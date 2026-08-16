@@ -4,9 +4,10 @@ import { ToolDefinition } from "@/lib/tools/registry";
 export const SITE_CONFIG = {
   name: "EverydayTools",
   legalName: "EverydayTools Network",
-  domain: "https://everydaytools.io",
-  description: "Fast, privacy-focused online calculators, text formatters, and developer utilities.",
+  domain: process.env.NEXT_PUBLIC_SITE_URL || "https://everydaytools-s.web.app",
+  description: "Free, private, and instant browser calculators, PDF utilities, image converters, and developer tools.",
   twitterHandle: "@EverydayToolsHQ",
+  ogImage: "https://everydaytools-s.web.app/og-image.svg",
 };
 
 export function constructToolMetadata(tool: ToolDefinition): Metadata {
@@ -15,23 +16,38 @@ export function constructToolMetadata(tool: ToolDefinition): Metadata {
   return {
     title: `${tool.metaTitle} | ${SITE_CONFIG.name}`,
     description: tool.metaDescription,
-    keywords: tool.keywords,
+    keywords: [
+      ...tool.keywords,
+      "free online tool",
+      "instant calculator",
+      "no login required",
+      "private browser utility",
+    ],
     alternates: {
       canonical: url,
     },
     openGraph: {
-      title: tool.metaTitle,
+      title: `${tool.metaTitle} - Fast & Free | ${SITE_CONFIG.name}`,
       description: tool.metaDescription,
       url: url,
       siteName: SITE_CONFIG.name,
       locale: "en_US",
       type: "website",
+      images: [
+        {
+          url: SITE_CONFIG.ogImage,
+          width: 1200,
+          height: 630,
+          alt: `${tool.name} - EverydayTools`,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: tool.metaTitle,
       description: tool.metaDescription,
       creator: SITE_CONFIG.twitterHandle,
+      images: [SITE_CONFIG.ogImage],
     },
     robots: {
       index: true,
@@ -63,7 +79,14 @@ export function constructPageMetadata({
   return {
     title: `${title} | ${SITE_CONFIG.name}`,
     description,
-    keywords: [...keywords, "online tools", "free calculators", "web utilities"],
+    keywords: [
+      ...keywords,
+      "online tools",
+      "free calculators",
+      "web utilities",
+      "file converters",
+      "developer utilities",
+    ],
     alternates: {
       canonical: url,
     },
@@ -74,12 +97,21 @@ export function constructPageMetadata({
       siteName: SITE_CONFIG.name,
       locale: "en_US",
       type: "website",
+      images: [
+        {
+          url: SITE_CONFIG.ogImage,
+          width: 1200,
+          height: 630,
+          alt: `${title} - EverydayTools`,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
       creator: SITE_CONFIG.twitterHandle,
+      images: [SITE_CONFIG.ogImage],
     },
   };
 }

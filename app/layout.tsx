@@ -7,6 +7,8 @@ import Footer from "@/components/Footer";
 import FloatingToolsBackground from "@/components/FloatingToolsBackground";
 import ThemeProvider from "@/components/ThemeProvider";
 import FirebaseAnalytics from "@/components/FirebaseAnalytics";
+import { SITE_CONFIG } from "@/lib/seo/metadata";
+import { generateWebsiteJsonLd } from "@/lib/seo/jsonld";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,17 +27,33 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://everydaytools.io"),
+  metadataBase: new URL(SITE_CONFIG.domain),
   title: {
     default: "EverydayTools - Fast, Free & Private Online Calculators and Utilities",
     template: "%s | EverydayTools",
   },
   description:
-    "Free, fast, and privacy-focused online calculators, file converters, image compressors, and developer utilities. Run calculations instantly in your browser with zero latency.",
+    "Free, fast, and privacy-focused online calculators, file converters, image compressors, PDF utilities, and developer tools. Run calculations instantly in your browser with zero latency.",
   applicationName: "EverydayTools",
-  authors: [{ name: "EverydayTools Team" }],
+  authors: [{ name: "EverydayTools Team", url: SITE_CONFIG.domain }],
   creator: "EverydayTools",
   publisher: "EverydayTools",
+  keywords: [
+    "free online tools",
+    "online calculators",
+    "image compressor to 50kb",
+    "pdf to word converter",
+    "percentage calculator",
+    "qr code generator",
+    "password generator",
+    "age calculator",
+    "gst calculator",
+    "loan emi calculator",
+    "json formatter",
+    "base64 encoder",
+    "uuid generator",
+    "jwt decoder",
+  ],
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },
@@ -44,10 +62,31 @@ export const metadata: Metadata = {
       { url: "/icon.svg", type: "image/svg+xml" },
     ],
   },
-  formatDetection: {
-    email: false,
-    address: false,
-    telephone: false,
+  openGraph: {
+    title: "EverydayTools - Fast, Free & Private Online Calculators and Utilities",
+    description: "22+ Essential Tools: Image Compressor, PDF to Word, QR Generator, Math & Developer Tools. 100% Client-Side Private.",
+    url: SITE_CONFIG.domain,
+    siteName: "EverydayTools",
+    locale: "en_US",
+    type: "website",
+    images: [
+      {
+        url: `${SITE_CONFIG.domain}/og-image.svg`,
+        width: 1200,
+        height: 630,
+        alt: "EverydayTools - Fast, Free & Private Online Utilities",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "EverydayTools - Fast, Free & Private Online Calculators and Utilities",
+    description: "22+ Essential Tools: Image Compressor, PDF to Word, QR Generator, Math & Developer Tools.",
+    creator: SITE_CONFIG.twitterHandle,
+    images: [`${SITE_CONFIG.domain}/og-image.svg`],
+  },
+  alternates: {
+    canonical: SITE_CONFIG.domain,
   },
   robots: {
     index: true,
@@ -67,12 +106,28 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const websiteSchema = generateWebsiteJsonLd();
+
   return (
     <html
       lang="en"
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full scroll-smooth`}
     >
+      <head>
+        {/* Google AdSense Script */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5552044975820319"
+          crossOrigin="anonymous"
+        />
+
+        {/* Structured Data (Schema.org) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+      </head>
       <body className="min-h-full flex flex-col font-sans transition-colors relative overflow-x-hidden antialiased">
         <ThemeProvider
           attribute="class"

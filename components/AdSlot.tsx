@@ -1,43 +1,66 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 
 interface AdSlotProps {
   slotId: string;
-  format?: "leaderboard" | "rectangle" | "in-article" | "sidebar";
+  format?: "sidebar" | "rectangle" | "skyscraper" | "leaderboard" | "in-article";
   className?: string;
-  showPlaceholder?: boolean;
+  adClient?: string;
 }
 
 export default function AdSlot({
   slotId,
-  format = "in-article",
+  format = "rectangle",
   className = "",
-  showPlaceholder = false,
+  adClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || "ca-pub-5552044975820319",
 }: AdSlotProps) {
-  // During development or before ad network approval, hide empty dashed boxes unless explicitly enabled
-  if (!showPlaceholder) {
-    return null;
-  }
+  useEffect(() => {
+    try {
+      if (typeof window !== "undefined" && (window as any).adsbygoogle) {
+        ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
+      }
+    } catch (e) {
+      console.debug("AdSense push:", e);
+    }
+  }, [slotId]);
 
-  const formatStyles = {
-    leaderboard: "min-h-[90px] w-full max-w-[728px]",
-    rectangle: "min-h-[250px] w-full max-w-[300px]",
-    "in-article": "min-h-[120px] w-full max-w-[728px]",
-    sidebar: "min-h-[600px] w-full max-w-[300px]",
+  // Standard IAB display dimensions for Zero-CLS (Cumulative Layout Shift) compliance
+  const formatDimensions: Record<string, { width: string; height: string; label: string }> = {
+    sidebar: { width: "w-full max-w-[300px]", height: "min-h-[600px]", label: "300x600 Half-Page / Skyscraper" },
+    rectangle: { width: "w-full max-w-[300px]", height: "min-h-[250px]", label: "300x250 Medium Rectangle" },
+    skyscraper: { width: "w-[160px]", height: "min-h-[600px]", label: "160x600 Gutter Skyscraper" },
+    leaderboard: { width: "w-full max-w-[728px]", height: "min-h-[90px]", label: "728x90 Leaderboard" },
+    "in-article": { width: "w-full max-w-[728px]", height: "min-h-[120px]", label: "Responsive In-Article" },
   };
+
+  const dim = formatDimensions[format] || formatDimensions.rectangle;
 
   return (
     <div
-      data-ad-slot={slotId}
-      className={`my-6 mx-auto flex flex-col items-center justify-center rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-900/20 p-3 transition-all ${formatStyles[format]} ${className}`}
+      data-ad-slot-id={slotId}
+      className={`mx-auto my-4 flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200/80 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-900/30 overflow-hidden ${dim.width} ${dim.height} ${className}`}
     >
-      <span className="text-[10px] font-semibold tracking-wider uppercase text-slate-400 dark:text-slate-500 mb-1">
-        Sponsored
-      </span>
-      <div className="flex flex-col items-center justify-center text-xs text-slate-400/80 dark:text-slate-600">
-        <span className="font-mono text-[11px]">{slotId}</span>
+      <div className="text-center p-3 space-y-1">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          Advertisement
+        </span>
+        <div className="text-[11px] text-slate-400/80 dark:text-slate-600 font-mono">
+          {dim.label}
+        </div>
       </div>
+
+      {/* Google AdSense live tag (active when adClient is configured) */}
+      {adClient && (
+        <ins
+          className="adsbygoogle"
+          style={{ display: "block" }}
+          data-ad-client={adClient}
+          data-ad-slot={slotId}
+          data-ad-format="auto"
+          data-full-width-responsive="true"
+        />
+      )}
     </div>
   );
 }

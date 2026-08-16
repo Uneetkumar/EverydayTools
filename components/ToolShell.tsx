@@ -38,7 +38,7 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
         ]}
       />
 
-      {/* Main 2-Column Responsive Layout */}
+      {/* Main 2-Column Responsive Layout (8-col main area + 4-col sideways rail) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left / Primary Column (8 of 12 cols on desktop) */}
         <div className="lg:col-span-8 space-y-6">
@@ -63,9 +63,6 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
             </p>
           </div>
 
-          {/* Top Leaderboard Ad */}
-          <AdSlot slotId="tool-top-banner" format="leaderboard" />
-
           {/* Main Interactive Tool Card */}
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-xs">
             {children}
@@ -86,8 +83,13 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
           {relatedTools.length > 0 && <RelatedTools tools={relatedTools} />}
         </div>
 
-        {/* Right Sidebar Rail (4 of 12 cols on desktop) */}
-        <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-24">
+        {/* Right Sideways Rail (4 of 12 cols on desktop) */}
+        <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-20">
+          {/* Sideways Sticky Ad Slot (300x250 or 300x600 skyscraper) */}
+          <div className="p-2 rounded-2xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 backdrop-blur-xs">
+            <AdSlot slotId="sideways-sidebar-ad" format="rectangle" />
+          </div>
+
           {/* Quick Tool Switcher in this Category */}
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center justify-between">
@@ -149,9 +151,6 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
               })}
             </div>
           </div>
-
-          {/* Sidebar Ad Placement (Compliant with Mediavine/Raptive 300x250 or 300x600 rail) */}
-          <AdSlot slotId="tool-sidebar-rail" format="rectangle" />
         </aside>
       </div>
     </div>
