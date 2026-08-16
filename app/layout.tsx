@@ -36,6 +36,14 @@ export const metadata: Metadata = {
   authors: [{ name: "EverydayTools Team" }],
   creator: "EverydayTools",
   publisher: "EverydayTools",
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+    apple: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+    ],
+  },
   formatDetection: {
     email: false,
     address: false,
