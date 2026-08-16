@@ -1,12 +1,32 @@
 import React from "react";
 import Link from "next/link";
-import { ToolDefinition, getRelatedTools, getAllTools, TOOL_CATEGORIES } from "@/lib/tools/registry";
+import {
+  ToolDefinition,
+  getRelatedTools,
+  getAllTools,
+  TOOL_CATEGORIES,
+} from "@/lib/tools/registry";
+import { getToolContent } from "@/lib/tools/content";
 import Breadcrumbs from "./Breadcrumbs";
 import FormulaBox from "./FormulaBox";
 import FaqSection from "./FaqSection";
 import RelatedTools from "./RelatedTools";
 import AdSlot from "./AdSlot";
-import { ShieldCheck, Sparkles, ArrowRight, Calculator, TrendingUp, Type, Code, Clock } from "lucide-react";
+import {
+  ToolIntro,
+  HowToSection,
+  UseCasesSection,
+  TipsSection,
+} from "./ToolContentSections";
+import {
+  ShieldCheck,
+  ArrowRight,
+  Calculator,
+  TrendingUp,
+  Type,
+  Code,
+  Clock,
+} from "lucide-react";
 
 interface ToolShellProps {
   tool: ToolDefinition;
@@ -24,30 +44,36 @@ const ICON_MAP: Record<string, React.ElementType> = {
 export default function ToolShell({ tool, children }: ToolShellProps) {
   const relatedTools = getRelatedTools(tool);
   const allTools = getAllTools();
+  const content = getToolContent(tool.slug);
   const sameCategoryTools = allTools.filter(
     (t) => t.category === tool.category && t.slug !== tool.slug
   );
 
+  // Registry FAQ first, then the long-form ones. Must stay in sync with the
+  // FAQPage JSON-LD built in lib/seo/jsonld.ts.
+  const allFaqs = [...tool.faqs, ...(content?.extraFaqs ?? [])];
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
-      {/* Breadcrumb Navigation */}
       <Breadcrumbs
         items={[
-          { name: tool.categoryName, url: `/#${tool.category}` },
+          { name: "All Tools", url: "/tools" },
+          { name: tool.categoryName, url: `/categories/${tool.category}` },
           { name: tool.name },
         ]}
       />
 
-      {/* Main 2-Column Responsive Layout (8-col main area + 4-col sideways rail) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left / Primary Column (8 of 12 cols on desktop) */}
+        {/* Primary column */}
         <div className="lg:col-span-8 space-y-6">
-          {/* Header Area */}
-          <div className="space-y-2 pb-1">
+          <header className="space-y-3 pb-1">
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300">
+              <Link
+                href={`/categories/${tool.category}`}
+                className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
+              >
                 {tool.categoryName}
-              </span>
+              </Link>
               <span className="flex items-center text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md">
                 <ShieldCheck className="w-3 h-3 mr-1" />
                 100% Client-Side Private
@@ -61,41 +87,57 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
             <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
               {tool.longDescription}
             </p>
-          </div>
+          </header>
 
-          {/* Main Interactive Tool Card */}
+          {/* The interactive tool itself stays directly below the H1 — no ad
+              is placed between the heading and the tool, both because it is
+              what users came for and because AdSense treats ads that crowd
+              primary controls as an accidental-click risk. */}
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-xs">
             {children}
           </div>
 
-          {/* Step-by-step Formulas */}
+          {content && (
+            <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-sm">
+              <ToolIntro intro={content.intro} />
+            </div>
+          )}
+
           {tool.formulas && tool.formulas.length > 0 && (
             <FormulaBox formulas={tool.formulas} />
           )}
 
-          {/* In-content non-intrusive AdSlot */}
-          <AdSlot slotId="tool-mid-banner" format="in-article" />
+          {content && (
+            <HowToSection howTo={content.howTo} toolName={tool.name} />
+          )}
 
-          {/* FAQs */}
-          {tool.faqs && tool.faqs.length > 0 && <FaqSection faqs={tool.faqs} />}
+          {/* In-article ad sits between content sections with generous margin
+              on both sides, well clear of any interactive element. */}
+          <div className="py-4">
+            <AdSlot placement="toolInArticle" format="in-article" />
+          </div>
 
-          {/* Related Tools */}
+          {content && <UseCasesSection useCases={content.useCases} />}
+
+          {content && <TipsSection tips={content.tips} />}
+
+          {allFaqs.length > 0 && <FaqSection faqs={allFaqs} />}
+
           {relatedTools.length > 0 && <RelatedTools tools={relatedTools} />}
         </div>
 
-        {/* Right Sideways Rail (4 of 12 cols on desktop) */}
-        <aside className="lg:col-span-4 space-y-6 lg:sticky lg:top-20">
-          {/* Sideways Sticky Ad Slot (300x250 or 300x600 skyscraper) */}
-          <div className="p-2 rounded-2xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 backdrop-blur-xs">
-            <AdSlot slotId="sideways-sidebar-ad" format="rectangle" />
-          </div>
-
-          {/* Quick Tool Switcher in this Category */}
+        {/* Sidebar rail */}
+        <aside className="lg:col-span-4 space-y-6">
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center justify-between">
+            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center justify-between">
               <span>More in {tool.categoryName}</span>
-              <span className="text-[11px] font-normal text-slate-400">Quick jump</span>
-            </h3>
+              <Link
+                href={`/categories/${tool.category}`}
+                className="text-[11px] font-normal text-blue-600 dark:text-blue-400 hover:underline"
+              >
+                View all
+              </Link>
+            </h2>
 
             <div className="space-y-1.5 pt-1">
               {sameCategoryTools.length > 0 ? (
@@ -119,36 +161,45 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
             </div>
           </div>
 
-          {/* All Tool Categories Navigation */}
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
-              Browse All Categories
-            </h3>
+          {/* Sticky sidebar ad. `top-20` clears the sticky header; the sidebar
+              scrolls with the article rather than overlaying content. */}
+          <div className="lg:sticky lg:top-20 space-y-6">
+            <AdSlot placement="toolSidebar" format="sidebar" />
 
-            <div className="space-y-1 pt-1">
-              {TOOL_CATEGORIES.map((cat) => {
-                const CatIcon = ICON_MAP[cat.id] || Calculator;
-                const count = allTools.filter((t) => t.category === cat.id).length;
-                const isCurrent = cat.id === tool.category;
+            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
+              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
+                Browse All Categories
+              </h2>
 
-                return (
-                  <Link
-                    key={cat.id}
-                    href={`/#${cat.id}`}
-                    className={`flex items-center justify-between p-2.5 rounded-xl text-xs font-medium transition ${
-                      isCurrent
-                        ? "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-semibold"
-                        : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2.5">
-                      <CatIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                      <span>{cat.name}</span>
-                    </div>
-                    <span className="text-[11px] text-slate-400">{count}</span>
-                  </Link>
-                );
-              })}
+              <div className="space-y-1 pt-1">
+                {TOOL_CATEGORIES.map((cat) => {
+                  const CatIcon = ICON_MAP[cat.id] || Calculator;
+                  const count = allTools.filter(
+                    (t) => t.category === cat.id
+                  ).length;
+                  const isCurrent = cat.id === tool.category;
+
+                  return (
+                    <Link
+                      key={cat.id}
+                      href={`/categories/${cat.id}`}
+                      className={`flex items-center justify-between p-2.5 rounded-xl text-xs font-medium transition ${
+                        isCurrent
+                          ? "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-semibold"
+                          : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2.5">
+                        <CatIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                        <span>{cat.name}</span>
+                      </div>
+                      <span className="text-[11px] text-slate-400">
+                        {count}
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </aside>

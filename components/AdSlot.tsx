@@ -1,66 +1,112 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
+import {
+  ADSENSE_CLIENT,
+  AD_SLOTS,
+  AdPlacement,
+  isValidSlotId,
+} from "@/lib/ads/config";
+
+type AdFormat = "in-article" | "rectangle" | "sidebar" | "leaderboard";
 
 interface AdSlotProps {
-  slotId: string;
-  format?: "sidebar" | "rectangle" | "skyscraper" | "leaderboard" | "in-article";
+  /** Named placement from lib/ads/config.ts */
+  placement: AdPlacement;
+  format?: AdFormat;
   className?: string;
-  adClient?: string;
+}
+
+/**
+ * Reserved heights match the IAB unit each format requests, so the space is
+ * held from first paint and the ad does not shift content when it fills.
+ * Cumulative Layout Shift is a Core Web Vital and a ranking signal — an ad
+ * that pushes the page down on load is one of the most common causes of a
+ * failing CLS score.
+ */
+const FORMAT_STYLES: Record<
+  AdFormat,
+  { wrapper: string; minHeight: number; responsive: boolean }
+> = {
+  "in-article": {
+    wrapper: "w-full max-w-[728px]",
+    minHeight: 280,
+    responsive: true,
+  },
+  rectangle: {
+    wrapper: "w-full max-w-[336px]",
+    minHeight: 280,
+    responsive: false,
+  },
+  sidebar: {
+    wrapper: "w-full max-w-[300px]",
+    minHeight: 600,
+    responsive: false,
+  },
+  leaderboard: {
+    wrapper: "w-full max-w-[728px]",
+    minHeight: 90,
+    responsive: true,
+  },
+};
+
+declare global {
+  interface Window {
+    adsbygoogle?: unknown[];
+  }
 }
 
 export default function AdSlot({
-  slotId,
-  format = "rectangle",
+  placement,
+  format = "in-article",
   className = "",
-  adClient = process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID || "ca-pub-5552044975820319",
 }: AdSlotProps) {
+  const slotId = AD_SLOTS[placement];
+  const insRef = useRef<HTMLModElement | null>(null);
+  const pushed = useRef(false);
+
   useEffect(() => {
+    if (!isValidSlotId(slotId) || pushed.current) return;
+
+    // The adsbygoogle array is a queue: pushing before the script loads is the
+    // documented pattern, and the script drains it on arrival. The previous
+    // implementation skipped the push whenever window.adsbygoogle was still
+    // undefined, which is the normal state on first paint — so the unit never
+    // filled.
     try {
-      if (typeof window !== "undefined" && (window as any).adsbygoogle) {
-        ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({});
-      }
-    } catch (e) {
-      console.debug("AdSense push:", e);
+      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      pushed.current = true;
+    } catch {
+      // A failed push must never break the page around it.
     }
   }, [slotId]);
 
-  // Standard IAB display dimensions for Zero-CLS (Cumulative Layout Shift) compliance
-  const formatDimensions: Record<string, { width: string; height: string; label: string }> = {
-    sidebar: { width: "w-full max-w-[300px]", height: "min-h-[600px]", label: "300x600 Half-Page / Skyscraper" },
-    rectangle: { width: "w-full max-w-[300px]", height: "min-h-[250px]", label: "300x250 Medium Rectangle" },
-    skyscraper: { width: "w-[160px]", height: "min-h-[600px]", label: "160x600 Gutter Skyscraper" },
-    leaderboard: { width: "w-full max-w-[728px]", height: "min-h-[90px]", label: "728x90 Leaderboard" },
-    "in-article": { width: "w-full max-w-[728px]", height: "min-h-[120px]", label: "Responsive In-Article" },
-  };
+  // No real slot ID configured: render nothing. An empty bordered box labelled
+  // "Advertisement" is worse than no box — it wastes layout, and AdSense
+  // prohibits placeholders that imply an ad where none is served.
+  if (!isValidSlotId(slotId)) return null;
 
-  const dim = formatDimensions[format] || formatDimensions.rectangle;
+  const style = FORMAT_STYLES[format];
 
   return (
     <div
-      data-ad-slot-id={slotId}
-      className={`mx-auto my-4 flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200/80 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-900/30 overflow-hidden ${dim.width} ${dim.height} ${className}`}
+      className={`mx-auto flex flex-col items-center ${style.wrapper} ${className}`}
     >
-      <div className="text-center p-3 space-y-1">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-          Advertisement
-        </span>
-        <div className="text-[11px] text-slate-400/80 dark:text-slate-600 font-mono">
-          {dim.label}
-        </div>
-      </div>
-
-      {/* Google AdSense live tag (active when adClient is configured) */}
-      {adClient && (
-        <ins
-          className="adsbygoogle"
-          style={{ display: "block" }}
-          data-ad-client={adClient}
-          data-ad-slot={slotId}
-          data-ad-format="auto"
-          data-full-width-responsive="true"
-        />
-      )}
+      <span className="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-600">
+        Advertisement
+      </span>
+      <ins
+        ref={insRef}
+        className="adsbygoogle block w-full"
+        style={{ display: "block", minHeight: style.minHeight }}
+        data-ad-client={ADSENSE_CLIENT}
+        data-ad-slot={slotId}
+        data-ad-format={format === "in-article" ? "fluid" : "auto"}
+        {...(format === "in-article"
+          ? { "data-ad-layout": "in-article" }
+          : {})}
+        data-full-width-responsive={style.responsive ? "true" : "false"}
+      />
     </div>
   );
 }

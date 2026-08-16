@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
@@ -8,7 +9,11 @@ import FloatingToolsBackground from "@/components/FloatingToolsBackground";
 import ThemeProvider from "@/components/ThemeProvider";
 import FirebaseAnalytics from "@/components/FirebaseAnalytics";
 import { SITE_CONFIG } from "@/lib/seo/metadata";
-import { generateWebsiteJsonLd } from "@/lib/seo/jsonld";
+import {
+  generateWebsiteJsonLd,
+  generateOrganizationJsonLd,
+} from "@/lib/seo/jsonld";
+import { ADSENSE_CLIENT } from "@/lib/ads/config";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -64,26 +69,21 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "EverydayTools - Fast, Free & Private Online Calculators and Utilities",
-    description: "22+ Essential Tools: Image Compressor, PDF to Word, QR Generator, Math & Developer Tools. 100% Client-Side Private.",
+    description:
+      "28 free tools: image compressor, PDF to Word, QR generator, calculators and developer utilities. Everything runs in your browser — no upload, no signup.",
     url: SITE_CONFIG.domain,
     siteName: "EverydayTools",
     locale: "en_US",
     type: "website",
-    images: [
-      {
-        url: `${SITE_CONFIG.domain}/og-image.svg`,
-        width: 1200,
-        height: 630,
-        alt: "EverydayTools - Fast, Free & Private Online Utilities",
-      },
-    ],
+    // Images come from app/opengraph-image.tsx (a real PNG). Setting them
+    // here would override that convention.
   },
   twitter: {
     card: "summary_large_image",
     title: "EverydayTools - Fast, Free & Private Online Calculators and Utilities",
-    description: "22+ Essential Tools: Image Compressor, PDF to Word, QR Generator, Math & Developer Tools.",
+    description:
+      "28 free browser tools: image compressor, PDF to Word, QR generator, calculators and developer utilities.",
     creator: SITE_CONFIG.twitterHandle,
-    images: [`${SITE_CONFIG.domain}/og-image.svg`],
   },
   alternates: {
     canonical: SITE_CONFIG.domain,
@@ -106,7 +106,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const websiteSchema = generateWebsiteJsonLd();
+  // Emitted as a @graph so the WebSite and Organization nodes can reference
+  // each other by @id instead of repeating the publisher block on every page.
+  const siteSchema = {
+    "@context": "https://schema.org",
+    "@graph": [generateOrganizationJsonLd(), generateWebsiteJsonLd()],
+  };
 
   return (
     <html
@@ -115,17 +120,18 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full scroll-smooth`}
     >
       <head>
-        {/* Google AdSense Script */}
-        <script
-          async
-          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5552044975820319"
+        {/* Warm up the ad origins so the first ad request is not paying for
+            DNS and TLS on top of the fetch. */}
+        <link
+          rel="preconnect"
+          href="https://pagead2.googlesyndication.com"
           crossOrigin="anonymous"
         />
+        <link rel="dns-prefetch" href="https://googleads.g.doubleclick.net" />
 
-        {/* Structured Data (Schema.org) */}
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSchema) }}
         />
       </head>
       <body className="min-h-full flex flex-col font-sans transition-colors relative overflow-x-hidden antialiased">
@@ -150,6 +156,19 @@ export default function RootLayout({
             <Footer />
           </div>
         </ThemeProvider>
+
+        {/* AdSense loads after hydration rather than in <head>. The library is
+            large and third-party; blocking the head on it delays Largest
+            Contentful Paint, which is a Core Web Vital and a ranking signal.
+            afterInteractive still loads it well before a user scrolls to an
+            ad slot. */}
+        <Script
+          id="adsbygoogle-init"
+          strategy="afterInteractive"
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
+          crossOrigin="anonymous"
+        />
       </body>
     </html>
   );

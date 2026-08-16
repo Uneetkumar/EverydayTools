@@ -2,6 +2,7 @@ import React from "react";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getAllTools, getToolBySlug } from "@/lib/tools/registry";
+import { getToolContent } from "@/lib/tools/content";
 import { constructToolMetadata } from "@/lib/seo/metadata";
 import { generateToolJsonLd } from "@/lib/seo/jsonld";
 import ToolShell from "@/components/ToolShell";
@@ -70,7 +71,11 @@ export default async function ToolPage({ params }: ToolPageProps) {
     notFound();
   }
 
-  const { webAppSchema, breadcrumbSchema, faqSchema } = generateToolJsonLd(tool);
+  const content = getToolContent(tool.slug);
+  const { webAppSchema, breadcrumbSchema, faqSchema } = generateToolJsonLd(
+    tool,
+    content
+  );
 
   const renderToolComponent = () => {
     switch (tool.slug) {

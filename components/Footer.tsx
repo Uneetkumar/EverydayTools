@@ -35,10 +35,18 @@ export default function Footer() {
               Categories
             </h3>
             <ul className="space-y-2 text-xs">
+              <li>
+                <Link
+                  href="/tools"
+                  className="font-semibold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  All Tools
+                </Link>
+              </li>
               {TOOL_CATEGORIES.map((cat) => (
                 <li key={cat.id}>
                   <Link
-                    href={`/#${cat.id}`}
+                    href={`/categories/${cat.id}`}
                     className="text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
                   >
                     {cat.name}

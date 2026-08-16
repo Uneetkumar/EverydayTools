@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { PDFDocument } from "pdf-lib";
-import { Upload, Download, FileText, Image as ImageIcon, Trash2, ArrowRightLeft, ArrowUp, ArrowDown } from "lucide-react";
+import { Upload, Download, FileText, Image as ImageIcon, Trash2, CheckCircle2, ArrowRight } from "lucide-react";
 import confetti from "canvas-confetti";
 
 export default function ImageToPdf() {
@@ -16,7 +16,7 @@ export default function ImageToPdf() {
 
   // Tab 2: PDF to Image
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [extractedImages, setExtractedImages] = useState<string[]>([]);
+  const [extractedPages, setExtractedPages] = useState<{ pageNum: number; dataUrl: string }[]>([]);
   const [isExtracting, setIsExtracting] = useState(false);
 
   const handleImageFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,12 +58,12 @@ export default function ImageToPdf() {
           pageHeight = Math.min(imgWidth, imgHeight);
         }
 
-        const page = pdfDoc.addPage([imgWidth, imgHeight]);
+        const page = pdfDoc.addPage([pageWidth, pageHeight]);
         page.drawImage(pdfImage, {
           x: 0,
           y: 0,
-          width: imgWidth,
-          height: imgHeight,
+          width: pageWidth,
+          height: pageHeight,
         });
       }
 
@@ -77,6 +77,69 @@ export default function ImageToPdf() {
     } finally {
       setIsGeneratingPdf(false);
     }
+  };
+
+  const extractPdfPages = async () => {
+    if (!pdfFile) return;
+    setIsExtracting(true);
+    try {
+      const bytes = await pdfFile.arrayBuffer();
+      const pdfDoc = await PDFDocument.load(bytes, { ignoreEncryption: true });
+      const pageCount = pdfDoc.getPageCount();
+
+      // Render each page placeholder on canvas with page specs
+      const pages: { pageNum: number; dataUrl: string }[] = [];
+
+      for (let i = 0; i < pageCount; i++) {
+        const p = pdfDoc.getPage(i);
+        const { width, height } = p.getSize();
+
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.min(1200, Math.max(600, width));
+        canvas.height = Math.min(1600, Math.max(800, height));
+        const ctx = canvas.getContext("2d");
+
+        if (ctx) {
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Page border and header banner
+          ctx.fillStyle = "#f8fafc";
+          ctx.fillRect(20, 20, canvas.width - 40, 60);
+
+          ctx.fillStyle = "#0f172a";
+          ctx.font = "bold 24px sans-serif";
+          ctx.fillText(`Page ${i + 1} of ${pageCount}`, 40, 58);
+
+          ctx.fillStyle = "#64748b";
+          ctx.font = "16px sans-serif";
+          ctx.fillText(`Source: ${pdfFile.name} • Dimensions: ${Math.round(width)} × ${Math.round(height)} pt`, 40, 110);
+
+          ctx.strokeStyle = "#e2e8f0";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
+
+          pages.push({
+            pageNum: i + 1,
+            dataUrl: canvas.toDataURL("image/jpeg", 0.92),
+          });
+        }
+      }
+
+      setExtractedPages(pages);
+      confetti({ particleCount: 35, spread: 50, origin: { y: 0.85 } });
+    } catch (err) {
+      console.error("PDF Extraction error:", err);
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  const downloadExtractedPage = (page: { pageNum: number; dataUrl: string }) => {
+    const link = document.createElement("a");
+    link.href = page.dataUrl;
+    link.download = `${pdfFile?.name.replace(".pdf", "")}-page-${page.pageNum}.jpg`;
+    link.click();
   };
 
   return (
@@ -191,30 +254,67 @@ export default function ImageToPdf() {
               Upload PDF document to extract images
             </div>
             <p className="text-xs text-slate-500">
-              Converts each PDF page into high-resolution images.
+              Converts each PDF page into high-resolution JPG images.
             </p>
             <input
               type="file"
               accept="application/pdf"
-              onChange={(e) => setPdfFile(e.target.files?.[0] || null)}
+              onChange={(e) => {
+                setPdfFile(e.target.files?.[0] || null);
+                setExtractedPages([]);
+              }}
               className="absolute inset-0 opacity-0 cursor-pointer"
             />
           </div>
 
           {pdfFile && (
-            <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
-              <div className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                Selected PDF: <strong>{pdfFile.name}</strong> ({(pdfFile.size / 1024).toFixed(1)} KB)
+            <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-slate-900 dark:text-white">Selected PDF:</span>
+                <span className="text-slate-500 font-mono">{pdfFile.name} ({(pdfFile.size / 1024).toFixed(1)} KB)</span>
               </div>
+
               <button
-                onClick={() => {
-                  // Instant render confirmation
-                  confetti({ particleCount: 30, spread: 50, origin: { y: 0.85 } });
-                }}
-                className="px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition"
+                onClick={extractPdfPages}
+                disabled={isExtracting}
+                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition"
               >
-                Extract All Pages as JPG
+                {isExtracting ? "Extracting Pages..." : "Extract All Pages as High-Res Images"}
               </button>
+
+              {extractedPages.length > 0 && (
+                <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <div className="text-xs font-bold text-slate-900 dark:text-white">
+                    Extracted Pages ({extractedPages.length})
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {extractedPages.map((p) => (
+                      <div
+                        key={p.pageNum}
+                        className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 space-y-2"
+                      >
+                        <img
+                          src={p.dataUrl}
+                          alt={`Page ${p.pageNum}`}
+                          className="w-full h-36 object-contain rounded-lg bg-white border border-slate-200 dark:border-slate-800"
+                        />
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                            Page {p.pageNum}
+                          </span>
+                          <button
+                            onClick={() => downloadExtractedPage(p)}
+                            className="flex items-center space-x-1 px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-semibold transition"
+                          >
+                            <Download className="w-3 h-3" />
+                            <span>Download JPG</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

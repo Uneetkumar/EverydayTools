@@ -116,7 +116,7 @@ export default function Header() {
                       return (
                         <Link
                           key={cat.id}
-                          href={`/#${cat.id}`}
+                          href={`/categories/${cat.id}`}
                           onClick={() => setIsCategoriesDropdownOpen(false)}
                           className="flex items-center space-x-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/80 transition group"
                         >
@@ -152,7 +152,7 @@ export default function Header() {
               ))}
 
               <Link
-                href="/#popular"
+                href="/tools"
                 className="flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition"
               >
                 <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
@@ -225,7 +225,7 @@ export default function Header() {
                 {TOOL_CATEGORIES.map((cat) => (
                   <Link
                     key={cat.id}
-                    href={`/#${cat.id}`}
+                    href={`/categories/${cat.id}`}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className="px-3 py-2 text-xs font-medium rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 truncate"
                   >

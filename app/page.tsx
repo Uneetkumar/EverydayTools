@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   TOOL_CATEGORIES,
   getAllTools,
@@ -39,6 +40,7 @@ import {
   GitCompare,
   Layers,
   Crop,
+  ChevronRight,
 } from "lucide-react";
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -128,18 +130,27 @@ const CATEGORY_COLORS: Record<
 };
 
 export default function HomePage() {
+  const router = useRouter();
   const allTools = useMemo(() => getAllTools(), []);
   const popularTools = useMemo(() => getPopularTools(), []);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(0);
+
+  const searchContainerRef = useRef<HTMLDivElement>(null);
 
   const filteredTools = useMemo(() => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) {
+      if (selectedCategory === "all") return allTools;
+      return allTools.filter((t) => t.category === selectedCategory);
+    }
+
     return allTools.filter((tool) => {
       const matchesCategory =
         selectedCategory === "all" || tool.category === selectedCategory;
-      const query = searchQuery.toLowerCase().trim();
       const matchesQuery =
-        query === "" ||
         tool.name.toLowerCase().includes(query) ||
         tool.shortName.toLowerCase().includes(query) ||
         tool.description.toLowerCase().includes(query) ||
@@ -149,6 +160,63 @@ export default function HomePage() {
       return matchesCategory && matchesQuery;
     });
   }, [allTools, searchQuery, selectedCategory]);
+
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    return allTools.filter(
+      (tool) =>
+        tool.name.toLowerCase().includes(q) ||
+        tool.shortName.toLowerCase().includes(q) ||
+        tool.description.toLowerCase().includes(q) ||
+        tool.keywords.some((k) => k.toLowerCase().includes(q))
+    ).slice(0, 7);
+  }, [allTools, searchQuery]);
+
+  useEffect(() => {
+    setSelectedIndex(0);
+    if (searchQuery.trim().length > 0) {
+      setIsDropdownOpen(true);
+    } else {
+      setIsDropdownOpen(false);
+    }
+  }, [searchQuery]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        searchContainerRef.current &&
+        !searchContainerRef.current.contains(e.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isDropdownOpen || searchResults.length === 0) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setSelectedIndex((prev) => (prev + 1) % searchResults.length);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setSelectedIndex((prev) =>
+        prev === 0 ? searchResults.length - 1 : prev - 1
+      );
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      const targetTool = searchResults[selectedIndex] || searchResults[0];
+      if (targetTool) {
+        setIsDropdownOpen(false);
+        router.push(`/tools/${targetTool.slug}`);
+      }
+    } else if (e.key === "Escape") {
+      setIsDropdownOpen(false);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
@@ -166,34 +234,93 @@ export default function HomePage() {
           Fast, private browser utilities for students, developers, and creators. All calculations and file conversions run locally on your device.
         </p>
 
-        {/* Live Search Bar */}
-        <div className="relative max-w-2xl mx-auto pt-2">
+        {/* Live Search Bar with Instant Autocomplete Dropdown */}
+        <div className="relative max-w-2xl mx-auto pt-2 z-30" ref={searchContainerRef}>
           <div className="relative flex items-center">
             <Search className="w-5 h-5 text-slate-400 absolute left-4 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search 22+ tools (e.g. percentage, qr code, password, emi, json, base64)..."
-              className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm text-sm text-slate-900 dark:text-white shadow-xs focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              onKeyDown={handleKeyDown}
+              onFocus={() => {
+                if (searchQuery.trim().length > 0) setIsDropdownOpen(true);
+              }}
+              placeholder="Search 22+ tools (e.g. crop image, compress, pdf to word, emi, json)..."
+              className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md text-sm text-slate-900 dark:text-white shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery("")}
+                onClick={() => {
+                  setSearchQuery("");
+                  setIsDropdownOpen(false);
+                }}
                 className="absolute right-3.5 p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               >
                 <X className="w-4 h-4" />
               </button>
             )}
           </div>
+
+          {/* Autocomplete Results Dropdown (Same rich UX as header modal) */}
+          {isDropdownOpen && searchResults.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-2 p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-1 text-left animate-in fade-in-50 zoom-in-95 duration-150">
+              <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider flex justify-between">
+                <span>Matching Tools ({searchResults.length})</span>
+                <span className="text-slate-400 font-normal">Press Enter to launch</span>
+              </div>
+
+              {searchResults.map((tool, idx) => {
+                const Icon = ICON_MAP[tool.iconName] || Calculator;
+                const isSelected = idx === selectedIndex;
+
+                return (
+                  <Link
+                    key={tool.slug}
+                    href={`/tools/${tool.slug}`}
+                    onClick={() => setIsDropdownOpen(false)}
+                    className={`flex items-center justify-between p-3 rounded-xl transition group ${
+                      isSelected
+                        ? "bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800"
+                        : "hover:bg-slate-50 dark:hover:bg-slate-800/80 border border-transparent"
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3 min-w-0">
+                      <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
+                          {tool.name}
+                        </div>
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1">
+                          {tool.description}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2 shrink-0 ml-3">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500">
+                        {tool.categoryName}
+                      </span>
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition" />
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Category Filter Chips */}
         <div className="flex flex-wrap items-center justify-center gap-1.5 pt-2">
           <button
-            onClick={() => setSelectedCategory("all")}
+            onClick={() => {
+              setSelectedCategory("all");
+              setSearchQuery("");
+            }}
             className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-              selectedCategory === "all"
+              selectedCategory === "all" && !searchQuery
                 ? "bg-blue-600 text-white shadow-xs"
                 : "bg-white/80 dark:bg-slate-900/80 backdrop-blur-xs text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
             }`}
@@ -202,12 +329,16 @@ export default function HomePage() {
           </button>
           {TOOL_CATEGORIES.map((cat) => {
             const count = allTools.filter((t) => t.category === cat.id).length;
+            const isCatActive = selectedCategory === cat.id && !searchQuery;
             return (
               <button
                 key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
+                onClick={() => {
+                  setSelectedCategory(cat.id);
+                  setSearchQuery("");
+                }}
                 className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-                  selectedCategory === cat.id
+                  isCatActive
                     ? "bg-blue-600 text-white shadow-xs"
                     : "bg-white/80 dark:bg-slate-900/80 backdrop-blur-xs text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
@@ -286,6 +417,7 @@ export default function HomePage() {
             onClick={() => {
               setSearchQuery("");
               setSelectedCategory("all");
+              setIsDropdownOpen(false);
             }}
             className="px-4 py-2 text-xs font-semibold rounded-xl bg-blue-600 text-white hover:bg-blue-700 transition"
           >
