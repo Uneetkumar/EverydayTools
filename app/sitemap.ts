@@ -2,6 +2,8 @@ import { MetadataRoute } from "next";
 import { getAllTools } from "@/lib/tools/registry";
 import { SITE_CONFIG } from "@/lib/seo/metadata";
 
+export const dynamic = "force-static";
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const tools = getAllTools();
   const currentDate = new Date().toISOString();
