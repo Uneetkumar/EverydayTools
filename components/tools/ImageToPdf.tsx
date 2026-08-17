@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { PDFDocument } from "pdf-lib";
 import { Upload, Download, FileText, Image as ImageIcon, Trash2, CheckCircle2, ArrowRight } from "lucide-react";
 import confetti from "canvas-confetti";
+import { downloadDataUrl } from "@/lib/utils/download";
 
 export default function ImageToPdf() {
   const [tab, setTab] = useState<"img_to_pdf" | "pdf_to_img">("img_to_pdf");
@@ -136,10 +137,10 @@ export default function ImageToPdf() {
   };
 
   const downloadExtractedPage = (page: { pageNum: number; dataUrl: string }) => {
-    const link = document.createElement("a");
-    link.href = page.dataUrl;
-    link.download = `${pdfFile?.name.replace(".pdf", "")}-page-${page.pageNum}.jpg`;
-    link.click();
+    downloadDataUrl(
+      page.dataUrl,
+      `${pdfFile?.name.replace(".pdf", "") || "document"}-page-${page.pageNum}.jpg`
+    );
   };
 
   return (

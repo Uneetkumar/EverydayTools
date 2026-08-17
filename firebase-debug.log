@@ -1,0 +1,37 @@
+[debug] [2026-08-17T15:31:54.331Z] ----------------------------------------------------------------------
+[debug] [2026-08-17T15:31:54.332Z] Command:       /Users/uneetkumar/.nvm/versions/node/v24.13.1/bin/node /Users/uneetkumar/.nvm/versions/node/v24.13.1/bin/firebase deploy --only hosting
+[debug] [2026-08-17T15:31:54.332Z] CLI Version:   15.27.0
+[debug] [2026-08-17T15:31:54.332Z] Platform:      darwin
+[debug] [2026-08-17T15:31:54.332Z] Node Version:  v24.13.1
+[debug] [2026-08-17T15:31:54.333Z] Detected Agent: antigravity
+[debug] [2026-08-17T15:31:54.333Z] Time:          Mon Aug 17 2026 21:01:54 GMT+0530 (India Standard Time)
+[debug] [2026-08-17T15:31:54.333Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-08-17T15:31:54.828Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-08-17T15:31:54.828Z] > authorizing via signed-in user (uneetkumar772@gmail.com)
+[debug] [2026-08-17T15:31:54.828Z] [iam] checking project everydaytools-s for permissions ["firebase.projects.get","firebasehosting.sites.update"]
+[debug] [2026-08-17T15:31:54.833Z] Checked if tokens are valid: true, expires at: 1786982546325
+[debug] [2026-08-17T15:31:54.833Z] Checked if tokens are valid: true, expires at: 1786982546325
+[debug] [2026-08-17T15:31:54.833Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/everydaytools-s:testIamPermissions [none]
+[debug] [2026-08-17T15:31:54.833Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/everydaytools-s:testIamPermissions  x-goog-user-project=everydaytools-s
+[debug] [2026-08-17T15:31:54.833Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/everydaytools-s:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-08-17T15:31:56.319Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/everydaytools-s:testIamPermissions 200
+[debug] [2026-08-17T15:31:56.319Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/everydaytools-s:testIamPermissions {"permissions":["firebase.projects.get","firebasehosting.sites.update"]}
+[debug] [2026-08-17T15:31:56.319Z] Checked if tokens are valid: true, expires at: 1786982546325
+[debug] [2026-08-17T15:31:56.319Z] Checked if tokens are valid: true, expires at: 1786982546325
+[debug] [2026-08-17T15:31:56.320Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects/everydaytools-s [none]
+[debug] [2026-08-17T15:31:56.777Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects/everydaytools-s 200
+[debug] [2026-08-17T15:31:56.777Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects/everydaytools-s {"projectId":"everydaytools-s","projectNumber":"341790396738","displayName":"EverydayTools","name":"projects/everydaytools-s","resources":{"hostingSite":"everydaytools-s"},"state":"ACTIVE","labels":{"firebase":"enabled"},"etag":"1_a7909ba5-4db5-4c9a-9f53-217d594b3b31"}
+[info] 
+[info] === Deploying to 'everydaytools-s'...
+[info] 
+[info] i  deploying hosting 
+[debug] [2026-08-17T15:31:56.780Z] Checked if tokens are valid: true, expires at: 1786982546325
+[debug] [2026-08-17T15:31:56.780Z] Checked if tokens are valid: true, expires at: 1786982546325
+[debug] [2026-08-17T15:31:56.780Z] >>> [apiv2][query] GET https://firebasehosting.googleapis.com/v1beta1/projects/everydaytools-s/sites/everydaytools-s [none]
+[debug] [2026-08-17T15:31:58.212Z] <<< [apiv2][status] GET https://firebasehosting.googleapis.com/v1beta1/projects/everydaytools-s/sites/everydaytools-s 200
+[debug] [2026-08-17T15:31:58.213Z] <<< [apiv2][body] GET https://firebasehosting.googleapis.com/v1beta1/projects/everydaytools-s/sites/everydaytools-s {"name":"projects/everydaytools-s/sites/everydaytools-s","defaultUrl":"https://everydaytools-s.web.app","appId":"1:341790396738:web:b18e89a0b40fbbc915b8db","type":"DEFAULT_SITE"}
+[debug] [2026-08-17T15:31:58.215Z] Checked if tokens are valid: true, expires at: 1786982546325
+[debug] [2026-08-17T15:31:58.215Z] Checked if tokens are valid: true, expires at: 1786982546325
+[debug] [2026-08-17T15:31:58.215Z] >>> [apiv2][query] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/everydaytools-s/versions [none]
+[debug] [2026-08-17T15:31:58.215Z] >>> [apiv2][body] POST https://firebasehosting.googleapis.com/v1beta1/projects/-/sites/everydaytools-s/versions {"status":"CREATED","labels":{"deployment-tool":"cli-firebase"}}

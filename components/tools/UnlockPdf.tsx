@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { PDFDocument } from "pdf-lib";
 import { Lock, Unlock, Upload, Download, CheckCircle2, AlertCircle } from "lucide-react";
 import confetti from "canvas-confetti";
+import { downloadDataUrl } from "@/lib/utils/download";
 
 export default function UnlockPdf() {
   const [file, setFile] = useState<File | null>(null);
@@ -99,14 +100,16 @@ export default function UnlockPdf() {
             </button>
 
             {unlockedUrl && (
-              <a
-                href={unlockedUrl}
-                download={`unlocked-${file.name}`}
+              <button
+                onClick={() => {
+                  downloadDataUrl(unlockedUrl, `unlocked-${file.name}`);
+                  confetti({ particleCount: 35, spread: 50, origin: { y: 0.85 } });
+                }}
                 className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition"
               >
                 <Download className="w-4 h-4" />
                 <span>Download Unlocked PDF</span>
-              </a>
+              </button>
             )}
           </div>
         </div>

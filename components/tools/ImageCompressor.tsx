@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Upload, Download, CheckCircle2, AlertCircle, RefreshCw, Sparkles, Image as ImageIcon } from "lucide-react";
 import confetti from "canvas-confetti";
+import { downloadBlob } from "@/lib/utils/download";
 
 export default function ImageCompressor() {
   const [origFile, setOrigFile] = useState<File | null>(null);
@@ -112,10 +113,7 @@ export default function ImageCompressor() {
   const handleDownload = () => {
     if (!compressedBlob) return;
     const ext = format === "image/jpeg" ? "jpg" : "webp";
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(compressedBlob);
-    link.download = `compressed-${targetKb}kb.${ext}`;
-    link.click();
+    downloadBlob(compressedBlob, `compressed-${targetKb}kb.${ext}`);
     confetti({ particleCount: 35, spread: 50, origin: { y: 0.85 } });
   };
 

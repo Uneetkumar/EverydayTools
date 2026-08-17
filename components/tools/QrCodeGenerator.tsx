@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import { QRCodeCanvas, QRCodeSVG } from "qrcode.react";
 import { usePersistentState } from "@/lib/hooks/usePersistentState";
+import { downloadDataUrl } from "@/lib/utils/download";
 import {
   Download,
   QrCode,
@@ -126,10 +127,8 @@ export default function QrCodeGenerator() {
       ctx.drawImage(canvas, 0, 0, exportSize, exportSize);
     }
 
-    const link = document.createElement("a");
-    link.download = `custom-qrcode-${Date.now()}.png`;
-    link.href = exportCanvas.toDataURL("image/png");
-    link.click();
+    const dataUrl = exportCanvas.toDataURL("image/png");
+    downloadDataUrl(dataUrl, `custom-qrcode-${Date.now()}.png`);
     confetti({ particleCount: 45, spread: 60, origin: { y: 0.85 } });
   };
 

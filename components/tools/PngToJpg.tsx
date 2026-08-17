@@ -12,6 +12,7 @@ import {
   Layers,
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { downloadDataUrl } from "@/lib/utils/download";
 
 type ConversionMode =
   | "png_to_jpg"
@@ -114,10 +115,7 @@ export default function PngToJpg({
     else if (mode === "img_to_webp") ext = "webp";
 
     const name = file.name.replace(/\.[^/.]+$/, "");
-    const link = document.createElement("a");
-    link.href = convertedUrl;
-    link.download = `${name}.${ext}`;
-    link.click();
+    downloadDataUrl(convertedUrl, `${name}.${ext}`);
     confetti({ particleCount: 40, spread: 55, origin: { y: 0.85 } });
   };
 

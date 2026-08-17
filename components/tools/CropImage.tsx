@@ -17,6 +17,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import { downloadBlob, downloadDataUrl } from "@/lib/utils/download";
 
 type AspectRatio = "free" | "1:1" | "16:9" | "4:3" | "9:16" | "3:2";
 type HandleType = "tl" | "tr" | "bl" | "br" | "move" | null;
@@ -545,11 +546,7 @@ export default function CropImage() {
         });
         const pdfBytes = await pdfDoc.save();
         const blob = new Blob([new Uint8Array(pdfBytes)], { type: "application/pdf" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `${fileName}-cropped.pdf`;
-        a.click();
+        downloadBlob(blob, `${fileName}-cropped.pdf`);
         confetti({ particleCount: 45, spread: 60, origin: { y: 0.85 } });
         return;
       } catch (err) {
@@ -572,10 +569,7 @@ export default function CropImage() {
     }
 
     const url = out.toDataURL(mimeType, quality);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${fileName}-cropped.${ext}`;
-    a.click();
+    downloadDataUrl(url, `${fileName}-cropped.${ext}`);
     confetti({ particleCount: 45, spread: 60, origin: { y: 0.85 } });
   };
 

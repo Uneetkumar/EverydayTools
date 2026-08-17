@@ -34,11 +34,11 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_CONFIG.domain),
   title: {
-    default: "EverydayTools - 100% Free Online Calculators, Converters & Developer Utilities",
+    default: "EverydayTools - Free Online Calculators & Web Tools",
     template: "%s | EverydayTools",
   },
   description:
-    "100% Free online tools for everyone. Fast, private calculators, image format converters, PDF editors, and developer utilities with zero signups, no limits, and complete client-side privacy.",
+    "Free online calculators, file converters, image compressors, PDF utilities, and developer tools. Fast, private in-browser tools with zero signups.",
   applicationName: "EverydayTools",
   authors: [{ name: "EverydayTools Team", url: SITE_CONFIG.domain }],
   creator: "EverydayTools",
