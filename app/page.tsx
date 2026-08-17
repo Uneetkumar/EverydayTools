@@ -397,7 +397,7 @@ export default function HomePage() {
                   </div>
 
                   <div className="flex items-center text-[11px] font-semibold text-blue-600 dark:text-blue-400 mt-3 group-hover:translate-x-0.5 transition">
-                    <span>Launch</span>
+                    <span>Use {tool.shortName}</span>
                     <ArrowRight className="w-3 h-3 ml-1" />
                   </div>
                 </Link>
@@ -455,25 +455,34 @@ export default function HomePage() {
                       </p>
                     </div>
                   </div>
-                  <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 w-fit">
-                    {categoryTools.length} {categoryTools.length === 1 ? "tool" : "tools"}
-                  </span>
+                  <Link
+                    href={`/categories/${cat.id}`}
+                    title={`Explore all ${cat.name} tools`}
+                    aria-label={`Explore all ${cat.name} tools`}
+                    className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-700 flex items-center space-x-1"
+                  >
+                    <span>View all {categoryTools.length} tools</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
                 </div>
 
-                {/* Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {/* Tools Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {categoryTools.map((tool) => {
-                    const Icon = ICON_MAP[tool.iconName] || Calculator;
+                    const ToolIcon = ICON_MAP[tool.iconName] || Calculator;
+
                     return (
                       <Link
                         key={tool.slug}
                         href={`/tools/${tool.slug}`}
-                        className={`group p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 hover:bg-white dark:hover:bg-slate-900 ${colorInfo.border} tool-card-glow transition flex flex-col justify-between`}
+                        title={`Open ${tool.name} free online tool`}
+                        aria-label={`Open ${tool.name}`}
+                        className="group p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-950/40 hover:bg-white dark:hover:bg-slate-900 tool-card-glow transition flex flex-col justify-between"
                       >
-                        <div className="space-y-2.5">
+                        <div className="space-y-3">
                           <div className="flex items-center space-x-3">
-                            <div className={`w-8 h-8 rounded-lg ${colorInfo.bg} ${colorInfo.text} flex items-center justify-center shrink-0 group-hover:scale-105 transition`}>
-                              <Icon className="w-4 h-4" />
+                            <div className={`w-8 h-8 rounded-lg ${colorInfo.bg} ${colorInfo.text} flex items-center justify-center group-hover:scale-105 transition`}>
+                              <ToolIcon className="w-4 h-4" />
                             </div>
                             <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
                               {tool.name}
@@ -485,7 +494,7 @@ export default function HomePage() {
                         </div>
 
                         <div className="flex items-center text-xs font-semibold text-blue-600 dark:text-blue-400 mt-4 group-hover:translate-x-1 transition">
-                          <span>Open tool</span>
+                          <span>Explore {tool.shortName}</span>
                           <ArrowRight className="w-3.5 h-3.5 ml-1" />
                         </div>
                       </Link>
@@ -495,6 +504,76 @@ export default function HomePage() {
               </section>
             );
           })}
+
+          {/* Comprehensive SEO Long-Form Article & Feature Guide */}
+          <section className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-8 sm:p-10 space-y-8">
+            <div className="max-w-3xl space-y-3">
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+                Why Choose EverydayTools? 100% Free, Private & Instant
+              </h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                EverydayTools is an open, high-performance web utility suite engineered for students, software engineers, accountants, designers, and creators worldwide. Unlike traditional online conversion platforms that upload your sensitive documents, passwords, or images to third-party cloud servers, our architecture computes 100% of calculations and file operations directly inside your browser memory.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
+              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800 space-y-2">
+                <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 flex items-center justify-center">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Zero Server Uploads</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Your PDF files, photos, JSON payloads, and passwords never leave your device. All processing happens in local browser memory via HTML5 Canvas, WebAssembly, and WebCrypto.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800 space-y-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/80 text-blue-600 flex items-center justify-center">
+                  <Zap className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">Zero-Latency Speed</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  No queue times, no server bottlenecks, and no waiting for uploads. Everything computes in real time at the native speed of your device hardware.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800 space-y-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/80 text-amber-600 flex items-center justify-center">
+                  <CheckCircle2 className="w-4 h-4" />
+                </div>
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white">100% Free Forever</h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                  No paywalls, no monthly subscription fees, and no required registration. Enjoy unlimited access to all 31+ online calculators, formatters, and converters.
+                </p>
+              </div>
+            </div>
+
+            {/* Homepage FAQs */}
+            <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                Frequently Asked Questions
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 rounded-xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800 space-y-1.5">
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    Are the tools really completely free to use?
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    Yes. All 31+ utilities on EverydayTools are 100% free with unlimited usage for personal, commercial, and educational purposes. No credit card or account is ever required.
+                  </p>
+                </div>
+
+                <div className="p-4 rounded-xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800 space-y-1.5">
+                  <div className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                    Do you store or look at my uploaded images or files?
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                    No. Our platform uses client-side JavaScript execution. Files you drop into the cropper, compressor, or PDF tools are processed locally inside your web browser and are destroyed when you close the tab.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
       ) : (
         /* Filtered Grid */
@@ -511,6 +590,8 @@ export default function HomePage() {
                 <Link
                   key={tool.slug}
                   href={`/tools/${tool.slug}`}
+                  title={`Open ${tool.name} free online tool`}
+                  aria-label={`Open ${tool.name}`}
                   className={`group p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 ${colorInfo.border} tool-card-glow transition flex flex-col justify-between`}
                 >
                   <div className="space-y-2.5">
@@ -531,7 +612,7 @@ export default function HomePage() {
                   </div>
 
                   <div className="flex items-center text-xs font-semibold text-blue-600 dark:text-blue-400 mt-4 group-hover:translate-x-1 transition">
-                    <span>Open tool</span>
+                    <span>Open {tool.shortName}</span>
                     <ArrowRight className="w-3.5 h-3.5 ml-1" />
                   </div>
                 </Link>

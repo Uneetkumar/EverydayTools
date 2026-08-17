@@ -18,6 +18,7 @@ import {
   UseCasesSection,
   TipsSection,
 } from "./ToolContentSections";
+import ShareToolWidget from "./ShareToolWidget";
 import {
   ShieldCheck,
   ArrowRight,
@@ -134,6 +135,8 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
 
         {/* Sidebar rail */}
         <aside className="lg:col-span-4 space-y-6">
+          <ShareToolWidget toolName={tool.name} toolSlug={tool.slug} category={tool.categoryName} />
+
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
             <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center justify-between">
               <span>More in {tool.categoryName}</span>

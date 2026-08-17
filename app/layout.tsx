@@ -127,10 +127,16 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full scroll-smooth`}
     >
       <head>
+        <meta charSet="utf-8" />
+        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta
           name="google-site-verification"
           content="a5hV-mzr0orDMWtjZapmRNjUCku4wH7UfUJhzymIQ9s"
         />
+        <meta name="rating" content="general" />
+        <meta name="distribution" content="global" />
+        <meta name="revisit-after" content="2 days" />
 
         {/* Warm up the ad origins so the first ad request is not paying for
             DNS and TLS on top of the fetch. */}

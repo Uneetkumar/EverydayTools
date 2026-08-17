@@ -39,6 +39,15 @@ const COLOR_PRESETS: PresetTheme[] = [
   { id: "dark", name: "Cyber Neon", fg: "#38bdf8", bg: "#090d16" },
 ];
 
+interface QrHistoryItem {
+  id: string;
+  payload: string;
+  tab: QrTab;
+  fgColor: string;
+  bgColor: string;
+  timestamp: number;
+}
+
 export default function QrCodeGenerator() {
   const [tab, setTab] = usePersistentState<QrTab>("qr_tab", "url");
 
@@ -67,6 +76,7 @@ export default function QrCodeGenerator() {
   const [level, setLevel] = usePersistentState<"L" | "M" | "Q" | "H">("qr_level", "H");
   const [frameBadge, setFrameBadge] = usePersistentState<boolean>("qr_frame_badge", true);
   const [centerIcon, setCenterIcon] = usePersistentState<string>("qr_center_icon", "none");
+  const [recentQrs, setRecentQrs] = usePersistentState<QrHistoryItem[]>("recent_qrs_history", []);
 
   const [copied, setCopied] = useState(false);
   const canvasContainerRef = useRef<HTMLDivElement>(null);
@@ -128,6 +138,18 @@ export default function QrCodeGenerator() {
     }
 
     const dataUrl = exportCanvas.toDataURL("image/png");
+
+    // Save to history (last 3 items)
+    const newQrItem: QrHistoryItem = {
+      id: String(Date.now()),
+      payload: getPayload(),
+      tab,
+      fgColor,
+      bgColor,
+      timestamp: Date.now(),
+    };
+    setRecentQrs((prev = []) => [newQrItem, ...prev.filter((q) => q.payload !== newQrItem.payload)].slice(0, 3));
+
     downloadDataUrl(dataUrl, `custom-qrcode-${Date.now()}.png`);
     confetti({ particleCount: 45, spread: 60, origin: { y: 0.85 } });
   };
@@ -493,6 +515,114 @@ export default function QrCodeGenerator() {
           </div>
         </div>
       </div>
+
+      {/* Recent QR Codes History (Last 3) */}
+      {recentQrs && recentQrs.length > 0 && (
+        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                Recent Generated QR Codes ({recentQrs.length}/3)
+              </span>
+              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+                Saved on device
+              </span>
+            </div>
+            <button
+              onClick={() => setRecentQrs([])}
+              className="text-[11px] font-semibold text-rose-500 hover:text-rose-700 hover:underline transition"
+            >
+              Clear History
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {recentQrs.map((item, idx) => (
+              <div
+                key={item.id || idx}
+                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 flex flex-col space-y-3 group hover:border-blue-500/50 transition shadow-xs"
+              >
+                {/* QR Preview */}
+                <div
+                  className="w-full h-36 rounded-xl p-3 flex items-center justify-center border shadow-xs"
+                  style={{ backgroundColor: item.bgColor }}
+                >
+                  <QRCodeCanvas
+                    value={item.payload}
+                    size={110}
+                    fgColor={item.fgColor}
+                    bgColor={item.bgColor}
+                    level="H"
+                    includeMargin={false}
+                  />
+                </div>
+
+                {/* Info */}
+                <div className="space-y-1 text-xs">
+                  <div className="font-semibold text-slate-900 dark:text-white truncate" title={item.payload}>
+                    {item.payload}
+                  </div>
+                  <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono">
+                    <span className="capitalize">{item.tab} QR</span>
+                    <span>
+                      {new Date(item.timestamp).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    onClick={() => {
+                      const c = document.createElement("canvas");
+                      c.width = 1024;
+                      c.height = 1024;
+                      const ctx = c.getContext("2d");
+                      if (ctx) {
+                        ctx.fillStyle = item.bgColor;
+                        ctx.fillRect(0, 0, 1024, 1024);
+                      }
+                      // Download
+                      const exportCanvas = document.createElement("canvas");
+                      exportCanvas.width = 1024;
+                      exportCanvas.height = 1024;
+                      const expCtx = exportCanvas.getContext("2d");
+                      if (expCtx) {
+                        expCtx.fillStyle = item.bgColor;
+                        expCtx.fillRect(0, 0, 1024, 1024);
+                      }
+                      downloadDataUrl(exportCanvas.toDataURL("image/png"), `qrcode-${item.id}.png`);
+                      confetti({ particleCount: 30, spread: 50, origin: { y: 0.85 } });
+                    }}
+                    className="flex items-center justify-center space-x-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-semibold transition shadow-xs"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      if (item.tab === "url") setUrl(item.payload);
+                      else setText(item.payload);
+                      setTab(item.tab);
+                      setFgColor(item.fgColor);
+                      setBgColor(item.bgColor);
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="flex items-center justify-center space-x-1.5 py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-semibold transition"
+                  >
+                    <QrCode className="w-3.5 h-3.5" />
+                    <span>Re-Edit</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

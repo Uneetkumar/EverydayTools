@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { downloadBlob, downloadDataUrl } from "@/lib/utils/download";
+import { usePersistentState } from "@/lib/hooks/usePersistentState";
 
 type AspectRatio = "free" | "1:1" | "16:9" | "4:3" | "9:16" | "3:2";
 type HandleType = "tl" | "tr" | "bl" | "br" | "move" | null;
@@ -27,6 +28,16 @@ interface CropBox {
   y: number;
   w: number;
   h: number;
+}
+
+export interface CropHistoryItem {
+  id: string;
+  dataUrl: string;
+  width: number;
+  height: number;
+  format: string;
+  timestamp: number;
+  fileName: string;
 }
 
 const MIN_SIZE = 30;
@@ -202,6 +213,7 @@ export default function CropImage() {
   const [cropBox, setCropBox] = useState<CropBox>({ x: 0, y: 0, w: 300, h: 300 });
   const [activeHandle, setActiveHandle] = useState<HandleType>(null);
   const [showNudgeControls, setShowNudgeControls] = useState<boolean>(false);
+  const [recentCrops, setRecentCrops] = usePersistentState<CropHistoryItem[]>("recent_crops_history", []);
 
   const imgRef = useRef<HTMLImageElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -569,6 +581,19 @@ export default function CropImage() {
     }
 
     const url = out.toDataURL(mimeType, quality);
+
+    // Save to recent crops history (keep last 3 items)
+    const newCropItem: CropHistoryItem = {
+      id: String(Date.now()),
+      dataUrl: url,
+      width: Math.round(cropBox.w),
+      height: Math.round(cropBox.h),
+      format: ext.toUpperCase(),
+      timestamp: Date.now(),
+      fileName: `${fileName}-cropped.${ext}`,
+    };
+    setRecentCrops((prev = []) => [newCropItem, ...prev.filter((c) => c.id !== newCropItem.id)].slice(0, 3));
+
     downloadDataUrl(url, `${fileName}-cropped.${ext}`);
     confetti({ particleCount: 45, spread: 60, origin: { y: 0.85 } });
   };
@@ -764,6 +789,88 @@ export default function CropImage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Cropped Images History (Last 3) */}
+      {recentCrops && recentCrops.length > 0 && (
+        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-xs">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                Recent Cropped Images ({recentCrops.length}/3)
+              </span>
+              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+                Saved on device
+              </span>
+            </div>
+            <button
+              onClick={() => setRecentCrops([])}
+              className="text-[11px] font-semibold text-rose-500 hover:text-rose-700 hover:underline transition"
+            >
+              Clear History
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {recentCrops.map((item, idx) => (
+              <div
+                key={item.id || idx}
+                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 flex flex-col space-y-3 group hover:border-blue-500/50 transition shadow-xs"
+              >
+                {/* Thumbnail */}
+                <div className="relative w-full h-36 rounded-xl overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+                  <img
+                    src={item.dataUrl}
+                    alt={`Cropped ${item.width}x${item.height}`}
+                    className="max-w-full max-h-full object-contain"
+                  />
+                  <span className="absolute top-2 right-2 px-2 py-0.5 rounded-md text-[10px] font-bold bg-black/70 text-white backdrop-blur-xs font-mono">
+                    {item.format}
+                  </span>
+                </div>
+
+                {/* Info */}
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">
+                    {item.width} × {item.height} px
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    {new Date(item.timestamp).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+
+                {/* Actions */}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    onClick={() => {
+                      downloadDataUrl(item.dataUrl, item.fileName);
+                      confetti({ particleCount: 30, spread: 50, origin: { y: 0.85 } });
+                    }}
+                    className="flex items-center justify-center space-x-1.5 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-semibold transition shadow-xs"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Download</span>
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setImageSrc(item.dataUrl);
+                      setFileName(item.fileName.replace(/\.[^/.]+$/, ""));
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="flex items-center justify-center space-x-1.5 py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-semibold transition"
+                  >
+                    <CropIcon className="w-3.5 h-3.5" />
+                    <span>Re-Crop</span>
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
