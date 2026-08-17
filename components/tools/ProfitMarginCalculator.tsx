@@ -1,16 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import ResultCard from "@/components/ResultCard";
 import { formatCurrency, formatNumber } from "@/lib/utils";
+import { usePersistentState } from "@/lib/hooks/usePersistentState";
 import { DollarSign, Percent, TrendingUp, Info } from "lucide-react";
 
 export default function ProfitMarginCalculator() {
-  const [calcMode, setCalcMode] = useState<"cost_revenue" | "cost_margin" | "cost_markup">("cost_revenue");
-  const [cost, setCost] = useState<string>("60");
-  const [revenue, setRevenue] = useState<string>("100");
-  const [targetMargin, setTargetMargin] = useState<string>("40");
-  const [targetMarkup, setTargetMarkup] = useState<string>("66.67");
+  const [calcMode, setCalcMode] = usePersistentState<"cost_revenue" | "cost_margin" | "cost_markup">("margin_mode", "cost_revenue");
+  const [cost, setCost] = usePersistentState<string>("margin_cost", "60");
+  const [revenue, setRevenue] = usePersistentState<string>("margin_revenue", "100");
+  const [targetMargin, setTargetMargin] = usePersistentState<string>("margin_target_margin", "40");
+  const [targetMarkup, setTargetMarkup] = usePersistentState<string>("margin_target_markup", "66.67");
 
   const numCost = parseFloat(cost) || 0;
 

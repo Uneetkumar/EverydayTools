@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { usePersistentState } from "@/lib/hooks/usePersistentState";
 import { Check, Copy, Download, Trash2, FileJson, AlertCircle, Sparkles, RefreshCw } from "lucide-react";
 import confetti from "canvas-confetti";
 
@@ -18,10 +19,11 @@ const SAMPLE_JSON = {
 };
 
 export default function JsonFormatter() {
-  const [inputJson, setInputJson] = useState<string>(
+  const [inputJson, setInputJson] = usePersistentState<string>(
+    "json_formatter_input",
     JSON.stringify(SAMPLE_JSON, null, 2)
   );
-  const [indentSize, setIndentSize] = useState<"2" | "4" | "tab">("2");
+  const [indentSize, setIndentSize] = usePersistentState<"2" | "4" | "tab">("json_formatter_indent", "2");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [stats, setStats] = useState<{ size: number; keys: number } | null>({

@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import ResultCard from "@/components/ResultCard";
 import { formatCurrency, formatNumber } from "@/lib/utils";
+import { usePersistentState } from "@/lib/hooks/usePersistentState";
 import { Receipt, Percent, Tag } from "lucide-react";
 
 export default function GstCalculator() {
-  const [mode, setMode] = useState<"exclusive" | "inclusive">("exclusive");
-  const [amount, setAmount] = useState<string>("1000");
-  const [rate, setRate] = useState<string>("18");
+  const [mode, setMode] = usePersistentState<"exclusive" | "inclusive">("gst_mode", "exclusive");
+  const [amount, setAmount] = usePersistentState<string>("gst_amount", "1000");
+  const [rate, setRate] = usePersistentState<string>("gst_rate", "18");
 
   const numAmount = parseFloat(amount) || 0;
   const numRate = parseFloat(rate) || 0;

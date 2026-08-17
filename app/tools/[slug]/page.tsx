@@ -85,10 +85,16 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <ImageToPdf />;
       case "pdf-to-word":
         return <PdfToWord />;
+      case "png-to-jpg":
+        return <PngToJpg initialMode="png_to_jpg" />;
+      case "jpg-to-png":
+        return <PngToJpg initialMode="jpg_to_png" />;
+      case "image-to-webp":
+        return <PngToJpg initialMode="img_to_webp" />;
+      case "webp-to-jpg":
+        return <PngToJpg initialMode="webp_to_jpg" />;
       case "watermark-remover":
         return <WatermarkRemover />;
-      case "png-to-jpg":
-        return <PngToJpg />;
       case "unlock-pdf":
         return <UnlockPdf />;
       case "crop-image":

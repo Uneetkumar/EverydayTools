@@ -2,16 +2,17 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import ResultCard from "@/components/ResultCard";
+import { usePersistentState } from "@/lib/hooks/usePersistentState";
 import { RefreshCw, Copy, Check, ShieldCheck, ShieldAlert, Sparkles } from "lucide-react";
 import confetti from "canvas-confetti";
 
 export default function PasswordGenerator() {
-  const [length, setLength] = useState<number>(16);
-  const [useUppercase, setUseUppercase] = useState<boolean>(true);
-  const [useLowercase, setUseLowercase] = useState<boolean>(true);
-  const [useNumbers, setUseNumbers] = useState<boolean>(true);
-  const [useSymbols, setUseSymbols] = useState<boolean>(true);
-  const [excludeSimilar, setExcludeSimilar] = useState<boolean>(false);
+  const [length, setLength] = usePersistentState<number>("pwd_length", 16);
+  const [useUppercase, setUseUppercase] = usePersistentState<boolean>("pwd_upper", true);
+  const [useLowercase, setUseLowercase] = usePersistentState<boolean>("pwd_lower", true);
+  const [useNumbers, setUseNumbers] = usePersistentState<boolean>("pwd_num", true);
+  const [useSymbols, setUseSymbols] = usePersistentState<boolean>("pwd_sym", true);
+  const [excludeSimilar, setExcludeSimilar] = usePersistentState<boolean>("pwd_ex_sim", false);
   const [password, setPassword] = useState<string>("");
   const [copied, setCopied] = useState<boolean>(false);
 

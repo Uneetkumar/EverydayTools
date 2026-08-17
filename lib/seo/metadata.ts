@@ -27,22 +27,28 @@ export const CONTENT_LAST_UPDATED = "2026-08-17T00:00:00.000Z";
 
 export function constructToolMetadata(tool: ToolDefinition): Metadata {
   const url = `${SITE_CONFIG.domain}/tools/${tool.slug}`;
+  const title = `${tool.metaTitle} | 100% Free for All`;
+  const description = `${tool.metaDescription} 100% free to use for everyone — zero signup, unlimited access, and complete browser privacy.`;
 
   return {
-    title: tool.metaTitle,
-    description: tool.metaDescription,
+    title,
+    description,
     keywords: [
       ...tool.keywords,
-      "free online tool",
+      "100% free online tool",
+      "free for all",
+      "free online utility",
       "no login required",
+      "no signup free tool",
+      "unlimited free use",
       "private browser utility",
     ],
     alternates: {
       canonical: url,
     },
     openGraph: {
-      title: `${tool.metaTitle} | ${SITE_CONFIG.name}`,
-      description: tool.metaDescription,
+      title: `${title} | ${SITE_CONFIG.name}`,
+      description,
       url,
       siteName: SITE_CONFIG.name,
       locale: "en_US",
@@ -50,8 +56,8 @@ export function constructToolMetadata(tool: ToolDefinition): Metadata {
     },
     twitter: {
       card: "summary_large_image",
-      title: tool.metaTitle,
-      description: tool.metaDescription,
+      title,
+      description,
       creator: SITE_CONFIG.twitterHandle,
     },
   };

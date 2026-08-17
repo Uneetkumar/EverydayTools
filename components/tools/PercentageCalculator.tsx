@@ -1,28 +1,29 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import ResultCard from "@/components/ResultCard";
 import { formatNumber } from "@/lib/utils";
+import { usePersistentState } from "@/lib/hooks/usePersistentState";
 import { Percent, ArrowRightLeft, Sparkles, RefreshCw } from "lucide-react";
 
 export default function PercentageCalculator() {
-  const [tab, setTab] = useState<"percentage_of" | "what_percent" | "change" | "difference">("percentage_of");
+  const [tab, setTab] = usePersistentState<"percentage_of" | "what_percent" | "change" | "difference">("pct_tab", "percentage_of");
 
   // Tab 1: What is X% of Y
-  const [x1, setX1] = useState<string>("15");
-  const [y1, setY1] = useState<string>("200");
+  const [x1, setX1] = usePersistentState<string>("pct_x1", "15");
+  const [y1, setY1] = usePersistentState<string>("pct_y1", "200");
 
   // Tab 2: X is what % of Y
-  const [x2, setX2] = useState<string>("30");
-  const [y2, setY2] = useState<string>("150");
+  const [x2, setX2] = usePersistentState<string>("pct_x2", "30");
+  const [y2, setY2] = usePersistentState<string>("pct_y2", "150");
 
   // Tab 3: Percent Change from X to Y
-  const [x3, setX3] = useState<string>("50");
-  const [y3, setY3] = useState<string>("75");
+  const [x3, setX3] = usePersistentState<string>("pct_x3", "50");
+  const [y3, setY3] = usePersistentState<string>("pct_y3", "75");
 
   // Tab 4: Percent Difference between X and Y
-  const [x4, setX4] = useState<string>("80");
-  const [y4, setY4] = useState<string>("100");
+  const [x4, setX4] = usePersistentState<string>("pct_x4", "80");
+  const [y4, setY4] = usePersistentState<string>("pct_y4", "100");
 
   // Calculations
   const numX1 = parseFloat(x1) || 0;

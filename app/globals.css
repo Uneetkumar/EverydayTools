@@ -36,6 +36,10 @@
 
 html {
   color-scheme: light;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 html.dark {
@@ -49,6 +53,14 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   transition: background-color 0.2s ease, color 0.2s ease;
+  overflow-x: hidden;
+  width: 100%;
+  min-height: 100%;
+}
+
+img, svg, video, canvas, audio, iframe, embed, object {
+  max-width: 100%;
+  height: auto;
 }
 
 html.dark body {
@@ -97,4 +109,21 @@ html.dark body {
 }
 .dark ::-webkit-scrollbar-thumb {
   background: #374151;
+}
+
+/* Google AdSense CMP Privacy Modal Mobile Containment */
+.fc-consent-root,
+.fc-dialog-container,
+.fc-dialog,
+div[class*="fc-"],
+div[class*="consent"] {
+  max-width: 100vw !important;
+  box-sizing: border-box !important;
+}
+
+.fc-dialog {
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  margin: 10px auto !important;
+  border-radius: 16px !important;
 }

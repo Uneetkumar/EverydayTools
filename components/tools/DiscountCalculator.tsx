@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import ResultCard from "@/components/ResultCard";
 import { formatCurrency, formatNumber } from "@/lib/utils";
+import { usePersistentState } from "@/lib/hooks/usePersistentState";
 import { Tag, Sparkles, ShoppingBag } from "lucide-react";
 
 export default function DiscountCalculator() {
-  const [originalPrice, setOriginalPrice] = useState<string>("80");
-  const [discountPercent, setDiscountPercent] = useState<string>("25");
-  const [extraCoupon, setExtraCoupon] = useState<string>("0");
+  const [originalPrice, setOriginalPrice] = usePersistentState<string>("discount_price", "80");
+  const [discountPercent, setDiscountPercent] = usePersistentState<string>("discount_pct", "25");
+  const [extraCoupon, setExtraCoupon] = usePersistentState<string>("discount_coupon", "0");
 
   const orig = parseFloat(originalPrice) || 0;
   const disc = parseFloat(discountPercent) || 0;

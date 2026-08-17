@@ -67,16 +67,22 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
         {/* Primary column */}
         <div className="lg:col-span-8 space-y-6">
           <header className="space-y-3 pb-1">
-            <div className="flex items-center space-x-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Link
                 href={`/categories/${tool.category}`}
                 className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
               >
                 {tool.categoryName}
               </Link>
+              <span className="flex items-center text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200/50 dark:border-amber-900/30">
+                100% Free for All
+              </span>
               <span className="flex items-center text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md">
                 <ShieldCheck className="w-3 h-3 mr-1" />
-                100% Client-Side Private
+                Client-Side Private
+              </span>
+              <span className="flex items-center text-[11px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40 px-2 py-0.5 rounded-md">
+                Auto-saved (3 days)
               </span>
             </div>
 

@@ -14,14 +14,25 @@ export default function FloatingToolsBackground() {
     if (!ctx) return;
 
     let animationFrameId: number;
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+    let width = 0;
+    let height = 0;
 
     const handleResize = () => {
-      if (!canvas) return;
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+      if (!canvas || !ctx) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+
+      canvas.width = Math.round(width * dpr);
+      canvas.height = Math.round(height * dpr);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+
+      ctx.setTransform(1, 0, 0, 1, 0, 0); // reset transform
+      ctx.scale(dpr, dpr);
     };
+
+    handleResize();
     window.addEventListener("resize", handleResize);
 
     // Subtle micro-particles restricted to the side margins (outer 25% on each side)
@@ -93,14 +104,14 @@ export default function FloatingToolsBackground() {
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 select-none">
-      {/* Soft Ambient Radial Gradient Blobs (very low opacity) */}
+      {/* Soft Ambient Radial Gradient Blobs */}
       <div className="absolute top-0 left-1/4 w-[600px] h-[400px] bg-gradient-to-br from-blue-500/5 via-indigo-500/5 to-transparent rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-1/4 w-[600px] h-[400px] bg-gradient-to-tl from-emerald-500/5 via-sky-500/5 to-transparent rounded-full blur-3xl" />
 
       {/* Subtle Dot Grid */}
       <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:32px_32px] opacity-20" />
 
-      {/* Subtle edge particles canvas */}
+      {/* Subtle edge particles canvas with DPR zoom scaling */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
     </div>
   );

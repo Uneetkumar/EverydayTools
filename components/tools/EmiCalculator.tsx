@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import ResultCard from "@/components/ResultCard";
 import { formatCurrency, formatNumber } from "@/lib/utils";
+import { usePersistentState } from "@/lib/hooks/usePersistentState";
 import { TrendingUp, DollarSign, Calendar, Percent } from "lucide-react";
 
 export default function EmiCalculator() {
-  const [loanAmount, setLoanAmount] = useState<string>("100000");
-  const [interestRate, setInterestRate] = useState<string>("8.5");
-  const [tenureYears, setTenureYears] = useState<string>("10");
+  const [loanAmount, setLoanAmount] = usePersistentState<string>("emi_loan_amount", "100000");
+  const [interestRate, setInterestRate] = usePersistentState<string>("emi_interest_rate", "8.5");
+  const [tenureYears, setTenureYears] = usePersistentState<string>("emi_tenure_years", "10");
 
   const P = parseFloat(loanAmount) || 0;
   const annualR = parseFloat(interestRate) || 0;

@@ -1809,6 +1809,150 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
       },
     ],
   },
+
+  "jpg-to-png": {
+    intro:
+      "Converting JPG photos to PNG is essential when you need uncompressed image fidelity, transparent layer readiness, or clean digital assets for graphic design and web publishing. Because JPEG uses lossy discrete cosine transform compression, re-saving a JPG repeatedly introduces compounding blur and compression artifacts. Our client-side JPG to PNG converter creates a crisp, 24-bit RGB PNG directly inside your browser memory without quality loss or server uploads.",
+    howTo: {
+      title: "How to convert JPG to PNG online",
+      steps: [
+        "Upload or drag-and-drop your JPG/JPEG image into the converter.",
+        "The tool instantly decodes the raw image bitmap into uncompressed pixel data.",
+        "Preview the converted PNG file size and resolution in real time.",
+        "Click Download PNG to save your lossless high-quality image immediately.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Graphic design & UI asset preparation",
+        body:
+          "Designers converting stock photos or client mockups to PNG ensure that subsequent edits in Figma, Photoshop, or Canva do not degrade from repeated JPEG compression cycles.",
+      },
+      {
+        title: "Website logo & icon conversion",
+        body:
+          "PNG provides sharp text rendering, high contrast edges, and zero pixel bleeding around logos, making it the preferred format for hero branding and UI elements.",
+      },
+      {
+        title: "Print & publishing preparation",
+        body:
+          "Converting high-resolution JPEG photography to PNG preserves pristine color profiles and crisp lines for desktop publishing and marketing collateral.",
+      },
+    ],
+    tips: [
+      "Converting JPG to PNG cannot restore detail lost during original JPEG compression, but it permanently stops future compression degradation.",
+      "PNG files have larger file sizes than JPGs because PNG uses lossless DEFLATE compression. If you need smaller web files, consider WebP.",
+      "Everything runs 100% locally in your browser with zero server latency and total privacy.",
+    ],
+    extraFaqs: [
+      {
+        question: "Does converting JPG to PNG make the background transparent?",
+        answer:
+          "No. Standard JPGs have opaque backgrounds (often white). To make it transparent after converting, you can remove the background in any image editor.",
+      },
+      {
+        question: "Is there any file size limit for JPG to PNG conversion?",
+        answer:
+          "Because processing happens entirely in your device's memory using HTML5 Canvas, you can convert large multi-megabyte photos instantly without server upload limits.",
+      },
+    ],
+  },
+
+  "image-to-webp": {
+    intro:
+      "WebP is Google's modern image format designed specifically for the web, delivering 25% to 80% smaller file sizes than comparable PNG and JPEG images while maintaining equivalent visual quality. Converting your website imagery to WebP drastically improves Google PageSpeed scores, lowers bandwidth consumption, and speeds up page load times on desktop and mobile devices. Our converter processes all images client-side with full quality control.",
+    howTo: {
+      title: "How to convert images to WebP format",
+      steps: [
+        "Select or drop any JPG, PNG, or GIF file into the upload zone.",
+        "Adjust the compression quality slider (recommended: 85% to 92% for optimal balance of size and visual clarity).",
+        "Compare the original versus converted file size savings in real time.",
+        "Click Download WebP to get your optimized lightweight image.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Core Web Vitals & SEO optimization",
+        body:
+          "Google search ranking algorithms heavily prioritize fast Largest Contentful Paint (LCP). Switching hero images to WebP frequently cuts load times in half.",
+      },
+      {
+        title: "E-commerce product catalog compression",
+        body:
+          "Online stores with thousands of product photos save gigabytes of CDN bandwidth and hosting costs by serving WebP images to mobile shoppers.",
+      },
+      {
+        title: "Blog & content publishing",
+        body:
+          "Article screenshots and infographics load instantly even on slow 4G/3G mobile networks when compressed into modern WebP.",
+      },
+    ],
+    tips: [
+      "A quality setting of 85% is visually indistinguishable from 100% for 99% of web users while cutting 60% of the byte weight.",
+      "WebP supports both lossy compression (like JPG) and lossless transparency (like PNG) in a single unified format.",
+      "All modern browsers (Chrome, Safari, Firefox, Edge, iOS Safari, Android) natively support WebP.",
+    ],
+    extraFaqs: [
+      {
+        question: "How much smaller is WebP compared to PNG?",
+        answer:
+          "WebP is typically 26% smaller than PNGs in lossless mode, and 25-34% smaller than comparable JPEGs at equivalent SSIM visual quality.",
+      },
+      {
+        question: "Are my uploaded images saved on a server?",
+        answer:
+          "No. All image encoding is performed strictly in your browser via the Canvas WebP encoder. No files are uploaded to any external server.",
+      },
+    ],
+  },
+
+  "webp-to-jpg": {
+    intro:
+      "While WebP is dominant on modern websites, many legacy desktop image editors, older operating systems, email clients, and printing services still require standard JPG or PNG files. Our WebP to JPG converter lets you effortlessly convert downloaded .webp images into universally compatible JPGs with adjustable quality and custom background color fill for transparent assets.",
+    howTo: {
+      title: "How to convert WebP to JPG online",
+      steps: [
+        "Upload your .webp image directly into the converter.",
+        "Choose your desired JPG quality setting (default 92% for crystal-clear fidelity).",
+        "Pick a background color fill if the source WebP contains transparent areas.",
+        "Click Download JPG to save a universally compatible image file.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Editing downloaded web images in desktop software",
+        body:
+          "Older versions of Adobe Photoshop, Microsoft Paint, Word, and Illustrator cannot open .webp files. Converting to JPG makes them immediately editable.",
+      },
+      {
+        title: "Email campaigns & newsletter templates",
+        body:
+          "Some older email clients (such as legacy Outlook) do not render WebP images. Converting to JPG guarantees 100% inbox compatibility.",
+      },
+      {
+        title: "Social media and photo print kiosks",
+        body:
+          "Certain social media tools and in-store automated photo print kiosks only accept .jpg or .png uploads.",
+      },
+    ],
+    tips: [
+      "If your WebP image has a transparent background, select white (#ffffff) or your brand color for clean background fill.",
+      "Use 92% or higher JPG quality to retain maximum sharpness.",
+      "Batch convert multiple files seamlessly with instant in-browser processing.",
+    ],
+    extraFaqs: [
+      {
+        question: "Why can't I open WebP files on my computer?",
+        answer:
+          "Older operating systems (such as Windows 7 or macOS High Sierra) lack native WebP codecs. Converting to JPG solves compatibility across all devices.",
+      },
+      {
+        question: "Does converting WebP to JPG reduce quality?",
+        answer:
+          "Our tool uses high-fidelity 92%+ JPEG encoding, ensuring visual degradation is virtually zero while creating a universally compatible file.",
+      },
+    ],
+  },
 };
 
 /** Returns the long-form content for a tool, if any has been written. */

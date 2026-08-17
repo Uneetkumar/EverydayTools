@@ -34,30 +34,34 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_CONFIG.domain),
   title: {
-    default: "EverydayTools - Fast, Free & Private Online Calculators and Utilities",
+    default: "EverydayTools - 100% Free Online Calculators, Converters & Developer Utilities",
     template: "%s | EverydayTools",
   },
   description:
-    "Free, fast, and privacy-focused online calculators, file converters, image compressors, PDF utilities, and developer tools. Run calculations instantly in your browser with zero latency.",
+    "100% Free online tools for everyone. Fast, private calculators, image format converters, PDF editors, and developer utilities with zero signups, no limits, and complete client-side privacy.",
   applicationName: "EverydayTools",
   authors: [{ name: "EverydayTools Team", url: SITE_CONFIG.domain }],
   creator: "EverydayTools",
   publisher: "EverydayTools",
   keywords: [
-    "free online tools",
-    "online calculators",
-    "image compressor to 50kb",
-    "pdf to word converter",
-    "percentage calculator",
-    "qr code generator",
-    "password generator",
+    "100% free online tools",
+    "free tools for all",
+    "free online calculators",
+    "free image converter",
+    "free pdf editor",
+    "free image compressor to 50kb",
+    "pdf to word converter free",
+    "percentage calculator free",
+    "qr code generator free",
+    "password generator free",
     "age calculator",
     "gst calculator",
     "loan emi calculator",
-    "json formatter",
-    "base64 encoder",
+    "json formatter online free",
+    "base64 encoder free",
     "uuid generator",
-    "jwt decoder",
+    "jwt decoder free",
+    "no login tools",
   ],
   icons: {
     icon: [
@@ -99,6 +103,9 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+  verification: {
+    google: "a5hV-mzr0orDMWtjZapmRNjUCku4wH7UfUJhzymIQ9s",
+  },
 };
 
 export default function RootLayout({
@@ -120,6 +127,11 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full scroll-smooth`}
     >
       <head>
+        <meta
+          name="google-site-verification"
+          content="a5hV-mzr0orDMWtjZapmRNjUCku4wH7UfUJhzymIQ9s"
+        />
+
         {/* Warm up the ad origins so the first ad request is not paying for
             DNS and TLS on top of the fetch. */}
         <link

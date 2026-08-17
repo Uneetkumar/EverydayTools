@@ -377,24 +377,87 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     isPopular: true,
   },
 
-  // 14. PNG to JPG & JPG to PNG
+  // 14. PNG to JPG Converter
   "png-to-jpg": {
     slug: "png-to-jpg",
-    name: "PNG to JPG & JPG to PNG Converter",
+    name: "PNG to JPG Converter",
     shortName: "PNG to JPG",
     category: "image-media",
     categoryName: "Image & Media",
-    description: "Convert PNG images to JPG with custom background colors, or convert JPG photos to PNG format losslessly.",
-    longDescription: "Instant format conversion between PNG, JPG, and WebP. Automatically fills transparent PNG backgrounds with clean white or custom colors when saving as JPG.",
+    description: "Convert PNG images to JPG with custom background fill for transparent areas and adjustable compression quality.",
+    longDescription: "Instant format conversion from PNG to JPG. Automatically fills transparent PNG backgrounds with clean white or custom colors when saving as JPG.",
     iconName: "Image",
-    metaTitle: "PNG to JPG & JPG to PNG Converter - Free Image Format Tool",
-    metaDescription: "Convert PNG to JPG with background fill, or convert JPG to PNG online. High quality, instant, and private.",
-    keywords: ["png to jpg", "jpg to png", "convert png to jpg", "image format converter"],
-    features: ["PNG to JPG conversion", "JPG to PNG conversion", "Custom background color for transparency", "Adjustable JPG quality"],
+    metaTitle: "PNG to JPG Converter Online - Free Image Format Tool",
+    metaDescription: "Convert PNG to JPG with custom background fill online. High quality, instant, and 100% private in browser.",
+    keywords: ["png to jpg", "convert png to jpg", "png to jpeg online", "image format converter"],
+    features: ["PNG to JPG conversion", "Custom background color for transparency", "Adjustable JPG quality slider", "Instant file size comparison"],
     faqs: [
       { question: "What happens to transparent backgrounds when converting PNG to JPG?", answer: "Because JPG does not support transparency, our tool fills transparent areas with clean white (or your chosen background color)." }
     ],
-    relatedToolSlugs: ["image-compressor", "crop-image", "watermark-remover"],
+    relatedToolSlugs: ["jpg-to-png", "image-to-webp", "image-compressor", "crop-image"],
+    isPopular: true,
+  },
+
+  // 14b. JPG to PNG Converter
+  "jpg-to-png": {
+    slug: "jpg-to-png",
+    name: "JPG to PNG Converter",
+    shortName: "JPG to PNG",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Convert JPG and JPEG photos into lossless PNG format with crisp quality and zero compression artifacts.",
+    longDescription: "Convert standard JPEG and JPG photos into uncompressed PNG images. Great for graphic design, logos, and high-fidelity editing.",
+    iconName: "Image",
+    metaTitle: "JPG to PNG Converter Online - Convert JPG to Lossless PNG",
+    metaDescription: "Convert JPG and JPEG to PNG online for free. Fast, lossless, and processed 100% locally in your browser.",
+    keywords: ["jpg to png", "convert jpg to png", "jpeg to png online", "lossless image converter"],
+    features: ["Lossless PNG export", "Fast client-side conversion", "Zero data upload", "High-fidelity color retention"],
+    faqs: [
+      { question: "Does converting JPG to PNG improve image quality?", answer: "It prevents further compression loss when you edit or save the file again, maintaining original pixel fidelity." }
+    ],
+    relatedToolSlugs: ["png-to-jpg", "image-to-webp", "crop-image", "image-compressor"],
+    isPopular: true,
+  },
+
+  // 14c. Image to WebP Converter
+  "image-to-webp": {
+    slug: "image-to-webp",
+    name: "Image to WebP Converter",
+    shortName: "Image to WebP",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Convert JPG and PNG images into modern Google WebP format to reduce file sizes by 30% to 80% while retaining quality.",
+    longDescription: "Speed up your website load times and save bandwidth by converting bulky images to modern, high-efficiency WebP format.",
+    iconName: "Image",
+    metaTitle: "Image to WebP Converter - Convert JPG & PNG to WebP Free",
+    metaDescription: "Convert PNG and JPG images to lightweight WebP format online. Reduce image file size by up to 80% with quality controls.",
+    keywords: ["image to webp", "png to webp", "jpg to webp", "convert to webp online"],
+    features: ["Convert PNG and JPG to WebP", "Up to 80% file size reduction", "Lossy & Lossless quality slider", "Faster website load times"],
+    faqs: [
+      { question: "What is WebP format?", answer: "WebP is a modern image format developed by Google that provides superior lossless and lossy compression for web images." }
+    ],
+    relatedToolSlugs: ["webp-to-jpg", "png-to-jpg", "image-compressor", "crop-image"],
+    isPopular: true,
+  },
+
+  // 14d. WebP to JPG Converter
+  "webp-to-jpg": {
+    slug: "webp-to-jpg",
+    name: "WebP to JPG / PNG Converter",
+    shortName: "WebP to JPG",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Convert WebP images into universally compatible JPG or PNG formats for easy sharing and opening on any device.",
+    longDescription: "Easily open and convert downloaded .webp images into standard JPG or PNG files that can be edited in Photoshop, Word, or shared anywhere.",
+    iconName: "Image",
+    metaTitle: "WebP to JPG & PNG Converter - Convert WebP Images Free",
+    metaDescription: "Convert WebP to JPG or PNG online. Universal compatibility for downloaded web images. Fast, free, and private.",
+    keywords: ["webp to jpg", "webp to png", "convert webp", "open webp image"],
+    features: ["Convert WebP to JPG & PNG", "Universal device compatibility", "Zero quality degradation", "Instant batch download"],
+    faqs: [
+      { question: "Why should I convert WebP to JPG?", answer: "Some older photo viewers and image editing apps do not natively support WebP files, while JPG works everywhere." }
+    ],
+    relatedToolSlugs: ["image-to-webp", "png-to-jpg", "jpg-to-png", "crop-image"],
     isPopular: true,
   },
 

@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
+import { usePersistentState } from "@/lib/hooks/usePersistentState";
 import { Copy, Check, Download, Trash2, FileText, Sparkles } from "lucide-react";
 import confetti from "canvas-confetti";
 
 export default function CaseConverter() {
-  const [text, setText] = useState<string>(
+  const [text, setText] = usePersistentState<string>(
+    "case_converter_text",
     "Everyday tools provide instant, client-side utility for students, engineers, and creators."
   );
   const [copied, setCopied] = useState(false);

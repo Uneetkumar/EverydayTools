@@ -1,11 +1,13 @@
 "use client";
 
 import React, { useState } from "react";
+import { usePersistentState } from "@/lib/hooks/usePersistentState";
 import { Copy, Check, Trash2, FileText, Sparkles } from "lucide-react";
 import confetti from "canvas-confetti";
 
 export default function WordCounter() {
-  const [text, setText] = useState<string>(
+  const [text, setText, resetText] = usePersistentState<string>(
+    "word_counter_text",
     "EverydayTools delivers fast, privacy-first online calculators, converters, and formatters directly to your browser. No signups, no latency, and zero data logging."
   );
   const [copied, setCopied] = useState<boolean>(false);
