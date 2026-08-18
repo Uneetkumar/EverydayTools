@@ -9,6 +9,7 @@ import {
   getPopularTools,
   ToolDefinition,
 } from "@/lib/tools/registry";
+import { searchTools } from "@/lib/tools/search";
 import AdSlot from "@/components/AdSlot";
 import {
   Search,
@@ -147,30 +148,16 @@ export default function HomePage() {
       return allTools.filter((t) => t.category === selectedCategory);
     }
 
-    return allTools.filter((tool) => {
-      const matchesCategory =
-        selectedCategory === "all" || tool.category === selectedCategory;
-      const matchesQuery =
-        tool.name.toLowerCase().includes(query) ||
-        tool.shortName.toLowerCase().includes(query) ||
-        tool.description.toLowerCase().includes(query) ||
-        tool.keywords.some((k) => k.toLowerCase().includes(query)) ||
-        tool.categoryName.toLowerCase().includes(query);
-
-      return matchesCategory && matchesQuery;
-    });
+    const matches = searchTools(allTools, query);
+    return selectedCategory === "all"
+      ? matches
+      : matches.filter((t) => t.category === selectedCategory);
   }, [allTools, searchQuery, selectedCategory]);
 
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
-    const q = searchQuery.toLowerCase().trim();
-    return allTools.filter(
-      (tool) =>
-        tool.name.toLowerCase().includes(q) ||
-        tool.shortName.toLowerCase().includes(q) ||
-        tool.description.toLowerCase().includes(q) ||
-        tool.keywords.some((k) => k.toLowerCase().includes(q))
-    ).slice(0, 7);
+    // Same ranked search as the grid, so the dropdown never disagrees with it.
+    return searchTools(allTools, searchQuery, 7);
   }, [allTools, searchQuery]);
 
   useEffect(() => {
@@ -224,7 +211,7 @@ export default function HomePage() {
       <section className="text-center max-w-4xl mx-auto space-y-5 pt-4">
         <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-50/90 dark:bg-blue-950/80 border border-blue-200/80 dark:border-blue-800/80 text-blue-700 dark:text-blue-300 text-xs font-semibold shadow-xs backdrop-blur-xs">
           <Sparkles className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
-          <span>22+ Everyday Utilities • 100% Client-Side Private • Zero Latency</span>
+          <span>{allTools.length}+ Everyday Utilities • 100% Client-Side Private • Zero Latency</span>
         </div>
 
         <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
@@ -246,7 +233,7 @@ export default function HomePage() {
               onFocus={() => {
                 if (searchQuery.trim().length > 0) setIsDropdownOpen(true);
               }}
-              placeholder="Search 22+ tools (e.g. crop image, compress, pdf to word, emi, json)..."
+              placeholder={`Search ${allTools.length} tools (e.g. crop image, compress, pdf to word, emi, json)...`}
               className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md text-sm text-slate-900 dark:text-white shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
             {searchQuery && (

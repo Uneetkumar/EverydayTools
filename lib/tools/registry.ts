@@ -793,6 +793,163 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     ],
     relatedToolSlugs: ["percentage-calculator", "profit-margin-calculator", "json-formatter"],
   },
+
+  // 32. Split PDF
+  "split-pdf": {
+    slug: "split-pdf",
+    name: "Split PDF & Extract Pages",
+    shortName: "Split PDF",
+    category: "pdf-docs",
+    categoryName: "PDF & Documents",
+    description: "Extract specific pages or page ranges from a PDF into a new document, entirely in your browser.",
+    longDescription: "Pull selected pages out of a PDF into a new file using simple range syntax like 1-3, 5, 8-10. Runs client-side with pdf-lib, so contracts and statements are never uploaded.",
+    iconName: "Scissors",
+    metaTitle: "Split PDF Online Free - Extract Pages from PDF",
+    metaDescription: "Split a PDF and extract any pages or ranges into a new file. Free, no signup, and processed entirely in your browser.",
+    keywords: ["split pdf", "extract pages from pdf", "pdf splitter", "separate pdf pages", "pdf page extractor"],
+    features: ["Range syntax like 1-3, 5, 8-10", "Live count of selected pages", "Lossless page copying", "Nothing is uploaded"],
+    faqs: [
+      { question: "Does splitting reduce quality?", answer: "No. Pages are copied across byte-for-byte, so text, vectors, and images are preserved exactly." }
+    ],
+    relatedToolSlugs: ["pdf-merge", "rotate-pdf", "pdf-to-jpg"],
+    isPopular: true,
+  },
+
+  // 33. PDF to JPG
+  "pdf-to-jpg": {
+    slug: "pdf-to-jpg",
+    name: "PDF to JPG & PNG Converter",
+    shortName: "PDF to JPG",
+    category: "pdf-docs",
+    categoryName: "PDF & Documents",
+    description: "Render every page of a PDF as a JPG or PNG image and download them individually or as a ZIP.",
+    longDescription: "Convert PDF pages into images at your chosen resolution using pdf.js. Download single pages or the whole document as a ZIP archive, with all rendering done inside your browser.",
+    iconName: "Image",
+    metaTitle: "PDF to JPG Converter Free - Convert PDF Pages to Images",
+    metaDescription: "Convert PDF pages to JPG or PNG images at up to 288 DPI. Download individually or as a ZIP. Free and fully client-side.",
+    keywords: ["pdf to jpg", "pdf to png", "convert pdf to image", "pdf page to image", "extract images from pdf"],
+    features: ["JPG or PNG output", "Selectable render resolution", "Batch ZIP download", "Rendered in your browser"],
+    faqs: [
+      { question: "What resolution should I choose?", answer: "2x (about 144 DPI) suits screen use. Choose 3x or 4x for printing, which produces larger files." }
+    ],
+    relatedToolSlugs: ["image-to-pdf", "split-pdf", "image-compressor"],
+    isPopular: true,
+  },
+
+  // 34. Rotate PDF
+  "rotate-pdf": {
+    slug: "rotate-pdf",
+    name: "Rotate PDF Pages",
+    shortName: "Rotate PDF",
+    category: "pdf-docs",
+    categoryName: "PDF & Documents",
+    description: "Rotate every page of a PDF by 90, 180, or 270 degrees and save the corrected document.",
+    longDescription: "Fix sideways or upside-down scans by rotating PDF pages. Rotation is added to any existing page rotation so already-landscape pages stay correct, and the file never leaves your browser.",
+    iconName: "RotateCw",
+    metaTitle: "Rotate PDF Online Free - Fix Sideways PDF Pages",
+    metaDescription: "Rotate PDF pages by 90, 180, or 270 degrees and download the fixed file. Free, private, and runs in your browser.",
+    keywords: ["rotate pdf", "turn pdf pages", "fix sideways pdf", "rotate pdf online free", "pdf orientation"],
+    features: ["90, 180 or 270 degree rotation", "Respects existing page rotation", "Lossless — no re-encoding", "Nothing is uploaded"],
+    faqs: [
+      { question: "Is the rotation permanent?", answer: "Yes. The rotation is written into the downloaded PDF, so every reader displays it the same way." }
+    ],
+    relatedToolSlugs: ["split-pdf", "pdf-merge", "add-page-numbers"],
+  },
+
+  // 35. Add Page Numbers to PDF
+  "add-page-numbers": {
+    slug: "add-page-numbers",
+    name: "Add Page Numbers to PDF",
+    shortName: "Add Page Numbers",
+    category: "pdf-docs",
+    categoryName: "PDF & Documents",
+    description: "Stamp sequential page numbers onto a PDF with a choice of position and starting number.",
+    longDescription: "Add clean page numbers to any PDF, choosing the corner they sit in and the number to start counting from. Useful for court filings, dissertations, and any document that must be paginated.",
+    iconName: "Hash",
+    metaTitle: "Add Page Numbers to PDF Free - Number PDF Pages",
+    metaDescription: "Add page numbers to a PDF online. Choose position and starting number. Free, no signup, processed in your browser.",
+    keywords: ["add page numbers to pdf", "number pdf pages", "pdf pagination", "insert page numbers pdf"],
+    features: ["Bottom centre, bottom right or top right", "Custom starting number", "Clean Helvetica numbering", "Nothing is uploaded"],
+    faqs: [
+      { question: "Can I start numbering from a page other than 1?", answer: "Yes. Set any starting number, which is useful when front matter is numbered separately." }
+    ],
+    relatedToolSlugs: ["pdf-merge", "split-pdf", "rotate-pdf"],
+  },
+
+  // 36. Image Resizer
+  "image-resizer": {
+    slug: "image-resizer",
+    name: "Image Resizer by Pixels & Percent",
+    shortName: "Image Resizer",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Resize any image to exact pixel dimensions or a percentage, with aspect ratio locking.",
+    longDescription: "Change an image's pixel dimensions precisely, with an optional aspect-ratio lock and high-quality resampling. Export as JPG, PNG, or WebP without uploading anything.",
+    iconName: "Scaling",
+    metaTitle: "Image Resizer Online Free - Resize Images by Pixel",
+    metaDescription: "Resize images to exact pixel dimensions or by percentage. Lock aspect ratio and export as JPG, PNG, or WebP. Free and private.",
+    keywords: ["image resizer", "resize image online", "change image dimensions", "resize photo pixels", "image size changer"],
+    features: ["Exact pixel width and height", "Aspect ratio lock", "25/50/75% quick presets", "JPG, PNG or WebP output"],
+    faqs: [
+      { question: "Does resizing lose quality?", answer: "Downscaling is essentially lossless to the eye. Enlarging cannot add detail that was never captured, so upscaled images look soft." }
+    ],
+    relatedToolSlugs: ["image-compressor", "crop-image", "png-to-jpg"],
+    isPopular: true,
+  },
+
+  // 37. Favicon Generator
+  "favicon-generator": {
+    slug: "favicon-generator",
+    name: "Favicon Generator from Image",
+    shortName: "Favicon Generator",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Turn a logo into a full set of favicon PNGs at every size browsers and phones request.",
+    longDescription: "Generate favicons at 16px through 512px from a single logo, including the 180px Apple touch icon, packaged as a ZIP with a ready-to-paste HTML snippet and web manifest.",
+    iconName: "Star",
+    metaTitle: "Favicon Generator Free - Create Favicons from Image",
+    metaDescription: "Generate favicon PNGs from any logo at 16 to 512 pixels, with Apple touch icon and manifest. Free, no signup, client-side.",
+    keywords: ["favicon generator", "create favicon", "favicon from image", "apple touch icon generator", "website icon generator"],
+    features: ["Nine sizes from 16px to 512px", "Apple touch icon at 180px", "ZIP with HTML snippet and manifest", "Transparent or solid background"],
+    faqs: [
+      { question: "What source image works best?", answer: "A square image of at least 512x512. Simple, high-contrast marks stay legible at 16px; detailed logos do not." }
+    ],
+    relatedToolSlugs: ["image-resizer", "png-to-jpg", "crop-image"],
+  },
+
+  // 38. Currency Converter
+  "currency-converter": {
+    slug: "currency-converter",
+    name: "Currency Converter",
+    shortName: "Currency Converter",
+    category: "calculators",
+    categoryName: "Calculators & Finance",
+    description: "Convert dollar to rupee, rupee to dollar, and between 160+ world currencies at live mid-market exchange rates.",
+    longDescription: "Convert dollars to rupees, euros to rupees, and between more than 160 world currencies using live mid-market exchange rates, with the reverse rate and the bank margin explained alongside.",
+    iconName: "ArrowRightLeft",
+    metaTitle: "Currency Converter - Live Exchange Rates",
+    metaDescription: "Convert dollar to rupee and 160+ other currencies at live mid-market rates. Reverse rate shown instantly. Free, no signup, updated daily.",
+    // Broad aliases so the on-site search matches how people actually type:
+    // "dollar", "rupee", "$", "₹", "exchange" all reach this tool.
+    keywords: [
+      "dollar to rupee", "rupee to dollar", "usd to inr", "inr to usd",
+      "dollar", "rupee", "usd", "inr", "$", "₹",
+      "currency converter", "currency exchange", "exchange rate",
+      "money converter", "forex rate", "live exchange rate",
+      "euro to rupee", "eur to inr", "euro", "eur", "€",
+      "pound to rupee", "gbp to inr", "pound", "gbp", "£",
+      "dirham to rupee", "aed to inr", "dirham", "aed",
+      "riyal to rupee", "sar to inr", "riyal", "sar",
+      "cad to inr", "aud to inr", "sgd to inr", "yen", "jpy",
+      "convert currency", "1 usd to inr", "dollar rate today",
+    ],
+    features: ["Live mid-market rates", "160+ currencies", "One-tap swap and reverse rate", "Popular pairs preset"],
+    faqs: [
+      { question: "Why is my bank's rate worse than this?", answer: "This shows the mid-market rate. Banks and cards add a margin of roughly 1-4%, plus any fixed transfer fee." }
+    ],
+    relatedToolSlugs: ["percentage-calculator", "gst-calculator", "discount-calculator"],
+    isPopular: true,
+  },
 };
 
 export function getAllTools(): ToolDefinition[] {

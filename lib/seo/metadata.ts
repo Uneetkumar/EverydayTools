@@ -41,7 +41,11 @@ export function constructToolMetadata(tool: ToolDefinition): Metadata {
   }
 
   return {
-    title,
+    // `absolute` opts out of the root layout's "%s | EverydayTools" template.
+    // Without it the suffix is added twice ("... | EverydayTools |
+    // EverydayTools"), which also pushed every title past the 60-char target
+    // the length logic above is trying to hit.
+    title: { absolute: title },
     description,
     keywords: [
       ...tool.keywords,
@@ -103,7 +107,7 @@ export function constructPageMetadata({
   }
 
   return {
-    title: optTitle,
+    title: { absolute: optTitle },
     description: optDesc,
     keywords: [
       ...keywords,

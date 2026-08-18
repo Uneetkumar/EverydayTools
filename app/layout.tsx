@@ -14,6 +14,10 @@ import {
   generateOrganizationJsonLd,
 } from "@/lib/seo/jsonld";
 import { ADSENSE_CLIENT } from "@/lib/ads/config";
+import { getAllTools } from "@/lib/tools/registry";
+
+// Derived so the marketing copy cannot drift from the registry.
+const TOOL_COUNT = getAllTools().length;
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -74,7 +78,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "EverydayTools - Fast, Free & Private Online Calculators and Utilities",
     description:
-      "28 free tools: image compressor, PDF to Word, QR generator, calculators and developer utilities. Everything runs in your browser — no upload, no signup.",
+      `${TOOL_COUNT} free tools: image compressor, PDF to Word, QR generator, calculators and developer utilities. Everything runs in your browser — no upload, no signup.`,
     url: SITE_CONFIG.domain,
     siteName: "EverydayTools",
     locale: "en_US",
@@ -86,7 +90,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "EverydayTools - Fast, Free & Private Online Calculators and Utilities",
     description:
-      "28 free browser tools: image compressor, PDF to Word, QR generator, calculators and developer utilities.",
+      `${TOOL_COUNT} free browser tools: image compressor, PDF to Word, QR generator, calculators and developer utilities.`,
     creator: SITE_CONFIG.twitterHandle,
   },
   alternates: {

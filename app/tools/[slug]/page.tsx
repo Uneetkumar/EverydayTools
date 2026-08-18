@@ -39,6 +39,15 @@ import PngToJpg from "@/components/tools/PngToJpg";
 import UnlockPdf from "@/components/tools/UnlockPdf";
 import CropImage from "@/components/tools/CropImage";
 
+// PDF & image workspace tools
+import SplitPdf from "@/components/tools/SplitPdf";
+import PdfToJpg from "@/components/tools/PdfToJpg";
+import RotatePdf from "@/components/tools/RotatePdf";
+import AddPageNumbers from "@/components/tools/AddPageNumbers";
+import ImageResizer from "@/components/tools/ImageResizer";
+import FaviconGenerator from "@/components/tools/FaviconGenerator";
+import CurrencyConverter from "@/components/tools/CurrencyConverter";
+
 interface ToolPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -99,6 +108,20 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <UnlockPdf />;
       case "crop-image":
         return <CropImage />;
+      case "split-pdf":
+        return <SplitPdf />;
+      case "pdf-to-jpg":
+        return <PdfToJpg />;
+      case "rotate-pdf":
+        return <RotatePdf />;
+      case "add-page-numbers":
+        return <AddPageNumbers />;
+      case "image-resizer":
+        return <ImageResizer />;
+      case "favicon-generator":
+        return <FaviconGenerator />;
+      case "currency-converter":
+        return <CurrencyConverter />;
       case "percentage-calculator":
         return <PercentageCalculator />;
       case "profit-margin-calculator":

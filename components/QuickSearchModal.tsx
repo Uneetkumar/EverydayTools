@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { searchTools } from "@/lib/tools/search";
 import { useRouter } from "next/navigation";
 import { getAllTools, ToolDefinition } from "@/lib/tools/registry";
 import { Search, X, Command, ArrowRight, Percent, TrendingUp, Type, Code, Clock, Calculator } from "lucide-react";
@@ -45,12 +46,7 @@ export default function QuickSearchModal({ isOpen, onClose }: QuickSearchModalPr
 
   const filteredTools = query.trim() === ""
     ? tools
-    : tools.filter((tool) =>
-        tool.name.toLowerCase().includes(query.toLowerCase()) ||
-        tool.description.toLowerCase().includes(query.toLowerCase()) ||
-        tool.keywords.some((k) => k.toLowerCase().includes(query.toLowerCase())) ||
-        tool.categoryName.toLowerCase().includes(query.toLowerCase())
-      );
+    : searchTools(tools, query);
 
   const handleSelect = (slug: string) => {
     router.push(`/tools/${slug}`);

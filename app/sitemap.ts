@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { getAllTools, getToolsByCategory, TOOL_CATEGORIES } from "@/lib/tools/registry";
+import { CURRENCY_PAIRS } from "@/lib/currency/pairs";
 import { SITE_CONFIG, CONTENT_LAST_UPDATED } from "@/lib/seo/metadata";
 
 export const dynamic = "force-static";
@@ -40,5 +41,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified,
   }));
 
-  return [...staticRoutes, ...categoryRoutes, ...toolRoutes];
+  const pairRoutes: MetadataRoute.Sitemap = CURRENCY_PAIRS.map((p) => ({
+    url: `${SITE_CONFIG.domain}/convert/${p.slug}`,
+    lastModified,
+  }));
+
+  return [...staticRoutes, ...categoryRoutes, ...toolRoutes, ...pairRoutes];
 }

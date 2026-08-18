@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { getAllTools } from "@/lib/tools/registry";
 
 // Required with `output: export` — the image is rendered once at build time.
 export const dynamic = "force-static";
@@ -46,7 +47,7 @@ export default function OpengraphImage() {
             marginBottom: 28,
           }}
         >
-          28 free tools that run in your browser
+          {getAllTools().length} free tools that run in your browser
         </div>
 
         <div

@@ -795,64 +795,71 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "watermark-remover": {
     intro:
-      "Watermarks in PDFs are usually a text or image object drawn on top of the page content, and when they are stored that way they can be identified and removed cleanly. This tool inspects the page's content stream in your browser and strips overlay objects matching the watermark, leaving the underlying text and images intact. Use it on documents you own or have permission to modify.",
+      "Removing a watermark from an image means reconstructing what was underneath it, and that information is genuinely gone — no tool can recover pixels the file never stored. What this eraser does is inpainting: you brush over the watermark and the surrounding pixels are blended inward to fill the gap. Over an even background such as sky, a wall, or paper the result is usually indistinguishable. Over busy detail it will look smudged, because there is nothing else to rebuild from. Everything runs on a canvas in your browser, so the image is never uploaded.",
     howTo: {
-      title: "How to remove a watermark from a PDF",
+      title: "How to remove a watermark from an image",
       steps: [
-        "Upload the PDF you have the right to edit.",
-        "Let the tool scan each page for overlay objects that look like watermarks — repeated text, diagonal stamps, or full-page transparent images.",
-        "Review the detected candidates and the preview before applying.",
-        "Apply the removal and download the cleaned PDF.",
+        "Upload the image you own or have permission to edit.",
+        "Set a brush size a little larger than the thickness of the watermark strokes — big enough to cover it, small enough not to eat surrounding detail.",
+        "Brush over the watermark. Each pass blends in colours sampled from just outside the brush, so short strokes over an even background work better than one large sweep.",
+        "Use Undo to step back a stroke, or Reset to return to the original image if a pass goes wrong.",
+        "Download the cleaned image as a PNG.",
       ],
     },
     useCases: [
       {
-        title: "Removing a draft stamp before publication",
+        title: "Erasing a camera timestamp",
         body:
-          "Documents circulated internally are often stamped 'DRAFT' or 'CONFIDENTIAL'. Once approved, the stamp needs to come off the final version.",
+          "Date stamps burned into the corner of an old photograph usually sit over sky, grass, or a plain surface, which is the ideal case for inpainting — the fill has consistent surrounding colour to draw from.",
       },
       {
-        title: "Cleaning up your own exported templates",
+        title: "Cleaning up your own exported images",
         body:
-          "Trial versions of design and PDF software stamp their output. If you have since licensed the software, removing the stamp from your own past exports saves regenerating them.",
+          "Trial versions of design software stamp their output. If you have since licensed the software, removing the stamp from your own past exports saves regenerating them.",
       },
       {
-        title: "Preparing documents for print",
+        title: "Removing a stray object or blemish",
         body:
-          "A screen watermark that is subtle on a monitor can be obtrusive in print. Removing it before sending to a printer avoids a wasted run.",
+          "The same brush works for anything small and unwanted — a power line against sky, a mark on a scanned document, a spot on a wall.",
       },
     ],
     tips: [
-      "Watermarks flattened into the page image cannot be removed without also removing the content beneath them — no tool can recover pixels that were never stored separately.",
-      "Always keep the original file. Removal rewrites the content stream and is not reversible.",
-      "Check every page after processing. Watermarks are sometimes applied inconsistently across a document.",
-      "Only remove watermarks from documents you own or are licensed to modify. Stripping a copyright notice from someone else's work is a legal matter, not a technical one.",
+      "Work in short strokes rather than one long drag. Each dab samples fresh surrounding colour, so several small passes blend better than one big one.",
+      "Match the brush to the watermark. A brush much larger than the mark destroys detail around it that did not need replacing.",
+      "Inpainting cannot invent texture. Over a face, patterned fabric, or dense foliage the filled area will read as a smudge no matter how carefully you brush.",
+      "Zoom your browser in before working on a small watermark — the brush maps to image pixels, so a larger view gives finer control.",
+      "Only remove watermarks from images you own or are licensed to modify.",
     ],
     extraFaqs: [
       {
         question: "Is it legal to remove a watermark?",
         answer:
-          "It depends entirely on the document. Removing a draft stamp from your own file, or a trial watermark from output you have since licensed, is ordinary document editing. Removing a copyright or ownership mark from work belonging to someone else, in order to use or redistribute it, generally is not — and in many jurisdictions removing rights-management information is a separate offence from the underlying infringement. Use this on documents you own or have permission to modify.",
+          "It depends entirely on the image. Removing a timestamp from your own photograph, or a trial-software stamp from output you have since licensed, is ordinary editing. Removing a photographer's or stock library's watermark in order to use or publish their work is copyright infringement, and in many jurisdictions stripping rights-management information is a separate offence on top of it. Use this on images you own or have permission to modify.",
       },
       {
-        question: "Why can't some watermarks be removed?",
+        question: "Why does the erased area look blurry or smudged?",
         answer:
-          "Because they are not overlays. If the page was flattened into a single image, or the watermark was composited into the content itself, the original pixels underneath no longer exist in the file. Anything claiming to remove those is reconstructing content, not recovering it.",
+          "Because inpainting reconstructs from surrounding pixels, and that is all the information available. Over an even background the reconstruction is convincing. Over detailed texture — hair, foliage, patterned fabric — there is no way to infer what the watermark covered, so the fill reads as a smooth patch. This is a limit of the technique, not a setting you can turn up.",
       },
       {
-        question: "Does this affect the rest of the document?",
+        question: "Can it remove a watermark covering the whole image?",
         answer:
-          "It should not. The tool targets the specific overlay objects it identifies and leaves other content untouched. Review the output before discarding the original, since content streams vary widely between PDF producers.",
+          "Not usefully. Large diagonal watermarks spanning the full frame overlap too much varied content, so brushing them out replaces most of the picture with blended colour. Tools claiming to do this cleanly are generating plausible content rather than recovering the original.",
       },
       {
-        question: "Is the file uploaded to a server?",
+        question: "Is my image uploaded to a server?",
         answer:
-          "No. Parsing and rewriting happen entirely in your browser. Nothing is transmitted, which matters given that watermarked documents are often confidential by definition.",
+          "No. The image is drawn to a canvas in your browser and every edit happens there. Nothing is transmitted, and the cleaned PNG is written straight to your downloads folder.",
       },
       {
-        question: "Can I remove a watermark from a scanned PDF?",
+        question: "Does it work on a phone or tablet?",
         answer:
-          "Generally no. A scan is a photograph of a page, so the watermark is part of the same image as the text. There is no separate object to remove.",
+          "Yes. The brush uses pointer events, so touch and stylus input work the same as a mouse, and the page will not scroll while you are brushing on the canvas.",
+      },
+      {
+        question: "Why is the download a PNG when I uploaded a JPEG?",
+        answer:
+          "PNG is lossless, so the edit is saved without adding a fresh round of JPEG compression artefacts on top of the ones already there. If you need a smaller file, run the result through an image compressor afterwards.",
       },
     ],
   },
@@ -1950,6 +1957,459 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
         question: "Does converting WebP to JPG reduce quality?",
         answer:
           "Our tool uses high-fidelity 92%+ JPEG encoding, ensuring visual degradation is virtually zero while creating a universally compatible file.",
+      },
+    ],
+  },
+
+  "split-pdf": {
+    intro:
+      "Splitting a PDF means copying the pages you want into a new document and leaving the rest behind. It is the fix for the everyday problem of needing to send one section of a long report, or file page 4 of a bank statement without disclosing the other eleven. This splitter copies pages losslessly with pdf-lib inside your browser, so the original document is never uploaded.",
+    howTo: {
+      title: "How to split a PDF and extract pages",
+      steps: [
+        "Upload the PDF. The page count appears once it has been read.",
+        "Type the pages you want using ranges and single numbers, comma separated — for example 1-3, 5, 8-10.",
+        "Check the count of selected pages shown underneath the field.",
+        "Extract and download. The new PDF contains only those pages, in ascending order.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Sending one section of a long document",
+        body:
+          "Rather than emailing a 90-page report so somebody can read chapter three, extract those pages. It is smaller, faster to open, and avoids circulating material that was not asked for.",
+      },
+      {
+        title: "Redacting by omission",
+        body:
+          "When a form asks for a single page of a statement, extracting that page is safer than sending the whole file. Pages you do not copy are not present in the output at all.",
+      },
+      {
+        title: "Breaking a scan into per-document files",
+        body:
+          "A batch scan often produces one PDF containing several separate documents. Splitting on the page boundaries turns it back into individually filed papers.",
+      },
+    ],
+    tips: [
+      "Ranges are inclusive at both ends: 1-3 gives you pages 1, 2 and 3.",
+      "Overlapping ranges are fine — each page is included once, so 1-5, 3-7 gives pages 1 to 7.",
+      "Pages always come out in ascending order. To reorder them, extract first and then use a merge tool.",
+      "Unlock a password-protected PDF before splitting; encrypted files cannot be read.",
+    ],
+    extraFaqs: [
+      {
+        question: "Does splitting reduce the quality of the pages?",
+        answer:
+          "No. Pages are copied as complete objects, so text stays as vector font data, images keep their original encoding, and nothing is re-compressed. A split page is byte-for-byte equivalent to the original.",
+      },
+      {
+        question: "Can I split one PDF into many separate files at once?",
+        answer:
+          "This tool produces one new PDF per extraction. To create several files, run the extraction once per range — for a three-way split that is three passes with different ranges.",
+      },
+      {
+        question: "Are my PDFs uploaded to a server?",
+        answer:
+          "No. The file is read into your browser and the new document is built locally with pdf-lib, then written straight to your downloads. Nothing is transmitted, which is why this is safe for contracts and financial records.",
+      },
+      {
+        question: "Why does my page range produce fewer pages than expected?",
+        answer:
+          "Ranges are clamped to the document. Asking for 1-20 in a 12-page PDF yields 12 pages. Page numbering here is the physical position in the file, which may differ from printed numbers if the document has unnumbered front matter.",
+      },
+      {
+        question: "Do bookmarks and form fields survive the split?",
+        answer:
+          "Page content transfers reliably. Document-level features such as bookmarks and interactive form fields may not, since they are stored outside the pages themselves. Flatten forms first if the filled values matter.",
+      },
+    ],
+  },
+
+  "pdf-to-jpg": {
+    intro:
+      "Converting PDF pages to images is what you need when something only accepts pictures — a social post, a slide, a forum, an upload form that rejects PDFs. Each page is rendered by pdf.js onto a canvas at whatever resolution you pick and encoded as JPG or PNG. Rendering happens in your browser, so the document is never uploaded.",
+    howTo: {
+      title: "How to convert a PDF to JPG",
+      steps: [
+        "Choose JPG for photographic pages or PNG for pages that are mostly text and line art.",
+        "Set the resolution. 2x is about 144 DPI and is right for screens; 3x or 4x suits printing.",
+        "Upload the PDF and wait while each page renders — larger documents take a moment per page.",
+        "Download a single page by clicking its thumbnail, or use the button to get everything as a ZIP.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Posting a page where PDFs are not accepted",
+        body:
+          "Most social platforms and forums accept images but not PDFs. Converting the page you want to show is the whole solution.",
+      },
+      {
+        title: "Dropping a page into a slide deck",
+        body:
+          "Pasting a rendered page into a presentation keeps its exact layout, which copying the text does not.",
+      },
+      {
+        title: "Creating thumbnails or previews",
+        body:
+          "Rendering the first page produces a cover image for a document library or a download listing.",
+      },
+    ],
+    tips: [
+      "JPG is smaller for pages containing photographs; PNG is sharper for text and diagrams and avoids compression halos.",
+      "Higher resolution multiplies file size quadratically — 4x is four times the pixels of 2x, not twice.",
+      "Rendered pages are images, so the text inside them is no longer selectable or searchable.",
+      "Very long documents at high resolution can use a lot of memory, since every page is held in the tab.",
+    ],
+    extraFaqs: [
+      {
+        question: "What resolution should I pick?",
+        answer:
+          "2x, roughly 144 DPI, is the sensible default for anything viewed on screen. Choose 3x or 4x when the image will be printed or zoomed into, and accept the larger file. 1x matches the PDF's own point size and is usually too soft.",
+      },
+      {
+        question: "Will the text still be selectable in the image?",
+        answer:
+          "No. Rendering converts the page to pixels, so text becomes part of the picture. If you need the text itself, use a PDF-to-Word converter to extract the text layer instead.",
+      },
+      {
+        question: "Why do my JPG pages have a white background?",
+        answer:
+          "JPEG has no alpha channel, so transparent regions must be filled with something and white is painted in first. Choose PNG if you need transparency preserved.",
+      },
+      {
+        question: "Is the PDF uploaded to convert it?",
+        answer:
+          "No. pdf.js renders each page to a canvas inside your browser and the images are encoded locally. Nothing is transmitted at any point.",
+      },
+      {
+        question: "How do I get all the pages in one download?",
+        answer:
+          "Use the ZIP button, which packages every rendered page into a single archive. A single-page document downloads directly as an image rather than a ZIP.",
+      },
+    ],
+  },
+
+  "rotate-pdf": {
+    intro:
+      "A scanner fed a page the wrong way round produces a PDF that everyone has to tilt their head to read. Rotating writes a corrected orientation into the file itself, so every reader and printer displays it the right way up. Rotation here is added to whatever the page already carries, which matters for documents that mix portrait and landscape pages.",
+    howTo: {
+      title: "How to rotate a PDF",
+      steps: [
+        "Upload the PDF you want to fix.",
+        "Choose 90 degrees for a page on its side, 180 for one that is upside down, or 270 for a 90-degree turn the other way.",
+        "Apply and download. The rotation is written into the new file.",
+        "Open the result to confirm before discarding the original.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Fixing a sideways scan",
+        body:
+          "Documents fed into a scanner in landscape come out rotated. A single 90-degree turn makes the file readable without anyone adjusting their viewer.",
+      },
+      {
+        title: "Correcting a phone photo turned into a PDF",
+        body:
+          "Photographs taken in portrait sometimes carry orientation metadata that survives into the PDF incorrectly. Rotating fixes the displayed result.",
+      },
+      {
+        title: "Preparing a document for printing",
+        body:
+          "Printers honour the rotation stored in the file. Fixing it before printing avoids a wasted run of sideways pages.",
+      },
+    ],
+    tips: [
+      "Rotation is lossless — it sets a flag on each page rather than re-rendering anything, so quality is untouched.",
+      "This tool rotates every page by the same amount. For a document where only some pages are wrong, split it, rotate the affected part, and merge back.",
+      "Rotation is cumulative: applying 90 degrees twice is the same as 180.",
+      "Keep the original until you have opened and checked the rotated copy.",
+    ],
+    extraFaqs: [
+      {
+        question: "Does rotating a PDF reduce its quality?",
+        answer:
+          "No. Rotation writes a value into each page's dictionary telling readers how to display it. No content is re-encoded, so text stays vector-sharp and images are untouched. File size is essentially unchanged.",
+      },
+      {
+        question: "Will the rotation stick in every PDF reader?",
+        answer:
+          "Yes. The rotation is stored in the file rather than being a temporary view setting, so Acrobat, Preview, Chrome, and printers all honour it.",
+      },
+      {
+        question: "Can I rotate only some pages?",
+        answer:
+          "Not in a single pass — this applies one rotation to the whole document. For mixed documents, extract the misoriented pages with the split tool, rotate those, then merge everything back in order.",
+      },
+      {
+        question: "What is the difference between 90 and 270 degrees?",
+        answer:
+          "Both turn the page onto its side, in opposite directions. If 90 leaves the text running bottom-to-top, 270 is the one you want. It is quicker to try one and look than to reason about it.",
+      },
+      {
+        question: "Is my file uploaded?",
+        answer:
+          "No. The PDF is read and rewritten in your browser with pdf-lib, and nothing is transmitted.",
+      },
+    ],
+  },
+
+  "add-page-numbers": {
+    intro:
+      "Plenty of documents must be paginated before they can be filed — court submissions, dissertations, tender responses, contracts referenced by page. Adding numbers by hand in a word processor means re-exporting the whole PDF; stamping them directly onto the existing file takes a second and changes nothing else about the document.",
+    howTo: {
+      title: "How to add page numbers to a PDF",
+      steps: [
+        "Upload the PDF.",
+        "Pick where the numbers sit — bottom centre is the usual convention for printed documents.",
+        "Set the starting number if the first page should not be numbered 1.",
+        "Apply and download the numbered copy. The original is untouched.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Meeting a filing requirement",
+        body:
+          "Courts and tender processes frequently require every page numbered so that submissions can be referenced precisely. Unnumbered filings are routinely rejected.",
+      },
+      {
+        title: "Paginating a merged document",
+        body:
+          "Combining several PDFs produces a file whose original page numbers restart at each section. Stamping a continuous sequence over the top makes the whole document navigable.",
+      },
+      {
+        title: "Preparing a document for review",
+        body:
+          "Reviewers need to be able to say 'page 14, second paragraph'. Numbering is what makes that possible.",
+      },
+    ],
+    tips: [
+      "Bottom centre is the standard for printed documents; bottom right suits single-sided material read on screen.",
+      "Set the starting number above 1 when front matter is numbered separately in roman numerals.",
+      "Numbers are drawn on top of the existing content, so check they do not land over a footer or footnote.",
+      "Number after merging, not before, or you will end up with two competing sequences.",
+    ],
+    extraFaqs: [
+      {
+        question: "Can I start numbering from a page other than the first?",
+        answer:
+          "You can set the starting number to any value, which shifts the whole sequence — set it to 3 and the first page shows 3. Skipping the first page entirely, so that page one is unnumbered, is not currently supported.",
+      },
+      {
+        question: "Will the numbers overlap my existing content?",
+        answer:
+          "They are drawn on top, about 28 points in from the edge. That falls within the margin of most documents, but a page with an existing footer at the same position will collide. Check the output and choose a different corner if needed.",
+      },
+      {
+        question: "Can I change the font or size of the numbers?",
+        answer:
+          "Not currently — numbers are drawn in 10pt Helvetica in mid grey, which is unobtrusive and prints cleanly. Position and starting number are the available controls.",
+      },
+      {
+        question: "Does this change anything else in the document?",
+        answer:
+          "No. Existing text, images, and layout are untouched; a small text object is added to each page and the font is embedded so it renders identically everywhere.",
+      },
+      {
+        question: "Is the PDF uploaded?",
+        answer:
+          "No. The document is modified in your browser with pdf-lib and saved directly to your device.",
+      },
+    ],
+  },
+
+  "image-resizer": {
+    intro:
+      "Resizing changes an image's pixel dimensions — the single most effective way to cut file size, and a hard requirement for platforms that specify exact dimensions. Reducing a 4000px photograph to 800px removes 96% of its pixels and usually looks identical at display size. This resizer uses the browser's high-quality canvas resampling, so nothing is uploaded.",
+    howTo: {
+      title: "How to resize an image",
+      steps: [
+        "Upload the image. Its original dimensions are shown so you know what you are starting from.",
+        "Enter a target width or height. With the ratio lock on, the other dimension follows automatically.",
+        "Or use a quick preset — 25%, 50%, and 75% of the original.",
+        "Pick an output format and quality, then download. The filename records the new dimensions.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Meeting an exact size requirement",
+        body:
+          "Application portals and print services often specify precise pixel dimensions. Typing the numbers directly is faster and more reliable than dragging a crop handle.",
+      },
+      {
+        title: "Cutting page weight on a website",
+        body:
+          "Serving a 4000px image in an 800px slot wastes most of the bytes downloaded. Resizing to the display size is the biggest single win available for Largest Contentful Paint.",
+      },
+      {
+        title: "Preparing images for email or chat",
+        body:
+          "Halving both dimensions removes three-quarters of the pixels, which usually brings an oversized photo comfortably under an attachment limit.",
+      },
+    ],
+    tips: [
+      "Keep the ratio lock on unless you specifically want to distort the image — unlocking it stretches the picture.",
+      "Downscaling is effectively lossless to the eye. Upscaling cannot add detail that was never captured, so enlarged images look soft no matter the setting.",
+      "Resize before compressing. Fewer pixels means the compressor has far less work to do for the same visual result.",
+      "WebP gives noticeably smaller files than JPG at the same quality and is supported by every current browser.",
+    ],
+    extraFaqs: [
+      {
+        question: "Does resizing reduce image quality?",
+        answer:
+          "Making an image smaller discards pixels but looks essentially identical at the new size, because there is more detail than the display can show. Making it larger is different — the extra pixels are interpolated from neighbours, so the result is softer than a photograph genuinely captured at that size.",
+      },
+      {
+        question: "How do I resize without stretching the image?",
+        answer:
+          "Leave the aspect ratio lock enabled. Setting a width then updates the height proportionally. Unlocking it lets you set both independently, which distorts the picture — occasionally useful, usually not what you want.",
+      },
+      {
+        question: "What is the difference between resizing and cropping?",
+        answer:
+          "Resizing keeps the whole image and changes its dimensions. Cropping keeps part of the image at original quality and throws the rest away. To hit an exact size with a different aspect ratio, crop to the right shape first, then resize.",
+      },
+      {
+        question: "Which output format should I choose?",
+        answer:
+          "JPG for photographs, PNG for screenshots, logos, or anything needing transparency, WebP when you want the smallest file and transparency together. Note that exporting to JPG fills transparent areas with white, since JPEG has no alpha channel.",
+      },
+      {
+        question: "Is my image uploaded?",
+        answer:
+          "No. The file is read into a canvas in your browser, resampled locally, and written straight to your downloads. Nothing is transmitted.",
+      },
+    ],
+  },
+
+  "favicon-generator": {
+    intro:
+      "A favicon is the small icon in a browser tab, a bookmark list, and a phone home screen — and modern platforms request it at a surprising number of sizes. Rather than exporting each one by hand, this generator renders your logo at every size browsers actually ask for and packages them as a ZIP with a ready-to-paste HTML snippet. Everything is drawn on a canvas in your browser.",
+    howTo: {
+      title: "How to generate a favicon",
+      steps: [
+        "Upload a square logo. At least 512×512 gives the best result at every output size.",
+        "Choose a background — transparent for PNG-style logos, or a solid colour if your mark needs one behind it.",
+        "Review the previews. Pay particular attention to 16px, which is what most people actually see.",
+        "Download the ZIP and drop the files at the root of your site, then paste the snippet from README.txt into your <head>.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Launching a new site",
+        body:
+          "A missing favicon leaves a blank page icon in the tab, which reads as unfinished. It is a five-minute job that noticeably affects how polished a site feels.",
+      },
+      {
+        title: "Supporting phone home screens",
+        body:
+          "The 180px Apple touch icon is what appears when someone adds your site to an iPhone home screen. Without it, iOS renders a screenshot of the page instead.",
+      },
+      {
+        title: "Refreshing icons after a rebrand",
+        body:
+          "New logo, new icon set. Regenerating every size from the new mark takes seconds and keeps the sizes consistent.",
+      },
+    ],
+    tips: [
+      "Simple, high-contrast marks survive being shown at 16 pixels. Detailed logos with fine text turn to mush — consider a simplified variant for the icon.",
+      "Non-square sources are fitted inside the square and centred rather than stretched, so a wide logo leaves space at top and bottom.",
+      "Transparent backgrounds adapt to light and dark browser themes; a solid background will not.",
+      "Browsers cache favicons aggressively. A hard refresh, or a fresh profile, is often needed to see a change.",
+    ],
+    extraFaqs: [
+      {
+        question: "Which favicon sizes do I actually need?",
+        answer:
+          "16 and 32 cover browser tabs and bookmarks, 180 is the Apple touch icon for iOS home screens, and 192 and 512 are used by Android and the web app manifest. The remaining sizes cover older platforms and high-density displays. The ZIP includes all of them, so you can drop in the full set and stop thinking about it.",
+      },
+      {
+        question: "Do I need an .ico file?",
+        answer:
+          "Not any more for practical purposes. Every current browser accepts PNG favicons, which is why this generator produces PNGs. A multi-resolution .ico is only worth pursuing if you must support very old versions of Internet Explorer.",
+      },
+      {
+        question: "Why does my logo look unreadable at 16px?",
+        answer:
+          "Because 16×16 is 256 pixels in total — far too few for fine detail or text. Icons that work at that size are simple bold shapes, typically a single letter or symbol. Most brands use a simplified mark for the favicon rather than the full logo.",
+      },
+      {
+        question: "How do I install the favicons?",
+        answer:
+          "Copy the PNGs to the root of your site, then add the link tags from the included README.txt to your page head. The ZIP also contains a site.webmanifest referencing the 192 and 512 icons for Android and installable web apps.",
+      },
+      {
+        question: "Is my logo uploaded anywhere?",
+        answer:
+          "No. Every size is rendered on a canvas in your browser and zipped locally, so unreleased branding never leaves your machine.",
+      },
+    ],
+  },
+
+  "currency-converter": {
+    intro:
+      "Exchange rates move constantly, and the number you see quoted in the news is almost never the number you get. This converter uses the mid-market rate — the midpoint between what buyers and sellers are trading at, and the rate banks quote each other. It is the honest benchmark to plan against, but be clear that it is not what your bank will give you: retail providers add a margin on top, which is where most of their money on a transfer is made.",
+    howTo: {
+      title: "How to convert currency",
+      steps: [
+        "Enter the amount you want to convert.",
+        "Pick the currency you are converting from, then the one you want it in. USD to INR is the default.",
+        "Read the converted figure, along with the rate in both directions underneath.",
+        "Use the swap button to reverse the pair, or a popular-pair button to jump straight to a common conversion.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Checking what a transfer should cost",
+        body:
+          "Comparing your provider's quoted rate against the mid-market rate shows their margin immediately. On a large transfer, a 3% spread is often far more than the advertised 'zero fee' saved you.",
+      },
+      {
+        title: "Pricing international invoices",
+        body:
+          "Freelancers and exporters billing in dollars need to know what a figure lands as in rupees. Because the rate moves between invoicing and payment, quoting from the current mid-market rate with a small buffer is the usual approach.",
+      },
+      {
+        title: "Budgeting for travel or online purchases",
+        body:
+          "Card networks convert at close to mid-market and then add their own fee, so the mid-market figure is a reasonable floor for what a foreign purchase will cost you.",
+      },
+    ],
+    tips: [
+      "The mid-market rate is a benchmark, not an offer. Nobody sells you currency at it.",
+      "A provider advertising 'no fees' usually recovers the cost in a wider spread. Compare the total amount received, not the fee.",
+      "Rates from these providers update roughly daily, so this is right for planning and estimating rather than for timing a trade.",
+      "Airport and hotel exchange desks are consistently the worst rates available — often 8-12% off mid-market.",
+    ],
+    extraFaqs: [
+      {
+        question: "Why does my bank give me a worse rate than this?",
+        answer:
+          "Because this is the mid-market rate — the midpoint of the interbank market — and no retail provider sells at it. Banks and card networks add a margin, typically 1-4% for a bank transfer and 0.5-2% for a card, sometimes alongside a fixed fee. A rate 3% below mid-market on a transfer of 100,000 rupees costs you 3,000 rupees, which is usually far more than any headline fee.",
+      },
+      {
+        question: "How often are these rates updated?",
+        answer:
+          "The providers refresh roughly once a day, and the exact timestamp is shown beneath the result. That is appropriate for budgeting, invoicing, and comparing offers. It is not a live trading feed, so do not use it to time a transaction to the minute.",
+      },
+      {
+        question: "Does this tool work offline like the others?",
+        answer:
+          "No, and it is the only one here that does not. A converter has to ask somebody what today's rate is, so it makes a request to an exchange-rate provider. That request contains no personal data — it just fetches the public rate table — but it does mean the tool needs a working connection, unlike the PDF and image tools.",
+      },
+      {
+        question: "How many currencies are supported?",
+        answer:
+          "More than 160, covering every widely traded currency. The most searched ones are grouped at the top of each picker, with the full list underneath.",
+      },
+      {
+        question: "What is the difference between the mid-market and the buy/sell rate?",
+        answer:
+          "Currency trades with two prices: a bid (what buyers will pay) and an ask (what sellers want). The mid-market rate sits exactly between them. Providers quote you a rate on the unfavourable side of that midpoint, and the gap is their spread.",
+      },
+      {
+        question: "Can I use these figures for accounting or tax?",
+        answer:
+          "Check first. Tax authorities usually specify which rate to use — often a central bank reference rate on a particular date, or an annual average. The mid-market rate here may not match the one your jurisdiction requires, so confirm with your accountant before filing.",
       },
     ],
   },

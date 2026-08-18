@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Key, AlertCircle, CheckCircle, Clock, Copy, Check } from "lucide-react";
 
 const SAMPLE_JWT =
@@ -9,6 +9,22 @@ const SAMPLE_JWT =
 export default function JwtDecoder() {
   const [token, setToken] = useState<string>(SAMPLE_JWT);
   const [copied, setCopied] = useState(false);
+  // Expiry depends on the current time, which is not a pure value: reading
+  // Date.now() during render bakes the *build* time into the static HTML and
+  // then disagrees with the browser at hydration. Gate it on mount so the
+  // server and first client render always agree, then evaluate for real.
+  const [now, setNow] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Primed off the synchronous effect path so the initial read does not
+    // trigger a cascading render during mount.
+    const prime = setTimeout(() => setNow(Date.now()), 0);
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => {
+      clearTimeout(prime);
+      clearInterval(id);
+    };
+  }, []);
 
   let headerObj = null;
   let payloadObj = null;
@@ -33,7 +49,7 @@ export default function JwtDecoder() {
 
         if (payloadObj && payloadObj.exp) {
           const expTimeMs = payloadObj.exp * 1000;
-          isExpired = Date.now() > expTimeMs;
+          isExpired = now !== null && now > expTimeMs;
           expiryDateStr = new Date(expTimeMs).toUTCString();
         }
       } catch (err: unknown) {

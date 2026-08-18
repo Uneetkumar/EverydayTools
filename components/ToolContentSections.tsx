@@ -19,9 +19,12 @@ export function ToolIntro({ intro }: { intro: string }) {
 export function HowToSection({
   howTo,
   toolName,
+  needsNetwork = false,
 }: {
   howTo: ToolContent["howTo"];
   toolName: string;
+  /** Suppresses the "nothing is uploaded" line for tools that call an API. */
+  needsNetwork?: boolean;
 }) {
   return (
     <section
@@ -57,8 +60,9 @@ export function HowToSection({
       </ol>
 
       <p className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800/60 text-xs text-slate-500 dark:text-slate-500">
-        The {toolName} runs entirely in your browser — nothing you enter is
-        uploaded, stored, or logged.
+        {needsNetwork
+          ? `The ${toolName} fetches current rates from an exchange-rate provider. The request carries no personal data — only your amounts stay on your device.`
+          : `The ${toolName} runs entirely in your browser — nothing you enter is uploaded, stored, or logged.`}
       </p>
     </section>
   );

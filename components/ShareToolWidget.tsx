@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Share2, Check, Copy, MessageCircle, Code, Globe, Send } from "lucide-react";
 import confetti from "canvas-confetti";
+import { SITE_CONFIG } from "@/lib/seo/metadata";
 
 interface ShareToolWidgetProps {
   toolName: string;
@@ -14,9 +15,14 @@ export default function ShareToolWidget({ toolName, toolSlug }: ShareToolWidgetP
   const [copied, setCopied] = useState(false);
   const [embedCopied, setEmbedCopied] = useState(false);
   const [showEmbedModal, setShowEmbedModal] = useState(false);
+  const [toolUrl, setToolUrl] = useState(`${SITE_CONFIG.domain}/tools/${toolSlug}`);
 
-  const siteUrl = typeof window !== "undefined" ? window.location.origin : "https://everydaytools-s.web.app";
-  const toolUrl = `${siteUrl}/tools/${toolSlug}`;
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setToolUrl(`${window.location.origin}/tools/${toolSlug}`);
+    }
+  }, [toolSlug]);
+
   const shareText = `Check out this 100% free and private ${toolName} online:`;
 
   const copyToClipboard = async () => {

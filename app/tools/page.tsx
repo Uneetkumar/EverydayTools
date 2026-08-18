@@ -16,9 +16,9 @@ import AdSlot from "@/components/AdSlot";
 import { ArrowRight, ShieldCheck, Zap, Wallet } from "lucide-react";
 
 export const metadata: Metadata = constructPageMetadata({
-  title: "All Free Online Tools - Complete A-Z Directory",
+  title: "All Free Online Tools - Full Directory",
   description:
-    "Browse all 28 free online tools: PDF converters, image compressors, calculators, and developer utilities. Every tool runs in your browser with no signup and no upload.",
+    `Browse all ${getAllTools().length} free online tools: PDF converters, image compressors, calculators, and developer utilities. Every tool runs in your browser with no signup and no upload.`,
   path: "/tools",
   keywords: [
     "all online tools",
