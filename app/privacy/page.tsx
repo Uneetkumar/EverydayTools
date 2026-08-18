@@ -1,10 +1,11 @@
 import React from "react";
 import { constructPageMetadata } from "@/lib/seo/metadata";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import ClearLocalData from "@/components/ClearLocalData";
 
 export const metadata = constructPageMetadata({
-  title: "Privacy Policy - Zero Client-Side Data Storage",
-  description: "Read our comprehensive privacy policy. EverydayTools processes your calculations and text locally in your browser with zero data logging.",
+  title: "Privacy Policy - What We Store & What We Never See",
+  description: "Your files are processed in your browser and never uploaded. Read exactly what is saved on your own device, for how long, and how to erase it.",
   path: "/privacy",
 });
 
@@ -48,11 +49,50 @@ export default function PrivacyPage() {
           </p>
         </section>
 
-        <section className="space-y-2">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">4. Local Storage</h2>
+        <section className="space-y-3">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">
+            4. What is stored on your device
+          </h2>
           <p>
-            We use your browser&apos;s `localStorage` solely to remember your interface preferences (such as light vs. dark theme toggle). No personal identifiers are stored.
+            Some features save data in your own browser so that the site
+            remembers your work between visits. None of it is transmitted to us
+            or to anyone else &mdash; it is written to your device and stays
+            there. We cannot read any of it.
           </p>
+          <ul className="list-disc pl-5 space-y-1.5">
+            <li>
+              <strong>Interface preferences</strong> &mdash; theme choice and
+              per-tool settings such as your preferred QR margin or error
+              correction level. Kept until you clear them.
+            </li>
+            <li>
+              <strong>Recently used tools</strong> &mdash; the names of the last
+              four tools you opened, so they are quick to return to. Kept until
+              you clear them.
+            </li>
+            <li>
+              <strong>Recent output files</strong> &mdash; the last three files
+              each tool produced for you, stored in your browser&apos;s
+              IndexedDB so you can download them again without redoing the
+              work. <strong>These are deleted automatically after seven
+              days.</strong> Files over 25&nbsp;MB are never saved.
+            </li>
+          </ul>
+          <p>
+            That last item is worth being explicit about: if you crop an
+            identity document or split a bank statement, the resulting file sits
+            in this browser&apos;s storage for up to a week. It is never
+            uploaded, but it is on your disk. Every tool that saves files shows
+            a &ldquo;Your recent files&rdquo; panel with per-file delete, and
+            you can erase everything at once below.
+          </p>
+        </section>
+
+        <section className="space-y-2">
+          <h2 className="text-base font-bold text-slate-900 dark:text-white">
+            5. Erasing your local data
+          </h2>
+          <ClearLocalData />
         </section>
       </div>
     </div>

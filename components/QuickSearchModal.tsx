@@ -50,6 +50,9 @@ export default function QuickSearchModal({ isOpen, onClose }: QuickSearchModalPr
 
   const handleSelect = (slug: string) => {
     router.push(`/tools/${slug}`);
+    // Reset the query so reopening the palette starts clean rather than
+    // showing the previous search's results.
+    setQuery("");
     onClose();
   };
 

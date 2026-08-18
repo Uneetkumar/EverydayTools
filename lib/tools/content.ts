@@ -1122,64 +1122,60 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "pdf-compressor": {
     intro:
-      "Most oversized PDFs are large for one reason: they contain high-resolution images that are far bigger than the page needs. Compression re-encodes those images at a sensible resolution and quality, which commonly cuts a scanned document by 60–80% while leaving it perfectly readable. This compressor works in your browser, so the document is never uploaded to be processed.",
+      "This tool inspects a PDF rather than re-compressing it: it reports the page count, file size, title, and author so you can see what you are dealing with before deciding how to shrink it. It does not re-encode the images inside the file, because doing that properly needs image codecs that pdf-lib does not provide. What follows is the approach that actually works, using the tools available here.",
     howTo: {
-      title: "How to compress a PDF",
+      title: "How to inspect a PDF and reduce its size",
       steps: [
-        "Upload the PDF you want to shrink.",
-        "Choose a compression level. Higher compression means smaller files and softer images; lower keeps more detail.",
-        "Let it process — image-heavy documents take longer than text-only ones.",
-        "Check the reported size reduction, review a page or two, then download.",
+        "Upload the PDF to see its page count, size, and metadata.",
+        "Work out where the weight is: if the page count is low but the file is large, the pages are scans or contain high-resolution images.",
+        "Remove what you do not need. Use the Split PDF tool to extract only the pages you actually have to submit — this is usually the single biggest reduction available.",
+        "If the file is a scan and still too large, rescan the original at 150–200 DPI rather than 600. Reducing the source resolution beats any post-processing.",
+        "For a document you generated yourself, re-export it from the original application with image quality set lower.",
       ],
     },
     useCases: [
       {
-        title: "Getting under an email attachment limit",
+        title: "Diagnosing an oversized PDF before you act",
         body:
-          "Most mail servers reject attachments above 20–25 MB. A scanned contract frequently exceeds that and compresses comfortably underneath it.",
+          "A 30MB three-page PDF and a 30MB 200-page PDF need completely different fixes. Checking the page count first tells you which problem you have.",
       },
       {
-        title: "Meeting a portal's upload cap",
+        title: "Trimming a document to a submission limit",
         body:
-          "Government and university portals often cap uploads at 2 MB or 5 MB. Compression is usually the difference between a rejected and an accepted submission.",
+          "When a form asks for one page of a statement, extracting that page removes far more weight than any compression setting would.",
       },
       {
-        title: "Reducing storage and transfer cost",
+        title: "Checking document metadata before sharing",
         body:
-          "Across an archive of thousands of scanned documents, a 70% reduction is a material saving in both storage and sync time.",
+          "PDFs carry the title and author from whatever produced them, which sometimes reveals an internal filename or a colleague's name you would rather not send out.",
       },
     ],
     tips: [
-      "Text-only PDFs are already small and compress very little — if your file is large, images are the cause.",
-      "Scans at 600 DPI are usually unnecessary. 150–200 DPI is entirely legible on screen and in ordinary print.",
-      "Compression is lossy for images. Keep the original if you may need full resolution later.",
-      "If a PDF barely shrinks, it may contain embedded fonts or vector artwork rather than images, and there is little left to remove.",
+      "Page count against file size is the fastest diagnostic: more than about 1MB per page means the pages are images, not text.",
+      "Text-based PDFs exported from Word are already compact. If yours is large and text-only, the cause is usually embedded fonts or an oversized logo.",
+      "Rescanning at a lower DPI is more effective than any amount of post-processing, and it does not stack compression artefacts.",
+      "Splitting out the pages you need is lossless, unlike image re-compression.",
     ],
     extraFaqs: [
       {
-        question: "How much smaller will my PDF get?",
+        question: "Does this tool actually compress the PDF?",
         answer:
-          "It depends entirely on what is inside. Scanned documents and image-heavy presentations routinely drop 60–80%. A text-only PDF exported from Word is already efficiently encoded and may shrink by only a few percent, because there is nothing substantial to compress.",
+          "No, and it is worth being clear about that. It inspects the document and reports what is inside it. True PDF compression means decoding every embedded image, re-encoding it at lower quality, and rebuilding the file — which needs image codecs this browser-side library does not include. Anything claiming to do that purely with pdf-lib is re-saving your file and reporting the small difference as a saving.",
       },
       {
-        question: "Will compression make the text blurry?",
+        question: "Then how do I actually make my PDF smaller?",
         answer:
-          "Real text in a PDF is stored as vector font data and is not affected by compression at all — it stays sharp at any zoom. Text inside a scanned image is pixels, and will soften at aggressive settings. If your document is a scan, use a moderate level and check legibility.",
+          "In order of effectiveness: remove pages you do not need with the Split PDF tool, rescan the source at 150–200 DPI instead of 600, or re-export from the original application at lower image quality. For a scan that must keep every page at full fidelity, a desktop tool such as Ghostscript will do genuine image re-encoding.",
       },
       {
-        question: "Is my document uploaded to a server?",
+        question: "Why is my PDF so large in the first place?",
         answer:
-          "No. The PDF is parsed and re-written in your browser. Nothing is transmitted, which matters for the confidential contracts and financial records that most often need compressing.",
+          "Almost always embedded images. A page scanned at 600 DPI is roughly sixteen times the data of the same page at 150 DPI, with no visible benefit on screen or in ordinary print.",
       },
       {
-        question: "Can I compress the same PDF twice?",
+        question: "Is my document uploaded to inspect it?",
         answer:
-          "You can, but you should not expect much. The second pass has far less to remove and will degrade image quality further for little gain. If one pass is not enough, reduce the source resolution before creating the PDF instead.",
-      },
-      {
-        question: "Does compressing remove any content?",
-        answer:
-          "No pages, text, or images are removed. What changes is how images are encoded — at lower resolution and higher compression. Metadata and unused objects may also be discarded, which contributes a small additional saving.",
+          "No. The PDF is parsed in your browser with pdf-lib and nothing is transmitted.",
       },
     ],
   },

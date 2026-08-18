@@ -19,6 +19,9 @@ import {
   TipsSection,
 } from "./ToolContentSections";
 import ShareToolWidget from "./ShareToolWidget";
+import RecentTools from "./RecentTools";
+import RecentResults from "./RecentResults";
+import TrackToolVisit from "./TrackToolVisit";
 import { CURRENCY_PAIRS } from "@/lib/currency/pairs";
 import {
   ShieldCheck,
@@ -85,6 +88,8 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <TrackToolVisit slug={tool.slug} name={tool.name} />
+
       <Breadcrumbs
         items={[
           { name: "All Tools", url: "/tools" },
@@ -255,6 +260,10 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
 
         {/* Sidebar rail */}
         <aside className="lg:col-span-4 space-y-6">
+          <RecentResults toolSlug={tool.slug} />
+
+          <RecentTools />
+
           <ShareToolWidget toolName={tool.name} toolSlug={tool.slug} category={tool.categoryName} />
 
           <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">

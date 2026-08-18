@@ -1,6 +1,7 @@
 import { MetadataRoute } from "next";
 import { getAllTools, getToolsByCategory, TOOL_CATEGORIES } from "@/lib/tools/registry";
 import { CURRENCY_PAIRS } from "@/lib/currency/pairs";
+import { GUIDES } from "@/lib/guides/content";
 import { SITE_CONFIG, CONTENT_LAST_UPDATED } from "@/lib/seo/metadata";
 
 export const dynamic = "force-static";
@@ -22,6 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: SITE_CONFIG.domain, lastModified },
     { url: `${SITE_CONFIG.domain}/tools`, lastModified },
+    { url: `${SITE_CONFIG.domain}/guides`, lastModified },
     { url: `${SITE_CONFIG.domain}/about`, lastModified },
     { url: `${SITE_CONFIG.domain}/contact`, lastModified },
     { url: `${SITE_CONFIG.domain}/privacy`, lastModified },
@@ -46,5 +48,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified,
   }));
 
-  return [...staticRoutes, ...categoryRoutes, ...toolRoutes, ...pairRoutes];
+  const guideRoutes: MetadataRoute.Sitemap = GUIDES.map((g) => ({
+    url: `${SITE_CONFIG.domain}/guides/${g.slug}`,
+    // Guides carry their own revision date rather than the global constant.
+    lastModified: new Date(g.updated).toISOString(),
+  }));
+
+  return [
+    ...staticRoutes,
+    ...categoryRoutes,
+    ...toolRoutes,
+    ...pairRoutes,
+    ...guideRoutes,
+  ];
 }

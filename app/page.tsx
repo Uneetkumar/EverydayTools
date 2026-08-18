@@ -11,6 +11,7 @@ import {
 } from "@/lib/tools/registry";
 import { searchTools } from "@/lib/tools/search";
 import AdSlot from "@/components/AdSlot";
+import RecentTools from "@/components/RecentTools";
 import {
   Search,
   Percent,
@@ -198,6 +199,9 @@ export default function HomePage() {
       const targetTool = searchResults[selectedIndex] || searchResults[0];
       if (targetTool) {
         setIsDropdownOpen(false);
+        // Clear the query too, so returning to the homepage shows the full
+        // tool grid rather than the last search still applied.
+        setSearchQuery("");
         router.push(`/tools/${targetTool.slug}`);
       }
     } else if (e.key === "Escape") {
@@ -265,7 +269,10 @@ export default function HomePage() {
                   <Link
                     key={tool.slug}
                     href={`/tools/${tool.slug}`}
-                    onClick={() => setIsDropdownOpen(false)}
+                    onClick={() => {
+                      setIsDropdownOpen(false);
+                      setSearchQuery("");
+                    }}
                     className={`flex items-center justify-between p-3 rounded-xl transition group ${
                       isSelected
                         ? "bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800"
@@ -336,6 +343,13 @@ export default function HomePage() {
           })}
         </div>
       </section>
+
+      {/* Recently used — renders itself only when local history exists, and is
+          hidden while browsing a category or searching so it never competes
+          with the results the user asked for. */}
+      {selectedCategory === "all" && !searchQuery && (
+        <RecentTools variant="compact" />
+      )}
 
       {/* 2. Main Popular Tools Section (Above the Fold) */}
       {selectedCategory === "all" && !searchQuery && (

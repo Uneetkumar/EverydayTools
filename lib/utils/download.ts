@@ -1,13 +1,30 @@
+import { recordResult } from "@/lib/history/results";
+
 /**
  * Universal, high-reliability download utility.
  * Guarantees instant 1-click downloads across Chrome, Safari (Desktop & iOS), Firefox, Edge, and Android.
  */
 export function downloadBlob(blob: Blob, filename: string): void {
+  // Recording here rather than in each tool means every download is captured
+  // from one place, and a tool added later gets history for free.
+  void recordResult(blob, filename);
   const url = URL.createObjectURL(blob);
   downloadDataUrl(url, filename, true);
 }
 
 export function downloadDataUrl(url: string, filename: string, isBlobUrl = false): void {
+  // A data: URL means the caller built the bytes directly (canvas exports, for
+  // instance) and never produced a Blob, so convert one for the history. Blob
+  // URLs are skipped because downloadBlob already recorded them.
+  if (!isBlobUrl && url.startsWith("data:")) {
+    void fetch(url)
+      .then((r) => r.blob())
+      .then((blob) => recordResult(blob, filename))
+      .catch(() => {
+        /* history is best-effort */
+      });
+  }
+
   const link = document.createElement("a");
   link.href = url;
   link.download = filename;
