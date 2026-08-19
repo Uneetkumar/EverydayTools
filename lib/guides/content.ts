@@ -35,6 +35,11 @@ export interface Guide {
   updated: string;
 }
 
+/** Reverse lookup: which guides are relevant to a given tool page. */
+export function getGuidesForTool(slug: string): Guide[] {
+  return GUIDES.filter((g) => g.toolSlug === slug);
+}
+
 export const GUIDES: Guide[] = [
   {
     slug: "compress-image-to-50kb",
@@ -417,6 +422,148 @@ export const GUIDES: Guide[] = [
         question: "Is my document uploaded to a server?",
         answer:
           "Not with this converter — extraction runs in your browser using pdf.js and the .docx is generated locally. That is worth checking with any converter you use, since contracts and reports are exactly the documents you would not want sitting on someone else's server.",
+      },
+    ],
+  },
+  {
+    slug: "voice-typing-in-hindi",
+    title: "How to do voice typing in Hindi (and other Indian languages)",
+    metaTitle: "Hindi Voice Typing Online Free - Speak to Type",
+    metaDescription:
+      "Type Hindi, Tamil, Bengali and more by speaking, straight in your browser. No keyboard layout, no app install, no signup.",
+    keywords: [
+      "hindi voice typing", "voice typing in hindi online", "hindi speech to text",
+      "bolkar likhna", "tamil voice typing", "indian language voice typing",
+      "hindi typing without keyboard",
+    ],
+    toolSlug: "speech-to-text",
+    toolLabel: "Voice to Text tool",
+    updated: "2026-08-19",
+    intro: [
+      "Typing in Hindi, Tamil, or Bengali on a normal keyboard is genuinely awkward. You either install a language layout and relearn where every character sits, or you type phonetically in English and hope the transliteration guesses right. Most people give up and switch to English.",
+      "Speaking is the way around it. Browser speech recognition handles Indian languages well, and it needs no keyboard layout, no app, and no account — you pick a language, press a button, and talk.",
+    ],
+    steps: [
+      {
+        title: "Pick the right language, not just the right country",
+        body:
+          "Choose Hindi for Hindi, Tamil for Tamil, and so on. If you are speaking Indian-accented English, choose English (India) rather than English (US) — the difference in accuracy is large, because the models are trained on different accents.",
+      },
+      {
+        title: "Allow microphone access",
+        body:
+          "The browser asks once per site. If you decline by mistake, click the padlock or microphone icon in the address bar to grant it afterwards.",
+      },
+      {
+        title: "Speak in complete phrases",
+        body:
+          "Recognition uses surrounding words to choose between similar-sounding options, so a full sentence transcribes better than the same words said one at a time.",
+      },
+      {
+        title: "Say the punctuation",
+        body:
+          "Saying 'comma', 'full stop', and 'new paragraph' inserts them. Without this, you get one long unbroken sentence that takes longer to fix than it saved.",
+      },
+      {
+        title: "Edit the transcript, then copy it",
+        body:
+          "The text area is editable. Correct any proper nouns and technical terms, then copy or download. Expect to fix names — those are what recognition gets wrong most.",
+      },
+    ],
+    notes: [
+      "Firefox does not implement speech recognition at all. Use Chrome, Edge, or Safari.",
+      "A phone is often more accurate than a laptop, because the microphone is closer to your mouth.",
+      "Background noise costs more accuracy than accent does. A quiet room matters more than an expensive microphone.",
+      "Sessions end after a stretch of silence. Press start again — previously transcribed text is kept.",
+    ],
+    faqs: [
+      {
+        question: "Is Hindi voice typing accurate?",
+        answer:
+          "For clear speech in a quiet room, yes — comfortably usable for drafting messages, notes, and documents. It struggles with proper nouns, English technical terms mixed into Hindi, and heavy background noise. Treat it as a fast first draft you then edit, not a finished transcript.",
+      },
+      {
+        question: "Do I need to install anything?",
+        answer:
+          "No. It runs in the browser using the speech API already built into Chrome, Edge, and Safari. There is no app, no keyboard layout, and no account.",
+      },
+      {
+        question: "Is my voice private?",
+        answer:
+          "Not entirely, and this is worth knowing. Chrome and Edge send the audio to a cloud speech service to transcribe it; only Safari does it on-device. That is how the browser API works and no website using it can change that. Avoid dictating confidential material, and use Safari if on-device matters to you.",
+      },
+      {
+        question: "Which Indian languages are supported?",
+        answer:
+          "Hindi, Bengali, Tamil, Telugu, Marathi, and Gujarati, plus English (India) for Indian-accented English. Accuracy is generally best for Hindi, which has the most training data behind it.",
+      },
+    ],
+  },
+  {
+    slug: "convert-webp-to-jpg",
+    title: "How to convert WebP to JPG (and when not to)",
+    metaTitle: "Convert WebP to JPG Free - Fix Unsupported Images",
+    metaDescription:
+      "Turn WebP images into JPG or PNG so older software and upload forms accept them. Free, instant, and nothing is uploaded.",
+    keywords: [
+      "webp to jpg", "convert webp to jpg", "webp to png", "open webp file",
+      "webp not supported", "save webp as jpg",
+    ],
+    toolSlug: "webp-to-jpg",
+    toolLabel: "WebP to JPG Converter",
+    updated: "2026-08-19",
+    intro: [
+      "Saving an image from the web increasingly gives you a .webp file, and then something refuses it — an upload form, an older photo editor, a printing service, a government portal. WebP is a genuinely better format, but support outside browsers is still patchy.",
+      "Converting to JPG solves the compatibility problem immediately. It is worth understanding what you give up, though, because the conversion is not free: WebP is smaller at the same quality, so the JPG you get back will usually be a larger file.",
+    ],
+    steps: [
+      {
+        title: "Check whether you actually need to convert",
+        body:
+          "Every current browser displays WebP. If the image is for a website, keep it as WebP — it is smaller and looks the same. Convert only when a specific piece of software or a form rejects it.",
+      },
+      {
+        title: "Choose JPG or PNG deliberately",
+        body:
+          "JPG for photographs. PNG if the image has transparency or sharp text edges, because JPG has no alpha channel and will fill transparent areas with a solid colour.",
+      },
+      {
+        title: "Convert and check the file size",
+        body:
+          "Expect the JPG to be larger than the WebP was — often 25 to 35 percent larger at comparable quality. That is the cost of the older format, not a mistake.",
+      },
+      {
+        title: "Compress afterwards if there is a size limit",
+        body:
+          "If the destination caps file size, run the converted JPG through an image compressor rather than converting again.",
+      },
+    ],
+    notes: [
+      "Converting WebP to JPG then back to WebP loses quality twice. Always work from the original.",
+      "Animated WebP converts to a single still frame — JPG cannot hold animation.",
+      "Transparency is lost when converting to JPG. Use PNG if you need to keep it.",
+      "WebP is supported by every browser released in the last several years; the gaps are in desktop software and older upload systems.",
+    ],
+    faqs: [
+      {
+        question: "Why did my download come as a WebP?",
+        answer:
+          "Because the site serves WebP to browsers that support it, which is now all of them, and the browser saves what it received. It is not an error — the site is simply using a more efficient format.",
+      },
+      {
+        question: "Will converting to JPG lose quality?",
+        answer:
+          "Slightly, since both are lossy and re-encoding always discards a little. At a high quality setting the difference is invisible in photographs. What is more noticeable is file size going up, because JPG is a less efficient format.",
+      },
+      {
+        question: "Can I open a WebP without converting it?",
+        answer:
+          "Yes — drag it into any browser window. Recent versions of Windows Photos, macOS Preview, Photoshop, and GIMP also open WebP. Conversion is only needed for software or forms that specifically reject it.",
+      },
+      {
+        question: "Is my image uploaded during conversion?",
+        answer:
+          "No. The file is decoded and re-encoded on a canvas in your browser, so it never leaves your device.",
       },
     ],
   },

@@ -23,6 +23,7 @@ import RecentTools from "./RecentTools";
 import RecentResults from "./RecentResults";
 import TrackToolVisit from "./TrackToolVisit";
 import { CURRENCY_PAIRS } from "@/lib/currency/pairs";
+import { getGuidesForTool } from "@/lib/guides/content";
 import {
   ShieldCheck,
   Wifi,
@@ -62,7 +63,7 @@ const WIDE_LAYOUT_TOOLS = new Set([
  * would be false — and a privacy claim that is not true everywhere is worth
  * less than no claim at all.
  */
-const NETWORK_TOOLS = new Set(["currency-converter"]);
+const NETWORK_TOOLS = new Set(["currency-converter", "speech-to-text"]);
 
 const ICON_MAP: Record<string, React.ElementType> = {
   calculators: Calculator,
@@ -85,6 +86,7 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
   const allFaqs = [...tool.faqs, ...(content?.extraFaqs ?? [])];
   const isWide = WIDE_LAYOUT_TOOLS.has(tool.slug);
   const needsNetwork = NETWORK_TOOLS.has(tool.slug);
+  const relatedGuides = getGuidesForTool(tool.slug);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -216,6 +218,39 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
           {content && <UseCasesSection useCases={content.useCases} />}
 
           {content && <TipsSection tips={content.tips} />}
+
+          {relatedGuides.length > 0 && (
+            <section
+              aria-labelledby="guides-heading"
+              className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-sm"
+            >
+              <h2
+                id="guides-heading"
+                className="text-lg font-semibold text-slate-900 dark:text-white mb-1"
+              >
+                Guides that use this tool
+              </h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                Step-by-step walkthroughs for the situations this tool is
+                usually reached for.
+              </p>
+              <ul className="space-y-2">
+                {relatedGuides.map((g) => (
+                  <li key={g.slug}>
+                    <Link
+                      href={`/guides/${g.slug}`}
+                      className="flex items-center justify-between gap-2 p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 text-sm font-medium text-slate-700 dark:text-slate-200 transition group"
+                    >
+                      <span className="group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                        {g.title}
+                      </span>
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {allFaqs.length > 0 && <FaqSection faqs={allFaqs} />}
 

@@ -1058,6 +1058,69 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     ],
     relatedToolSlugs: ["json-formatter", "sample-file-generator", "text-diff-checker"],
   },
+
+  // 44. Notepad
+  "notepad": {
+    slug: "notepad",
+    name: "Online Notepad & Quick Notes",
+    shortName: "Notepad",
+    category: "text",
+    categoryName: "Text & Writing",
+    description: "A distraction-free notepad that saves automatically to your browser. No account, no sync, no waiting.",
+    longDescription: "Jot notes, drafts, and snippets in a clean editor that autosaves to this browser as you type. Keep multiple notes, search across them, and export any note as a text file.",
+    iconName: "FileText",
+    metaTitle: "Online Notepad - Free Notes That Autosave",
+    metaDescription: "A free online notepad that saves as you type, with multiple notes and text export. No signup, works offline, stored only in your browser.",
+    keywords: ["online notepad", "notepad online free", "quick notes", "text editor online", "notes app browser", "scratchpad online", "notepad no login"],
+    features: ["Autosaves as you type", "Multiple notes with search", "Download any note as .txt", "Stored only in your browser"],
+    faqs: [
+      { question: "Where are my notes stored?", answer: "In this browser's local storage. They are not uploaded, and they will not appear on your other devices." }
+    ],
+    relatedToolSlugs: ["word-counter", "case-converter", "text-diff-checker"],
+    isPopular: true,
+  },
+
+  // 45. Text to Speech
+  "text-to-speech": {
+    slug: "text-to-speech",
+    name: "Text to Speech Reader",
+    shortName: "Text to Speech",
+    category: "text",
+    categoryName: "Text & Writing",
+    description: "Read any text aloud using your device's own voices, with adjustable speed and pitch.",
+    longDescription: "Paste text and have it read aloud using the voices installed on your device. Adjust speed and pitch, pause and resume, and proofread by ear. Nothing is sent anywhere.",
+    iconName: "Volume2",
+    metaTitle: "Text to Speech Online Free - Read Text Aloud",
+    metaDescription: "Convert text to speech in your browser with your device's own voices. Adjustable speed and pitch, free, and nothing is uploaded.",
+    keywords: ["text to speech", "text to voice", "read text aloud", "tts online free", "speech synthesis", "text reader online", "voice reader"],
+    features: ["Uses your device's built-in voices", "Adjustable speed and pitch", "Pause, resume and stop", "Text never leaves your device"],
+    faqs: [
+      { question: "Why do I only see a few voices?", answer: "Voices come from your operating system. Install more in your system's speech or accessibility settings." }
+    ],
+    relatedToolSlugs: ["speech-to-text", "word-counter", "notepad"],
+    isPopular: true,
+  },
+
+  // 46. Speech to Text
+  "speech-to-text": {
+    slug: "speech-to-text",
+    name: "Voice to Text Dictation",
+    shortName: "Voice to Text",
+    category: "text",
+    categoryName: "Text & Writing",
+    description: "Dictate and get a live transcript you can edit, copy, or download. Supports Hindi, Tamil, and more.",
+    longDescription: "Speak and watch words appear as you talk, with support for English, Hindi, Bengali, Tamil, Telugu and more. Edit the transcript inline, then copy or download it. Note that browsers process speech in the cloud.",
+    iconName: "Mic",
+    metaTitle: "Voice to Text Online Free - Speech Dictation",
+    metaDescription: "Convert speech to text in your browser. Live transcript, 14 languages including Hindi and Tamil, editable and downloadable. Free.",
+    keywords: ["voice to text", "speech to text", "dictation online", "voice typing", "audio to text", "hindi voice typing", "speech recognition online"],
+    features: ["Live transcript as you speak", "14 languages including Hindi and Tamil", "Editable, copyable, downloadable", "No signup or install"],
+    faqs: [
+      { question: "Is my voice sent to a server?", answer: "In Chrome and Edge, yes — they use a cloud speech service. Safari transcribes on-device. This is a browser behaviour, not a site choice." }
+    ],
+    relatedToolSlugs: ["text-to-speech", "notepad", "word-counter"],
+    isPopular: true,
+  },
 };
 
 export function getAllTools(): ToolDefinition[] {

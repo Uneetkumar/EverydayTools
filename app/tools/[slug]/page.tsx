@@ -48,6 +48,9 @@ import ImageResizer from "@/components/tools/ImageResizer";
 import FaviconGenerator from "@/components/tools/FaviconGenerator";
 import CurrencyConverter from "@/components/tools/CurrencyConverter";
 import SampleFileGenerator from "@/components/tools/SampleFileGenerator";
+import NotePad from "@/components/tools/NotePad";
+import TextToSpeech from "@/components/tools/TextToSpeech";
+import SpeechToText from "@/components/tools/SpeechToText";
 
 interface ToolPageProps {
   params: Promise<{ slug: string }>;
@@ -123,6 +126,12 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <FaviconGenerator />;
       case "currency-converter":
         return <CurrencyConverter />;
+      case "notepad":
+        return <NotePad />;
+      case "text-to-speech":
+        return <TextToSpeech />;
+      case "speech-to-text":
+        return <SpeechToText />;
       case "sample-file-generator":
         return <SampleFileGenerator />;
       case "sample-image-generator":

@@ -2710,6 +2710,189 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
     ],
   },
 
+
+  "notepad": {
+    intro:
+      "Most note apps want an account before they will let you write a sentence. This one opens straight into an empty page and saves as you type, to this browser and nowhere else. It is the right tool for the note you need for the next ten minutes — a phone number, a draft reply, something pasted out of a call — rather than the one you need on three devices next year.",
+    howTo: {
+      title: "How to use the online notepad",
+      steps: [
+        "Click New note and start typing. There is nothing to set up.",
+        "Your text saves automatically a moment after you stop typing — the 'saved' marker confirms it.",
+        "Create as many notes as you like; the first line becomes the title in the list.",
+        "Filter across all notes once you have a few, and download any note as a .txt file.",
+      ],
+    },
+    useCases: [
+      {
+        title: "A scratchpad during a call",
+        body:
+          "Names, numbers, and action items need somewhere to go immediately. Opening a tab is faster than opening an app, and the note is still there when you come back.",
+      },
+      {
+        title: "Drafting before pasting elsewhere",
+        body:
+          "Writing a reply here rather than directly in a web form means a stray refresh does not lose the draft.",
+      },
+      {
+        title: "Holding text between machines-worth of copying",
+        body:
+          "Somewhere to park a block of text while you reformat it, strip it, or run it through another tool on this site.",
+      },
+    ],
+    tips: [
+      "Notes are per-browser. Opening the site in a different browser, or in private mode, shows a different set.",
+      "Clearing your browser's site data deletes them. Download anything you would be upset to lose.",
+      "The first non-empty line becomes the title, so starting with a short heading keeps the list readable.",
+      "It works offline once the page has loaded, since nothing about it needs the network.",
+    ],
+    extraFaqs: [
+      {
+        question: "Where exactly are my notes stored?",
+        answer:
+          "In this browser's localStorage, on this device. They are never uploaded, which is why there is no signup and why the tool works instantly. The trade-off is real: they will not sync to your phone, and clearing site data removes them.",
+      },
+      {
+        question: "Will I lose my notes?",
+        answer:
+          "They persist across refreshes and browser restarts. They are lost if you clear site data, use private browsing, or open the site in a different browser. For anything important, use the download button to keep a .txt copy.",
+      },
+      {
+        question: "Is there a size limit?",
+        answer:
+          "localStorage caps out at roughly 5MB per site, which is well over a million characters of notes. You would have to write a long book to reach it.",
+      },
+      {
+        question: "Can other people see my notes?",
+        answer:
+          "Not through this site — nothing is transmitted and there is no server holding them. Anyone with access to your unlocked device and this browser profile can read them, exactly as with any local file.",
+      },
+    ],
+  },
+
+  "text-to-speech": {
+    intro:
+      "Hearing your own writing read back is the fastest proofreading trick there is — the ear catches clumsy sentences the eye slides over. This reads any text aloud using the voices already installed on your device, which means it starts instantly, costs nothing, and sends your text nowhere.",
+    howTo: {
+      title: "How to convert text to speech",
+      steps: [
+        "Paste or type the text you want read aloud.",
+        "Pick a voice. The list comes from your operating system, so it differs between Windows, macOS, Android, and iOS.",
+        "Adjust speed and pitch if the default reading is too fast or too flat.",
+        "Press Play. You can pause and resume, or stop and restart after an edit.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Proofreading by ear",
+        body:
+          "A sentence that is hard to say is usually hard to read. Listening to a draft surfaces run-ons and repeated words far more reliably than re-reading it.",
+      },
+      {
+        title: "Listening instead of reading",
+        body:
+          "An article or a long email can be listened to while doing something else, at a speed you control.",
+      },
+      {
+        title: "Accessibility and language learning",
+        body:
+          "Hearing correct pronunciation alongside the written word helps both people with reading difficulties and anyone learning a new language.",
+      },
+    ],
+    tips: [
+      "Speed around 1.2–1.4x is comfortable for listening once you are used to it; 1.0 is better for proofreading.",
+      "Voices are provided by your operating system. If you only see one or two, more can be installed in your system's speech or accessibility settings.",
+      "Punctuation matters — commas and full stops become pauses, so badly punctuated text sounds wrong.",
+      "Very long text may be cut short by the browser. Read it in sections if it stops early.",
+    ],
+    extraFaqs: [
+      {
+        question: "Is my text sent to a server?",
+        answer:
+          "No. Speech synthesis uses voices installed on your own device through the browser's built-in API, so the text is spoken locally and never transmitted. This is the opposite of the voice-to-text tool, which does rely on a cloud service.",
+      },
+      {
+        question: "Why do the available voices differ from someone else's?",
+        answer:
+          "Because they come from the operating system rather than from this site. macOS, Windows, Android, and iOS each ship a different set, and browsers expose whatever is installed. Nothing here can add voices — that is a system setting.",
+      },
+      {
+        question: "Can I download the audio as an MP3?",
+        answer:
+          "Not from this tool. The browser's speech API plays audio directly and does not expose it as a file that can be captured. Producing a downloadable audio file requires a server-side service, which would mean sending your text away.",
+      },
+      {
+        question: "Why does it stop partway through long text?",
+        answer:
+          "Some browsers impose a limit on the length of a single utterance and cut off after a few thousand characters. Splitting the text into sections and playing them in turn is the reliable workaround.",
+      },
+    ],
+  },
+
+  "speech-to-text": {
+    intro:
+      "Speaking is roughly three times faster than typing, which makes dictation genuinely useful for first drafts, notes, and anything long. This turns speech into editable text live in the browser, with support for English, Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati and more. One important caveat is stated up front: unlike the rest of this site, it is not fully private.",
+    howTo: {
+      title: "How to convert voice to text",
+      steps: [
+        "Choose your language. Accuracy drops sharply if the setting does not match what you are speaking.",
+        "Press Start listening and allow microphone access when the browser asks.",
+        "Speak normally. Words appear as you talk, with the in-progress phrase shown until it settles.",
+        "Press Stop, then edit the transcript directly before copying or downloading it.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Drafting faster than you can type",
+        body:
+          "For a long email or a first draft, dictating and then editing is usually quicker than typing and editing, particularly on a phone.",
+      },
+      {
+        title: "Capturing thoughts while away from a keyboard",
+        body:
+          "Notes taken by speaking are notes that actually get taken. Editing afterwards is far easier than reconstructing them from memory.",
+      },
+      {
+        title: "Typing in Indian languages without a keyboard layout",
+        body:
+          "Dictating Hindi, Tamil, or Bengali avoids installing a keyboard layout or hunting for transliteration, which is where most people give up.",
+      },
+    ],
+    tips: [
+      "Say punctuation aloud — 'comma', 'full stop', 'new paragraph' — as most engines recognise these commands.",
+      "A quiet room and a close microphone matter more than an expensive one.",
+      "Speak in complete phrases rather than word by word; the engine uses surrounding context to choose between similar-sounding words.",
+      "Firefox does not implement speech recognition. Use Chrome, Edge, or Safari.",
+    ],
+    extraFaqs: [
+      {
+        question: "Is my voice sent to a server?",
+        answer:
+          "In Chrome and Edge, yes. Those browsers stream the captured audio to a cloud speech service to transcribe it, and neither this site nor any website using the standard API can change that. Safari performs recognition on-device. Because of this, dictating confidential material is not advisable, and this tool does not carry the client-side privacy badge the rest of the site uses.",
+      },
+      {
+        question: "Why does it stop listening on its own?",
+        answer:
+          "Browsers end a recognition session after a stretch of silence, and some cap the total length. Press Start again to continue — previously transcribed text is kept, so nothing is lost.",
+      },
+      {
+        question: "Which languages are supported?",
+        answer:
+          "Fourteen are offered here, including English in US, UK, and Indian variants, plus Hindi, Bengali, Tamil, Telugu, Marathi, Gujarati, Spanish, French, German, Arabic, and Japanese. Accuracy varies by language and accent, and the English variants matter — 'en-IN' recognises Indian English considerably better than 'en-US' does.",
+      },
+      {
+        question: "How accurate is it?",
+        answer:
+          "Good for clear speech in a quiet room — typically well above ninety percent for common languages. It degrades with background noise, strong accents, technical vocabulary, and proper nouns. Treat the output as a draft to edit rather than a finished transcript.",
+      },
+      {
+        question: "Does it work on a phone?",
+        answer:
+          "Yes, in Chrome on Android and Safari on iOS. Phone microphones are close to your mouth, which often makes accuracy better than on a laptop.",
+      },
+    ],
+  },
+
 };
 
 /** Returns the long-form content for a tool, if any has been written. */

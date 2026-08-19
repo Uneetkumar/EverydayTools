@@ -1,6 +1,6 @@
 import { ToolDefinition } from "@/lib/tools/registry";
 import { ToolContent } from "@/lib/tools/content";
-import { SITE_CONFIG } from "./metadata";
+import { SITE_CONFIG, CONTENT_LAST_UPDATED } from "./metadata";
 
 /**
  * NOTE ON RATINGS: we deliberately do not emit `aggregateRating`. Google's
@@ -32,9 +32,16 @@ export function generateToolJsonLd(tool: ToolDefinition, content?: ToolContent) 
     },
     featureList: tool.features,
     inLanguage: "en",
+    datePublished: CONTENT_LAST_UPDATED,
+    dateModified: CONTENT_LAST_UPDATED,
+    author: { "@id": `${SITE_CONFIG.domain}/#organization` },
     publisher: {
       "@id": `${SITE_CONFIG.domain}/#organization`,
     },
+    // Declares the tool page itself as the primary entity, which helps Google
+    // treat the page as being *about* the application rather than merely
+    // mentioning it.
+    mainEntityOfPage: { "@type": "WebPage", "@id": toolUrl },
   };
 
   const breadcrumbSchema = {

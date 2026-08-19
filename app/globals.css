@@ -127,3 +127,61 @@ div[class*="consent"] {
   margin: 10px auto !important;
   border-radius: 16px !important;
 }
+
+/* ---------------------------------------------------------------------------
+   Interaction affordances
+
+   Tailwind v4's Preflight sets `cursor: default` on <button>, reversing the
+   browser default of `pointer`. Every button on the site therefore showed an
+   arrow, which reads as "not clickable". These rules restore the expected
+   affordances globally so individual components do not each need cursor-*.
+--------------------------------------------------------------------------- */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  label:has(input[type="checkbox"]),
+  label:has(input[type="radio"]),
+  select:not(:disabled),
+  a[href] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled="true"],
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    cursor: not-allowed;
+  }
+
+  input[type="range"]:not(:disabled) {
+    cursor: grab;
+  }
+  input[type="range"]:active:not(:disabled) {
+    cursor: grabbing;
+  }
+  input[type="color"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  /* A visible keyboard focus ring. Preflight removes the UA outline, and
+     without a replacement the site is unusable by keyboard. */
+  :focus-visible {
+    outline: 2px solid var(--color-blue-500, #3b82f6);
+    outline-offset: 2px;
+    border-radius: 0.375rem;
+  }
+
+  /* Respect users who have asked for less motion. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
