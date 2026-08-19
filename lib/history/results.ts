@@ -15,7 +15,7 @@
  * stored and offers a one-click clear.
  */
 
-const DB_NAME = "everydaytools_history";
+const DB_NAME = "tabbench_history";
 const DB_VERSION = 1;
 const STORE = "results";
 

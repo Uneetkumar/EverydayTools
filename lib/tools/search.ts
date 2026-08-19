@@ -49,6 +49,12 @@ const ALIASES: Record<string, string[]> = {
   picture: ["image"],
   img: ["image"],
   jpeg: ["jpg"],
+  vid: ["video", "download"],
+  video: ["download", "stream", "media"],
+  mp4: ["video", "media"],
+  webm: ["video", "media"],
+  mov: ["video", "media"],
+  stream: ["video", "download"],
   // action shorthand
   shrink: ["compress", "reduce"],
   reduce: ["compress"],

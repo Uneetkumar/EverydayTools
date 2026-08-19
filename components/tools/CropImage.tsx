@@ -598,6 +598,74 @@ export default function CropImage() {
     confetti({ particleCount: 45, spread: 60, origin: { y: 0.85 } });
   };
 
+  const [nudgeStep, setNudgeStep] = useState<number>(10);
+
+  // Keyboard navigation support for arrow keys
+  useEffect(() => {
+    if (!imageSrc) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (["INPUT", "TEXTAREA", "SELECT"].includes((e.target as HTMLElement)?.tagName)) {
+        return;
+      }
+      const step = e.shiftKey ? 1 : nudgeStep;
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        nudge(0, -step);
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        nudge(0, step);
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        nudge(-step, 0);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        nudge(step, 0);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [imageSrc, nudgeStep, cropBox]);
+
+  const repeatTimerRef = useRef<{ timeoutId?: NodeJS.Timeout; intervalId?: NodeJS.Timeout } | null>(null);
+
+  const stopNudgeRepeat = useCallback(() => {
+    if (repeatTimerRef.current) {
+      if (repeatTimerRef.current.timeoutId) clearTimeout(repeatTimerRef.current.timeoutId);
+      if (repeatTimerRef.current.intervalId) clearInterval(repeatTimerRef.current.intervalId);
+      repeatTimerRef.current = null;
+    }
+  }, []);
+
+  const startNudgeRepeat = useCallback((dx: number, dy: number) => {
+    stopNudgeRepeat();
+    // 1. Immediate first step
+    nudge(dx, dy);
+
+    // 2. Short initial hold delay (180ms), then fast continuous repeat (35ms)
+    const timeoutId = setTimeout(() => {
+      const intervalId = setInterval(() => {
+        nudge(dx, dy);
+      }, 35);
+      if (repeatTimerRef.current) {
+        repeatTimerRef.current.intervalId = intervalId;
+      }
+    }, 180);
+
+    repeatTimerRef.current = { timeoutId };
+  }, [nudge, stopNudgeRepeat]);
+
+  // Clean up repeat timer on unmount and global pointer up
+  useEffect(() => {
+    const handleGlobalUp = () => stopNudgeRepeat();
+    window.addEventListener("pointerup", handleGlobalUp);
+    window.addEventListener("pointercancel", handleGlobalUp);
+    return () => {
+      stopNudgeRepeat();
+      window.removeEventListener("pointerup", handleGlobalUp);
+      window.removeEventListener("pointercancel", handleGlobalUp);
+    };
+  }, [stopNudgeRepeat]);
+
   return (
     <div className="space-y-6">
       {/* Upload Box */}
@@ -713,10 +781,10 @@ export default function CropImage() {
             </div>
           </div>
 
-          {/* Responsive Canvas Container with Viewport Fit */}
+          {/* Responsive Canvas Container */}
           <div
             ref={containerRef}
-            className="p-3 sm:p-4 rounded-3xl bg-slate-950 border border-slate-800 flex flex-col items-center justify-center select-none relative min-h-[320px] max-h-[68vh] overflow-hidden"
+            className="p-4 sm:p-6 rounded-3xl bg-slate-950 border border-slate-800 flex flex-col items-center justify-center select-none relative min-h-[340px]"
             style={{ touchAction: "none" }}
           >
             <canvas
@@ -725,67 +793,134 @@ export default function CropImage() {
               onPointerMove={handlePointerMove}
               onPointerUp={handlePointerUp}
               onPointerCancel={handlePointerUp}
-              className="max-w-full max-h-[55vh] w-auto h-auto rounded-xl shadow-2xl cursor-crosshair touch-none object-contain mx-auto"
+              className="max-w-full max-h-[60vh] w-auto h-auto rounded-xl shadow-2xl cursor-crosshair touch-none object-contain mx-auto"
               style={{ touchAction: "none" }}
             />
+          </div>
 
-            {/* Live Dimensions and Nudge Toggle */}
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 w-full px-2 text-[11px] font-mono text-slate-400">
-              <div>
-                Dimensions: <span className="text-white font-bold">{Math.round(cropBox.w)} × {Math.round(cropBox.h)} px</span>
+          {/* Bottom Status & Fine Position Controller Card */}
+          <div className="p-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex items-center space-x-3 text-slate-600 dark:text-slate-300">
+                <div>
+                  Dimensions:{" "}
+                  <span className="text-blue-600 dark:text-blue-400 font-bold font-mono text-sm">
+                    {Math.round(cropBox.w)} × {Math.round(cropBox.h)} px
+                  </span>
+                </div>
+                <div className="hidden sm:block text-slate-400 font-mono text-[11px]">
+                  Offset: X={Math.round(cropBox.x)} Y={Math.round(cropBox.y)}
+                </div>
               </div>
-              <div className="flex items-center space-x-1">
+
+              <div className="flex items-center space-x-2">
                 <button
                   onClick={() => setShowNudgeControls((p) => !p)}
-                  className="text-xs font-sans text-blue-400 hover:underline flex items-center space-x-1"
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-xl border flex items-center space-x-1.5 transition ${
+                    showNudgeControls
+                      ? "bg-blue-600 text-white border-blue-600 shadow-xs"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700"
+                  }`}
                 >
-                  <Move className="w-3 h-3" />
-                  <span>{showNudgeControls ? "Hide D-Pad" : "Fine Position D-Pad"}</span>
+                  <Move className="w-3.5 h-3.5" />
+                  <span>{showNudgeControls ? "Hide Position D-Pad" : "Position Nudge D-Pad"}</span>
                 </button>
               </div>
             </div>
 
-            {/* Fine Position D-Pad */}
+            {/* Expanded Fine Position D-Pad Panel */}
             {showNudgeControls && (
-              <div className="mt-2 p-3 rounded-2xl bg-slate-900/95 border border-slate-800 flex flex-col items-center space-y-1.5 animate-in fade-in zoom-in-95 z-20">
-                <div className="text-[10px] text-slate-400 font-semibold mb-1">
-                  10px Position Nudge:
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in fade-in duration-200 select-none">
+                {/* Step Size Selector */}
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs font-semibold text-slate-500">Step Size:</span>
+                  <div className="flex items-center space-x-1">
+                    {[1, 5, 10, 25].map((step) => (
+                      <button
+                        key={step}
+                        onClick={() => setNudgeStep(step)}
+                        className={`px-2.5 py-1 text-xs font-mono font-semibold rounded-lg border transition ${
+                          nudgeStep === step
+                            ? "bg-blue-600 text-white border-blue-600"
+                            : "bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100"
+                        }`}
+                      >
+                        {step}px
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex justify-center">
+
+                {/* Tactile D-Pad Controller with Continuous Hold */}
+                <div className="flex flex-col items-center space-y-1.5 p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
                   <button
-                    onClick={() => nudge(0, -10)}
-                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white"
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      startNudgeRepeat(0, -nudgeStep);
+                    }}
+                    onPointerUp={stopNudgeRepeat}
+                    onPointerLeave={stopNudgeRepeat}
+                    onContextMenu={(e) => e.preventDefault()}
+                    className="p-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-xs transition active:scale-95 active:bg-blue-600 active:text-white cursor-pointer"
+                    title={`Nudge Up by ${nudgeStep}px (Hold to move continuously)`}
                   >
                     <ChevronUp className="w-4 h-4" />
                   </button>
-                </div>
-                <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1.5">
+                    <button
+                      onPointerDown={(e) => {
+                        e.preventDefault();
+                        startNudgeRepeat(-nudgeStep, 0);
+                      }}
+                      onPointerUp={stopNudgeRepeat}
+                      onPointerLeave={stopNudgeRepeat}
+                      onContextMenu={(e) => e.preventDefault()}
+                      className="p-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-xs transition active:scale-95 active:bg-blue-600 active:text-white cursor-pointer"
+                      title={`Nudge Left by ${nudgeStep}px (Hold to move continuously)`}
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={centerCrop}
+                      className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition active:scale-95 cursor-pointer"
+                      title="Re-center crop box"
+                    >
+                      Center
+                    </button>
+                    <button
+                      onPointerDown={(e) => {
+                        e.preventDefault();
+                        startNudgeRepeat(nudgeStep, 0);
+                      }}
+                      onPointerUp={stopNudgeRepeat}
+                      onPointerLeave={stopNudgeRepeat}
+                      onContextMenu={(e) => e.preventDefault()}
+                      className="p-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-xs transition active:scale-95 active:bg-blue-600 active:text-white cursor-pointer"
+                      title={`Nudge Right by ${nudgeStep}px (Hold to move continuously)`}
+                    >
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
                   <button
-                    onClick={() => nudge(-10, 0)}
-                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={centerCrop}
-                    className="px-3 py-1 rounded-lg bg-blue-600 text-white text-[10px] font-bold"
-                  >
-                    Center
-                  </button>
-                  <button
-                    onClick={() => nudge(10, 0)}
-                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-                <div className="flex justify-center">
-                  <button
-                    onClick={() => nudge(0, 10)}
-                    className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white"
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      startNudgeRepeat(0, nudgeStep);
+                    }}
+                    onPointerUp={stopNudgeRepeat}
+                    onPointerLeave={stopNudgeRepeat}
+                    onContextMenu={(e) => e.preventDefault()}
+                    className="p-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-blue-50 dark:hover:bg-blue-950/50 hover:text-blue-600 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 shadow-xs transition active:scale-95 active:bg-blue-600 active:text-white cursor-pointer"
+                    title={`Nudge Down by ${nudgeStep}px (Hold to move continuously)`}
                   >
                     <ChevronDown className="w-4 h-4" />
                   </button>
+                </div>
+
+                {/* Keyboard Hint */}
+                <div className="text-[11px] text-slate-400 text-center sm:text-right">
+                  <div className="font-semibold text-slate-600 dark:text-slate-300">Keyboard Shortcuts:</div>
+                  <div>Hold &uarr; &darr; &larr; &rarr; arrow keys to slide</div>
+                  <div>Hold <kbd className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px]">Shift</kbd> for 1px micro-nudge</div>
                 </div>
               </div>
             )}

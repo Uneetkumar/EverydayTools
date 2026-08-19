@@ -21,6 +21,7 @@ import {
   FileText,
   Shield,
   Star,
+  Download,
 } from "lucide-react";
 import QuickSearchModal from "./QuickSearchModal";
 
@@ -200,6 +201,19 @@ export default function Header() {
             </button>
 
             <button
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("tabbench-trigger-install"));
+                }
+              }}
+              className="hidden sm:flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition shadow-xs cursor-pointer"
+              title="Install TabBench as an app on your device"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Install App</span>
+            </button>
+
+            <button
               onClick={toggleTheme}
               className="p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               aria-label="Toggle dark/light theme"
@@ -213,52 +227,185 @@ export default function Header() {
             </button>
 
             <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              onClick={() => setIsMobileMenuOpen(true)}
               className="lg:hidden p-2 rounded-xl text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              aria-label="Toggle navigation menu"
-              title="Toggle menu"
+              aria-label="Open navigation menu"
+              title="Open menu"
             >
-              {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              <Menu className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Mobile Navigation Drawer */}
+        {/* Mobile Side Drawer Backdrop & Drawer */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pt-3 pb-5 space-y-3">
-            <div className="space-y-1">
-              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-2">
-                Top Popular Tools
-              </div>
-              <div className="grid grid-cols-2 gap-1">
-                {TOP_POPULAR_TOOLS.map((tool) => (
-                  <Link
-                    key={tool.slug}
-                    href={`/tools/${tool.slug}`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="px-3 py-2 text-xs font-medium rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-                  >
-                    {tool.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
+          <div className="fixed inset-0 z-50 lg:hidden flex justify-end">
+            {/* Backdrop Blur Overlay */}
+            <div
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-200"
+            />
 
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1">
-              <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider px-2">
-                Categories
-              </div>
-              <div className="grid grid-cols-2 gap-1">
-                {TOOL_CATEGORIES.map((cat) => (
+            {/* Slide-In Drawer */}
+            <div className="relative w-[320px] max-w-[85vw] h-full bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl z-50 flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-250">
+              <div className="p-5 space-y-6">
+                {/* Drawer Header */}
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
                   <Link
-                    key={cat.id}
-                    href={`/categories/${cat.id}`}
+                    href="/"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className="px-3 py-2 text-xs font-medium rounded-lg text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 truncate"
+                    className="flex items-center space-x-2"
                   >
-                    {cat.name}
+                    <div className="w-7 h-7 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-xs">
+                      <Calculator className="w-4 h-4" />
+                    </div>
+                    <span className="font-bold text-base tracking-tight text-slate-900 dark:text-white">
+                      Tab<span className="text-blue-600 dark:text-blue-400">Bench</span>
+                    </span>
                   </Link>
-                ))}
+
+                  <div className="flex items-center space-x-1">
+                    <button
+                      onClick={toggleTheme}
+                      className="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                      title="Toggle theme"
+                    >
+                      {isDarkMode ? (
+                        <Sun className="w-4 h-4 text-amber-400" />
+                      ) : (
+                        <Moon className="w-4 h-4 text-slate-600" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="p-2 rounded-lg text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                      title="Close menu"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quick Search Action */}
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    setIsSearchOpen(true);
+                  }}
+                  className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium transition shadow-xs"
+                >
+                  <div className="flex items-center space-x-2">
+                    <Search className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <span>Search all 40+ tools...</span>
+                  </div>
+                  <kbd className="px-1.5 py-0.5 text-[10px] font-mono rounded bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-400">
+                    ⌘K
+                  </kbd>
+                </button>
+
+                {/* Mobile Install App Action */}
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    if (typeof window !== "undefined") {
+                      window.dispatchEvent(new CustomEvent("tabbench-trigger-install"));
+                    }
+                  }}
+                  className="w-full flex items-center justify-center space-x-2 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md hover:shadow-blue-500/20 transition cursor-pointer"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Install TabBench App</span>
+                </button>
+
+                {/* Top Popular Tools */}
+                <div className="space-y-2">
+                  <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-1">
+                    Popular Tools
+                  </div>
+                  <div className="grid grid-cols-1 gap-1">
+                    {TOP_POPULAR_TOOLS.map((tool) => (
+                      <Link
+                        key={tool.slug}
+                        href={`/tools/${tool.slug}`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center justify-between px-3 py-2 text-xs font-semibold rounded-xl text-slate-700 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400 transition"
+                      >
+                        <span>{tool.name}</span>
+                        <span className="text-[10px] text-blue-600 dark:text-blue-400">&rarr;</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Categories */}
+                <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                      Categories
+                    </span>
+                    <Link
+                      href="/tools"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      All Tools
+                    </Link>
+                  </div>
+                  <div className="grid grid-cols-1 gap-1">
+                    {TOOL_CATEGORIES.map((cat) => {
+                      const Icon = ICON_MAP[cat.id] || Calculator;
+                      const count = allTools.filter((t) => t.category === cat.id).length;
+
+                      return (
+                        <Link
+                          key={cat.id}
+                          href={`/categories/${cat.id}`}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/80 transition group"
+                        >
+                          <div className="flex items-center space-x-2.5 min-w-0">
+                            <div className="w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                              <Icon className="w-3.5 h-3.5" />
+                            </div>
+                            <span className="text-xs font-medium text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
+                              {cat.name}
+                            </span>
+                          </div>
+                          <span className="text-[11px] font-mono text-slate-400">
+                            {count}
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Drawer Footer Links */}
+              <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/50 space-y-2">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500">
+                  <Link href="/about" onClick={() => setIsMobileMenuOpen(false)} className="hover:underline">
+                    About
+                  </Link>
+                  <Link href="/guides" onClick={() => setIsMobileMenuOpen(false)} className="hover:underline">
+                    Guides
+                  </Link>
+                  <Link href="/editorial-policy" onClick={() => setIsMobileMenuOpen(false)} className="hover:underline">
+                    Editorial
+                  </Link>
+                  <Link href="/privacy" onClick={() => setIsMobileMenuOpen(false)} className="hover:underline">
+                    Privacy
+                  </Link>
+                  <Link href="/terms" onClick={() => setIsMobileMenuOpen(false)} className="hover:underline">
+                    Terms
+                  </Link>
+                  <Link href="/contact" onClick={() => setIsMobileMenuOpen(false)} className="hover:underline">
+                    Contact
+                  </Link>
+                </div>
+                <div className="text-[10px] text-slate-400">
+                  TabBench &bull; 100% Client-Side Private
+                </div>
               </div>
             </div>
           </div>

@@ -33,6 +33,9 @@ import {
   Type,
   Code,
   Clock,
+  Film,
+  FileText,
+  Image as ImageIcon,
 } from "lucide-react";
 
 interface ToolShellProps {
@@ -55,6 +58,12 @@ const WIDE_LAYOUT_TOOLS = new Set([
   "image-resizer",
   "favicon-generator",
   "pdf-to-jpg",
+  "video-downloader",
+  "youtube-video-downloader",
+  "instagram-video-downloader",
+  "facebook-video-downloader",
+  "tiktok-video-downloader",
+  "twitter-video-downloader",
 ]);
 
 /**
@@ -63,14 +72,28 @@ const WIDE_LAYOUT_TOOLS = new Set([
  * would be false — and a privacy claim that is not true everywhere is worth
  * less than no claim at all.
  */
-const NETWORK_TOOLS = new Set(["currency-converter", "speech-to-text"]);
+const NETWORK_TOOLS = new Set([
+  "currency-converter",
+  "speech-to-text",
+  "video-downloader",
+  "youtube-video-downloader",
+  "instagram-video-downloader",
+  "facebook-video-downloader",
+  "tiktok-video-downloader",
+  "twitter-video-downloader",
+]);
 
 const ICON_MAP: Record<string, React.ElementType> = {
   calculators: Calculator,
   business: TrendingUp,
   text: Type,
   "data-dev": Code,
+  developer: Code,
   "time-units": Clock,
+  "date-time": Clock,
+  "image-media": Film,
+  "pdf-docs": FileText,
+  security: ShieldCheck,
 };
 
 export default function ToolShell({ tool, children }: ToolShellProps) {

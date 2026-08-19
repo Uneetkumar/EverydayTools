@@ -246,24 +246,82 @@ export function generateText(targetBytes: number, kind: "text" | "csv" | "json")
   };
 }
 
+export interface VideoGenerateOptions {
+  seconds: number;
+  format?: "video/webm" | "video/mp4";
+  resolution?: { w: number; h: number; label: string };
+  bitrateBps?: number;
+}
+
 /**
- * Records a canvas animation to WebM.
+ * Records an animated canvas to WebM or MP4.
  *
- * Unavoidably slower than the other generators — MediaRecorder captures in real
- * time, so a three-second clip takes three seconds. Size is also approximate:
- * the encoder decides its own bitrate and the container cannot be padded the
- * way the other formats can.
+ * MediaRecorder captures in real time, so duration matches the selected time.
+ * Supports configurable resolutions, formats (WebM/MP4), and bitrates.
  */
-export async function generateVideo(seconds: number): Promise<SampleFile> {
+export async function generateVideo(
+  optionsOrSeconds: number | VideoGenerateOptions
+): Promise<SampleFile> {
+  const options: VideoGenerateOptions =
+    typeof optionsOrSeconds === "number"
+      ? { seconds: optionsOrSeconds }
+      : optionsOrSeconds;
+
+  const seconds = Math.max(1, Math.min(60, options.seconds || 3));
+  const format = options.format || "video/webm";
+  const width = options.resolution?.w || 640;
+  const height = options.resolution?.h || 360;
+  const bitrateBps = options.bitrateBps || 2_500_000;
+
   const canvas = document.createElement("canvas");
-  canvas.width = 640;
-  canvas.height = 360;
+  canvas.width = width;
+  canvas.height = height;
   const ctx = canvas.getContext("2d")!;
   const stream = canvas.captureStream(30);
-  const mime = MediaRecorder.isTypeSupported("video/webm;codecs=vp9")
-    ? "video/webm;codecs=vp9"
-    : "video/webm";
-  const recorder = new MediaRecorder(stream, { mimeType: mime });
+
+  // Determine best supported MIME type
+  let mime = "video/webm";
+  let ext = "webm";
+  let codecLabel = "VP9/WebM";
+
+  if (format === "video/mp4") {
+    if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported("video/mp4;codecs=avc1")) {
+      mime = "video/mp4;codecs=avc1";
+      ext = "mp4";
+      codecLabel = "H.264/MP4";
+    } else if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported("video/mp4")) {
+      mime = "video/mp4";
+      ext = "mp4";
+      codecLabel = "MPEG-4/MP4";
+    } else if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported("video/webm;codecs=vp9")) {
+      mime = "video/webm;codecs=vp9";
+      ext = "webm";
+      codecLabel = "VP9/WebM (MP4 fallback)";
+    }
+  } else {
+    if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported("video/webm;codecs=vp9")) {
+      mime = "video/webm;codecs=vp9";
+      ext = "webm";
+      codecLabel = "VP9/WebM";
+    } else if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported("video/webm;codecs=vp8")) {
+      mime = "video/webm;codecs=vp8";
+      ext = "webm";
+      codecLabel = "VP8/WebM";
+    }
+  }
+
+  const recorderOptions: MediaRecorderOptions = {
+    mimeType: mime,
+    videoBitsPerSecond: bitrateBps,
+  };
+
+  let recorder: MediaRecorder;
+  try {
+    recorder = new MediaRecorder(stream, recorderOptions);
+  } catch {
+    recorder = new MediaRecorder(stream);
+  }
+
   const chunks: BlobPart[] = [];
   recorder.ondataavailable = (e) => e.data.size > 0 && chunks.push(e.data);
 
@@ -276,20 +334,56 @@ export async function generateVideo(seconds: number): Promise<SampleFile> {
     g.addColorStop(1, palette[1]);
     ctx.fillStyle = g;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Decorative geometric motion
     ctx.fillStyle = palette[2];
     ctx.globalAlpha = 0.7;
+    const baseRadius = Math.min(width, height) / 12;
     for (let i = 0; i < 5; i++) {
-      const x = canvas.width / 2 + Math.cos(t * 1.4 + i) * 150;
-      const y = canvas.height / 2 + Math.sin(t * 1.9 + i) * 90;
+      const x = canvas.width / 2 + Math.cos(t * 1.4 + i) * (width * 0.28);
+      const y = canvas.height / 2 + Math.sin(t * 1.9 + i) * (height * 0.25);
       ctx.beginPath();
-      ctx.arc(x, y, 26 + i * 7, 0, Math.PI * 2);
+      ctx.arc(x, y, baseRadius + i * (baseRadius * 0.25), 0, Math.PI * 2);
       ctx.fill();
     }
+
+    // Grid accent lines
+    ctx.globalAlpha = 0.15;
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height / 2);
+    ctx.lineTo(canvas.width, canvas.height / 2);
+    ctx.moveTo(canvas.width / 2, 0);
+    ctx.lineTo(canvas.width / 2, canvas.height);
+    ctx.stroke();
+
+    // Central Title & Specs
     ctx.globalAlpha = 1;
     ctx.fillStyle = "rgba(255,255,255,0.95)";
-    ctx.font = "bold 30px system-ui, sans-serif";
+    const mainFontSize = Math.max(16, Math.round(width / 20));
+    ctx.font = `bold ${mainFontSize}px system-ui, sans-serif`;
     ctx.textAlign = "center";
-    ctx.fillText(`Sample video · ${t.toFixed(1)}s`, canvas.width / 2, canvas.height - 40);
+    ctx.textBaseline = "middle";
+    ctx.fillText(`${width} × ${height} • ${seconds}s Sample`, canvas.width / 2, canvas.height / 2 - mainFontSize * 0.6);
+
+    // Timer & Codec subtitle
+    const subFontSize = Math.max(11, Math.round(width / 38));
+    ctx.font = `${subFontSize}px system-ui, sans-serif`;
+    ctx.fillStyle = "rgba(255,255,255,0.75)";
+    ctx.fillText(
+      `Playback: ${t.toFixed(1)}s / ${seconds}.0s • ${codecLabel}`,
+      canvas.width / 2,
+      canvas.height / 2 + mainFontSize * 0.7
+    );
+
+    // Progress Bar at Bottom
+    const progress = Math.min(1, t / seconds);
+    ctx.fillStyle = "rgba(255,255,255,0.2)";
+    ctx.fillRect(0, canvas.height - 8, canvas.width, 8);
+    ctx.fillStyle = "#3b82f6";
+    ctx.fillRect(0, canvas.height - 8, canvas.width * progress, 8);
+
     frame++;
   };
 
@@ -303,12 +397,14 @@ export async function generateVideo(seconds: number): Promise<SampleFile> {
   });
   stream.getTracks().forEach((t) => t.stop());
 
-  const blob = new Blob(chunks, { type: "video/webm" });
+  const blob = new Blob(chunks, { type: mime });
   return {
     blob,
-    filename: `sample-${seconds}s-640x360.webm`,
+    filename: `sample-${seconds}s-${width}x${height}.${ext}`,
     kind: "video",
-    label: `${seconds}s, 640×360, VP9/WebM`,
+    label: `${seconds}s, ${width}×${height}, ${codecLabel}`,
+    width,
+    height,
   };
 }
 

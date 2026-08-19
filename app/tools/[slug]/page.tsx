@@ -51,6 +51,7 @@ import SampleFileGenerator from "@/components/tools/SampleFileGenerator";
 import NotePad from "@/components/tools/NotePad";
 import TextToSpeech from "@/components/tools/TextToSpeech";
 import SpeechToText from "@/components/tools/SpeechToText";
+import VideoDownloader from "@/components/tools/VideoDownloader";
 
 interface ToolPageProps {
   params: Promise<{ slug: string }>;
@@ -184,6 +185,18 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <TextDiffChecker />;
       case "ai-explainer":
         return <AiExplainer />;
+      case "video-downloader":
+        return <VideoDownloader />;
+      case "youtube-video-downloader":
+        return <VideoDownloader platform="youtube" />;
+      case "instagram-video-downloader":
+        return <VideoDownloader platform="instagram" />;
+      case "facebook-video-downloader":
+        return <VideoDownloader platform="facebook" />;
+      case "tiktok-video-downloader":
+        return <VideoDownloader platform="tiktok" />;
+      case "twitter-video-downloader":
+        return <VideoDownloader platform="twitter" />;
       default:
         return <PercentageCalculator />;
     }

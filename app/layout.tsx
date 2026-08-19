@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import FloatingToolsBackground from "@/components/FloatingToolsBackground";
 import ThemeProvider from "@/components/ThemeProvider";
 import FirebaseAnalytics from "@/components/FirebaseAnalytics";
+import PwaManager from "@/components/PwaManager";
 import { SITE_CONFIG } from "@/lib/seo/metadata";
 import {
   generateWebsiteJsonLd,
@@ -136,6 +137,13 @@ export default function RootLayout({
         <meta name="distribution" content="global" />
         <meta name="revisit-after" content="2 days" />
 
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="TabBench" />
+        <link rel="apple-touch-icon" href="/icon.svg" />
+        <link rel="manifest" href="/manifest.webmanifest" />
+
         {/* Warm up the ad origins so the first ad request is not paying for
             DNS and TLS on top of the fetch. */}
         <link
@@ -166,6 +174,9 @@ export default function RootLayout({
           <Suspense fallback={null}>
             <FirebaseAnalytics />
           </Suspense>
+
+          {/* PWA Service Worker & Install Prompts */}
+          <PwaManager />
 
           {/* Floating Animated Background */}
           <FloatingToolsBackground />

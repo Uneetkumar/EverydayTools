@@ -1121,6 +1121,163 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     relatedToolSlugs: ["text-to-speech", "notepad", "word-counter"],
     isPopular: true,
   },
+
+  // 47. Video Downloader
+  "video-downloader": {
+    slug: "video-downloader",
+    name: "Video Downloader",
+    shortName: "Video Downloader",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Download and inspect video files from direct, authorized, or self-hosted media streams.",
+    longDescription: "Inspect technical specifications including resolution, codecs, frame rate, bitrate, and duration from direct video URLs. Download permitted MP4, WebM, and MOV streams in original or extracted audio quality with zero server retention.",
+    iconName: "Video",
+    metaTitle: "Video Downloader - Download Online Videos | TabBench",
+    metaDescription: "Free online video downloader: inspect resolution, bitrate, codecs, and download authorized MP4 and WebM videos.",
+    keywords: [
+      "video downloader",
+      "download video online",
+      "inspect video url",
+      "video metadata inspector",
+      "mp4 downloader",
+      "webm downloader",
+      "extract video audio",
+      "free video stream download",
+    ],
+    features: [
+      "Direct MP4, WebM & MOV stream inspection",
+      "Resolution, bitrate & codec analysis",
+      "Quality selection with Highest Available badge",
+      "Audio-only track extraction",
+      "SSRF-protected secure retrieval",
+      "100% private in-browser processing",
+    ],
+    formulas: [
+      {
+        name: "Video Bitrate & File Size Relationship",
+        expression: "File Size (MB) = (Bitrate (kbps) × Duration (seconds)) / 8000",
+        explanation: "The total file size of a video stream is directly determined by the combined video and audio bitrates multiplied by duration.",
+        example: "A 1080p stream at 5,000 kbps lasting 120 seconds = (5000 × 120) / 8000 = 75 MB.",
+      },
+    ],
+    faqs: [
+      {
+        question: "Can I download videos from YouTube, TikTok, or Instagram?",
+        answer: "This tool strictly respects platform terms of service and copyright laws. It does not bypass DRM, paywalls, authentication, or technical platform restrictions. Only direct, authorized, or user-owned media streams are supported.",
+      },
+      {
+        question: "Are my inspected videos stored on TabBench servers?",
+        answer: "No. Processing is performed client-side in your browser. No files, URLs, or personal data are stored or retained on any server.",
+      },
+    ],
+    relatedToolSlugs: ["youtube-video-downloader", "instagram-video-downloader", "crop-image"],
+    isPopular: true,
+  },
+
+  // 48. YouTube Video Downloader
+  "youtube-video-downloader": {
+    slug: "youtube-video-downloader",
+    name: "YouTube Video Downloader",
+    shortName: "YouTube Downloader",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Inspect video resolution, codecs, and download permitted YouTube streams and creative assets.",
+    longDescription: "Analyze stream dimensions, frame rate, audio codecs, and download permitted or self-hosted video streams. Adheres to platform copyright policies without DRM circumvention.",
+    iconName: "Video",
+    metaTitle: "YouTube Video Downloader - Stream & Media Inspector | TabBench",
+    metaDescription: "Inspect stream properties and download authorized YouTube media streams. Fast, free in-browser video inspector.",
+    keywords: ["youtube video downloader", "youtube downloader", "youtube stream inspector", "youtube audio extractor", "download youtube video free"],
+    features: ["YouTube stream analysis", "Resolution & audio track detection", "Highest quality auto-selection", "100% private in-browser"],
+    faqs: [
+      { question: "Can I download copyrighted YouTube content?", answer: "No. Only permitted, creative commons, or self-owned video streams are supported in compliance with platform terms." }
+    ],
+    relatedToolSlugs: ["video-downloader", "instagram-video-downloader", "tiktok-video-downloader"],
+    isPopular: true,
+  },
+
+  // 49. Instagram Video Downloader
+  "instagram-video-downloader": {
+    slug: "instagram-video-downloader",
+    name: "Instagram Video Downloader",
+    shortName: "Instagram Downloader",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Download and inspect Instagram Reels, Stories, and permitted video streams.",
+    longDescription: "Inspect aspect ratio (9:16 vertical / 1:1 square), resolution, and bitrate for Instagram videos and Reels. Download permitted media with zero server storage.",
+    iconName: "Video",
+    metaTitle: "Instagram Video Downloader - Reels & Media Inspector | TabBench",
+    metaDescription: "Inspect and download authorized Instagram videos and Reels. Fast in-browser media analysis.",
+    keywords: ["instagram video downloader", "instagram reel downloader", "download insta video", "instagram story video download", "insta media inspector"],
+    features: ["Reels & vertical video inspection", "Direct media retrieval", "Resolution & codec analysis", "100% client-side private"],
+    faqs: [
+      { question: "Can I download private Instagram posts?", answer: "No. Private accounts and DRM-protected streams cannot and should not be accessed without explicit authorization." }
+    ],
+    relatedToolSlugs: ["video-downloader", "tiktok-video-downloader", "facebook-video-downloader"],
+    isPopular: true,
+  },
+
+  // 50. Facebook Video Downloader
+  "facebook-video-downloader": {
+    slug: "facebook-video-downloader",
+    name: "Facebook Video Downloader",
+    shortName: "Facebook Downloader",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Inspect and download public, authorized Facebook video streams.",
+    longDescription: "Check video resolution, aspect ratio, audio bitrate, and download authorized Facebook streams directly in your browser.",
+    iconName: "Video",
+    metaTitle: "Facebook Video Downloader - Stream Inspector | TabBench",
+    metaDescription: "Free Facebook video downloader and stream inspector. Analyze resolution, format, and download authorized video files.",
+    keywords: ["facebook video downloader", "fb video download", "facebook stream inspector", "download facebook video hd"],
+    features: ["Facebook stream analysis", "HD & SD format selection", "Audio track extraction", "Zero server retention"],
+    faqs: [
+      { question: "Can I download private Facebook group videos?", answer: "No. Only public, permitted, or self-hosted video streams are supported." }
+    ],
+    relatedToolSlugs: ["video-downloader", "youtube-video-downloader", "instagram-video-downloader"],
+    isPopular: true,
+  },
+
+  // 51. TikTok Video Downloader
+  "tiktok-video-downloader": {
+    slug: "tiktok-video-downloader",
+    name: "TikTok Video Downloader",
+    shortName: "TikTok Downloader",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Inspect video resolution and download permitted TikTok videos and creative assets.",
+    longDescription: "Analyze 9:16 vertical video properties, duration, audio codecs, and retrieve permitted TikTok video files without watermarks or quality loss.",
+    iconName: "Video",
+    metaTitle: "TikTok Video Downloader - Media Inspector | TabBench",
+    metaDescription: "Download and inspect authorized TikTok videos in HD. Fast, secure in-browser video inspector.",
+    keywords: ["tiktok video downloader", "tiktok downloader", "download tiktok video hd", "tiktok video inspector", "tiktok audio extractor"],
+    features: ["Vertical 9:16 video analysis", "HD resolution detection", "Audio track extraction", "No app install required"],
+    faqs: [
+      { question: "Are videos downloaded in original quality?", answer: "Yes. When you choose the Highest Available quality, media is retrieved without generational re-encoding." }
+    ],
+    relatedToolSlugs: ["video-downloader", "instagram-video-downloader", "twitter-video-downloader"],
+    isPopular: true,
+  },
+
+  // 52. Twitter / X Video Downloader
+  "twitter-video-downloader": {
+    slug: "twitter-video-downloader",
+    name: "Twitter Video Downloader",
+    shortName: "Twitter Downloader",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Download and inspect Twitter / X videos, GIFs, and media streams.",
+    longDescription: "Inspect video bitrates, dimensions, and audio tracks for Twitter (X) video clips and animated GIFs. Save authorized files directly to your device.",
+    iconName: "Video",
+    metaTitle: "Twitter Video Downloader - X Media Inspector | TabBench",
+    metaDescription: "Download Twitter videos and X media streams in HD. Inspect resolution, format, and bitrate.",
+    keywords: ["twitter video downloader", "x video downloader", "download twitter video", "twitter gif download", "x media inspector"],
+    features: ["Twitter & X media stream analysis", "Multiple resolution options", "GIF & MP4 support", "100% private in browser"],
+    faqs: [
+      { question: "Can I download Twitter GIFs as MP4?", answer: "Yes. Twitter delivers animated GIFs as MP4 video streams, which can be downloaded directly." }
+    ],
+    relatedToolSlugs: ["video-downloader", "tiktok-video-downloader", "youtube-video-downloader"],
+    isPopular: true,
+  },
 };
 
 export function getAllTools(): ToolDefinition[] {

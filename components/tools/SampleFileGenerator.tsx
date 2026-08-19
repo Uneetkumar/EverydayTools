@@ -37,6 +37,22 @@ const IMAGE_FORMATS = [
   { id: "image/webp" as const, label: "WebP" },
 ];
 
+const VIDEO_FORMATS = [
+  { id: "video/webm" as const, label: "WebM (VP9)" },
+  { id: "video/mp4" as const, label: "MP4 (H.264)" },
+];
+
+const VIDEO_RESOLUTIONS = [
+  { id: "360p", label: "360p SD (640×360)", w: 640, h: 360 },
+  { id: "480p", label: "480p (854×480)", w: 854, h: 480 },
+  { id: "720p", label: "720p HD (1280×720)", w: 1280, h: 720 },
+  { id: "1080p", label: "1080p (1920×1080)", w: 1920, h: 1080 },
+  { id: "1:1", label: "1:1 Square (720×720)", w: 720, h: 720 },
+  { id: "9:16", label: "9:16 Story (720×1280)", w: 720, h: 1280 },
+];
+
+const VIDEO_DURATION_PRESETS = [1, 2, 3, 5, 10, 15, 30];
+
 const HOW_MANY = 4;
 
 interface SampleFileGeneratorProps {
@@ -59,6 +75,8 @@ export default function SampleFileGenerator({
   const [customKb, setCustomKb] = useState("100");
   const [imageFormat, setImageFormat] =
     useState<(typeof IMAGE_FORMATS)[number]["id"]>("image/jpeg");
+  const [videoFormat, setVideoFormat] = useState<"video/webm" | "video/mp4">("video/webm");
+  const [videoResolution, setVideoResolution] = useState(VIDEO_RESOLUTIONS[0]);
   const [videoSeconds, setVideoSeconds] = useState(3);
   const [items, setItems] = useState<(SampleFile & { url: string; id: string })[]>([]);
   const [busy, setBusy] = useState(false);
@@ -73,8 +91,14 @@ export default function SampleFileGenerator({
     try {
       const made: SampleFile[] = [];
       if (kind === "video") {
-        setStatus(`Recording ${videoSeconds}s of video…`);
-        made.push(await generateVideo(videoSeconds));
+        setStatus(`Recording ${videoSeconds}s of ${videoResolution.label} ${videoFormat === "video/mp4" ? "MP4" : "WebM"} video…`);
+        made.push(
+          await generateVideo({
+            seconds: videoSeconds,
+            format: videoFormat,
+            resolution: videoResolution,
+          })
+        );
       } else {
         for (let i = 0; i < HOW_MANY; i++) {
           setStatus(`Generating file ${i + 1} of ${HOW_MANY}…`);
@@ -112,7 +136,7 @@ export default function SampleFileGenerator({
     } finally {
       setBusy(false);
     }
-  }, [kind, bytes, imageFormat, videoSeconds, items]);
+  }, [kind, bytes, imageFormat, videoSeconds, videoFormat, videoResolution, items]);
 
   const copyDataUrl = async (item: SampleFile & { url: string; id: string }) => {
     const reader = new FileReader();
@@ -163,15 +187,89 @@ export default function SampleFileGenerator({
       )}
 
       {kind === "video" ? (
-        <div className="space-y-1.5">
-          <label htmlFor="vid-secs" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-            Length
-          </label>
-          <div className="flex items-center gap-3">
-            <input id="vid-secs" type="range" min={1} max={10} value={videoSeconds}
-              onChange={(e) => setVideoSeconds(parseInt(e.target.value, 10))}
-              className="w-40 accent-blue-600 cursor-pointer" />
-            <span className="text-xs font-bold text-blue-600 tabular-nums">{videoSeconds}s</span>
+        <div className="space-y-4 p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800">
+          {/* Video Format Selection */}
+          <div className="space-y-1.5">
+            <span className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+              Video Format
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {VIDEO_FORMATS.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setVideoFormat(f.id)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    videoFormat === f.id
+                      ? "bg-blue-600 text-white shadow-xs"
+                      : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Video Resolution / Size Selection */}
+          <div className="space-y-1.5">
+            <span className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+              Resolution &amp; Aspect Ratio
+            </span>
+            <div className="flex flex-wrap gap-2">
+              {VIDEO_RESOLUTIONS.map((res) => (
+                <button
+                  key={res.id}
+                  onClick={() => setVideoResolution(res)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    videoResolution.id === res.id
+                      ? "bg-blue-600 text-white shadow-xs"
+                      : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100"
+                  }`}
+                >
+                  {res.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Video Duration / Time Selection */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <label htmlFor="vid-secs" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                Duration / Time (seconds)
+              </label>
+              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 font-mono">
+                {videoSeconds} seconds
+              </span>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {VIDEO_DURATION_PRESETS.map((sec) => (
+                <button
+                  key={sec}
+                  onClick={() => setVideoSeconds(sec)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition ${
+                    videoSeconds === sec
+                      ? "bg-blue-600 text-white"
+                      : "bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100"
+                  }`}
+                >
+                  {sec}s
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3 pt-1">
+              <input
+                id="vid-secs"
+                type="range"
+                min={1}
+                max={30}
+                value={videoSeconds}
+                onChange={(e) => setVideoSeconds(parseInt(e.target.value, 10))}
+                className="w-full accent-blue-600 cursor-pointer"
+              />
+            </div>
           </div>
         </div>
       ) : (

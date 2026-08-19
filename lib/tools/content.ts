@@ -2893,6 +2893,221 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
     ],
   },
 
+  "video-downloader": {
+    intro:
+      "Inspect technical specifications from direct video URLs and download permitted media files in original, downscaled, or audio-only formats. This tool probes container headers to reveal exact frame dimensions, aspect ratios, durations, audio and video codecs (H.264, VP9, AV1, AAC), and average bitrates with zero server-side storage or tracking.",
+    howTo: {
+      title: "How to inspect and download an authorized video URL",
+      steps: [
+        "Paste the direct HTTPS media URL into the input field above (e.g. https://your-server.com/sample-video.mp4).",
+        "Click 'Analyze Video'. The inspector will probe container headers to extract resolution, aspect ratio, duration, codecs, and bitrate.",
+        "Preview the video in the live player and review the full technical stream specifications.",
+        "Select your preferred resolution or choose 'Audio Track Only' to extract an M4A audio file.",
+        "Click 'Download' to stream the media chunks directly into your browser and save the file to your device.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Retrieving self-hosted media and creative assets",
+        body:
+          "Content creators, video editors, and motion designers who host footage on cloud storage (AWS S3, Google Cloud Storage, Cloudflare R2, or private CDNs) can inspect and download their own master files on any device without installing desktop software.",
+      },
+      {
+        title: "Extracting audio tracks from presentations and podcasts",
+        body:
+          "Easily extract standalone audio streams from recorded webinars, lectures, or interviews to listen offline, transcribe with speech-to-text tools, or archive as lightweight audio files.",
+      },
+      {
+        title: "Validating video bitrate and encoding fidelity",
+        body:
+          "Web developers and QA engineers can test media encoding pipelines by checking exact file sizes, frame rates, and bitrates across different render presets before deploying videos to production.",
+      },
+    ],
+    tips: [
+      "For mobile and web streaming, H.264 (AVC) in an MP4 container offers the highest cross-browser and device compatibility.",
+      "WebM (VP9/AV1) provides smaller file sizes at identical visual quality, making it ideal for modern web optimization.",
+      "Bitrate is the key determinant of visual quality: 1080p video typically looks crisp between 4,000 and 8,000 kbps, while 4K UHD typically requires 15,000 to 25,000 kbps.",
+      "Make sure the source server permits CORS (Cross-Origin Resource Sharing) headers if downloading across different origins.",
+    ],
+    extraFaqs: [
+      {
+        question: "What is the difference between 1080p, 1440p, and 4K UHD?",
+        answer:
+          "1080p (Full HD) has a resolution of 1920×1080 (approx. 2 million pixels). 1440p (2K QHD) is 2560×1440 (approx. 3.7 million pixels). 4K UHD is 3840×2160 (approx. 8.3 million pixels). Higher resolution delivers sharper image detail on large displays but requires significantly more data and bandwidth.",
+      },
+      {
+        question: "Why are YouTube, Instagram, and TikTok URLs not supported?",
+        answer:
+          "Proprietary streaming platforms deliver media through encrypted, tokenized, and DRM-protected segmented streams (DASH/HLS) that disallow third-party downloading under their terms of service. TabBench strictly respects platform terms and copyright laws and does not implement circumvention mechanisms.",
+      },
+      {
+        question: "What video formats can I download?",
+        answer:
+          "You can inspect and download direct MP4 (.mp4, .m4v), WebM (.webm), QuickTime (.mov), and Ogg (.ogv) media files, as well as extract audio-only M4A tracks.",
+      },
+      {
+        question: "Is there a file size limit?",
+        answer:
+          "The default browser safety threshold is 500 MB to ensure smooth in-memory stream decoding and downloading without exhausting device RAM.",
+      },
+      {
+        question: "Does downloading reduce video quality?",
+        answer:
+          "No. When you select the 'Highest Available' source quality, the video stream is retrieved bit-for-bit without re-encoding or generational compression loss.",
+      },
+    ],
+  },
+
+  "youtube-video-downloader": {
+    intro:
+      "Inspect stream resolution, audio sampling, and bitrate for authorized YouTube streams and self-hosted creative assets. This utility validates container codecs, frame dimensions, and downloads permitted direct media streams in full fidelity.",
+    howTo: {
+      title: "How to inspect and download authorized YouTube media",
+      steps: [
+        "Paste the YouTube or permitted direct media stream URL into the input field above.",
+        "Click 'Analyze Video' to probe container headers, video codecs (VP9, AV1, H.264), and audio channels.",
+        "Review the stream resolution (1080p, 720p, 4K) and aspect ratio in the live preview.",
+        "Select your preferred resolution or choose 'Audio Track Only' to extract an audio track.",
+        "Click 'Download' to stream and save the media directly to your device.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Archiving your own uploaded YouTube footage",
+        body: "Creators who need to retrieve original video masters or podcast audio tracks from their own cloud storage or authorized channels.",
+      },
+      {
+        title: "Analyzing video encoding quality",
+        body: "Verify compression bitrates, audio codecs, and frame rates across uploaded media clips.",
+      },
+    ],
+    tips: [
+      "Select 'Audio Track Only' for fast, lightweight MP3/M4A extraction from long webinars or presentations.",
+      "Always verify you have explicit permission or ownership of the content before downloading.",
+    ],
+    extraFaqs: [
+      {
+        question: "Can I download copyrighted videos without permission?",
+        answer: "No. This tool is built strictly for authorized and user-owned media in compliance with copyright laws and platform terms.",
+      },
+    ],
+  },
+
+  "instagram-video-downloader": {
+    intro:
+      "Inspect and download Instagram Reels, Stories, and permitted vertical video assets in original HD resolution. Analyzes 9:16 aspect ratio dimensions, frame rates, and audio bitrates with 100% private in-browser processing.",
+    howTo: {
+      title: "How to inspect and download Instagram Reels and videos",
+      steps: [
+        "Paste the Instagram video, Reel, or direct media URL into the box above.",
+        "Click 'Analyze Video' to detect dimensions, duration, and video stream bitrate.",
+        "Preview the vertical video in the live player.",
+        "Click 'Download' to save the original MP4 video directly to your phone or computer.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Backing up your own Instagram Reels",
+        body: "Download master copies of your recorded Reels and vertical videos for cross-posting to other platforms without watermark degradation.",
+      },
+    ],
+    tips: [
+      "Reels are rendered at 1080×1920 (9:16 vertical widescreen) with stereo AAC audio.",
+    ],
+    extraFaqs: [
+      {
+        question: "Can I download private Instagram posts?",
+        answer: "No. Private accounts and DRM-protected media cannot and should not be accessed without account authorization.",
+      },
+    ],
+  },
+
+  "facebook-video-downloader": {
+    intro:
+      "Analyze stream properties and download public, authorized Facebook video streams in HD or SD quality. Probes container headers to give you full visibility over video codecs, bitrates, and audio tracks.",
+    howTo: {
+      title: "How to download authorized Facebook videos",
+      steps: [
+        "Paste the Facebook video link or direct media URL into the analyzer.",
+        "Click 'Analyze Video' to inspect resolution and audio channels.",
+        "Choose between Full HD 1080p, HD 720p, or Audio Track Only.",
+        "Click 'Download' to save the file to your device.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Saving company webinars and live stream archives",
+        body: "Download public broadcast recordings and company presentations you manage for offline archiving.",
+      },
+    ],
+    tips: [
+      "HD streams offer significantly clearer text in recorded slides and presentations.",
+    ],
+    extraFaqs: [
+      {
+        question: "What format are Facebook videos saved in?",
+        answer: "Videos are saved as universally compatible MP4 files with H.264 video and AAC audio.",
+      },
+    ],
+  },
+
+  "tiktok-video-downloader": {
+    intro:
+      "Inspect resolution, duration, and download permitted TikTok vertical videos in original quality. Fast, client-side media stream inspection with zero watermarks added and zero server storage.",
+    howTo: {
+      title: "How to inspect and download authorized TikTok videos",
+      steps: [
+        "Paste the TikTok video link or direct media stream URL above.",
+        "Click 'Analyze Video' to inspect video height, width, and audio bitrate.",
+        "Preview the video in the player and select your desired format.",
+        "Click 'Download' to save the video file directly.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Creators archiving high-res vertical video assets",
+        body: "Save your own TikTok creations in original master quality for portfolio backups and editing.",
+      },
+    ],
+    tips: [
+      "Vertical 9:16 format looks best on mobile screens and modern vertical displays.",
+    ],
+    extraFaqs: [
+      {
+        question: "Does this downloader compress the video?",
+        answer: "No. When you select Highest Available quality, the stream is saved bit-for-bit in original quality.",
+      },
+    ],
+  },
+
+  "twitter-video-downloader": {
+    intro:
+      "Inspect and download permitted Twitter / X videos and animated GIFs in HD resolution. Checks container bitrate, dimensions, and saves media directly in your browser without tracking.",
+    howTo: {
+      title: "How to download Twitter / X videos",
+      steps: [
+        "Paste the Twitter / X video or GIF link into the search box.",
+        "Click 'Analyze Video' to probe stream resolutions.",
+        "Choose your preferred quality tier (1080p, 720p, or 480p).",
+        "Click 'Download' to save the MP4 video to your device.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Saving informative video clips and charts",
+        body: "Download educational demonstrations, product announcements, and animated charts for offline reference.",
+      },
+    ],
+    tips: [
+      "Twitter animated GIFs are encoded as MP4 videos for bandwidth efficiency.",
+    ],
+    extraFaqs: [
+      {
+        question: "Can I download Twitter videos on mobile?",
+        answer: "Yes. TabBench is fully mobile-responsive and installable as a PWA on iOS and Android.",
+      },
+    ],
+  },
 };
 
 /** Returns the long-form content for a tool, if any has been written. */
