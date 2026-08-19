@@ -82,7 +82,7 @@ export default function Header() {
                 <Calculator className="w-4 h-4" />
               </div>
               <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-white">
-                Everyday<span className="text-blue-600 dark:text-blue-400">Tools</span>
+                Tab<span className="text-blue-600 dark:text-blue-400">Bench</span>
               </span>
             </Link>
 

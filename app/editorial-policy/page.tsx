@@ -5,7 +5,7 @@ import { CheckCircle2, BookOpen, ShieldAlert, Cpu } from "lucide-react";
 
 export const metadata = constructPageMetadata({
   title: "Editorial & Mathematical Accuracy Policy",
-  description: "How EverydayTools researches, reviews, tests, and verifies mathematical formulas, calculation accuracy, and editorial content.",
+  description: "How TabBench researches, reviews, tests, and verifies mathematical formulas, calculation accuracy, and editorial content.",
   path: "/editorial-policy",
 });
 
@@ -32,7 +32,7 @@ export default function EditorialPolicyPage() {
             <h2 className="text-lg font-bold text-slate-900 dark:text-white">1. Formula Verification & Mathematical Precision</h2>
           </div>
           <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-            Every calculator formula published on EverydayTools is cross-verified against standard academic, financial, and mathematical definitions. We document the explicit formulas, assumptions, step-by-step examples, and edge-case boundaries (e.g., division by zero, leap years, negative percentages) on every tool page so users can verify our working logic.
+            Every calculator formula published on TabBench is cross-verified against standard academic, financial, and mathematical definitions. We document the explicit formulas, assumptions, step-by-step examples, and edge-case boundaries (e.g., division by zero, leap years, negative percentages) on every tool page so users can verify our working logic.
           </p>
         </div>
 

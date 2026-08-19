@@ -6,7 +6,7 @@ import { Check, Copy, Download, Trash2, FileJson, AlertCircle, Sparkles, Refresh
 import confetti from "canvas-confetti";
 
 const SAMPLE_JSON = {
-  appName: "EverydayTools",
+  appName: "TabBench",
   version: "1.0.0",
   features: ["Zero Latency", "Client-Side Privacy", "Search Optimized"],
   monetization: {

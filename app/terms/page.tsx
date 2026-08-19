@@ -3,8 +3,8 @@ import { constructPageMetadata } from "@/lib/seo/metadata";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
 export const metadata = constructPageMetadata({
-  title: "Terms of Service - EverydayTools",
-  description: "Terms of service, usage guidelines, and general disclaimers for EverydayTools.",
+  title: "Terms of Service - TabBench",
+  description: "Terms of service, usage guidelines, and general disclaimers for TabBench.",
   path: "/terms",
 });
 
@@ -24,7 +24,7 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-base font-bold text-slate-900 dark:text-white">1. Acceptance of Terms</h2>
           <p>
-            By accessing or using EverydayTools, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.
+            By accessing or using TabBench, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.
           </p>
         </section>
 
@@ -38,14 +38,14 @@ export default function TermsPage() {
         <section className="space-y-2">
           <h2 className="text-base font-bold text-slate-900 dark:text-white">3. Intellectual Property</h2>
           <p>
-            The software, design system, layout, and original explanatory guides on EverydayTools are the property of EverydayTools and protected by intellectual property laws.
+            The software, design system, layout, and original explanatory guides on TabBench are the property of TabBench and protected by intellectual property laws.
           </p>
         </section>
 
         <section className="space-y-2">
           <h2 className="text-base font-bold text-slate-900 dark:text-white">4. Limitation of Liability</h2>
           <p>
-            EverydayTools and its contributors shall not be liable for any direct, indirect, incidental, or consequential damages resulting from the use or inability to use our tools.
+            TabBench and its contributors shall not be liable for any direct, indirect, incidental, or consequential damages resulting from the use or inability to use our tools.
           </p>
         </section>
       </div>

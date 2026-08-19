@@ -26,7 +26,7 @@ export default function RelatedTools({ tools }: RelatedToolsProps) {
           <Sparkles className="w-4 h-4" />
         </div>
         <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-          Related Everyday Utilities
+          Related Tools
         </h2>
       </div>
 

@@ -23,7 +23,7 @@ export default function GuidesIndexPage() {
   const listSchema = {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
-    name: "EverydayTools Guides",
+    name: "TabBench Guides",
     url: `${SITE_CONFIG.domain}/guides`,
     isPartOf: { "@id": `${SITE_CONFIG.domain}/#website` },
     mainEntity: {

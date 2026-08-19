@@ -38,15 +38,15 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_CONFIG.domain),
   title: {
-    default: "EverydayTools - Free Online Calculators & Web Tools",
-    template: "%s | EverydayTools",
+    default: "TabBench - Free Online Calculators & Web Tools",
+    template: "%s | TabBench",
   },
   description:
     "Free online calculators, file converters, image compressors, PDF utilities, and developer tools. Fast, private in-browser tools with zero signups.",
-  applicationName: "EverydayTools",
-  authors: [{ name: "EverydayTools Team", url: SITE_CONFIG.domain }],
-  creator: "EverydayTools",
-  publisher: "EverydayTools",
+  applicationName: "TabBench",
+  authors: [{ name: "TabBench Team", url: SITE_CONFIG.domain }],
+  creator: "TabBench",
+  publisher: "TabBench",
   keywords: [
     "100% free online tools",
     "free tools for all",
@@ -76,11 +76,11 @@ export const metadata: Metadata = {
     ],
   },
   openGraph: {
-    title: "EverydayTools - Fast, Free & Private Online Calculators and Utilities",
+    title: "TabBench - Fast, Free & Private Online Calculators and Utilities",
     description:
       `${TOOL_COUNT} free tools: image compressor, PDF to Word, QR generator, calculators and developer utilities. Everything runs in your browser — no upload, no signup.`,
     url: SITE_CONFIG.domain,
-    siteName: "EverydayTools",
+    siteName: "TabBench",
     locale: "en_US",
     type: "website",
     // Images come from app/opengraph-image.tsx (a real PNG). Setting them
@@ -88,7 +88,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "EverydayTools - Fast, Free & Private Online Calculators and Utilities",
+    title: "TabBench - Fast, Free & Private Online Calculators and Utilities",
     description:
       `${TOOL_COUNT} free browser tools: image compressor, PDF to Word, QR generator, calculators and developer utilities.`,
     creator: SITE_CONFIG.twitterHandle,
@@ -107,9 +107,9 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  verification: {
-    google: "a5hV-mzr0orDMWtjZapmRNjUCku4wH7UfUJhzymIQ9s",
-  },
+  // Add the verification token issued for the tabbench.com Search Console
+  // property here. The previous token belonged to everydaytools-s.web.app and
+  // will not validate on the new domain.
 };
 
 export default function RootLayout({
@@ -134,10 +134,6 @@ export default function RootLayout({
         <meta charSet="utf-8" />
         <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta
-          name="google-site-verification"
-          content="a5hV-mzr0orDMWtjZapmRNjUCku4wH7UfUJhzymIQ9s"
-        />
         <meta name="rating" content="general" />
         <meta name="distribution" content="global" />
         <meta name="revisit-after" content="2 days" />

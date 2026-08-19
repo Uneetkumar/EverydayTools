@@ -47,6 +47,7 @@ import AddPageNumbers from "@/components/tools/AddPageNumbers";
 import ImageResizer from "@/components/tools/ImageResizer";
 import FaviconGenerator from "@/components/tools/FaviconGenerator";
 import CurrencyConverter from "@/components/tools/CurrencyConverter";
+import SampleFileGenerator from "@/components/tools/SampleFileGenerator";
 
 interface ToolPageProps {
   params: Promise<{ slug: string }>;
@@ -66,7 +67,7 @@ export async function generateMetadata({
   const tool = getToolBySlug(slug);
   if (!tool) {
     return {
-      title: "Tool Not Found | EverydayTools",
+      title: "Tool Not Found | TabBench",
     };
   }
   return constructToolMetadata(tool);
@@ -122,6 +123,16 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <FaviconGenerator />;
       case "currency-converter":
         return <CurrencyConverter />;
+      case "sample-file-generator":
+        return <SampleFileGenerator />;
+      case "sample-image-generator":
+        return <SampleFileGenerator allowedKinds={["image"]} />;
+      case "sample-pdf-generator":
+        return <SampleFileGenerator allowedKinds={["pdf"]} />;
+      case "sample-video-generator":
+        return <SampleFileGenerator allowedKinds={["video"]} />;
+      case "sample-data-generator":
+        return <SampleFileGenerator allowedKinds={["csv", "json", "text"]} />;
       case "percentage-calculator":
         return <PercentageCalculator />;
       case "profit-margin-calculator":

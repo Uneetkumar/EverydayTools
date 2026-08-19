@@ -950,6 +950,114 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     relatedToolSlugs: ["percentage-calculator", "gst-calculator", "discount-calculator"],
     isPopular: true,
   },
+
+  // 39. Sample / Dummy File Generator
+  "sample-file-generator": {
+    slug: "sample-file-generator",
+    name: "Sample File Generator",
+    shortName: "Sample Files",
+    category: "developer",
+    categoryName: "Developer & Data",
+    description: "Generate dummy images, PDFs, Word files, CSV, JSON, and video at an exact file size for testing uploads.",
+    longDescription: "Create placeholder files at any size you specify — sample images, PDFs, DOCX, CSV, JSON, text, and short videos — with randomised content each time. Built for testing upload limits, forms, and file handling.",
+    iconName: "Shuffle",
+    metaTitle: "Sample File Generator - Dummy Image, PDF & Video",
+    metaDescription: "Generate dummy files at an exact size: sample images, PDFs, Word docs, CSV, JSON and video. Free, random each time, no signup.",
+    keywords: [
+      "sample file generator", "dummy file generator", "test file generator",
+      "sample image download", "dummy image generator", "sample pdf download",
+      "dummy pdf", "sample docx", "test file 1mb", "sample video download",
+      "placeholder image", "dummy data file", "sample csv", "sample json",
+      "generate file of specific size", "10mb test file",
+    ],
+    features: ["Exact target file size", "Image, PDF, Word, CSV, JSON, video", "Randomised content every time", "Copy small images as data URLs"],
+    faqs: [
+      { question: "Are the files a real, valid format?", answer: "Yes. Every file opens in its normal application; padding uses regions each format ignores." }
+    ],
+    relatedToolSlugs: ["image-compressor", "pdf-compressor", "json-formatter"],
+    isPopular: true,
+  },
+
+  // 40. Sample Image Generator
+  "sample-image-generator": {
+    slug: "sample-image-generator",
+    name: "Sample Image Generator",
+    shortName: "Sample Images",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Generate random placeholder images at an exact file size in JPG, PNG, or WebP.",
+    longDescription: "Create dummy images at any file size you specify, with randomised artwork and dimensions every time. Built for testing upload limits, filling layouts, and checking image pipelines.",
+    iconName: "Image",
+    metaTitle: "Sample Image Generator - Dummy Image Any Size",
+    metaDescription: "Generate placeholder images at an exact file size in JPG, PNG or WebP. Random artwork each time, free, no signup.",
+    keywords: ["sample image", "dummy image generator", "placeholder image", "sample image download", "test image 1mb", "random image generator", "fake image generator"],
+    features: ["Exact target file size", "JPG, PNG or WebP", "Randomised artwork and dimensions", "Copy small images as data URLs"],
+    faqs: [
+      { question: "Are the images real image files?", answer: "Yes. Each is drawn on a canvas and encoded properly, so it opens in any image viewer or editor." }
+    ],
+    relatedToolSlugs: ["image-compressor", "image-resizer", "sample-file-generator"],
+    isPopular: true,
+  },
+
+  // 41. Sample PDF Generator
+  "sample-pdf-generator": {
+    slug: "sample-pdf-generator",
+    name: "Sample PDF Generator",
+    shortName: "Sample PDFs",
+    category: "pdf-docs",
+    categoryName: "PDF & Documents",
+    description: "Generate dummy PDF files at an exact size, with a random number of pages and real text content.",
+    longDescription: "Create placeholder PDFs at any file size, each with a randomised page count and genuine text content built with pdf-lib. Useful for testing upload caps, PDF viewers, and document pipelines.",
+    iconName: "FileText",
+    metaTitle: "Sample PDF Generator - Dummy PDF of Any Size",
+    metaDescription: "Generate dummy PDF files at an exact size with real pages and text. Free, random each time, processed in your browser.",
+    keywords: ["sample pdf", "dummy pdf generator", "sample pdf download", "test pdf file", "pdf 1mb sample", "placeholder pdf", "fake pdf generator"],
+    features: ["Exact target file size", "Random page count and content", "Valid PDF that opens anywhere", "Nothing is uploaded"],
+    faqs: [
+      { question: "Do the PDFs actually open?", answer: "Yes. They are built with pdf-lib and contain real pages, headings, and body text." }
+    ],
+    relatedToolSlugs: ["pdf-merge", "split-pdf", "sample-file-generator"],
+  },
+
+  // 42. Sample Video Generator
+  "sample-video-generator": {
+    slug: "sample-video-generator",
+    name: "Sample Video Generator",
+    shortName: "Sample Videos",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Generate a short random WebM video clip in your browser for testing uploads and players.",
+    longDescription: "Record a short animated WebM clip of any length between one and ten seconds, generated live in your browser. Useful for testing video uploads, players, and duration limits.",
+    iconName: "Shuffle",
+    metaTitle: "Sample Video Generator - Dummy WebM Test Clip",
+    metaDescription: "Generate a short sample video for testing uploads and players. Choose the length, recorded in your browser, free.",
+    keywords: ["sample video", "dummy video generator", "sample video download", "test video file", "placeholder video", "short test clip"],
+    features: ["1 to 10 second clips", "640x360 VP9 WebM", "Randomised animation each time", "Recorded locally, never uploaded"],
+    faqs: [
+      { question: "Can I choose the exact file size?", answer: "No. The browser's recorder picks its own bitrate, so you choose the duration and the size follows." }
+    ],
+    relatedToolSlugs: ["sample-image-generator", "sample-file-generator", "image-compressor"],
+  },
+
+  // 43. Sample Data File Generator
+  "sample-data-generator": {
+    slug: "sample-data-generator",
+    name: "Sample CSV & JSON Generator",
+    shortName: "Sample Data",
+    category: "developer",
+    categoryName: "Developer & Data",
+    description: "Generate dummy CSV, JSON, and plain text files at an exact size with realistic placeholder records.",
+    longDescription: "Create test data files at any size — CSV with headers and rows, JSON arrays of records, or plain text. Useful for testing importers, parsers, and upload limits.",
+    iconName: "Code",
+    metaTitle: "Sample CSV & JSON Generator - Dummy Data Files",
+    metaDescription: "Generate dummy CSV, JSON and text files at an exact size with realistic placeholder records. Free and instant.",
+    keywords: ["sample csv", "dummy csv generator", "sample json file", "test data generator", "dummy data file", "sample csv download", "large csv for testing"],
+    features: ["CSV, JSON or plain text", "Exact target file size", "Realistic placeholder records", "Runs entirely in your browser"],
+    faqs: [
+      { question: "Is the data realistic?", answer: "It uses plausible names, emails, cities, and amounts — enough to exercise a parser or importer." }
+    ],
+    relatedToolSlugs: ["json-formatter", "sample-file-generator", "text-diff-checker"],
+  },
 };
 
 export function getAllTools(): ToolDefinition[] {

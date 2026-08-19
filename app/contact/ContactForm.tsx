@@ -34,7 +34,7 @@ export default function ContactForm() {
             </div>
             <h3 className="text-lg font-bold text-slate-900 dark:text-white">Message Received!</h3>
             <p className="text-sm text-slate-600 dark:text-slate-400 max-w-sm mx-auto">
-              Thank you for helping make EverydayTools better. Our editorial and development team will review your inquiry.
+              Thank you for helping make TabBench better. Our editorial and development team will review your inquiry.
             </p>
             <button
               onClick={() => setSubmitted(false)}

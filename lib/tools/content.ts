@@ -2409,6 +2409,307 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
       },
     ],
   },
+  "sample-file-generator": {
+    intro:
+      "Testing an upload form means finding a file of the right size, and hunting through your downloads folder for something near 2MB wastes a morning. This generates one to order: pick a type and a size and you get four freshly randomised files that are genuinely valid — the images open in an image viewer, the PDFs in a reader, the Word files in Word.",
+    howTo: {
+      title: "How to generate a sample file",
+      steps: [
+        "Pick a file type — image, PDF, Word, CSV, JSON, plain text, or a short video.",
+        "Choose a target size from the presets, or type an exact figure in kilobytes.",
+        "Generate. Four different samples appear, each with randomised content so no two look alike.",
+        "Download the one you want, or copy a small image as a data URL to paste straight into HTML or CSS.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Testing an upload limit",
+        body:
+          "A form that claims to reject files over 2MB needs a file just under and just over that line. Generating both takes seconds and tells you whether the validation actually works.",
+      },
+      {
+        title: "Filling a design or demo with placeholder media",
+        body:
+          "Randomised gradient images at the right dimensions stand in for real photography while a layout is still being built, without licensing anything.",
+      },
+      {
+        title: "Exercising a file pipeline",
+        body:
+          "Storage quotas, virus scanners, thumbnail generators, and progress bars all behave differently on a 10KB file and a 10MB one. Having both on demand makes those paths easy to check.",
+      },
+    ],
+    tips: [
+      "The size is exact. Content is scaled close to the target, then the file is padded using bytes each format ignores — after JPEG's end marker, after a PDF's %%EOF, after a ZIP's central directory.",
+      "Video is the exception: MediaRecorder chooses its own bitrate and the container cannot be padded, so length is what you control rather than size.",
+      "Recording video happens in real time — a five-second clip takes five seconds.",
+      "Every generation is random, so hitting Generate again gives you completely different files at the same size.",
+    ],
+    extraFaqs: [
+      {
+        question: "Are these real files or just padded junk?",
+        answer:
+          "Real files. Each one is generated properly for its format — the PDFs are built with pdf-lib and have actual pages and text, the Word files are valid OOXML, the images are drawn on a canvas. Padding only tops up the final byte count using regions the format specification says to ignore, so every file opens normally.",
+      },
+      {
+        question: "Why is the video size not exact?",
+        answer:
+          "Because it is encoded by the browser's own recorder, which picks a bitrate based on the content, and WebM does not tolerate trailing bytes the way JPEG and PDF do. You choose the duration instead, and the resulting size will be in the right region rather than exact.",
+      },
+      {
+        question: "Can I get a shareable link to the generated image?",
+        answer:
+          "Not a hosted one. This site has no server and stores nothing, so there is nowhere for a file to live at a public URL. What you can copy is a data URL for images under 200KB, which works pasted directly into HTML, CSS, or a Markdown file — self-contained, though much longer than a normal link.",
+      },
+      {
+        question: "Is anything uploaded?",
+        answer:
+          "No. Every file is generated in your browser and written straight to your downloads. Nothing is transmitted.",
+      },
+      {
+        question: "What is the largest file I can generate?",
+        answer:
+          "Sizes into the tens of megabytes work fine. Very large targets take longer and use memory proportional to the file, since the whole thing is held in the tab before download.",
+      },
+    ],
+  },
+
+
+  "sample-image-generator": {
+    intro:
+      "Placeholder images are needed constantly and are surprisingly annoying to source: you want one that is exactly 500KB to test an upload cap, or a 16:9 block to fill a layout, and instead you go rummaging through a downloads folder. This draws one to order — randomised artwork, randomised dimensions, and the exact byte size you asked for.",
+    howTo: {
+      title: "How to generate a sample image",
+      steps: [
+        "Choose an output format. JPG for realistic photo-like sizes, PNG when you need a larger file from the same content, WebP to test modern format handling.",
+        "Pick a target size from the presets or type an exact figure in kilobytes.",
+        "Generate. Four images appear, each with different artwork and a different aspect ratio.",
+        "Download the one you want, or copy it as a data URL if it is under 200KB.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Testing an upload size limit",
+        body:
+          "To check that a form really rejects files over 2MB you need one just under and one just over. Generating both takes seconds and proves whether the validation works.",
+      },
+      {
+        title: "Filling a layout before real photography exists",
+        body:
+          "Randomised gradient blocks at the right aspect ratio show how a grid or card design behaves without licensing stock images or shipping grey rectangles.",
+      },
+      {
+        title: "Exercising an image pipeline",
+        body:
+          "Thumbnail generation, EXIF handling, and progress indicators all behave differently on a 20KB file and a 5MB one. Having both on demand makes those paths testable.",
+      },
+    ],
+    tips: [
+      "The size is exact. Artwork is scaled near the target, then the file is padded with bytes after JPEG's end-of-image marker, which every decoder ignores.",
+      "PNG produces much larger files from the same drawing, so a PNG target is reached with a smaller image than a JPG one.",
+      "Each generation is fully random — press it again for four completely different images at the same size.",
+      "Data URLs are offered only under 200KB; beyond that they become unwieldy to paste anywhere.",
+    ],
+    extraFaqs: [
+      {
+        question: "Are these real image files?",
+        answer:
+          "Yes. Each is drawn on an HTML canvas and encoded by the browser's own JPEG, PNG, or WebP encoder, so it opens in any viewer or editor and carries correct dimensions and headers.",
+      },
+      {
+        question: "How is the file size exact?",
+        answer:
+          "The artwork is generated at dimensions estimated to land near your target, then the encoded file is topped up to the precise byte count using padding after the format's end marker. Decoders stop reading at that marker, so the image is unaffected while the size is exact — which matters when the whole point is testing a limit.",
+      },
+      {
+        question: "Can I choose the dimensions?",
+        answer:
+          "Not directly — dimensions are derived from the size target and randomised across common aspect ratios so the four samples differ from one another. If you need specific pixel dimensions, generate one here and run it through the Image Resizer.",
+      },
+      {
+        question: "Is anything uploaded?",
+        answer:
+          "No. Images are drawn and encoded in your browser and written straight to your downloads.",
+      },
+    ],
+  },
+
+  "sample-pdf-generator": {
+    intro:
+      "Testing anything that accepts PDFs means having PDFs of known sizes to hand, and real documents are rarely the size you need. This builds one to order with pdf-lib: a genuine document with pages, headings, and body text, at exactly the byte size you specify.",
+    howTo: {
+      title: "How to generate a sample PDF",
+      steps: [
+        "Pick a target size from the presets, or type an exact figure in kilobytes.",
+        "Generate. Four PDFs appear, each with a randomised page count between one and four.",
+        "Download whichever you need — the filename records the page count and size.",
+        "Press generate again for a completely different set at the same size.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Testing portal upload caps",
+        body:
+          "Government and university portals cap PDFs at 100KB, 2MB, or 5MB. Generating files either side of the line shows whether the check is enforced server-side or only in the browser.",
+      },
+      {
+        title: "Checking a PDF viewer or parser",
+        body:
+          "A viewer that works on a one-page document may behave differently across page boundaries. Randomised page counts give you both cases without hunting for samples.",
+      },
+      {
+        title: "Load-testing document storage",
+        body:
+          "Quota handling, virus scanning, and preview generation all scale with file size. A stack of known-size PDFs makes that measurable.",
+      },
+    ],
+    tips: [
+      "The PDFs are real documents, not renamed junk — they contain a heading, a timestamp, body paragraphs, and a filled rectangle on each page.",
+      "Size is exact: content is generated first, then the file is padded after the %%EOF marker, which every PDF reader ignores.",
+      "Page count is randomised between one and four so the four samples are not identical.",
+      "For a specific page count rather than a random one, generate a larger document and use the Split PDF tool.",
+    ],
+    extraFaqs: [
+      {
+        question: "Do these PDFs actually open?",
+        answer:
+          "Yes. They are constructed with pdf-lib and contain real page objects, embedded Helvetica text, and vector shapes. Acrobat, Preview, and browser viewers all open them normally.",
+      },
+      {
+        question: "Why is most of the file padding at large sizes?",
+        answer:
+          "Because a few pages of text is only a few kilobytes. Asking for 10MB means roughly 10MB of ignored padding after the %%EOF marker. That is exactly right for testing a size limit, but it is not a realistic stand-in for a genuinely image-heavy 10MB scan.",
+      },
+      {
+        question: "Can I control the page count?",
+        answer:
+          "Not directly — it is randomised between one and four so the samples differ. Generating repeatedly will give you the count you want, or you can split a larger file.",
+      },
+      {
+        question: "Is the file uploaded anywhere?",
+        answer:
+          "No. The PDF is built in your browser with pdf-lib and saved directly to your device.",
+      },
+    ],
+  },
+
+  "sample-video-generator": {
+    intro:
+      "Sample video files are the hardest kind to find at short notice — they are large, awkward to source, and most stock clips carry a licence. This records one live in your browser: an animated clip at 640×360, encoded as WebM, at whatever length you choose between one and ten seconds.",
+    howTo: {
+      title: "How to generate a sample video",
+      steps: [
+        "Set the length with the slider. Longer clips produce larger files.",
+        "Generate. Recording happens in real time, so a five-second clip takes five seconds.",
+        "Play it back in the preview to confirm it is a valid video.",
+        "Download the .webm file.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Testing a video upload form",
+        body:
+          "Duration limits, size caps, and format validation all need a real video file to exercise. A generated clip is faster than finding one and carries no licensing question.",
+      },
+      {
+        title: "Checking a player or embed",
+        body:
+          "A short clip with a visible running timer makes it obvious whether seeking, looping, and autoplay behave as expected.",
+      },
+      {
+        title: "Placeholder media in a prototype",
+        body:
+          "A moving placeholder shows how a layout handles video without embedding someone else's footage in a demo.",
+      },
+    ],
+    tips: [
+      "Recording is real time — there is no way to produce a ten-second clip faster than ten seconds.",
+      "The output is WebM with VP9 where the browser supports it. MP4 is not available, because browsers do not expose an MP4 encoder to web pages.",
+      "File size is a consequence of length and content, not something you can set precisely.",
+      "The clip shows a live timer, which makes playback and seeking problems easy to spot.",
+    ],
+    extraFaqs: [
+      {
+        question: "Why can I not set an exact file size?",
+        answer:
+          "Because the browser's MediaRecorder chooses its own bitrate based on the content, and the WebM container does not tolerate trailing padding the way JPEG and PDF do. You choose duration and the size follows. For an exact-size file, use the image, PDF, or data generators instead.",
+      },
+      {
+        question: "Can I get an MP4 rather than WebM?",
+        answer:
+          "Not from a browser. MediaRecorder exposes WebM (VP8/VP9) in essentially all browsers and MP4 in almost none, for patent-licensing reasons. Convert the WebM with a desktop tool such as ffmpeg if you specifically need MP4.",
+      },
+      {
+        question: "Is the video a real, playable file?",
+        answer:
+          "Yes. It is captured from a live canvas animation through the browser's encoder, so it plays in any WebM-capable player, which includes every modern browser and VLC.",
+      },
+      {
+        question: "Does the recording leave my device?",
+        answer:
+          "No. The canvas is captured and encoded locally, and the resulting blob is written straight to your downloads.",
+      },
+    ],
+  },
+
+  "sample-data-generator": {
+    intro:
+      "Testing an importer means having data to import, and hand-writing a thousand rows of CSV is nobody's idea of a good afternoon. This generates plausible records — names, emails, cities, amounts, dates — as CSV, JSON, or plain text, at exactly the file size you need.",
+    howTo: {
+      title: "How to generate sample data files",
+      steps: [
+        "Choose a format: CSV for tabular imports, JSON for API fixtures, plain text for anything else.",
+        "Set a target size. Larger files simply contain more records.",
+        "Generate four samples and inspect the filenames and sizes.",
+        "Download the one you need.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Testing a CSV importer",
+        body:
+          "Importers behave differently on ten rows and ten thousand. Generating both sizes shows whether batching, progress reporting, and timeouts hold up.",
+      },
+      {
+        title: "Seeding fixtures for development",
+        body:
+          "A JSON array of a few hundred records is enough to make a list view, pagination, and search feel realistic before a real API exists.",
+      },
+      {
+        title: "Checking upload and parse limits",
+        body:
+          "A 10MB CSV is a very different proposition from a 10KB one for a browser-side parser. Having both makes the limits measurable rather than guessed.",
+      },
+    ],
+    tips: [
+      "CSV output includes a header row, so it imports cleanly into spreadsheets and most database tools.",
+      "JSON is pretty-printed, which makes it larger than minified output but far easier to read while debugging.",
+      "Records use plausible values — real-looking names, emails, cities, and amounts — rather than repeated filler.",
+      "Sizes are exact, because text formats can be trimmed to the byte.",
+    ],
+    extraFaqs: [
+      {
+        question: "Is the data realistic enough to test with?",
+        answer:
+          "For structure, yes — records have consistent fields, valid-looking emails, real city names, and varied numeric and date values, which is enough to exercise a parser, importer, or table view. It is not statistically realistic, so it is not a substitute for real data when testing analytics.",
+      },
+      {
+        question: "How many rows will I get?",
+        answer:
+          "As many as fit the size you asked for. A CSV row here is roughly 70 bytes, so 1MB is around 15,000 rows. The file is filled with records and then trimmed to the exact byte count.",
+      },
+      {
+        question: "Can I choose the columns or fields?",
+        answer:
+          "Not currently — the schema is fixed at id, name, email, city, amount, and created_at, which covers the common shapes of test data. For a custom schema, generate a file here and edit the header and a row, or script it.",
+      },
+      {
+        question: "Does the data contain anything real?",
+        answer:
+          "No. Every value is generated, the email addresses use the reserved example.com domain, and nothing corresponds to a real person. It is safe to commit to a repository or share.",
+      },
+    ],
+  },
+
 };
 
 /** Returns the long-form content for a tool, if any has been written. */

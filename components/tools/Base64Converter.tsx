@@ -6,7 +6,7 @@ import confetti from "canvas-confetti";
 
 export default function Base64Converter() {
   const [mode, setMode] = useState<"encode" | "decode">("encode");
-  const [input, setInput] = useState<string>("Hello, EverydayTools!");
+  const [input, setInput] = useState<string>("Hello, TabBench!");
   const [urlSafe, setUrlSafe] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);

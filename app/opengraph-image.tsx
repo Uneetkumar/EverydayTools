@@ -5,7 +5,7 @@ import { getAllTools } from "@/lib/tools/registry";
 export const dynamic = "force-static";
 
 export const alt =
-  "EverydayTools - Free, fast and private online calculators and utilities";
+  "TabBench - Free, fast and private online calculators and utilities";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -34,7 +34,7 @@ export default function OpengraphImage() {
             marginBottom: 28,
           }}
         >
-          everydaytools
+          tabbench
         </div>
 
         <div

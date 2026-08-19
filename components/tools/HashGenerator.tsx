@@ -6,7 +6,7 @@ import { Copy, Check, Lock, RefreshCw } from "lucide-react";
 import confetti from "canvas-confetti";
 
 export default function HashGenerator() {
-  const [text, setText] = useState<string>("Hello, EverydayTools!");
+  const [text, setText] = useState<string>("Hello, TabBench!");
   const [uppercase, setUppercase] = useState<boolean>(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 

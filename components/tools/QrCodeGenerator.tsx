@@ -92,8 +92,8 @@ export default function QrCodeGenerator() {
   const [tab, setTab] = usePersistentState<QrTab>("qr_tab", "url");
 
   // Inputs
-  const [url, setUrl] = usePersistentState<string>("qr_url", "https://everydaytools-s.web.app");
-  const [text, setText] = usePersistentState<string>("qr_text", "EverydayTools — Fast, Private Utilities");
+  const [url, setUrl] = usePersistentState<string>("qr_url", "https://tabbench.com");
+  const [text, setText] = usePersistentState<string>("qr_text", "TabBench — Fast, Private Utilities");
 
   // WiFi Fields
   const [wifiSsid, setWifiSsid] = usePersistentState<string>("qr_wifi_ssid", "Office_WiFi");
@@ -108,11 +108,11 @@ export default function QrCodeGenerator() {
 
   // WhatsApp
   const [waPhone, setWaPhone] = usePersistentState<string>("qr_wa_phone", "14155552671");
-  const [waMsg, setWaMsg] = usePersistentState<string>("qr_wa_msg", "Hi! I found your QR code on EverydayTools.");
+  const [waMsg, setWaMsg] = usePersistentState<string>("qr_wa_msg", "Hi! I found your QR code on TabBench.");
 
   // vCard / Contact
   const [vcardName, setVcardName] = useState<string>("Alex Morgan");
-  const [vcardOrg, setVcardOrg] = useState<string>("EverydayTools");
+  const [vcardOrg, setVcardOrg] = useState<string>("TabBench");
   const [vcardPhone, setVcardPhone] = useState<string>("+1 555-0199");
   const [vcardEmail, setVcardEmail] = useState<string>("alex@example.com");
 
@@ -146,7 +146,7 @@ export default function QrCodeGenerator() {
   const payload = useMemo((): string => {
     switch (tab) {
       case "url":
-        if (!url.trim()) return "https://everydaytools-s.web.app";
+        if (!url.trim()) return "https://tabbench.com";
         return url.startsWith("http://") || url.startsWith("https://")
           ? url.trim()
           : `https://${url.trim()}`;
@@ -161,7 +161,7 @@ export default function QrCodeGenerator() {
         return `BEGIN:VCARD\nVERSION:3.0\nN:${vcardName}\nORG:${vcardOrg}\nTEL:${vcardPhone}\nEMAIL:${vcardEmail}\nEND:VCARD`;
       case "text":
       default:
-        return text || "EverydayTools";
+        return text || "TabBench";
     }
   }, [tab, url, wifiType, wifiSsid, wifiPass, wifiHidden, emailTo, emailSubject, emailBody, waPhone, waMsg, vcardName, vcardOrg, vcardPhone, vcardEmail, text]);
 
@@ -453,7 +453,7 @@ export default function QrCodeGenerator() {
                   {[
                     "https://google.com",
                     "https://github.com",
-                    "https://everydaytools-s.web.app",
+                    "https://tabbench.com",
                   ].map((testUrl) => (
                     <button
                       key={testUrl}

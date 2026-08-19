@@ -2,12 +2,12 @@ import type { Metadata } from "next";
 import { ToolDefinition } from "@/lib/tools/registry";
 
 export const SITE_CONFIG = {
-  name: "EverydayTools",
-  legalName: "EverydayTools Network",
-  domain: process.env.NEXT_PUBLIC_SITE_URL || "https://everydaytools-s.web.app",
+  name: "TabBench",
+  legalName: "TabBench",
+  domain: process.env.NEXT_PUBLIC_SITE_URL || "https://tabbench.com",
   description:
     "Free online calculators, file converters, image compressors, PDF utilities, and developer tools. Fast, private in-browser tools with zero signups.",
-  twitterHandle: "@EverydayToolsHQ",
+  twitterHandle: "@tabbench",
 };
 
 /**
@@ -24,11 +24,11 @@ export function constructToolMetadata(tool: ToolDefinition): Metadata {
   const url = `${SITE_CONFIG.domain}/tools/${tool.slug}`;
 
   // Optimal Title (50-60 characters)
-  let title = `${tool.shortName} - Free Online Tool | EverydayTools`;
+  let title = `${tool.shortName} - Free Online Tool | TabBench`;
   if (title.length > 60) {
-    title = `${tool.shortName} | EverydayTools`;
+    title = `${tool.shortName} | TabBench`;
   } else if (title.length < 50) {
-    title = `${tool.shortName} - Free Online Utility | EverydayTools`;
+    title = `${tool.shortName} - Free Online Utility | TabBench`;
   }
 
   // Optimal Description (135-160 characters)
@@ -41,9 +41,9 @@ export function constructToolMetadata(tool: ToolDefinition): Metadata {
   }
 
   return {
-    // `absolute` opts out of the root layout's "%s | EverydayTools" template.
-    // Without it the suffix is added twice ("... | EverydayTools |
-    // EverydayTools"), which also pushed every title past the 60-char target
+    // `absolute` opts out of the root layout's "%s | TabBench" template.
+    // Without it the suffix is added twice ("... | TabBench |
+    // TabBench"), which also pushed every title past the 60-char target
     // the length logic above is trying to hit.
     title: { absolute: title },
     description,
@@ -90,8 +90,8 @@ export function constructPageMetadata({
 
   // Ensure title fits optimal length
   let optTitle = title;
-  if (!optTitle.includes("EverydayTools")) {
-    optTitle = `${title} | EverydayTools`;
+  if (!optTitle.includes("TabBench")) {
+    optTitle = `${title} | TabBench`;
   }
   if (optTitle.length > 60) {
     optTitle = optTitle.slice(0, 57).trim() + "...";

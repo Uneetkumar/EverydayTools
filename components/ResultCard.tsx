@@ -53,7 +53,7 @@ export default function ResultCard({
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({
-          title: "EverydayTools Result",
+          title: "TabBench Result",
           text: `Check out this calculation: ${value} ${unit}`,
           url: window.location.href,
         });

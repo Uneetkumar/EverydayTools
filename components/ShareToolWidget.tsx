@@ -37,7 +37,7 @@ export default function ShareToolWidget({ toolName, toolSlug }: ShareToolWidgetP
   };
 
   const copyEmbedCode = async () => {
-    const embedCode = `<iframe src="${toolUrl}" width="100%" height="600" frameborder="0" title="${toolName} by EverydayTools" style="border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);"></iframe>`;
+    const embedCode = `<iframe src="${toolUrl}" width="100%" height="600" frameborder="0" title="${toolName} by TabBench" style="border-radius:16px;box-shadow:0 4px 20px rgba(0,0,0,0.08);"></iframe>`;
     try {
       await navigator.clipboard.writeText(embedCode);
       setEmbedCopied(true);
@@ -49,7 +49,7 @@ export default function ShareToolWidget({ toolName, toolSlug }: ShareToolWidgetP
   };
 
   const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(`${shareText} ${toolUrl}`)}`;
-  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(toolUrl)}&via=EverydayToolsHQ`;
+  const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(toolUrl)}&via=TabBenchHQ`;
   const linkedinUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(toolUrl)}`;
 
   return (

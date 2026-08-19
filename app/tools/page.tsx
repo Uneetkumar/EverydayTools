@@ -70,7 +70,7 @@ export default function ToolsIndexPage() {
             All free online tools
           </h1>
           <p className="text-base leading-relaxed text-slate-600 dark:text-slate-400">
-            Every tool on EverydayTools runs entirely inside your browser. Files
+            Every tool on TabBench runs entirely inside your browser. Files
             you open are never uploaded, calculations never reach a server, and
             nothing requires an account. That makes these tools usable for
             documents you would not paste into an unknown website — scanned

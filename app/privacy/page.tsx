@@ -25,7 +25,7 @@ export default function PrivacyPage() {
         <section className="space-y-2">
           <h2 className="text-base font-bold text-slate-900 dark:text-white">1. Client-Side Execution Guarantee</h2>
           <p>
-            At EverydayTools, we believe in radical privacy. The core utilities—including calculators, text formatting, code formatters, and date utilities—execute exclusively in your web browser&apos;s memory using client-side JavaScript.
+            At TabBench, we believe in radical privacy. The core utilities—including calculators, text formatting, code formatters, and date utilities—execute exclusively in your web browser&apos;s memory using client-side JavaScript.
           </p>
           <p>
             We do not transmit, intercept, log, or store the contents of your calculations, text documents, or JSON payloads on any remote servers.

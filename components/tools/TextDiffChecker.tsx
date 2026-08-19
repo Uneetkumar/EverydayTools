@@ -5,10 +5,10 @@ import { GitCompare, Trash2, ArrowRightLeft } from "lucide-react";
 
 export default function TextDiffChecker() {
   const [original, setOriginal] = useState<string>(
-    "EverydayTools provides fast online utilities.\nRuns completely in your browser.\nNo login required."
+    "TabBench provides fast online utilities.\nRuns completely in your browser.\nNo login required."
   );
   const [modified, setModified] = useState<string>(
-    "EverydayTools provides fast, private online utilities.\nRuns completely in your local browser.\nNo signup or login required."
+    "TabBench provides fast, private online utilities.\nRuns completely in your local browser.\nNo signup or login required."
   );
 
   const origLines = original.split("\n");

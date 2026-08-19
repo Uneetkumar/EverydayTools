@@ -5,7 +5,7 @@ import { ShieldCheck, Zap, Award, CheckCircle2 } from "lucide-react";
 
 export const metadata = constructPageMetadata({
   title: "About Us - Our Mission & Accuracy Standards",
-  description: "Learn about EverydayTools: our commitment to zero-latency, client-side privacy, mathematically verified formulas, and helpful free utilities.",
+  description: "Learn about TabBench: our commitment to zero-latency, client-side privacy, mathematically verified formulas, and helpful free utilities.",
   path: "/about",
 });
 
@@ -16,10 +16,10 @@ export default function AboutPage() {
 
       <div className="space-y-4 max-w-3xl">
         <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-          About EverydayTools
+          About TabBench
         </h1>
         <p className="text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-          EverydayTools was built to provide fast, reliable, zero-latency browser utilities that solve everyday mathematical, textual, and technical problems without clutter, forced logins, or intrusive data tracking.
+          TabBench was built to provide fast, reliable, zero-latency browser utilities that solve everyday mathematical, textual, and technical problems without clutter, forced logins, or intrusive data tracking.
         </p>
       </div>
 

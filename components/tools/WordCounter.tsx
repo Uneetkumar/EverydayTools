@@ -8,7 +8,7 @@ import confetti from "canvas-confetti";
 export default function WordCounter() {
   const [text, setText, resetText] = usePersistentState<string>(
     "word_counter_text",
-    "EverydayTools delivers fast, privacy-first online calculators, converters, and formatters directly to your browser. No signups, no latency, and zero data logging."
+    "TabBench delivers fast, privacy-first online calculators, converters, and formatters directly to your browser. No signups, no latency, and zero data logging."
   );
   const [copied, setCopied] = useState<boolean>(false);
 

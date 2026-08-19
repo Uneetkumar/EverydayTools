@@ -11,9 +11,9 @@ import ContactForm from "./ContactForm";
 export const metadata: Metadata = constructPageMetadata({
   title: "Contact & Support",
   description:
-    "Get in touch with the EverydayTools team about a bug, a tool request, feedback, or a partnership enquiry. We read every message.",
+    "Get in touch with the TabBench team about a bug, a tool request, feedback, or a partnership enquiry. We read every message.",
   path: "/contact",
-  keywords: ["contact everydaytools", "report a bug", "request a tool", "support"],
+  keywords: ["contact tabbench", "report a bug", "request a tool", "support"],
 });
 
 export default function ContactPage() {

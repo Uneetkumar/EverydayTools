@@ -8,7 +8,7 @@ import confetti from "canvas-confetti";
 export default function CaseConverter() {
   const [text, setText] = usePersistentState<string>(
     "case_converter_text",
-    "Everyday tools provide instant, client-side utility for students, engineers, and creators."
+    "TabBench provides instant, client-side utility for students, engineers, and creators."
   );
   const [copied, setCopied] = useState(false);
 

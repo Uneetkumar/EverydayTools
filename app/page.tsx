@@ -215,11 +215,11 @@ export default function HomePage() {
       <section className="text-center max-w-4xl mx-auto space-y-5 pt-4">
         <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-50/90 dark:bg-blue-950/80 border border-blue-200/80 dark:border-blue-800/80 text-blue-700 dark:text-blue-300 text-xs font-semibold shadow-xs backdrop-blur-xs">
           <Sparkles className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
-          <span>{allTools.length}+ Everyday Utilities • 100% Client-Side Private • Zero Latency</span>
+          <span>{allTools.length}+ Free Tools • 100% Client-Side Private • Zero Latency</span>
         </div>
 
         <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-          Everyday Online Utilities & Tools
+          Free Online Tools & Calculators
         </h1>
         <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
           Fast, private browser utilities for students, developers, and creators. All calculations and file conversions run locally on your device.
@@ -510,10 +510,10 @@ export default function HomePage() {
           <section className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-8 sm:p-10 space-y-8">
             <div className="max-w-3xl space-y-3">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                Why Choose EverydayTools? 100% Free, Private & Instant
+                Why Choose TabBench? 100% Free, Private & Instant
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                EverydayTools is an open, high-performance web utility suite engineered for students, software engineers, accountants, designers, and creators worldwide. Unlike traditional online conversion platforms that upload your sensitive documents, passwords, or images to third-party cloud servers, our architecture computes 100% of calculations and file operations directly inside your browser memory.
+                TabBench is an open, high-performance web utility suite engineered for students, software engineers, accountants, designers, and creators worldwide. Unlike traditional online conversion platforms that upload your sensitive documents, passwords, or images to third-party cloud servers, our architecture computes 100% of calculations and file operations directly inside your browser memory.
               </p>
             </div>
 
@@ -560,7 +560,7 @@ export default function HomePage() {
                     Are the tools really completely free to use?
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Yes. All 31+ utilities on EverydayTools are 100% free with unlimited usage for personal, commercial, and educational purposes. No credit card or account is ever required.
+                    Yes. All 31+ utilities on TabBench are 100% free with unlimited usage for personal, commercial, and educational purposes. No credit card or account is ever required.
                   </p>
                 </div>
 

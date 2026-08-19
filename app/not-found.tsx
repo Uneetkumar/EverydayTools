@@ -12,7 +12,7 @@ import { ArrowRight, Compass } from "lucide-react";
  * onward links wastes the crawl and sends the visitor straight back out.
  */
 export const metadata: Metadata = {
-  title: { absolute: "Page Not Found (404) | EverydayTools" },
+  title: { absolute: "Page Not Found (404) | TabBench" },
   description:
     "That page does not exist. Browse the full tool directory, or jump to one of the popular free tools below.",
   robots: { index: false, follow: true },

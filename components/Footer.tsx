@@ -17,7 +17,7 @@ export default function Footer() {
                 <Wrench className="w-4 h-4" />
               </div>
               <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white">
-                Everyday<span className="text-indigo-600 dark:text-indigo-400">Tools</span>
+                Tab<span className="text-indigo-600 dark:text-indigo-400">Bench</span>
               </span>
             </Link>
             <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed max-w-sm">
@@ -128,7 +128,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <div className="pt-8 mt-8 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400">
           <div>
-            © {new Date().getFullYear()} EverydayTools. Built for speed, clarity, and utility.
+            © {new Date().getFullYear()} TabBench. Built for speed, clarity, and utility.
           </div>
           <div className="flex items-center space-x-4 mt-4 sm:mt-0">
             <span>Global English Edition</span>

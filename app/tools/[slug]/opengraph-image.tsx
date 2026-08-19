@@ -4,7 +4,7 @@ import { getAllTools, getToolBySlug } from "@/lib/tools/registry";
 // Required with `output: export` — one PNG is rendered per tool at build time.
 export const dynamic = "force-static";
 
-export const alt = "EverydayTools";
+export const alt = "TabBench";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -42,7 +42,7 @@ export default async function ToolOpengraphImage({
             color: "#93c5fd",
           }}
         >
-          everydaytools {tool ? `· ${tool.categoryName}` : ""}
+          tabbench {tool ? `· ${tool.categoryName}` : ""}
         </div>
 
         <div style={{ display: "flex", flexDirection: "column" }}>
