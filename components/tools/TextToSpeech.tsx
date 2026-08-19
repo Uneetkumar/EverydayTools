@@ -26,8 +26,8 @@ export default function TextToSpeech() {
 
   useEffect(() => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      setSupported(false);
-      return;
+      const missing = setTimeout(() => setSupported(false), 0);
+      return () => clearTimeout(missing);
     }
     // Voices load asynchronously in most browsers, and the first call often
     // returns an empty array — hence the voiceschanged listener.
@@ -38,9 +38,10 @@ export default function TextToSpeech() {
         setVoiceName((current) => current || list.find((v) => v.default)?.name || list[0].name);
       }
     };
-    load();
+    const prime = setTimeout(load, 0);
     window.speechSynthesis.addEventListener("voiceschanged", load);
     return () => {
+      clearTimeout(prime);
       window.speechSynthesis.removeEventListener("voiceschanged", load);
       window.speechSynthesis.cancel();
     };
