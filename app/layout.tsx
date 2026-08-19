@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
@@ -13,7 +12,6 @@ import {
   generateWebsiteJsonLd,
   generateOrganizationJsonLd,
 } from "@/lib/seo/jsonld";
-import { ADSENSE_CLIENT } from "@/lib/ads/config";
 import { getAllTools } from "@/lib/tools/registry";
 
 // Derived so the marketing copy cannot drift from the registry.
@@ -145,7 +143,12 @@ export default function RootLayout({
           href="https://pagead2.googlesyndication.com"
           crossOrigin="anonymous"
         />
-        <link rel="dns-prefetch" href="https://googleads.g.doubleclick.net" />
+        {/* Google AdSense Script */}
+        <script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5552044975820319"
+          crossOrigin="anonymous"
+        />
 
         <script
           type="application/ld+json"
@@ -174,19 +177,6 @@ export default function RootLayout({
             <Footer />
           </div>
         </ThemeProvider>
-
-        {/* AdSense loads after hydration rather than in <head>. The library is
-            large and third-party; blocking the head on it delays Largest
-            Contentful Paint, which is a Core Web Vital and a ranking signal.
-            afterInteractive still loads it well before a user scrolls to an
-            ad slot. */}
-        <Script
-          id="adsbygoogle-init"
-          strategy="afterInteractive"
-          async
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
-          crossOrigin="anonymous"
-        />
       </body>
     </html>
   );
