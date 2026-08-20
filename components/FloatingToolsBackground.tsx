@@ -19,21 +19,32 @@ export default function FloatingToolsBackground() {
 
     const handleResize = () => {
       if (!canvas || !ctx) return;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       width = window.innerWidth;
       height = window.innerHeight;
 
+      // On mobile devices, don't run heavy Canvas particle RAF loops to maintain 120 FPS scrolling
+      if (width < 768) {
+        canvas.style.display = "none";
+        return;
+      }
+      canvas.style.display = "block";
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
       canvas.width = Math.round(width * dpr);
       canvas.height = Math.round(height * dpr);
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
 
-      ctx.setTransform(1, 0, 0, 1, 0, 0); // reset transform
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
     };
 
     handleResize();
     window.addEventListener("resize", handleResize);
+
+    if (window.innerWidth < 768) {
+      return () => window.removeEventListener("resize", handleResize);
+    }
 
     // Subtle micro-particles restricted to the side margins (outer 25% on each side)
     const particleCount = 14;

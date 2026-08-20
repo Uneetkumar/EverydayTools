@@ -112,7 +112,7 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
   const relatedGuides = getGuidesForTool(tool.slug);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
       <TrackToolVisit slug={tool.slug} name={tool.name} />
 
       <Breadcrumbs
@@ -125,7 +125,7 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
 
       {isWide && (
         <>
-          <header className="space-y-3 pb-1 max-w-3xl">
+          <header className="space-y-2.5 sm:space-y-3 pb-1 max-w-3xl">
             <div className="flex flex-wrap items-center gap-2">
               <Link
                 href={`/categories/${tool.category}`}
@@ -145,17 +145,17 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
                 </span>
               )}
             </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+            <h1 className="text-xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
               {tool.name}
             </h1>
-            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
               {tool.longDescription}
             </p>
           </header>
 
           {/* Full-bleed workspace. @container lets the tool lay itself out
               against its own width instead of the viewport. */}
-          <div className="@container rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-xs">
+          <div className="@container rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 sm:p-6 shadow-xs">
             {children}
           </div>
         </>

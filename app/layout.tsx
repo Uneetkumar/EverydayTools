@@ -127,7 +127,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full scroll-smooth`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full`}
     >
       <head>
         <meta charSet="utf-8" />

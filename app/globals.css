@@ -38,8 +38,11 @@ html {
   color-scheme: light;
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
-  overflow-x: hidden;
   width: 100%;
+  height: 100%;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: auto;
+  touch-action: manipulation;
 }
 
 html.dark {
@@ -52,10 +55,29 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  transition: background-color 0.2s ease, color 0.2s ease;
-  overflow-x: hidden;
+  -moz-osx-font-smoothing: grayscale;
   width: 100%;
   min-height: 100%;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior-y: auto;
+}
+
+/* GPU Accelerated Compositing for 120 FPS Smooth Touch Scrolling */
+.gpu-accelerated,
+header,
+main,
+.tool-card-glow {
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Optimize offscreen tool cards for instant frame delivery */
+.tool-card-item {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 180px;
 }
 
 img, svg, video, canvas, audio, iframe, embed, object {
