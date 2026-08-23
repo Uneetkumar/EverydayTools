@@ -144,6 +144,7 @@ curl -s -o /dev/null -w "%{http_code}" https://rdap.verisign.com/com/v1/domain/N
 | QR exports blurry | Export read the 240px preview canvas and upscaled to 1024/2048. Now a dedicated full-res export canvas. |
 | Watermark tool dead | Canvas deadlock (above). Also: brush was sized in image px → 3.5 screen px on a 14MP photo. Now sized in screen px. |
 | FAQ invisible to crawlers | Accordion only rendered open answers. Now `<details>`. |
+| **PDF editor could not edit** | Detected AcroForm fields only. Real invoices/receipts have none, so the tool appeared dead — it offered a blank "New text" box and nothing else. Now uses `getTextContent()` to locate every painted text run and make it click-to-edit. |
 | Multi-word search broken | Matched whole query as one substring, so "rs to" found nothing. Now tokenised with synonym groups. |
 
 ## 7. ⚠️ KNOWN PROBLEMS — unresolved
@@ -282,6 +283,45 @@ Both tools use `-c copy` (stream copy), never a re-encode:
 
 `public/ffmpeg/` adds ~32MB to every deploy. Keep it in sync if
 `@ffmpeg/core` is upgraded.
+
+---
+
+## 14. PDF editor — click-to-edit (added 23 Aug 2026)
+
+**The problem it solves.** A PDF stores positioned glyphs, not sentences, and
+fonts are subset-embedded, so an existing string genuinely cannot be rewritten in
+place. The first build exposed that limitation directly (cover, then add text)
+and users read it as broken.
+
+**How click-to-edit works.** On load, per page:
+```
+page.getTextContent()  →  per-run text matrix
+pdfjs.Util.transform(viewport(scale:1).transform, item.transform)
+  → t[4]=left, t[5]=baseline (top-down), hypot(t[2],t[3])=font size
+```
+stored as page fractions in `TextRun[]`. Clicking one:
+1. samples the **modal colour just outside** the box → the cover colour
+2. samples the **darkest pixel inside** the box → the ink colour
+3. emits a whiteout at the box (+~1.2pt bleed) and a text annot at the same
+   x/y/size, pre-filled with the original string, then focuses the textarea
+
+Verified against a generated invoice: export placed replacements at
+`x=50 y=640 size=11.0` and `x=60 y=568 size=12.0` — **identical** to the
+originals. Text on a coloured band got cover `rgb(231,240,255)`, not white.
+
+**Gotchas**
+- Covers are emitted **before** other annots in `save()`, or a replacement added
+  in the same click lands underneath its own whiteout.
+- On-screen font size must be `size * (stageW / pageWidthPts)` via a
+  `ResizeObserver`. The preview is a scaled bitmap; a fixed multiplier makes the
+  preview disagree with the exported file.
+- Colour sampling reads the page bitmap through a `willReadFrequently` context
+  decoded once per page — do not make it async per click.
+- **Covering is not redaction.** The original text stays in the content stream
+  and extraction still returns it (verified: both old and new strings present).
+  The UI warns on whiteout select; do not soften that copy.
+- Scanned PDFs yield zero runs. The UI says so and falls back to Cover + Add text.
+
 
 ## 11. Commands
 

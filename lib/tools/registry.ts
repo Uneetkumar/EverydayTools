@@ -1321,19 +1321,19 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
 
   "pdf-editor": {
     slug: "pdf-editor",
-    name: "PDF Page Editor",
+    name: "PDF Editor",
     shortName: "PDF Editor",
     category: "pdf-docs",
     categoryName: "PDF & Documents",
-    description: "Reorder, rotate and delete PDF pages visually, then save — losslessly and without uploading.",
-    longDescription: "Open a PDF, see every page as a thumbnail, then drag the order around, rotate individual pages and delete the ones you do not need. Pages are copied losslessly, so text stays sharp.",
+    description: "Click any text in a PDF to retype it. Fill form fields, add text or signatures, and manage pages.",
+    longDescription: "Click a word on the page and retype it — the editor finds every line of text in your PDF and lets you replace it in place, matching the original position, size and colour. Also fills real form fields, adds text, images and signatures, and reorders, rotates or deletes pages. Everything runs in your browser.",
     iconName: "FileText",
-    metaTitle: "PDF Editor Online Free - Reorder & Rotate Pages",
-    metaDescription: "Edit PDF pages in your browser: reorder, rotate and delete pages, then download. Free, lossless, and nothing is uploaded.",
-    keywords: ["pdf editor", "edit pdf online free", "reorder pdf pages", "rotate pdf page", "delete pdf pages", "organise pdf", "pdf page editor"],
-    features: ["Visual page thumbnails", "Reorder, rotate and delete pages", "Undo history", "Lossless page copying"],
+    metaTitle: "PDF Editor Online Free - Edit Text & Form Fields",
+    metaDescription: "Edit PDF text and form fields, cover mistakes, add a signature, and manage pages. Free, no signup, nothing uploaded.",
+    keywords: ["pdf editor", "edit pdf online free", "edit pdf text", "change name in pdf", "fill pdf form", "add text to pdf", "pdf signature", "reorder pdf pages", "delete pdf pages"],
+    features: ["Edit real PDF form fields", "Add text or cover and retype", "Insert signature or image", "Reorder, rotate and delete pages"],
     faqs: [
-      { question: "Does editing reduce quality?", answer: "No. Pages are copied as complete objects, so text stays vector and images keep their original encoding." }
+      { question: "Can I edit text already in the PDF?", answer: "If it is a form field, yes — directly. Otherwise cover it and type over the top, which is how PDF editors handle flattened text." }
     ],
     relatedToolSlugs: ["split-pdf", "pdf-merge", "rotate-pdf"],
     isPopular: true,

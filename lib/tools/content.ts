@@ -3229,69 +3229,74 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "pdf-editor": {
     intro:
-      "Most PDF problems are page problems: the scan came out in the wrong order, one page is sideways, or there are three pages you should not be sending. This shows every page as a thumbnail so you can reorder, rotate and delete visually, then rebuild the file. Pages are copied rather than re-rendered, so nothing degrades.",
+      "Upload a PDF here and every line of text on the page becomes clickable. Click a word, retype it, save. Underneath, the editor is doing what a PDF actually permits: a PDF stores positioned glyphs rather than sentences, and its fonts are usually subset-embedded, so the original string genuinely cannot be rewritten in place. So when you click, the editor measures that text run, covers it with a rectangle painted in the page's own sampled background colour, and drops an editable copy on top at the same position, size and ink colour. The result is the edit you wanted, without pretending the format allows something it does not.",
     howTo: {
-      title: "How to edit PDF pages",
+      title: "How to edit a PDF",
       steps: [
-        "Upload the PDF. Every page is rendered as a thumbnail so you can see what you are working with.",
-        "Use the arrows under a page to move it earlier or later in the document.",
-        "Rotate a sideways page with the two rotate buttons — each press turns it 90 degrees.",
-        "Delete anything you do not want to include. Undo steps back if you remove the wrong one.",
-        "Save. The rebuilt PDF downloads with your changes applied.",
+        "Upload the PDF. Every text run on the page is detected and lightly highlighted, and the status line tells you how many were found.",
+        "Click any highlighted word or line. It is replaced with an editable copy in the same spot — edit the text in the panel on the right.",
+        "Adjust size and colour there if the match is not exact, or drag the text to nudge its position.",
+        "If the document has real form fields, the Form fields tab lists them. Editing those changes the document's actual data and is always the better option when available.",
+        "Add a signature or logo with the Image button, place free text anywhere with Add text, then use the Pages tab to reorder, rotate or delete pages, and Save.",
       ],
     },
     useCases: [
       {
-        title: "Fixing a scan that came out in the wrong order",
+        title: "Correcting a name or a date",
         body:
-          "Document feeders regularly produce reversed or interleaved pages. Reordering visually is far quicker than rescanning the stack.",
+          "The most common PDF edit there is, and a single click here. Click the name, type the correction, save. On an invoice or a letterhead where the text sits on a coloured band, the cover is painted in that band's colour rather than white, so the correction does not leave a pale rectangle behind it.",
       },
       {
-        title: "Removing pages before you send a document",
+        title: "Filling in an official form",
         body:
-          "When a form asks for two pages of a statement, deleting the rest is safer than sending everything and trusting the reader to ignore it.",
+          "Government and bank PDFs frequently ship as real AcroForm documents. Editing those fields here produces a properly filled form rather than an image with text pasted on top.",
       },
       {
-        title: "Straightening sideways pages",
+        title: "Signing a document",
         body:
-          "A page fed in landscape stays landscape in the file. Rotating it means the recipient does not have to tilt their head or fix it themselves.",
+          "Drop in a PNG of your signature, place it on the line, and save. No printing, signing and rescanning.",
+      },
+      {
+        title: "Redacting information before sharing",
+        body:
+          "You can cover sensitive lines with black boxes, but understand exactly what that does: it hides the text visually while leaving it in the file, where copy-paste or any search tool will still find it. This is a real and frequently exploited mistake. Treat covering as tidying, never as redaction — for that, the underlying text must be removed, which needs specialist software.",
       },
     ],
     tips: [
-      "Rotation is additive, so a page that was already rotated ends up correct rather than doubly turned.",
-      "Editing is lossless — pages are copied as complete objects, so text stays vector-sharp and images keep their original encoding.",
-      "Undo holds the last twenty actions. Your original file is never modified; the download is a new document.",
-      "Unlock a password-protected PDF before editing, since encrypted files cannot be opened.",
+      "Check the Form fields tab first. If fields exist, editing them is always better than covering and retyping.",
+      "Click-to-edit picks the background and ink colours automatically. If a replacement looks slightly off against a gradient or an image, select the cover and set an exact colour with the picker.",
+      "Replacing a word does not delete the original from the file — it is still there underneath. Never rely on this to hide account or ID numbers.",
+      "Added text uses Helvetica. Non-Latin scripts such as Hindi, Tamil or Arabic will not render; use a form field, or place an image of the text instead.",
+      "Undo holds the last 25 actions, and your original file is never modified — saving produces a new document.",
     ],
     extraFaqs: [
       {
-        question: "Does editing reduce the quality of my PDF?",
+        question: "Why can I not just click existing text and retype it?",
         answer:
-          "No. Pages are copied wholesale into a new document rather than re-rendered, so text remains vector data and images keep their original compression. The output is visually identical to the input, minus whatever you removed.",
+          "Because a PDF does not contain editable text runs. It contains instructions to draw specific glyphs at specific coordinates, using a font that is usually subset-embedded — meaning only the characters already used are available. Typing a character that is not in the subset has no glyph to draw. Rewriting that properly requires font re-encoding and content-stream surgery, which no browser library can do reliably. Covering and retyping is the standard workaround, and it is what most PDF editors do underneath.",
       },
       {
-        question: "Can I edit the text inside a page?",
+        question: "What is the difference between form fields and added text?",
         answer:
-          "Not here — this is a page-level editor for order, rotation and deletion. Changing words inside a page means converting to Word, editing there, and exporting again, which is a different job with different trade-offs.",
+          "A form field is real structured data in the document — editing it is genuine editing, and the field keeps its name and type. Added text is drawn onto the page as new content. Both survive saving and print identically, but form fields are the better option whenever they exist.",
+      },
+      {
+        question: "Is covering text secure enough for redaction?",
+        answer:
+          "No, and this matters. A drawn rectangle hides text visually but the original characters may still exist in the file and can be recovered by copying the text or examining the content stream. For anything genuinely confidential, use software that removes the underlying content rather than covering it.",
+      },
+      {
+        question: "Why does my Hindi or Arabic text not appear?",
+        answer:
+          "Added text is drawn in Helvetica, a standard PDF font that only covers Latin characters. Other scripts need an embedded font containing those glyphs. The practical workaround is to type the text elsewhere, screenshot it, and place it as an image.",
       },
       {
         question: "Is my document uploaded?",
         answer:
-          "No. Thumbnails are rendered with pdf.js and the new file is built with pdf-lib, both in your browser. Nothing is transmitted, which matters for the contracts and statements most often needing this.",
-      },
-      {
-        question: "Why will my PDF not open?",
-        answer:
-          "Almost always because it is password-protected. Remove the password with an unlock tool first, then edit the unprotected copy. Damaged files that no reader can open will also fail here.",
-      },
-      {
-        question: "How many pages can it handle?",
-        answer:
-          "Thumbnails are rendered one page at a time, so large documents work — they simply take longer to load. Several hundred pages may take a while and use noticeable memory.",
+          "No. Pages are rendered with pdf.js and the new file is built with pdf-lib, both inside your browser. Nothing is transmitted — which matters, since the documents people most often need to edit are contracts, statements and identity papers.",
       },
     ],
   },
-
 
   "video-cutter": {
     intro:
