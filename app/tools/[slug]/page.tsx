@@ -51,6 +51,10 @@ import SampleFileGenerator from "@/components/tools/SampleFileGenerator";
 import NotePad from "@/components/tools/NotePad";
 import TextToSpeech from "@/components/tools/TextToSpeech";
 import SpeechToText from "@/components/tools/SpeechToText";
+import MediaPlayer from "@/components/tools/MediaPlayer";
+import PdfEditor from "@/components/tools/PdfEditor";
+import VideoCutter from "@/components/tools/VideoCutter";
+import AudioRemover from "@/components/tools/AudioRemover";
 import VideoDownloader from "@/components/tools/VideoDownloader";
 
 interface ToolPageProps {
@@ -127,6 +131,16 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <FaviconGenerator />;
       case "currency-converter":
         return <CurrencyConverter />;
+      case "video-player":
+        return <MediaPlayer mode="video" />;
+      case "audio-player":
+        return <MediaPlayer mode="audio" />;
+      case "video-cutter":
+        return <VideoCutter />;
+      case "audio-remover":
+        return <AudioRemover />;
+      case "pdf-editor":
+        return <PdfEditor />;
       case "notepad":
         return <NotePad />;
       case "text-to-speech":

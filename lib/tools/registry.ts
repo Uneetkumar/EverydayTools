@@ -1278,6 +1278,107 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     relatedToolSlugs: ["video-downloader", "tiktok-video-downloader", "youtube-video-downloader"],
     isPopular: true,
   },
+
+  // Media players & PDF page editor
+  "video-player": {
+    slug: "video-player",
+    name: "Online Video Player",
+    shortName: "Video Player",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Play MP4, WebM, MOV and more straight from your device, with speed control, picture-in-picture and a playlist.",
+    longDescription: "Open any video your browser can decode and play it with full transport controls, adjustable speed, picture-in-picture and a multi-file playlist. Files play from disk and are never uploaded.",
+    iconName: "Film",
+    metaTitle: "Online Video Player - Play MP4, WebM & MOV Free",
+    metaDescription: "Play video files in your browser with speed control, picture-in-picture and a playlist. No upload, no signup, works offline.",
+    keywords: ["online video player", "play mp4 online", "webm player", "mov player", "browser video player", "video player no download"],
+    features: ["Plays MP4, WebM, MOV and Ogg", "0.5x to 2x playback speed", "Picture-in-picture and fullscreen", "Multi-file playlist"],
+    faqs: [
+      { question: "Is my video uploaded?", answer: "No. The file is read from disk and played locally, so even multi-gigabyte videos open instantly." }
+    ],
+    relatedToolSlugs: ["audio-player", "video-downloader", "image-compressor"],
+    isPopular: true,
+  },
+
+  "audio-player": {
+    slug: "audio-player",
+    name: "Online Audio Player",
+    shortName: "Audio Player",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Play MP3, WAV, FLAC, M4A and OGG files with a playlist and speed control, entirely in your browser.",
+    longDescription: "Open audio files from your device and play them with a queue, adjustable speed and full transport controls. Useful for reviewing recordings and lectures without installing anything.",
+    iconName: "Music",
+    metaTitle: "Online Audio Player - Play MP3, WAV & FLAC Free",
+    metaDescription: "Play MP3, WAV, FLAC and M4A files in your browser with a playlist and speed control. Nothing is uploaded.",
+    keywords: ["online audio player", "play mp3 online", "flac player browser", "wav player", "listen to audio file online"],
+    features: ["MP3, WAV, FLAC, M4A, OGG", "Queue multiple files", "0.5x to 2x speed", "Nothing leaves your device"],
+    faqs: [
+      { question: "Can I speed up a lecture recording?", answer: "Yes — playback speed runs from 0.5x to 2x, and pitch is preserved by the browser." }
+    ],
+    relatedToolSlugs: ["video-player", "speech-to-text", "text-to-speech"],
+  },
+
+  "pdf-editor": {
+    slug: "pdf-editor",
+    name: "PDF Page Editor",
+    shortName: "PDF Editor",
+    category: "pdf-docs",
+    categoryName: "PDF & Documents",
+    description: "Reorder, rotate and delete PDF pages visually, then save — losslessly and without uploading.",
+    longDescription: "Open a PDF, see every page as a thumbnail, then drag the order around, rotate individual pages and delete the ones you do not need. Pages are copied losslessly, so text stays sharp.",
+    iconName: "FileText",
+    metaTitle: "PDF Editor Online Free - Reorder & Rotate Pages",
+    metaDescription: "Edit PDF pages in your browser: reorder, rotate and delete pages, then download. Free, lossless, and nothing is uploaded.",
+    keywords: ["pdf editor", "edit pdf online free", "reorder pdf pages", "rotate pdf page", "delete pdf pages", "organise pdf", "pdf page editor"],
+    features: ["Visual page thumbnails", "Reorder, rotate and delete pages", "Undo history", "Lossless page copying"],
+    faqs: [
+      { question: "Does editing reduce quality?", answer: "No. Pages are copied as complete objects, so text stays vector and images keep their original encoding." }
+    ],
+    relatedToolSlugs: ["split-pdf", "pdf-merge", "rotate-pdf"],
+    isPopular: true,
+  },
+
+  // ffmpeg.wasm media editors
+  "video-cutter": {
+    slug: "video-cutter",
+    name: "Video Cutter & Trimmer",
+    shortName: "Video Cutter",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Trim a video to any start and end point without re-encoding — instant and lossless.",
+    longDescription: "Cut a clip out of any video by dragging start and end handles, then download it. The trim copies streams rather than re-encoding, so it finishes almost immediately and loses no quality.",
+    iconName: "Scissors",
+    metaTitle: "Video Cutter Online Free - Trim Video No Upload",
+    metaDescription: "Trim and cut video online without re-encoding or uploading. Lossless, instant, and free — runs entirely in your browser.",
+    keywords: ["video cutter", "trim video online", "cut video free", "video trimmer", "crop video length", "shorten video online"],
+    features: ["Lossless stream copy — no re-encode", "Drag to set start and end", "Preview before cutting", "Runs entirely in your browser"],
+    faqs: [
+      { question: "Does trimming reduce quality?", answer: "No. The cut copies streams rather than re-encoding, so the output is bit-identical to the source within the range you kept." }
+    ],
+    relatedToolSlugs: ["audio-remover", "video-player", "video-downloader"],
+    isPopular: true,
+  },
+
+  "audio-remover": {
+    slug: "audio-remover",
+    name: "Remove Audio from Video",
+    shortName: "Audio Remover",
+    category: "image-media",
+    categoryName: "Image & Media",
+    description: "Strip the sound from a video, or pull the audio out as a separate file — both without re-encoding.",
+    longDescription: "Mute a video by removing its audio track entirely, or extract that audio as an .m4a file. Both are stream copies, so the video keeps its exact original quality and the audio keeps its original bitrate.",
+    iconName: "VolumeX",
+    metaTitle: "Remove Audio from Video Free - Mute or Extract",
+    metaDescription: "Remove sound from a video or extract the audio as a file. Lossless, no upload, no signup — works in your browser.",
+    keywords: ["remove audio from video", "mute video online", "extract audio from video", "silent video maker", "video to mp3", "strip audio track"],
+    features: ["Remove the audio track entirely", "Or extract audio as .m4a", "No re-encoding either way", "Nothing is uploaded"],
+    faqs: [
+      { question: "Will the video quality change?", answer: "No. The video stream is copied untouched; only the audio track is dropped." }
+    ],
+    relatedToolSlugs: ["video-cutter", "audio-player", "video-player"],
+    isPopular: true,
+  },
 };
 
 export function getAllTools(): ToolDefinition[] {

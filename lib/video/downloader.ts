@@ -66,34 +66,17 @@ export async function downloadMediaStream({
       response = directRes;
     }
   } catch {
-    // Direct fetch failed, proceed to CORS proxy
+    // Direct fetch blocked — almost always CORS, since a media host that
+    // serves <video> playback often still refuses cross-origin fetch.
   }
 
-  // 2. If direct fetch failed or was blocked by CORS, try through CORS proxy
-  if (!response || !response.ok) {
-    try {
-      const proxyUrl = getCorsProxyUrl(url);
-      const proxyRes = await tryFetchStream(proxyUrl);
-      if (proxyRes.ok) {
-        response = proxyRes;
-      }
-    } catch {
-      // Proxy failed
-    }
-  }
-
-  // 3. Fallback to secondary CORS proxy
-  if (!response || !response.ok) {
-    try {
-      const altProxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-      const altRes = await tryFetchStream(altProxyUrl);
-      if (altRes.ok) {
-        response = altRes;
-      }
-    } catch {
-      // Secondary proxy failed
-    }
-  }
+  // Public CORS proxies are deliberately not used any more.
+  //
+  // Verified August 2026: corsproxy.io returns 403 and allorigins.win is
+  // unreachable, so each attempt only added seconds of latency before failing.
+  // When a direct fetch is blocked we go straight to the anchor fallback,
+  // which hands the URL to the browser — navigation is not subject to CORS,
+  // so it succeeds for any publicly reachable file.
 
   if (!response || !response.ok) {
     // If all fetch attempts failed, trigger browser anchor fallback
@@ -114,12 +97,13 @@ export async function downloadMediaStream({
         totalBytes: 15 * 1024 * 1024,
         speedMbps: 0,
         timeRemainingSeconds: 0,
-        message: "Download triggered in browser!",
+        message:
+          "This host blocks in-page downloads, so the file was opened directly in your browser — use Save if it does not start automatically.",
       });
 
       return new Blob([], { type: mimeType });
-    } catch (err: any) {
-      const errorMsg = err.message || "Failed to download media stream. The server rejects cross-origin requests.";
+    } catch (err: unknown) {
+      const errorMsg = (err instanceof Error ? err.message : String(err)) || "Failed to download media stream. The server rejects cross-origin requests.";
       onProgress({
         stage: "error",
         progressPercent: 0,
@@ -169,7 +153,7 @@ export async function downloadMediaStream({
     const reader = body.getReader();
     const chunks: Uint8Array[] = [];
     let receivedBytes = 0;
-    let startTime = performance.now();
+    const startTime = performance.now();
     let lastProgressTime = startTime;
     let lastReceivedBytes = 0;
     let currentSpeedMbps = 0;
@@ -201,7 +185,7 @@ export async function downloadMediaStream({
         const bytesPerSec = bytesDiff / timeDiff;
         currentSpeedMbps = parseFloat(((bytesPerSec * 8) / (1024 * 1024)).toFixed(2));
 
-        let percent = totalBytes
+        const percent = totalBytes
           ? Math.min(92, Math.round((receivedBytes / totalBytes) * 100))
           : Math.min(90, Math.round(receivedBytes / (1024 * 1024)));
         let timeRemaining: number | null = null;
@@ -263,7 +247,7 @@ export async function downloadMediaStream({
     });
 
     return finalBlob;
-  } catch (err: any) {
+  } catch (err: unknown) {
     if (signal?.aborted) {
       onProgress({
         stage: "error",
@@ -278,7 +262,7 @@ export async function downloadMediaStream({
       throw new Error("Download cancelled.");
     }
 
-    const errorMsg = err.message || "Failed to download media stream.";
+    const errorMsg = (err instanceof Error ? err.message : String(err)) || "Failed to download media stream.";
     onProgress({
       stage: "error",
       progressPercent: 0,

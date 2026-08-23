@@ -3108,6 +3108,314 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
       },
     ],
   },
+
+  "video-player": {
+    intro:
+      "Sometimes you just need to watch a file without installing anything — a clip someone sent you, a recording off a camera, a download you want to check before filing. This opens video straight from your device and plays it with proper controls: a real seek bar, adjustable speed, picture-in-picture, and a playlist if you drop several files at once.",
+    howTo: {
+      title: "How to play a video file in your browser",
+      steps: [
+        "Drag a video onto the drop zone, or click it to browse. You can select several files at once.",
+        "Press play. The file streams from disk, so even a multi-gigabyte video starts instantly.",
+        "Adjust speed if you are reviewing footage — 1.5x is comfortable for most talking-head video.",
+        "Use picture-in-picture to keep watching while you work in another tab.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Checking a file before you send it",
+        body:
+          "Confirming that an export actually plays, and that the audio is in sync, takes ten seconds here and saves sending a broken file.",
+      },
+      {
+        title: "Reviewing footage at speed",
+        body:
+          "Skimming a long recording at 1.5x or 2x with keyboard seeking is far quicker than scrubbing a timeline in an editor.",
+      },
+      {
+        title: "Watching on a machine you cannot install software on",
+        body:
+          "Locked-down work and library computers usually allow a browser and nothing else. This needs no installation at all.",
+      },
+    ],
+    tips: [
+      "Space plays and pauses, the arrow keys seek five seconds, and M mutes.",
+      "MP4 (H.264) and WebM play everywhere. MKV containers and H.265 often will not, because browsers do not ship those decoders.",
+      "Dropping several files builds a playlist, and playback advances automatically at the end of each.",
+      "Nothing is uploaded, so this works offline once the page has loaded.",
+    ],
+    extraFaqs: [
+      {
+        question: "Is my video uploaded anywhere?",
+        answer:
+          "No. The file is opened with a local object URL and played directly from disk. There is no upload and no decode step, which is why even very large files start immediately — and why the tool works with no network connection.",
+      },
+      {
+        question: "Why will my MKV file not play?",
+        answer:
+          "Because browsers do not include an MKV demuxer or an H.265 decoder, for licensing reasons. The tool detects the failure and tells you rather than showing a blank frame. Converting to MP4 (H.264) or WebM fixes it.",
+      },
+      {
+        question: "Can I play several files in a row?",
+        answer:
+          "Yes. Select or drop multiple files and they queue up as a playlist, advancing automatically. You can reorder by removing and re-adding, and skip with the previous and next buttons.",
+      },
+      {
+        question: "Does changing speed affect the pitch?",
+        answer:
+          "No. Browsers apply pitch correction automatically, so speech stays natural up to about 2x.",
+      },
+    ],
+  },
+
+  "audio-player": {
+    intro:
+      "A browser tab is often the fastest way to listen to a file — no media library to import into, no application to launch. This plays MP3, WAV, FLAC, M4A and OGG from your device, with a queue for several files and speed control that keeps voices sounding natural.",
+    howTo: {
+      title: "How to play an audio file online",
+      steps: [
+        "Drop your audio files in, or click to browse. Several at once builds a queue.",
+        "Press play and use the seek bar to move around the recording.",
+        "Raise the speed for lectures and interviews — pitch is corrected automatically, so voices do not sound comical.",
+        "Remove a track from the queue with the cross that appears when you hover it.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Working through a lecture or interview recording",
+        body:
+          "Listening at 1.5x with easy five-second rewinds is the standard way to get through long recordings quickly without missing anything.",
+      },
+      {
+        title: "Checking a voice note or a recording before sending it",
+        body:
+          "Confirming a file is audible and complete before you pass it on avoids the most common re-send.",
+      },
+      {
+        title: "Playing files a media library will not import",
+        body:
+          "Rather than adding a one-off file to a music app, open it here and close the tab afterwards.",
+      },
+    ],
+    tips: [
+      "MP3, WAV, M4A and OGG play everywhere. FLAC works in most current browsers but not all.",
+      "Space plays and pauses; the arrow keys move five seconds at a time.",
+      "Pitch correction is applied automatically, so speech stays intelligible at 2x.",
+      "Files never leave your device, which matters for recorded calls and interviews.",
+    ],
+    extraFaqs: [
+      {
+        question: "Which audio formats are supported?",
+        answer:
+          "Whatever your browser can decode — in practice MP3, WAV, M4A/AAC and OGG everywhere, and FLAC in most current browsers. Exotic formats such as WMA and APE generally will not play, because browsers do not ship those decoders.",
+      },
+      {
+        question: "Is my audio uploaded?",
+        answer:
+          "No. Playback is entirely local, which is the point for recorded calls, interviews, and voice notes you would not want sitting on someone else's server.",
+      },
+      {
+        question: "Will speeding up make voices sound strange?",
+        answer:
+          "No. Browsers apply pitch correction, so a recording at 1.5x or 2x sounds like someone talking faster rather than a chipmunk.",
+      },
+      {
+        question: "Can I queue a whole folder?",
+        answer:
+          "Select multiple files in the picker, or drag a group in. They queue in the order given and advance automatically.",
+      },
+    ],
+  },
+
+  "pdf-editor": {
+    intro:
+      "Most PDF problems are page problems: the scan came out in the wrong order, one page is sideways, or there are three pages you should not be sending. This shows every page as a thumbnail so you can reorder, rotate and delete visually, then rebuild the file. Pages are copied rather than re-rendered, so nothing degrades.",
+    howTo: {
+      title: "How to edit PDF pages",
+      steps: [
+        "Upload the PDF. Every page is rendered as a thumbnail so you can see what you are working with.",
+        "Use the arrows under a page to move it earlier or later in the document.",
+        "Rotate a sideways page with the two rotate buttons — each press turns it 90 degrees.",
+        "Delete anything you do not want to include. Undo steps back if you remove the wrong one.",
+        "Save. The rebuilt PDF downloads with your changes applied.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Fixing a scan that came out in the wrong order",
+        body:
+          "Document feeders regularly produce reversed or interleaved pages. Reordering visually is far quicker than rescanning the stack.",
+      },
+      {
+        title: "Removing pages before you send a document",
+        body:
+          "When a form asks for two pages of a statement, deleting the rest is safer than sending everything and trusting the reader to ignore it.",
+      },
+      {
+        title: "Straightening sideways pages",
+        body:
+          "A page fed in landscape stays landscape in the file. Rotating it means the recipient does not have to tilt their head or fix it themselves.",
+      },
+    ],
+    tips: [
+      "Rotation is additive, so a page that was already rotated ends up correct rather than doubly turned.",
+      "Editing is lossless — pages are copied as complete objects, so text stays vector-sharp and images keep their original encoding.",
+      "Undo holds the last twenty actions. Your original file is never modified; the download is a new document.",
+      "Unlock a password-protected PDF before editing, since encrypted files cannot be opened.",
+    ],
+    extraFaqs: [
+      {
+        question: "Does editing reduce the quality of my PDF?",
+        answer:
+          "No. Pages are copied wholesale into a new document rather than re-rendered, so text remains vector data and images keep their original compression. The output is visually identical to the input, minus whatever you removed.",
+      },
+      {
+        question: "Can I edit the text inside a page?",
+        answer:
+          "Not here — this is a page-level editor for order, rotation and deletion. Changing words inside a page means converting to Word, editing there, and exporting again, which is a different job with different trade-offs.",
+      },
+      {
+        question: "Is my document uploaded?",
+        answer:
+          "No. Thumbnails are rendered with pdf.js and the new file is built with pdf-lib, both in your browser. Nothing is transmitted, which matters for the contracts and statements most often needing this.",
+      },
+      {
+        question: "Why will my PDF not open?",
+        answer:
+          "Almost always because it is password-protected. Remove the password with an unlock tool first, then edit the unprotected copy. Damaged files that no reader can open will also fail here.",
+      },
+      {
+        question: "How many pages can it handle?",
+        answer:
+          "Thumbnails are rendered one page at a time, so large documents work — they simply take longer to load. Several hundred pages may take a while and use noticeable memory.",
+      },
+    ],
+  },
+
+
+  "video-cutter": {
+    intro:
+      "Cutting a clip out of a video is usually the last thing standing between you and sending it — the interesting thirty seconds sit inside a four-minute recording, and everything you try either wants an account or spends ten minutes re-encoding. This trims by copying streams instead of re-encoding, which finishes almost instantly and loses nothing at all.",
+    howTo: {
+      title: "How to trim a video online",
+      steps: [
+        "Upload the video. It plays immediately from your device — nothing is sent anywhere.",
+        "Drag the start and end handles. The preview jumps as you move them, so you can hear exactly where the cut lands.",
+        "Check the clip length shown underneath.",
+        "Press Trim & download. The first run fetches the video engine (about 32MB, once per browser); after that it is near-instant.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Sending only the part that matters",
+        body:
+          "A message limit or an attachment cap usually is not a size problem so much as a length problem. Cutting to the relevant thirty seconds solves both at once.",
+      },
+      {
+        title: "Removing dead air at the start and end",
+        body:
+          "Screen recordings almost always begin with fumbling for the stop button. Trimming both ends takes seconds and makes a recording look deliberate.",
+      },
+      {
+        title: "Pulling a clip out of a longer recording",
+        body:
+          "Grabbing one exchange out of a meeting recording, without opening an editor or re-exporting the whole file.",
+      },
+    ],
+    tips: [
+      "Cuts land on the nearest keyframe before your start point — usually within a second or two. That is the trade for it being instant and lossless.",
+      "The engine downloads once per browser and is then cached, so the first cut is slower than every one after it.",
+      "MP4 and WebM copy cleanly. MKV and unusual codecs sometimes cannot be stream-copied and will report an error rather than produce a broken file.",
+      "Your original file is never modified — the trim downloads as a new file.",
+    ],
+    extraFaqs: [
+      {
+        question: "Does trimming reduce the quality?",
+        answer:
+          "No, and this is the main reason to use a stream copy. The kept portion is copied bit-for-bit rather than decoded and re-encoded, so the output is identical to the source within that range. Tools that re-encode lose a generation of quality every time.",
+      },
+      {
+        question: "Why is my cut slightly off from where I set it?",
+        answer:
+          "Because a stream copy has to begin at a keyframe, and keyframes typically occur every one to two seconds. Landing exactly on an arbitrary frame would require re-encoding the whole clip, which in a browser would take minutes rather than seconds and would cost quality.",
+      },
+      {
+        question: "Why does the first trim take longer?",
+        answer:
+          "The video engine is about 32MB and downloads the first time you use it. Your browser caches it afterwards, so subsequent trims — and the audio remover, which shares the same engine — start immediately.",
+      },
+      {
+        question: "Is my video uploaded?",
+        answer:
+          "No. The processing runs inside your browser through WebAssembly, so the file never leaves your device. That is unusual for a video tool and is why this works on footage you would not hand to a website.",
+      },
+      {
+        question: "Is there a file size limit?",
+        answer:
+          "The practical limit is your device's memory, since the file is held in the tab while it is processed. Clips of a few hundred megabytes are fine; multi-gigabyte files may exhaust memory on a phone.",
+      },
+    ],
+  },
+
+  "audio-remover": {
+    intro:
+      "Muting a video is one of those jobs that sounds trivial and usually is not — most tools re-encode the whole file to drop a track that could simply have been left out. Removing an audio stream requires no re-encoding at all, so this finishes in seconds and the video comes back with its picture completely untouched.",
+    howTo: {
+      title: "How to remove audio from a video",
+      steps: [
+        "Choose what you want: remove the audio from the video, or extract that audio as a separate file.",
+        "Upload the video — it previews immediately, so you can confirm it is the right one.",
+        "Press the button. The first run downloads the engine (about 32MB, once per browser).",
+        "The result downloads automatically. Your original file is unchanged.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Silencing background noise or conversation",
+        body:
+          "Footage where the picture is fine but the audio has someone talking over it. Removing the track entirely is cleaner than trying to edit around it.",
+      },
+      {
+        title: "Preparing video for a soundtrack",
+        body:
+          "Stripping the original audio before adding music avoids the two tracks fighting each other in an editor.",
+      },
+      {
+        title: "Pulling audio out of a recording",
+        body:
+          "Extract mode gives you the audio at its original bitrate — useful for turning a recorded talk or interview into something you can listen to or transcribe.",
+      },
+    ],
+    tips: [
+      "Both modes are stream copies, so neither the video nor the extracted audio is re-encoded.",
+      "Extraction produces .m4a because that is what most video files already carry internally; converting to MP3 would mean re-encoding and losing quality.",
+      "If the tool reports no audio track, the file is already silent — nothing to remove.",
+      "The engine is shared with the video cutter, so if you have used that already, this starts immediately.",
+    ],
+    extraFaqs: [
+      {
+        question: "Will removing the audio reduce video quality?",
+        answer:
+          "No. The video stream is copied across untouched and only the audio track is left out. The result is bit-identical picture, in a slightly smaller file.",
+      },
+      {
+        question: "Why is the extracted audio .m4a rather than .mp3?",
+        answer:
+          "Because most video files already contain AAC audio, and .m4a is the container for it — so the audio can be copied out with no quality loss at all. Producing MP3 would mean decoding and re-encoding, which would be slower and measurably worse.",
+      },
+      {
+        question: "Can I lower the volume instead of removing it?",
+        answer:
+          "Not here. Changing volume means re-encoding the audio, which is a different operation with different trade-offs. This tool is deliberately limited to the two things that can be done losslessly.",
+      },
+      {
+        question: "Is my video uploaded?",
+        answer:
+          "No. Everything runs in your browser via WebAssembly and nothing is transmitted, which matters given how often the videos people want to mute are personal.",
+      },
+    ],
+  },
+
 };
 
 /** Returns the long-form content for a tool, if any has been written. */

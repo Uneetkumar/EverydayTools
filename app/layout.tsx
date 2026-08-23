@@ -158,6 +158,21 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
 
+        {/* Firebase always serves the project's *.web.app hostname and it
+            cannot be switched off, so the whole site is reachable on two
+            domains. Canonicals already point at tabbench.com, but leaving the
+            duplicate answering 200 splits crawl budget and invites Google to
+            pick the wrong host. This sends it to the real domain, preserving
+            the path. Runs before paint; scoped to that exact hostname so local
+            development and the emulator are untouched. */}
+        <script
+          id="canonical-host"
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{if(location.hostname==='everydaytools-s.web.app'){location.replace('https://tabbench.com'+location.pathname+location.search+location.hash);}}catch(e){}})();",
+          }}
+        />
+
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSchema) }}

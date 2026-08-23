@@ -5,7 +5,22 @@
  * and direct web media URLs into playable, downloadable direct video streams.
  */
 
+/** Shape of the format entries an Invidious-compatible API returns. */
+interface InvidiousFormat {
+  url: string;
+  qualityLabel?: string;
+  resolution?: string;
+  container?: string;
+  type?: string;
+}
+
 export interface ResolvedMediaStream {
+  /** Set when the URL cannot be resolved to a real media stream. */
+  unsupported?: boolean;
+  /** Plain-English reason shown to the user when `unsupported` is true. */
+  reason?: string;
+  /** Best action the user can take instead. */
+  suggestion?: string;
   streamUrl: string;
   downloadUrl: string;
   title: string;
@@ -26,6 +41,56 @@ export interface ResolvedMediaStream {
 /**
  * Universal CORS Proxy helper to bypass cross-origin stream blocking in client browsers.
  */
+/** File extensions the browser can actually play and fetch directly. */
+const MEDIA_EXT = /\.(mp4|webm|ogg|ogv|mov|m4v|mp3|m4a|wav|aac|flac|opus)(\?|#|$)/i;
+
+/**
+ * Platforms that actively block third-party downloads.
+ *
+ * Verified August 2026: every public YouTube (Invidious) resolver returns
+ * 403/401, Instagram's proxy is unreachable, and TikTok's CDN answers 503 even
+ * when the URL resolves correctly. These are deliberate defences, not outages,
+ * so the honest thing is to say so immediately rather than spin and fail.
+ */
+const BLOCKED_PLATFORMS: {
+  test: RegExp;
+  name: string;
+  reason: string;
+  suggestion: string;
+}[] = [
+  {
+    test: /youtube\.com|youtu\.be/i,
+    name: "YouTube",
+    reason:
+      "YouTube signs every video URL and blocks cross-origin requests, so no browser-only tool can fetch the stream. The public mirrors this tool used are all blocked.",
+    suggestion:
+      "Use YouTube Premium's official download, or a desktop application such as yt-dlp. Downloading other people's videos also breaches YouTube's Terms of Service.",
+  },
+  {
+    test: /instagram\.com/i,
+    name: "Instagram",
+    reason:
+      "Instagram requires an authenticated session to reach media, and the public proxy this tool relied on is offline.",
+    suggestion:
+      "Use Instagram's own save option, or the share sheet on mobile, for content you are allowed to keep.",
+  },
+  {
+    test: /facebook\.com|fb\.watch/i,
+    name: "Facebook",
+    reason:
+      "Facebook media requires an authenticated session and blocks cross-origin reads.",
+    suggestion: "Use Facebook's own save feature where the uploader has allowed it.",
+  },
+  {
+    test: /tiktok\.com/i,
+    name: "TikTok",
+    reason:
+      "TikTok's CDN rejects requests that do not come from its own app or site — the link resolves, then the download returns a 503.",
+    suggestion:
+      "Use TikTok's built-in save button, which the uploader can permit.",
+  },
+];
+
 export function getCorsProxyUrl(rawUrl: string): string {
   if (!rawUrl) return "";
   // If already a blob or data url, return as is
@@ -209,7 +274,7 @@ async function resolveYouTubeVideo(url: string): Promise<ResolvedMediaStream | n
               qualityLabel: best.qualityLabel || "720p HD",
               width: 1280,
               height: 720,
-              availableStreams: formatStreams.map((f: any) => ({
+              availableStreams: formatStreams.map((f: InvidiousFormat) => ({
                 label: `${f.qualityLabel || f.resolution} (${f.container || "mp4"})`,
                 url: f.url,
                 resolution: f.qualityLabel || f.resolution,
@@ -234,31 +299,58 @@ async function resolveYouTubeVideo(url: string): Promise<ResolvedMediaStream | n
 export async function resolveVideoUrl(url: string): Promise<ResolvedMediaStream> {
   const trimmed = url.trim();
 
-  // 1. Twitter / X
+  // Twitter/X and TikTok still have responding resolvers, so they are still
+  // attempted — but a failure must NOT fall through to the direct-link branch.
   if (/twitter\.com|x\.com/i.test(trimmed)) {
     const resolved = await resolveTwitterVideo(trimmed);
-    if (resolved) return resolved;
+    if (resolved?.streamUrl) return resolved;
   }
-
-  // 2. TikTok
   if (/tiktok\.com/i.test(trimmed)) {
     const resolved = await resolveTikTokVideo(trimmed);
-    if (resolved) return resolved;
+    if (resolved?.streamUrl) return resolved;
   }
-
-  // 3. Instagram
   if (/instagram\.com/i.test(trimmed)) {
     const resolved = await resolveInstagramVideo(trimmed);
-    if (resolved) return resolved;
+    if (resolved?.streamUrl) return resolved;
   }
-
-  // 4. YouTube
   if (/youtube\.com|youtu\.be/i.test(trimmed)) {
     const resolved = await resolveYouTubeVideo(trimmed);
-    if (resolved) return resolved;
+    if (resolved?.streamUrl) return resolved;
   }
 
-  // 5. Direct Video Link or Fallback
+  // A platform page that could not be resolved is reported as such.
+  //
+  // Previously this fell through to the direct-link branch below, which handed
+  // back the *page* URL as though it were a video stream. The player then had
+  // an HTML document as its src and showed nothing, and "download" saved the
+  // HTML — which is exactly the failure users reported.
+  const blocked = BLOCKED_PLATFORMS.find((p) => p.test.test(trimmed));
+  if (blocked) {
+    return {
+      unsupported: true,
+      reason: blocked.reason,
+      suggestion: blocked.suggestion,
+      streamUrl: "",
+      downloadUrl: "",
+      title: blocked.name,
+    };
+  }
+
+  // Direct media link. Only accept URLs that actually point at a media file;
+  // an arbitrary web page is not a video and must not be treated as one.
+  if (!MEDIA_EXT.test(trimmed)) {
+    return {
+      unsupported: true,
+      reason:
+        "That link does not point directly at a media file. This tool works with direct links ending in .mp4, .webm, .mov, .mp3 and similar.",
+      suggestion:
+        "Right-click a video and choose 'Copy video address', or paste a direct CDN link to the file itself rather than the page it appears on.",
+      streamUrl: "",
+      downloadUrl: "",
+      title: "Unsupported link",
+    };
+  }
+
   let cleanTitle = "video-stream";
   try {
     const p = new URL(trimmed);
@@ -273,8 +365,6 @@ export async function resolveVideoUrl(url: string): Promise<ResolvedMediaStream>
     streamUrl: trimmed,
     downloadUrl: trimmed,
     title: cleanTitle,
-    qualityLabel: "Direct HD Stream",
-    width: 1920,
-    height: 1080,
+    qualityLabel: "Direct stream",
   };
 }

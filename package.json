@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ffmpeg/core": "^0.12.10",
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
     "@types/canvas-confetti": "^1.9.0",
     "@types/crypto-js": "^4.2.2",
     "@types/qrcode": "^1.5.6",

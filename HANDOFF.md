@@ -70,7 +70,7 @@ comm -23 /tmp/r.txt /tmp/s.txt   # in registry but unwired → renders the WRONG
 
 ## 4. Current state
 
-- **39 tools** (~925 words avg), 6 guides, 12 currency pairs, 9 categories
+- **52 tools** (~925 words avg), 6 guides, 12 currency pairs, 9 categories
 - **76 HTML pages**, 74 sitemap URLs
 - 0 titles over 60 chars, 0 duplicate titles (except 404/_not-found, harmless)
 - All JSON-LD valid, **no `aggregateRating` anywhere** (see §6)
@@ -215,6 +215,73 @@ actually determines rankings:
 A 7/10 domain with 50 backlinks beats a 9/10 with none. Do not expect ranking
 movement for 3–6 months even after the domain move. Target long-tail
 ("compress image to 50kb for exam form"), not head terms.
+
+
+## 12. Video downloader — architecture (added 23 Aug 2026)
+
+**The site cannot download from platforms on its own.** `output: "export"` means
+there is no server, and a browser cannot: CORS blocks reading the response,
+stream URLs are signature-signed, and above 360p video and audio are separate
+streams needing ffmpeg to mux.
+
+**Verified dead (Aug 2026)** — the old client-only approach relied on these and
+all are blocked: every public Invidious instance (403/401/dead), allorigins.win,
+corsproxy.io (403). TikTok's CDN resolves then answers **503**. Do not try to
+"fix" this by swapping in new mirrors; they get blocked within weeks.
+
+### The bug that made it look broken
+`resolveVideoUrl()` had a **silent fall-through**: when a platform resolver
+failed it dropped to the direct-link branch and returned the *page* URL as if it
+were a stream. The player got an HTML document as its `src` (blank) and
+"download" saved HTML. Now every unresolvable link returns
+`{ unsupported, reason, suggestion }` and the UI shows it.
+
+### Key distinction
+`<video src>` does **not** require CORS; `fetch()` does. A video can play
+perfectly and still fail to download. The download path falls back to anchor
+navigation, which is not subject to CORS.
+
+### The optional backend — `/server`
+Deployed **separately** (Cloud Run / Railway / Fly / VPS). Node + Express +
+`yt-dlp` + `ffmpeg` in a Docker image.
+
+- `GET /api/info?url=` → title, duration, thumbnail, format list
+- `GET /api/download?url=&format=&audio=` → streams the file (piped, never
+  buffered to disk)
+- Rate limited, SSRF-guarded, size-capped, CORS allowlisted
+
+**Activate by setting `NEXT_PUBLIC_VIDEO_API=https://your-service`.**
+Without it the site handles direct media URLs only and says so — that is the
+safe default, so nothing breaks if the service is down.
+
+Client lives in `lib/video/backend.ts`; `detectPlatform()` there recognises 10
+platforms from the URL.
+
+**Rebuild the image regularly** — platforms change signature algorithms and an
+outdated yt-dlp stops working within weeks.
+
+**Note:** the AdSense-policy concern about hosting platform downloaders was
+raised and the owner decided to proceed. Not re-litigated.
+
+
+## 13. ffmpeg.wasm tools (video-cutter, audio-remover)
+
+Engine: `@ffmpeg/ffmpeg` + self-hosted core in `public/ffmpeg/` (~32MB wasm).
+Loader is `lib/media/ffmpeg.ts` — lazy, so the core is fetched only when one of
+these tools runs, never on page load.
+
+**SINGLE-THREADED core is deliberate.** The multi-threaded build needs
+SharedArrayBuffer, which requires site-wide COOP/COEP headers — and those break
+third-party embeds **including AdSense**. Slower, but it does not cost the rest
+of the site. Do not "optimise" this without understanding that trade.
+
+Both tools use `-c copy` (stream copy), never a re-encode:
+- cutter: `-ss/-to` + `-c copy` → instant and lossless, but lands on the nearest
+  preceding keyframe (~1-2s). Frame accuracy would require re-encoding.
+- remover: `-an -c copy` to mute, `-vn -acodec copy` to extract as .m4a.
+
+`public/ffmpeg/` adds ~32MB to every deploy. Keep it in sync if
+`@ffmpeg/core` is upgraded.
 
 ## 11. Commands
 
