@@ -40,1353 +40,2226 @@ export interface ToolDefinition {
 
 export const TOOL_CATEGORIES = [
   {
-    id: "calculators",
-    name: "Calculators & Finance",
-    description: "Percentage, discount, EMI, GST, SIP, and salary calculators",
-    icon: "Calculator",
+    "id": "calculators",
+    "name": "Calculators & Finance",
+    "description": "Percentage, discount, EMI, GST, SIP, and salary calculators",
+    "icon": "Calculator"
   },
   {
-    id: "date-time",
-    name: "Date & Time",
-    description: "Age, date differences, business days, and timezone converters",
-    icon: "Clock",
+    "id": "date-time",
+    "name": "Date & Time",
+    "description": "Age, date differences, business days, and timezone converters",
+    "icon": "Clock"
   },
   {
-    id: "text",
-    name: "Text & Writing",
-    description: "Word counters, case converters, cleaners, and diff checkers",
-    icon: "Type",
+    "id": "text",
+    "name": "Text & Writing",
+    "description": "Word counters, case converters, cleaners, and diff checkers",
+    "icon": "Type"
   },
   {
-    id: "developer",
-    name: "Developer & Data",
-    description: "JSON formatters, Base64, JWT, UUID, URL encoders, and regex",
-    icon: "Code",
+    "id": "developer",
+    "name": "Developer & Data",
+    "description": "JSON formatters, Base64, JWT, UUID, URL encoders, and regex",
+    "icon": "Code"
   },
   {
-    id: "image-media",
-    name: "Image & Media",
-    description: "Client-side image compressor, QR code generator, and format converter",
-    icon: "Image",
+    "id": "image-media",
+    "name": "Image & Media",
+    "description": "Client-side image compressor, QR code generator, and format converter",
+    "icon": "Image"
   },
   {
-    id: "pdf-docs",
-    name: "PDF & Documents",
-    description: "Client-side PDF merge, split, and document utilities",
-    icon: "FileText",
+    "id": "pdf-docs",
+    "name": "PDF & Documents",
+    "description": "Client-side PDF merge, split, and document utilities",
+    "icon": "FileText"
   },
   {
-    id: "security",
-    name: "Security & Generators",
-    description: "Secure password generator, hash generation, and token tools",
-    icon: "Shield",
+    "id": "security",
+    "name": "Security & Generators",
+    "description": "Secure password generator, hash generation, and token tools",
+    "icon": "Shield"
   },
   {
-    id: "business",
-    name: "Business & Marketing",
-    description: "Profit margins, markup, break-even, and invoice calculations",
-    icon: "TrendingUp",
+    "id": "business",
+    "name": "Business & Marketing",
+    "description": "Profit margins, markup, break-even, and invoice calculations",
+    "icon": "TrendingUp"
   },
   {
-    id: "ai-tools",
-    name: "AI-Powered Tools",
-    description: "AI formula explainer, text summarizer, and regex generator",
-    icon: "Sparkles",
-  },
+    "id": "ai-tools",
+    "name": "AI-Powered Tools",
+    "description": "AI formula explainer, text summarizer, and regex generator",
+    "icon": "Sparkles"
+  }
 ];
 
 export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
-  // 1. JSON Formatter
   "json-formatter": {
-    slug: "json-formatter",
-    name: "JSON Formatter & Validator",
-    shortName: "JSON Formatter",
-    category: "developer",
-    categoryName: "Developer & Data",
-    description: "Format, validate, prettify, minify, and inspect JSON payloads with real-time error detection.",
-    longDescription: "A client-side developer utility to format unreadable JSON, detect syntax mistakes with exact line diagnostics, minify data, and inspect structures securely without data leaves your browser.",
-    iconName: "Code",
-    metaTitle: "Free JSON Formatter & Validator Online - Prettify & Minify",
-    metaDescription: "Format and validate JSON instantly in your browser. Prettify with 2/4 spaces or tabs, minify, and fix syntax errors.",
-    keywords: ["json formatter", "json validator", "prettify json", "minify json", "json parser"],
-    features: ["Prettify with 2/4 spaces or tab", "Minify JSON", "Syntax error line indicators", "100% private in-browser"],
-    faqs: [
-      { question: "Is my JSON stored?", answer: "No. Everything runs purely in your local browser JavaScript memory." }
+    "slug": "json-formatter",
+    "name": "JSON Formatter",
+    "shortName": "JSON Formatter",
+    "category": "developer",
+    "categoryName": "Developer & Data",
+    "description": "Format, validate, prettify, minify, and inspect JSON payloads with real-time error detection.",
+    "longDescription": "A client-side developer utility to format unreadable JSON, detect syntax mistakes with exact line diagnostics, minify data, and inspect structures securely without data leaves your browser.",
+    "iconName": "Code",
+    "metaTitle": "JSON Formatter | TabBench",
+    "metaDescription": "Format, validate, prettify, and minify JSON payloads in your browser. Live syntax error diagnostics with zero server upload.",
+    "keywords": [
+      "json formatter",
+      "json validator",
+      "prettify json",
+      "minify json",
+      "json parser"
     ],
-    relatedToolSlugs: ["base64-converter", "jwt-decoder", "uuid-generator"],
-    isPopular: true,
+    "features": [
+      "Prettify with 2/4 spaces or tab",
+      "Minify JSON",
+      "Syntax error line indicators",
+      "100% private in-browser"
+    ],
+    "faqs": [
+      {
+        "question": "Is my JSON stored?",
+        "answer": "No. Everything runs purely in your local browser JavaScript memory."
+      }
+    ],
+    "relatedToolSlugs": [
+      "base64-converter",
+      "jwt-decoder",
+      "uuid-generator"
+    ],
+    "isPopular": true
   },
-
-  // 2. Percentage Calculator
   "percentage-calculator": {
-    slug: "percentage-calculator",
-    name: "Percentage Calculator",
-    shortName: "Percentage",
-    category: "calculators",
-    categoryName: "Calculators & Finance",
-    description: "Calculate percentages, percentage increases, decreases, and differences with instant step-by-step formulas.",
-    longDescription: "Instant math tool for students, finance managers, shoppers, and researchers. Solve X% of Y, percentage increase/decrease, and percentage difference instantly.",
-    iconName: "Percent",
-    metaTitle: "Percentage Calculator - Fast % Increase, Decrease & Difference",
-    metaDescription: "Free percentage calculator: find X% of Y, percentage change, and percentage difference with formulas.",
-    keywords: ["percentage calculator", "percent increase", "percent decrease", "percentage difference"],
-    features: ["X% of Y calculation", "% Increase/decrease", "% Difference", "Step-by-step formula cards"],
-    formulas: [
+    "slug": "percentage-calculator",
+    "name": "Percentage Calculator",
+    "shortName": "Percentage Calculator",
+    "category": "calculators",
+    "categoryName": "Calculators & Finance",
+    "description": "Calculate percentages, percentage increases, decreases, and differences with instant step-by-step formulas.",
+    "longDescription": "Instant math tool for students, finance managers, shoppers, and researchers. Solve X% of Y, percentage increase/decrease, and percentage difference instantly.",
+    "iconName": "Percent",
+    "metaTitle": "Percentage Calculator | TabBench",
+    "metaDescription": "Calculate percentages, percentage increases, decreases, and differences with TabBench's free calculator. Includes formulas and instant calculations.",
+    "keywords": [
+      "percentage calculator",
+      "percent increase",
+      "percent decrease",
+      "percentage difference",
+      "calculate percentage"
+    ],
+    "features": [
+      "X% of Y calculation",
+      "% Increase/decrease",
+      "% Difference",
+      "Step-by-step formula cards"
+    ],
+    "formulas": [
       {
-        name: "Percentage of a Number",
-        expression: "P = (X / 100) × Y",
-        explanation: "Divide percentage by 100 and multiply by the total value.",
-        example: "15% of 200 = (15 / 100) * 200 = 30."
+        "name": "Percentage of a Number",
+        "expression": "P = (X / 100) × Y",
+        "explanation": "Divide percentage by 100 and multiply by the total value.",
+        "example": "15% of 200 = (15 / 100) * 200 = 30."
       }
     ],
-    faqs: [
-      { question: "How to calculate percent mentally?", answer: "Find 10% by shifting the decimal left, then scale accordingly." }
+    "faqs": [
+      {
+        "question": "How to calculate percent mentally?",
+        "answer": "Find 10% by shifting the decimal left, then scale accordingly."
+      }
     ],
-    relatedToolSlugs: ["discount-calculator", "gst-calculator", "emi-calculator"],
-    isPopular: true,
+    "relatedToolSlugs": [
+      "discount-calculator",
+      "gst-calculator",
+      "emi-calculator"
+    ],
+    "isPopular": true
   },
-
-  // 3. Word & Character Counter
   "word-counter": {
-    slug: "word-counter",
-    name: "Word & Character Counter",
-    shortName: "Word Counter",
-    category: "text",
-    categoryName: "Text & Writing",
-    description: "Count words, characters, sentences, paragraphs, and estimate reading & speaking time in real-time.",
-    longDescription: "Essential writing utility for essayists, copywriters, and social media managers. Track character limits for Twitter/X, Instagram, LinkedIn, and calculate estimated reading duration.",
-    iconName: "FileText",
-    metaTitle: "Word Counter & Character Counter Online - Free Writing Stats",
-    metaDescription: "Count words, characters with/without spaces, sentences, paragraphs, and reading time in real-time.",
-    keywords: ["word counter", "character counter", "letter count", "word count online", "reading time calculator"],
-    features: ["Live words and characters counter", "Counts without spaces", "Sentence and paragraph breakdown", "Estimated reading time"],
-    faqs: [
-      { question: "What is average reading speed?", answer: "Average reading speed is 200 to 250 words per minute." }
+    "slug": "word-counter",
+    "name": "Word Counter",
+    "shortName": "Word Counter",
+    "category": "text",
+    "categoryName": "Text & Writing",
+    "description": "Count words, characters, sentences, paragraphs, and estimate reading & speaking time in real-time.",
+    "longDescription": "Essential writing utility for essayists, copywriters, and social media managers. Track character limits for Twitter/X, Instagram, LinkedIn, and calculate estimated reading duration.",
+    "iconName": "FileText",
+    "metaTitle": "Word Counter | TabBench",
+    "metaDescription": "Count words, characters, sentences, paragraphs, and reading time in real time. Perfect for essays, social media posts, and editorial drafts.",
+    "keywords": [
+      "word counter",
+      "character counter",
+      "word count online",
+      "character count with spaces",
+      "reading time calculator"
     ],
-    relatedToolSlugs: ["case-converter", "text-diff-checker", "password-generator"],
-    isPopular: true,
-  },
-
-  // 4. Password Generator
-  "password-generator": {
-    slug: "password-generator",
-    name: "Strong Password Generator",
-    shortName: "Password Generator",
-    category: "security",
-    categoryName: "Security & Generators",
-    description: "Generate highly secure, cryptographically random passwords with customizable length, symbols, and memorability.",
-    longDescription: "Create uncrackable, cryptographically secure passwords using standard browser Crypto APIs. Customize length, uppercase, lowercase, numbers, and special symbols.",
-    iconName: "Shield",
-    metaTitle: "Strong Password Generator - Secure & Random Online",
-    metaDescription: "Generate strong, secure passwords with custom length, symbols, numbers, and strength score.",
-    keywords: ["password generator", "strong password generator", "random password", "secure password"],
-    features: ["Cryptographically secure (window.crypto)", "Customizable length (6 to 64 chars)", "Symbol and number toggles", "Password strength meter"],
-    faqs: [
-      { question: "Are passwords saved anywhere?", answer: "Never. Passwords are generated directly on your device via CSPRNG." }
+    "features": [
+      "Live words and characters counter",
+      "Counts without spaces",
+      "Sentence and paragraph breakdown",
+      "Estimated reading time"
     ],
-    relatedToolSlugs: ["uuid-generator", "hash-generator", "base64-converter"],
-    isPopular: true,
-  },
-
-  // 5. Base64 Encoder / Decoder
-  "base64-converter": {
-    slug: "base64-converter",
-    name: "Base64 Encoder / Decoder",
-    shortName: "Base64",
-    category: "developer",
-    categoryName: "Developer & Data",
-    description: "Encode text or decode Base64 strings instantly with live UTF-8 support and URL-safe mode.",
-    longDescription: "Convert plain text to Base64 and decode Base64 strings to readable UTF-8 text with instant one-click copy and error detection.",
-    iconName: "Binary",
-    metaTitle: "Base64 Encoder & Decoder Online - Fast & Private",
-    metaDescription: "Encode text to Base64 and decode Base64 to text with UTF-8 support. Fast, client-side, and free.",
-    keywords: ["base64 encoder", "base64 decoder", "base64 encode online", "decode base64"],
-    features: ["Encode text to Base64", "Decode Base64 to UTF-8", "URL-safe format toggle", "Instant live preview"],
-    faqs: [
-      { question: "What is Base64 used for?", answer: "Base64 encodes binary data into ASCII characters for safe transmission in JSON, email, and URLs." }
-    ],
-    relatedToolSlugs: ["jwt-decoder", "url-encoder-decoder", "json-formatter"],
-    isPopular: true,
-  },
-
-  // 6. JWT Decoder
-  "jwt-decoder": {
-    slug: "jwt-decoder",
-    name: "JWT Decoder & Expiration Checker",
-    shortName: "JWT Decoder",
-    category: "developer",
-    categoryName: "Developer & Data",
-    description: "Decode JSON Web Tokens (Header, Payload, Signature) and inspect expiration timestamps safely in your browser.",
-    longDescription: "Debug JWT authentication tokens client-side. Inspect user claims, issuer, algorithm, and check whether the token is expired or valid.",
-    iconName: "Key",
-    metaTitle: "JWT Decoder Online - Decode JSON Web Token Payload & Expiry",
-    metaDescription: "Decode JWT header, payload, and signature without sending tokens to any server. Check token expiration instantly.",
-    keywords: ["jwt decoder", "decode jwt", "jwt token inspect", "jwt expiration checker"],
-    features: ["Decodes Header and Payload", "Formatted JSON inspection", "Live token expiration status", "Zero network transmission"],
-    faqs: [
-      { question: "Is it safe to paste JWT tokens here?", answer: "Yes, decoding is performed purely in client JavaScript with no network requests." }
-    ],
-    relatedToolSlugs: ["base64-converter", "uuid-generator", "json-formatter"],
-    isPopular: true,
-  },
-
-  // 7. UUID Generator
-  "uuid-generator": {
-    slug: "uuid-generator",
-    name: "UUID / GUID Generator",
-    shortName: "UUID Generator",
-    category: "developer",
-    categoryName: "Developer & Data",
-    description: "Generate cryptographically secure Version 4 UUIDs (GUIDs) in bulk with uppercase, hyphen, and quote formatting.",
-    longDescription: "Generate random v4 UUIDs for database primary keys, API tokens, and unique identifiers. Bulk generation up to 100 UUIDs at once.",
-    iconName: "Hash",
-    metaTitle: "UUID Generator - Generate Secure v4 UUIDs / GUIDs Online",
-    metaDescription: "Generate random v4 UUIDs / GUIDs in bulk. Customize hyphens, uppercase, and quotes.",
-    keywords: ["uuid generator", "guid generator", "v4 uuid", "generate uuid online"],
-    features: ["RFC 4122 compliant v4 UUIDs", "Bulk generation (1 to 100)", "Hyphen and uppercase options", "One-click copy all"],
-    faqs: [
-      { question: "What is a UUID v4?", answer: "A Version 4 UUID is a 128-bit number generated using cryptographically random numbers." }
-    ],
-    relatedToolSlugs: ["password-generator", "base64-converter", "json-formatter"],
-    isPopular: true,
-  },
-
-  // 8. URL Encoder / Decoder
-  "url-encoder-decoder": {
-    slug: "url-encoder-decoder",
-    name: "URL Encoder / Decoder",
-    shortName: "URL Encoder",
-    category: "developer",
-    categoryName: "Developer & Data",
-    description: "Encode query parameters and special characters into percent-encoded URL format, or decode URLs to plain text.",
-    longDescription: "Quickly percent-encode URL strings and decode encoded URLs. Supports full URL encode and encodeURIComponent modes.",
-    iconName: "Link",
-    metaTitle: "URL Encoder & Decoder Online - Percent Encoding Tool",
-    metaDescription: "Encode and decode URLs and query parameters online with percent encoding. Fast and client-side.",
-    keywords: ["url encoder", "url decoder", "percent encode", "encodeuricomponent online"],
-    features: ["encodeURIComponent support", "decodeURIComponent support", "Live conversion", "One-click copy"],
-    faqs: [
-      { question: "Why encode URLs?", answer: "URLs can only contain certain ASCII characters. Special characters like spaces or symbols must be percent-encoded." }
-    ],
-    relatedToolSlugs: ["base64-converter", "jwt-decoder", "json-formatter"],
-    isPopular: true,
-  },
-
-  // 9. QR Code Generator
-  "qr-code-generator": {
-    slug: "qr-code-generator",
-    name: "QR Code Generator",
-    shortName: "QR Generator",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Generate high-resolution custom QR codes for URLs, text, Wi-Fi passwords, emails, and phone numbers. Download as PNG or SVG.",
-    longDescription: "Create clean QR codes instantly in your browser. Customize colors, error correction level, and size. Download high-res PNG for print or web.",
-    iconName: "QrCode",
-    metaTitle: "Free QR Code Generator - Create Custom QR Codes Online",
-    metaDescription: "Generate free QR codes for links, text, Wi-Fi, and contact cards. Download PNG/SVG with custom colors.",
-    keywords: ["qr code generator", "create qr code", "free qr generator", "qr code maker"],
-    features: ["URL, Text, and WiFi modes", "Custom foreground & background colors", "Download as PNG", "High error correction"],
-    faqs: [
-      { question: "Do these QR codes expire?", answer: "No, these are standard static QR codes and will work indefinitely." }
-    ],
-    relatedToolSlugs: ["image-compressor", "password-generator", "pdf-merge"],
-    isPopular: true,
-  },
-
-  // 10. Image Compressor (Target Size KB)
-  "image-compressor": {
-    slug: "image-compressor",
-    name: "Image Compressor (Compress to Target KB)",
-    shortName: "Image Compressor",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Compress image to exact target KB (e.g. under 50KB, 100KB, 200KB) with live quality adaptation and alerts.",
-    longDescription: "Compress JPG, PNG, and WebP images to your exact target file size in KB. Ideal for government portals, job applications, resumes, and websites with strict file size limits. 100% private in-browser compression.",
-    iconName: "Image",
-    metaTitle: "Compress Image to Specific KB (50KB, 100KB, 200KB) Online",
-    metaDescription: "Compress JPG, PNG, WebP to exact target KB size online. Set custom file size limits with live compression alerts.",
-    keywords: ["image compressor to 50kb", "compress image to 100kb", "reduce image size in kb", "target size compressor"],
-    features: ["Compress to exact KB target (e.g. 50KB, 100KB)", "Smart auto-downscaling algorithm", "Before/After size comparison", "100% client-side safe"],
-    faqs: [
-      { question: "Can I compress an image to under 50 KB or 100 KB?", answer: "Yes! Enter your desired target size in KB and our algorithm will automatically balance quality and resolution to meet your limit." }
-    ],
-    relatedToolSlugs: ["png-to-jpg", "crop-image", "image-to-pdf"],
-    isPopular: true,
-  },
-
-  // 11. Image to PDF & PDF to Image
-  "image-to-pdf": {
-    slug: "image-to-pdf",
-    name: "Image to PDF & PDF to Image Converter",
-    shortName: "Image to PDF",
-    category: "pdf-docs",
-    categoryName: "PDF & Documents",
-    description: "Convert JPG, PNG, and WebP images into PDF documents, or extract PDF pages as high-resolution images.",
-    longDescription: "Convert multiple photos and documents into a clean multi-page PDF, or convert PDF pages into high-res JPG/PNG images client-side with zero data uploads.",
-    iconName: "FilePlus",
-    metaTitle: "Image to PDF & PDF to Image Converter Online - Fast & Free",
-    metaDescription: "Convert images (JPG, PNG) to PDF or extract PDF pages to images. 100% private client-side converter.",
-    keywords: ["image to pdf", "jpg to pdf", "png to pdf", "pdf to image", "pdf to jpg"],
-    features: ["Convert multiple images to multi-page PDF", "Convert PDF to JPG/PNG images", "Page orientation settings", "Zero server upload"],
-    faqs: [
-      { question: "Can I merge multiple images into one PDF?", answer: "Yes, upload multiple JPG or PNG images and arrange them to create a combined PDF document." }
-    ],
-    relatedToolSlugs: ["pdf-to-word", "pdf-merge", "image-compressor"],
-    isPopular: true,
-  },
-
-  // 12. PDF to Word & Word to PDF
-  "pdf-to-word": {
-    slug: "pdf-to-word",
-    name: "PDF to Word & Word to PDF Converter",
-    shortName: "PDF to Word",
-    category: "pdf-docs",
-    categoryName: "PDF & Documents",
-    description: "Convert PDF documents to editable Microsoft Word (.docx) files, or convert Word documents to PDF.",
-    longDescription: "Easily extract text and formatting from PDF files into editable DOCX Word files, or convert Word (.docx) documents into clean PDF files right in your browser.",
-    iconName: "FileText",
-    metaTitle: "PDF to Word & Word to PDF Converter - Free & Private Online",
-    metaDescription: "Convert PDF to Word (.docx) or Word to PDF in your browser. Fast, editable, and 100% secure.",
-    keywords: ["pdf to word", "word to pdf", "convert pdf to docx", "docx to pdf online"],
-    features: ["Convert PDF to editable DOCX", "Convert DOCX Word documents to PDF", "Preserves text structure", "Private browser processing"],
-    faqs: [
-      { question: "Is the resulting Word document editable?", answer: "Yes, it creates standard Microsoft Word .docx files compatible with Word, Google Docs, and LibreOffice." }
-    ],
-    relatedToolSlugs: ["image-to-pdf", "pdf-merge", "unlock-pdf"],
-    isPopular: true,
-  },
-
-  // 13. Watermark Remover & Editor
-  "watermark-remover": {
-    slug: "watermark-remover",
-    name: "Watermark Remover & Image Cleaner",
-    shortName: "Watermark Remover",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Remove watermarks, logos, dates, and stamps from images using smart inpainting, or add custom watermarks.",
-    longDescription: "Clean unwanted watermarks, timestamps, and logos from photos using client-side neighbor inpainting algorithms, or protect your images by adding custom text/image watermarks.",
-    iconName: "Sparkles",
-    metaTitle: "Watermark Remover Online - Remove Watermarks from Images Free",
-    metaDescription: "Erase watermarks, logos, text stamps, and dates from images online. Private client-side inpainting tool.",
-    keywords: ["watermark remover", "remove watermark from photo", "erase watermark online", "image inpainting tool"],
-    features: ["Interactive watermark erase box", "Smart pixel inpainting algorithm", "Watermark adder mode", "Download clean image"],
-    faqs: [
-      { question: "How does the watermark eraser work?", answer: "Select the watermark area with your mouse; the inpainting algorithm blends surrounding textures to fill the area seamlessly." }
-    ],
-    relatedToolSlugs: ["image-compressor", "crop-image", "png-to-jpg"],
-    isPopular: true,
-  },
-
-  // 14. PNG to JPG Converter
-  "png-to-jpg": {
-    slug: "png-to-jpg",
-    name: "PNG to JPG Converter",
-    shortName: "PNG to JPG",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Convert PNG images to JPG with custom background fill for transparent areas and adjustable compression quality.",
-    longDescription: "Instant format conversion from PNG to JPG. Automatically fills transparent PNG backgrounds with clean white or custom colors when saving as JPG.",
-    iconName: "Image",
-    metaTitle: "PNG to JPG Converter Online - Free Image Format Tool",
-    metaDescription: "Convert PNG to JPG with custom background fill online. High quality, instant, and 100% private in browser.",
-    keywords: ["png to jpg", "convert png to jpg", "png to jpeg online", "image format converter"],
-    features: ["PNG to JPG conversion", "Custom background color for transparency", "Adjustable JPG quality slider", "Instant file size comparison"],
-    faqs: [
-      { question: "What happens to transparent backgrounds when converting PNG to JPG?", answer: "Because JPG does not support transparency, our tool fills transparent areas with clean white (or your chosen background color)." }
-    ],
-    relatedToolSlugs: ["jpg-to-png", "image-to-webp", "image-compressor", "crop-image"],
-    isPopular: true,
-  },
-
-  // 14b. JPG to PNG Converter
-  "jpg-to-png": {
-    slug: "jpg-to-png",
-    name: "JPG to PNG Converter",
-    shortName: "JPG to PNG",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Convert JPG and JPEG photos into lossless PNG format with crisp quality and zero compression artifacts.",
-    longDescription: "Convert standard JPEG and JPG photos into uncompressed PNG images. Great for graphic design, logos, and high-fidelity editing.",
-    iconName: "Image",
-    metaTitle: "JPG to PNG Converter Online - Convert JPG to Lossless PNG",
-    metaDescription: "Convert JPG and JPEG to PNG online for free. Fast, lossless, and processed 100% locally in your browser.",
-    keywords: ["jpg to png", "convert jpg to png", "jpeg to png online", "lossless image converter"],
-    features: ["Lossless PNG export", "Fast client-side conversion", "Zero data upload", "High-fidelity color retention"],
-    faqs: [
-      { question: "Does converting JPG to PNG improve image quality?", answer: "It prevents further compression loss when you edit or save the file again, maintaining original pixel fidelity." }
-    ],
-    relatedToolSlugs: ["png-to-jpg", "image-to-webp", "crop-image", "image-compressor"],
-    isPopular: true,
-  },
-
-  // 14c. Image to WebP Converter
-  "image-to-webp": {
-    slug: "image-to-webp",
-    name: "Image to WebP Converter",
-    shortName: "Image to WebP",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Convert JPG and PNG images into modern Google WebP format to reduce file sizes by 30% to 80% while retaining quality.",
-    longDescription: "Speed up your website load times and save bandwidth by converting bulky images to modern, high-efficiency WebP format.",
-    iconName: "Image",
-    metaTitle: "Image to WebP Converter - Convert JPG & PNG to WebP Free",
-    metaDescription: "Convert PNG and JPG images to lightweight WebP format online. Reduce image file size by up to 80% with quality controls.",
-    keywords: ["image to webp", "png to webp", "jpg to webp", "convert to webp online"],
-    features: ["Convert PNG and JPG to WebP", "Up to 80% file size reduction", "Lossy & Lossless quality slider", "Faster website load times"],
-    faqs: [
-      { question: "What is WebP format?", answer: "WebP is a modern image format developed by Google that provides superior lossless and lossy compression for web images." }
-    ],
-    relatedToolSlugs: ["webp-to-jpg", "png-to-jpg", "image-compressor", "crop-image"],
-    isPopular: true,
-  },
-
-  // 14d. WebP to JPG Converter
-  "webp-to-jpg": {
-    slug: "webp-to-jpg",
-    name: "WebP to JPG / PNG Converter",
-    shortName: "WebP to JPG",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Convert WebP images into universally compatible JPG or PNG formats for easy sharing and opening on any device.",
-    longDescription: "Easily open and convert downloaded .webp images into standard JPG or PNG files that can be edited in Photoshop, Word, or shared anywhere.",
-    iconName: "Image",
-    metaTitle: "WebP to JPG & PNG Converter - Convert WebP Images Free",
-    metaDescription: "Convert WebP to JPG or PNG online. Universal compatibility for downloaded web images. Fast, free, and private.",
-    keywords: ["webp to jpg", "webp to png", "convert webp", "open webp image"],
-    features: ["Convert WebP to JPG & PNG", "Universal device compatibility", "Zero quality degradation", "Instant batch download"],
-    faqs: [
-      { question: "Why should I convert WebP to JPG?", answer: "Some older photo viewers and image editing apps do not natively support WebP files, while JPG works everywhere." }
-    ],
-    relatedToolSlugs: ["image-to-webp", "png-to-jpg", "jpg-to-png", "crop-image"],
-    isPopular: true,
-  },
-
-  // 15. Unlock PDF
-  "unlock-pdf": {
-    slug: "unlock-pdf",
-    name: "Unlock PDF & Remove Password Restrictions",
-    shortName: "Unlock PDF",
-    category: "pdf-docs",
-    categoryName: "PDF & Documents",
-    description: "Remove owner password restrictions, copying, and printing locks from PDF files entirely in your browser.",
-    longDescription: "Unlock restricted PDF documents so you can copy text, print, and edit pages freely. 100% processed in browser memory with zero security risk.",
-    iconName: "Lock",
-    metaTitle: "Unlock PDF Online - Remove PDF Password & Copy Restrictions",
-    metaDescription: "Remove password restrictions, copy protections, and print locks from PDF documents online safely.",
-    keywords: ["unlock pdf", "remove pdf password", "pdf permission remover", "unlock protected pdf"],
-    features: ["Remove restrictions and print locks", "Decrypt with known password", "Zero server upload", "Instant unlocked PDF download"],
-    faqs: [
-      { question: "Can it unlock password-protected files?", answer: "Yes. For user-encrypted PDFs, enter the password once to decrypt and save a permanently unrestricted copy." }
-    ],
-    relatedToolSlugs: ["pdf-merge", "pdf-to-word", "image-to-pdf"],
-    isPopular: true,
-  },
-
-  // 16. Crop Image
-  "crop-image": {
-    slug: "crop-image",
-    name: "Crop Image & Aspect Ratio Tool",
-    shortName: "Crop Image",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Crop photos to custom dimensions or standard aspect ratios (1:1, 16:9, 4:3, 9:16 Story) with live preview.",
-    longDescription: "Crop, frame, and resize your images for Instagram posts, YouTube thumbnails, profile pictures, and banners with precise pixel controls.",
-    iconName: "Crop",
-    metaTitle: "Crop Image Online - Free Aspect Ratio & Photo Cropper",
-    metaDescription: "Crop images online with custom aspect ratios (1:1 square, 16:9, 4:3). Fast, accurate, and private.",
-    keywords: ["crop image", "crop photo online", "square image crop", "16:9 crop tool", "photo aspect ratio"],
-    features: ["Presets for 1:1, 16:9, 4:3, 9:16 Story", "Freeform crop box", "Precise pixel dimension indicator", "High quality export"],
-    faqs: [
-      { question: "Can I crop circular profile pictures?", answer: "Yes, you can crop to 1:1 square ratio which fits circular avatar frames perfectly." }
-    ],
-    relatedToolSlugs: ["image-compressor", "watermark-remover", "png-to-jpg"],
-    isPopular: true,
-  },
-
-  // 11. PDF Merge
-  "pdf-merge": {
-    slug: "pdf-merge",
-    name: "PDF Merge & Combine",
-    shortName: "PDF Merge",
-    category: "pdf-docs",
-    categoryName: "PDF & Documents",
-    description: "Combine multiple PDF documents into a single organized PDF file entirely client-side in your browser.",
-    longDescription: "Merge multiple PDF files securely in your browser using pdf-lib. Reorder files, remove unwanted pages, and download the combined PDF with zero server upload.",
-    iconName: "FilePlus",
-    metaTitle: "Merge PDF Online - Combine PDF Files Free & Privately",
-    metaDescription: "Merge and combine multiple PDF files into one. Fast, free, and processed 100% locally in your browser.",
-    keywords: ["merge pdf", "combine pdf", "pdf joiner", "merge pdf files free"],
-    features: ["Merge multiple PDFs", "Drag-and-drop file upload", "Zero server upload - 100% private", "Fast instant download"],
-    faqs: [
-      { question: "Is it safe to merge sensitive documents?", answer: "Yes, merging happens on your device using WebAssembly/JavaScript. No PDF data leaves your computer." }
-    ],
-    relatedToolSlugs: ["pdf-compressor", "image-compressor", "qr-code-generator"],
-    isPopular: true,
-  },
-
-  // 12. PDF Compressor
-  "pdf-compressor": {
-    slug: "pdf-compressor",
-    name: "PDF Page Counter & Compressor Info",
-    shortName: "PDF Utility",
-    category: "pdf-docs",
-    categoryName: "PDF & Documents",
-    description: "Inspect PDF metadata, count pages, analyze embedded objects, and reduce document overhead.",
-    longDescription: "Analyze PDF documents, verify page dimensions, check encryption status, and optimize document structure client-side.",
-    iconName: "FileCheck",
-    metaTitle: "PDF Utility & Inspector - Page Counter & Optimizer",
-    metaDescription: "Inspect PDF files, count pages, view document details, and prepare files for sharing.",
-    keywords: ["pdf compressor", "pdf page counter", "pdf inspector", "pdf tool online"],
-    features: ["Page count detection", "File size breakdown", "Document metadata viewer", "100% private"],
-    faqs: [
-      { question: "How are files processed?", answer: "Files are parsed directly in browser memory." }
-    ],
-    relatedToolSlugs: ["pdf-merge", "image-compressor", "word-counter"],
-    isPopular: true,
-  },
-
-  // 13. Age Calculator
-  "age-calculator": {
-    slug: "age-calculator",
-    name: "Age Calculator & Birthday Countdown",
-    shortName: "Age Calculator",
-    category: "date-time",
-    categoryName: "Date & Time",
-    description: "Calculate your exact age in years, months, weeks, days, hours, and minutes, plus next birthday countdown.",
-    longDescription: "Find out your exact age to the day and minute. View interesting milestones like days lived, total breaths, total heartbeats, and days until your next birthday.",
-    iconName: "Calendar",
-    metaTitle: "Age Calculator - Calculate Exact Age in Years, Months, Days",
-    metaDescription: "Calculate your exact age today in years, months, days, hours, and find your next birthday countdown.",
-    keywords: ["age calculator", "calculate age", "how old am i", "birthday countdown", "exact age in days"],
-    features: ["Exact age in Years, Months, Days", "Total days, hours, minutes lived", "Next birthday countdown", "Day of week you were born"],
-    formulas: [
+    "faqs": [
       {
-        name: "Age Duration Calculation",
-        expression: "Years = CurrentYear - BirthYear (adjusted for month/day)",
-        explanation: "Calculate the exact elapsed calendar years, months, and remainder days from date of birth.",
-        example: "Born Jan 15, 2000 -> 26 years, 7 months, 1 day (as of Aug 2026)."
+        "question": "What is average reading speed?",
+        "answer": "Average reading speed is 200 to 250 words per minute."
       }
     ],
-    faqs: [
-      { question: "Does this account for leap years?", answer: "Yes, exact calendar math accounts for leap years and month length variations." }
+    "relatedToolSlugs": [
+      "case-converter",
+      "text-diff-checker",
+      "password-generator"
     ],
-    relatedToolSlugs: ["date-difference-calculator", "percentage-calculator", "emi-calculator"],
-    isPopular: true,
+    "isPopular": true
   },
-
-  // 14. GST Calculator
-  "gst-calculator": {
-    slug: "gst-calculator",
-    name: "GST Calculator (Add / Remove GST)",
-    shortName: "GST Calculator",
-    category: "calculators",
-    categoryName: "Calculators & Finance",
-    description: "Calculate GST (Goods & Services Tax) easily: Add GST to base amount or Reverse GST (extract tax from total) with standard 5%, 12%, 18%, 28% slabs.",
-    longDescription: "Calculate inclusive and exclusive GST amounts in seconds. Determine CGST, SGST, IGST tax breakdown and find net pricing.",
-    iconName: "Receipt",
-    metaTitle: "GST Calculator - Calculate GST Inclusive & Exclusive Amounts",
-    metaDescription: "Free online GST Calculator. Add GST or remove GST from total price. Supports 5%, 12%, 18%, 28% tax slabs with CGST/SGST split.",
-    keywords: ["gst calculator", "calculate gst", "reverse gst calculator", "gst tax slabs", "inclusive gst formula"],
-    features: ["Add GST & Remove GST modes", "Standard slabs: 5%, 12%, 18%, 28%", "CGST and SGST split breakdown", "One-click copy"],
-    formulas: [
+  "password-generator": {
+    "slug": "password-generator",
+    "name": "Password Generator",
+    "shortName": "Password Generator",
+    "category": "security",
+    "categoryName": "Security & Generators",
+    "description": "Generate highly secure, cryptographically random passwords with customizable length, symbols, and memorability.",
+    "longDescription": "Create uncrackable, cryptographically secure passwords using standard browser Crypto APIs. Customize length, uppercase, lowercase, numbers, and special symbols.",
+    "iconName": "Shield",
+    "metaTitle": "Password Generator | TabBench",
+    "metaDescription": "Generate strong, cryptographically secure passwords with custom length, symbols, numbers, and strength scoring. 100% private.",
+    "keywords": [
+      "password generator",
+      "strong password generator",
+      "random password",
+      "secure password generator"
+    ],
+    "features": [
+      "Cryptographically secure (window.crypto)",
+      "Customizable length (6 to 64 chars)",
+      "Symbol and number toggles",
+      "Password strength meter"
+    ],
+    "faqs": [
       {
-        name: "GST Added (Exclusive)",
-        expression: "GST Amount = (Price × GST%) / 100",
-        explanation: "Total Amount = Price + GST Amount.",
-        example: "Rs. 1,000 with 18% GST = Rs. 1,000 + Rs. 180 = Rs. 1,180."
+        "question": "Are passwords saved anywhere?",
+        "answer": "Never. Passwords are generated directly on your device via CSPRNG."
+      }
+    ],
+    "relatedToolSlugs": [
+      "uuid-generator",
+      "hash-generator",
+      "base64-converter"
+    ],
+    "isPopular": true
+  },
+  "base64-converter": {
+    "slug": "base64-converter",
+    "name": "Base64 Converter",
+    "shortName": "Base64 Converter",
+    "category": "developer",
+    "categoryName": "Developer & Data",
+    "description": "Encode text or decode Base64 strings instantly with live UTF-8 support and URL-safe mode.",
+    "longDescription": "Convert plain text to Base64 and decode Base64 strings to readable UTF-8 text with instant one-click copy and error detection.",
+    "iconName": "Binary",
+    "metaTitle": "Base64 Converter | TabBench",
+    "metaDescription": "Encode text to Base64 and decode Base64 strings to UTF-8 text instantly. Supports URL-safe format and real-time live conversion.",
+    "keywords": [
+      "base64 converter",
+      "base64 encoder",
+      "base64 decoder",
+      "encode base64 online",
+      "decode base64 to text"
+    ],
+    "features": [
+      "Encode text to Base64",
+      "Decode Base64 to UTF-8",
+      "URL-safe format toggle",
+      "Instant live preview"
+    ],
+    "faqs": [
+      {
+        "question": "What is Base64 used for?",
+        "answer": "Base64 encodes binary data into ASCII characters for safe transmission in JSON, email, and URLs."
+      }
+    ],
+    "relatedToolSlugs": [
+      "jwt-decoder",
+      "url-encoder-decoder",
+      "json-formatter"
+    ],
+    "isPopular": true
+  },
+  "jwt-decoder": {
+    "slug": "jwt-decoder",
+    "name": "JWT Decoder",
+    "shortName": "JWT Decoder",
+    "category": "developer",
+    "categoryName": "Developer & Data",
+    "description": "Decode JSON Web Tokens (Header, Payload, Signature) and inspect expiration timestamps safely in your browser.",
+    "longDescription": "Debug JWT authentication tokens client-side. Inspect user claims, issuer, algorithm, and check whether the token is expired or valid.",
+    "iconName": "Key",
+    "metaTitle": "JWT Decoder | TabBench",
+    "metaDescription": "Decode and inspect JSON Web Tokens (JWT) headers and payloads. Check token expiration status securely with zero network transmission.",
+    "keywords": [
+      "jwt decoder",
+      "decode jwt",
+      "jwt token inspect",
+      "jwt expiration checker",
+      "jwt payload viewer"
+    ],
+    "features": [
+      "Decodes Header and Payload",
+      "Formatted JSON inspection",
+      "Live token expiration status",
+      "Zero network transmission"
+    ],
+    "faqs": [
+      {
+        "question": "Is it safe to paste JWT tokens here?",
+        "answer": "Yes, decoding is performed purely in client JavaScript with no network requests."
+      }
+    ],
+    "relatedToolSlugs": [
+      "base64-converter",
+      "uuid-generator",
+      "json-formatter"
+    ],
+    "isPopular": true
+  },
+  "uuid-generator": {
+    "slug": "uuid-generator",
+    "name": "UUID Generator",
+    "shortName": "UUID Generator",
+    "category": "developer",
+    "categoryName": "Developer & Data",
+    "description": "Generate cryptographically secure Version 4 UUIDs (GUIDs) in bulk with uppercase, hyphen, and quote formatting.",
+    "longDescription": "Generate random v4 UUIDs for database primary keys, API tokens, and unique identifiers. Bulk generation up to 100 UUIDs at once.",
+    "iconName": "Hash",
+    "metaTitle": "UUID Generator | TabBench",
+    "metaDescription": "Generate cryptographically secure Version 4 UUIDs (GUIDs) individually or in bulk. Customize hyphens, uppercase, and quote formatting.",
+    "keywords": [
+      "uuid generator",
+      "guid generator",
+      "v4 uuid",
+      "generate uuid online",
+      "bulk uuid generator"
+    ],
+    "features": [
+      "RFC 4122 compliant v4 UUIDs",
+      "Bulk generation (1 to 100)",
+      "Hyphen and uppercase options",
+      "One-click copy all"
+    ],
+    "faqs": [
+      {
+        "question": "What is a UUID v4?",
+        "answer": "A Version 4 UUID is a 128-bit number generated using cryptographically random numbers."
+      }
+    ],
+    "relatedToolSlugs": [
+      "password-generator",
+      "base64-converter",
+      "json-formatter"
+    ],
+    "isPopular": true
+  },
+  "url-encoder-decoder": {
+    "slug": "url-encoder-decoder",
+    "name": "URL Encoder & Decoder",
+    "shortName": "URL Encoder & Decoder",
+    "category": "developer",
+    "categoryName": "Developer & Data",
+    "description": "Encode query parameters and special characters into percent-encoded URL format, or decode URLs to plain text.",
+    "longDescription": "Quickly percent-encode URL strings and decode encoded URLs. Supports full URL encode and encodeURIComponent modes.",
+    "iconName": "Link",
+    "metaTitle": "URL Encoder & Decoder | TabBench",
+    "metaDescription": "Encode and decode URLs and URI query parameters using standard percent-encoding. Inspect and modify query parameters in real time.",
+    "keywords": [
+      "url encoder decoder",
+      "url encode online",
+      "url decode",
+      "percent encoding",
+      "parse url query parameters"
+    ],
+    "features": [
+      "encodeURIComponent support",
+      "decodeURIComponent support",
+      "Live conversion",
+      "One-click copy"
+    ],
+    "faqs": [
+      {
+        "question": "Why encode URLs?",
+        "answer": "URLs can only contain certain ASCII characters. Special characters like spaces or symbols must be percent-encoded."
+      }
+    ],
+    "relatedToolSlugs": [
+      "base64-converter",
+      "jwt-decoder",
+      "json-formatter"
+    ],
+    "isPopular": true
+  },
+  "qr-code-generator": {
+    "slug": "qr-code-generator",
+    "name": "QR Code Generator",
+    "shortName": "QR Code Generator",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Generate high-resolution custom QR codes for URLs, text, Wi-Fi passwords, emails, and phone numbers. Download as PNG or SVG.",
+    "longDescription": "Create clean QR codes instantly in your browser. Customize colors, error correction level, and size. Download high-res PNG for print or web.",
+    "iconName": "QrCode",
+    "metaTitle": "QR Code Generator | TabBench",
+    "metaDescription": "Create custom QR codes for URLs, WiFi networks, text, and contact cards. Customize colors, error correction, and download crisp PNGs.",
+    "keywords": [
+      "qr code generator",
+      "create qr code",
+      "custom qr code generator",
+      "free qr code maker",
+      "download qr code png"
+    ],
+    "features": [
+      "URL, Text, and WiFi modes",
+      "Custom foreground & background colors",
+      "Download as PNG",
+      "High error correction"
+    ],
+    "faqs": [
+      {
+        "question": "Do these QR codes expire?",
+        "answer": "No, these are standard static QR codes and will work indefinitely."
+      }
+    ],
+    "relatedToolSlugs": [
+      "image-compressor",
+      "password-generator",
+      "pdf-merge"
+    ],
+    "isPopular": true
+  },
+  "image-compressor": {
+    "slug": "image-compressor",
+    "name": "Image Compressor",
+    "shortName": "Image Compressor",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Compress image to exact target KB (e.g. under 50KB, 100KB, 200KB) with live quality adaptation and alerts.",
+    "longDescription": "Compress JPG, PNG, and WebP images to your exact target file size in KB. Ideal for government portals, job applications, resumes, and websites with strict file size limits. 100% private in-browser compression.",
+    "iconName": "Image",
+    "metaTitle": "Image Compressor | TabBench",
+    "metaDescription": "Compress JPEG, PNG, and WebP images directly in your browser without uploading files. Reduce file size while maintaining visual clarity.",
+    "keywords": [
+      "image compressor",
+      "compress image online",
+      "compress jpeg",
+      "compress png",
+      "reduce image file size"
+    ],
+    "features": [
+      "Compress to exact KB target (e.g. 50KB, 100KB)",
+      "Smart auto-downscaling algorithm",
+      "Before/After size comparison",
+      "100% client-side safe"
+    ],
+    "faqs": [
+      {
+        "question": "Can I compress an image to under 50 KB or 100 KB?",
+        "answer": "Yes! Enter your desired target size in KB and our algorithm will automatically balance quality and resolution to meet your limit."
+      }
+    ],
+    "relatedToolSlugs": [
+      "png-to-jpg",
+      "crop-image",
+      "image-to-pdf"
+    ],
+    "isPopular": true
+  },
+  "image-to-pdf": {
+    "slug": "image-to-pdf",
+    "name": "Image to PDF Converter",
+    "shortName": "Image to PDF Converter",
+    "category": "pdf-docs",
+    "categoryName": "PDF & Documents",
+    "description": "Convert JPG, PNG, and WebP images into PDF documents, or extract PDF pages as high-resolution images.",
+    "longDescription": "Convert multiple photos and documents into a clean multi-page PDF, or convert PDF pages into high-res JPG/PNG images client-side with zero data uploads.",
+    "iconName": "FilePlus",
+    "metaTitle": "Image to PDF Converter | TabBench",
+    "metaDescription": "Convert JPG, PNG, and WebP images into clean, multi-page PDF documents. Reorder pages, adjust margins, and download instantly.",
+    "keywords": [
+      "image to pdf",
+      "convert jpg to pdf",
+      "png to pdf",
+      "combine images to pdf",
+      "convert photos to pdf"
+    ],
+    "features": [
+      "Convert multiple images to multi-page PDF",
+      "Convert PDF to JPG/PNG images",
+      "Page orientation settings",
+      "Zero server upload"
+    ],
+    "faqs": [
+      {
+        "question": "Can I merge multiple images into one PDF?",
+        "answer": "Yes, upload multiple JPG or PNG images and arrange them to create a combined PDF document."
+      }
+    ],
+    "relatedToolSlugs": [
+      "pdf-to-word",
+      "pdf-merge",
+      "image-compressor"
+    ],
+    "isPopular": true
+  },
+  "pdf-to-word": {
+    "slug": "pdf-to-word",
+    "name": "PDF to Word Converter",
+    "shortName": "PDF to Word Converter",
+    "category": "pdf-docs",
+    "categoryName": "PDF & Documents",
+    "description": "Convert PDF documents to editable Microsoft Word (.docx) files, or convert Word documents to PDF.",
+    "longDescription": "Easily extract text and formatting from PDF files into editable DOCX Word files, or convert Word (.docx) documents into clean PDF files right in your browser.",
+    "iconName": "FileText",
+    "metaTitle": "PDF to Word Converter | TabBench",
+    "metaDescription": "Convert PDF documents to editable Word (.docx) files or Word to PDF in your browser. Fast, private conversion with no uploads.",
+    "keywords": [
+      "pdf to word",
+      "word to pdf",
+      "convert pdf to docx",
+      "pdf to editable word",
+      "pdf to doc online"
+    ],
+    "features": [
+      "Convert PDF to editable DOCX",
+      "Convert DOCX Word documents to PDF",
+      "Preserves text structure",
+      "Private browser processing"
+    ],
+    "faqs": [
+      {
+        "question": "Is the resulting Word document editable?",
+        "answer": "Yes, it creates standard Microsoft Word .docx files compatible with Word, Google Docs, and LibreOffice."
+      }
+    ],
+    "relatedToolSlugs": [
+      "image-to-pdf",
+      "pdf-merge",
+      "unlock-pdf"
+    ],
+    "isPopular": true
+  },
+  "watermark-remover": {
+    "slug": "watermark-remover",
+    "name": "Watermark Remover",
+    "shortName": "Watermark Remover",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Remove watermarks, logos, dates, and stamps from images using smart inpainting, or add custom watermarks.",
+    "longDescription": "Clean unwanted watermarks, timestamps, and logos from photos using client-side neighbor inpainting algorithms, or protect your images by adding custom text/image watermarks.",
+    "iconName": "Sparkles",
+    "metaTitle": "Watermark Remover | TabBench",
+    "metaDescription": "Erase watermarks, stamps, date logs, and unwanted objects from images client-side. Fast in-browser canvas retouching.",
+    "keywords": [
+      "watermark remover",
+      "remove watermark from photo",
+      "object eraser online",
+      "erase stamp from image",
+      "clean image watermark"
+    ],
+    "features": [
+      "Interactive watermark erase box",
+      "Smart pixel inpainting algorithm",
+      "Watermark adder mode",
+      "Download clean image"
+    ],
+    "faqs": [
+      {
+        "question": "How does the watermark eraser work?",
+        "answer": "Select the watermark area with your mouse; the inpainting algorithm blends surrounding textures to fill the area seamlessly."
+      }
+    ],
+    "relatedToolSlugs": [
+      "image-compressor",
+      "crop-image",
+      "png-to-jpg"
+    ],
+    "isPopular": true
+  },
+  "png-to-jpg": {
+    "slug": "png-to-jpg",
+    "name": "PNG to JPG Converter",
+    "shortName": "PNG to JPG Converter",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Convert PNG images to JPG with custom background fill for transparent areas and adjustable compression quality.",
+    "longDescription": "Instant format conversion from PNG to JPG. Automatically fills transparent PNG backgrounds with clean white or custom colors when saving as JPG.",
+    "iconName": "Image",
+    "metaTitle": "PNG to JPG Converter | TabBench",
+    "metaDescription": "Convert PNG images to JPG format with custom background color and compression quality settings. 100% private in your browser.",
+    "keywords": [
+      "png to jpg",
+      "convert png to jpg",
+      "png to jpeg converter",
+      "transparent png to jpg",
+      "image format converter"
+    ],
+    "features": [
+      "PNG to JPG conversion",
+      "Custom background color for transparency",
+      "Adjustable JPG quality slider",
+      "Instant file size comparison"
+    ],
+    "faqs": [
+      {
+        "question": "What happens to transparent backgrounds when converting PNG to JPG?",
+        "answer": "Because JPG does not support transparency, our tool fills transparent areas with clean white (or your chosen background color)."
+      }
+    ],
+    "relatedToolSlugs": [
+      "jpg-to-png",
+      "image-to-webp",
+      "image-compressor",
+      "crop-image"
+    ],
+    "isPopular": true
+  },
+  "jpg-to-png": {
+    "slug": "jpg-to-png",
+    "name": "JPG to PNG Converter",
+    "shortName": "JPG to PNG Converter",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Convert JPG and JPEG photos into lossless PNG format with crisp quality and zero compression artifacts.",
+    "longDescription": "Convert standard JPEG and JPG photos into uncompressed PNG images. Great for graphic design, logos, and high-fidelity editing.",
+    "iconName": "Image",
+    "metaTitle": "JPG to PNG Converter | TabBench",
+    "metaDescription": "Convert JPG and JPEG images to high-quality PNG format instantly. Retain maximum image clarity with client-side conversion.",
+    "keywords": [
+      "jpg to png",
+      "convert jpg to png",
+      "jpeg to png online",
+      "convert photo to png",
+      "lossless image converter"
+    ],
+    "features": [
+      "Lossless PNG export",
+      "Fast client-side conversion",
+      "Zero data upload",
+      "High-fidelity color retention"
+    ],
+    "faqs": [
+      {
+        "question": "Does converting JPG to PNG improve image quality?",
+        "answer": "It prevents further compression loss when you edit or save the file again, maintaining original pixel fidelity."
+      }
+    ],
+    "relatedToolSlugs": [
+      "png-to-jpg",
+      "image-to-webp",
+      "crop-image",
+      "image-compressor"
+    ],
+    "isPopular": true
+  },
+  "image-to-webp": {
+    "slug": "image-to-webp",
+    "name": "Image to WebP Converter",
+    "shortName": "Image to WebP Converter",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Convert JPG and PNG images into modern Google WebP format to reduce file sizes by 30% to 80% while retaining quality.",
+    "longDescription": "Speed up your website load times and save bandwidth by converting bulky images to modern, high-efficiency WebP format.",
+    "iconName": "Image",
+    "metaTitle": "Image to WebP Converter | TabBench",
+    "metaDescription": "Convert JPG and PNG images into modern WebP format for faster web page loading. Batch conversion directly in your browser.",
+    "keywords": [
+      "image to webp",
+      "convert jpg to webp",
+      "convert png to webp",
+      "webp converter online",
+      "next-gen image converter"
+    ],
+    "features": [
+      "Convert PNG and JPG to WebP",
+      "Up to 80% file size reduction",
+      "Lossy & Lossless quality slider",
+      "Faster website load times"
+    ],
+    "faqs": [
+      {
+        "question": "What is WebP format?",
+        "answer": "WebP is a modern image format developed by Google that provides superior lossless and lossy compression for web images."
+      }
+    ],
+    "relatedToolSlugs": [
+      "webp-to-jpg",
+      "png-to-jpg",
+      "image-compressor",
+      "crop-image"
+    ],
+    "isPopular": true
+  },
+  "webp-to-jpg": {
+    "slug": "webp-to-jpg",
+    "name": "WebP to JPG Converter",
+    "shortName": "WebP to JPG Converter",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Convert WebP images into universally compatible JPG or PNG formats for easy sharing and opening on any device.",
+    "longDescription": "Easily open and convert downloaded .webp images into standard JPG or PNG files that can be edited in Photoshop, Word, or shared anywhere.",
+    "iconName": "Image",
+    "metaTitle": "WebP to JPG Converter | TabBench",
+    "metaDescription": "Convert WebP images to standard JPG format for compatibility with older viewers and editors. Fast in-browser processing.",
+    "keywords": [
+      "webp to jpg",
+      "convert webp to jpg",
+      "webp to jpeg converter",
+      "save webp as jpg",
+      "webp image converter"
+    ],
+    "features": [
+      "Convert WebP to JPG & PNG",
+      "Universal device compatibility",
+      "Zero quality degradation",
+      "Instant batch download"
+    ],
+    "faqs": [
+      {
+        "question": "Why should I convert WebP to JPG?",
+        "answer": "Some older photo viewers and image editing apps do not natively support WebP files, while JPG works everywhere."
+      }
+    ],
+    "relatedToolSlugs": [
+      "image-to-webp",
+      "png-to-jpg",
+      "jpg-to-png",
+      "crop-image"
+    ],
+    "isPopular": true
+  },
+  "unlock-pdf": {
+    "slug": "unlock-pdf",
+    "name": "Unlock PDF",
+    "shortName": "Unlock PDF",
+    "category": "pdf-docs",
+    "categoryName": "PDF & Documents",
+    "description": "Remove owner password restrictions, copying, and printing locks from PDF files entirely in your browser.",
+    "longDescription": "Unlock restricted PDF documents so you can copy text, print, and edit pages freely. 100% processed in browser memory with zero security risk.",
+    "iconName": "Lock",
+    "metaTitle": "Unlock PDF | TabBench",
+    "metaDescription": "Unlock password-protected PDF files and remove print, copy, and edit restrictions safely in your browser. Zero server upload.",
+    "keywords": [
+      "unlock pdf",
+      "remove pdf password",
+      "unlock protected pdf",
+      "pdf password remover",
+      "remove pdf print restrictions"
+    ],
+    "features": [
+      "Remove restrictions and print locks",
+      "Decrypt with known password",
+      "Zero server upload",
+      "Instant unlocked PDF download"
+    ],
+    "faqs": [
+      {
+        "question": "Can it unlock password-protected files?",
+        "answer": "Yes. For user-encrypted PDFs, enter the password once to decrypt and save a permanently unrestricted copy."
+      }
+    ],
+    "relatedToolSlugs": [
+      "pdf-merge",
+      "pdf-to-word",
+      "image-to-pdf"
+    ],
+    "isPopular": true
+  },
+  "crop-image": {
+    "slug": "crop-image",
+    "name": "Crop Image",
+    "shortName": "Crop Image",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Crop photos to custom dimensions or standard aspect ratios (1:1, 16:9, 4:3, 9:16 Story) with live preview.",
+    "longDescription": "Crop, frame, and resize your images for Instagram posts, YouTube thumbnails, profile pictures, and banners with precise pixel controls.",
+    "iconName": "Crop",
+    "metaTitle": "Crop Image | TabBench",
+    "metaDescription": "Crop photos and graphics to custom dimensions or standard aspect ratios (16:9, 4:3, 1:1). Download crisp cropped images with zero upload.",
+    "keywords": [
+      "crop image",
+      "image cropper online",
+      "crop photo",
+      "crop square image",
+      "aspect ratio cropper"
+    ],
+    "features": [
+      "Presets for 1:1, 16:9, 4:3, 9:16 Story",
+      "Freeform crop box",
+      "Precise pixel dimension indicator",
+      "High quality export"
+    ],
+    "faqs": [
+      {
+        "question": "Can I crop circular profile pictures?",
+        "answer": "Yes, you can crop to 1:1 square ratio which fits circular avatar frames perfectly."
+      }
+    ],
+    "relatedToolSlugs": [
+      "image-compressor",
+      "watermark-remover",
+      "png-to-jpg"
+    ],
+    "isPopular": true
+  },
+  "pdf-merge": {
+    "slug": "pdf-merge",
+    "name": "Merge PDF",
+    "shortName": "Merge PDF",
+    "category": "pdf-docs",
+    "categoryName": "PDF & Documents",
+    "description": "Combine multiple PDF documents into a single organized PDF file entirely client-side in your browser.",
+    "longDescription": "Merge multiple PDF files securely in your browser using pdf-lib. Reorder files, remove unwanted pages, and download the combined PDF with zero server upload.",
+    "iconName": "FilePlus",
+    "metaTitle": "Merge PDF | TabBench",
+    "metaDescription": "Merge and combine multiple PDF documents into a single organized file. Reorder pages and files with client-side processing.",
+    "keywords": [
+      "merge pdf",
+      "combine pdf",
+      "combine pdf files",
+      "pdf joiner",
+      "merge pdf files free"
+    ],
+    "features": [
+      "Merge multiple PDFs",
+      "Drag-and-drop file upload",
+      "Zero server upload - 100% private",
+      "Fast instant download"
+    ],
+    "faqs": [
+      {
+        "question": "Is it safe to merge sensitive documents?",
+        "answer": "Yes, merging happens on your device using WebAssembly/JavaScript. No PDF data leaves your computer."
+      }
+    ],
+    "relatedToolSlugs": [
+      "pdf-compressor",
+      "image-compressor",
+      "qr-code-generator"
+    ],
+    "isPopular": true
+  },
+  "pdf-compressor": {
+    "slug": "pdf-compressor",
+    "name": "PDF Page Counter & Inspector",
+    "shortName": "PDF Inspector",
+    "category": "pdf-docs",
+    "categoryName": "PDF & Documents",
+    "description": "Inspect PDF metadata, count pages, analyze embedded objects, and reduce document overhead.",
+    "longDescription": "Analyze PDF documents, verify page dimensions, check encryption status, and optimize document structure client-side.",
+    "iconName": "FileCheck",
+    "metaTitle": "PDF Page Counter & Inspector | TabBench",
+    "metaDescription": "Inspect PDF files, count pages, view document metadata, and learn practical steps to reduce PDF file size safely.",
+    "keywords": [
+      "pdf page counter",
+      "pdf inspector",
+      "pdf metadata viewer",
+      "check pdf page count",
+      "how to compress pdf"
+    ],
+    "features": [
+      "Page count detection",
+      "File size breakdown",
+      "Document metadata viewer",
+      "100% private"
+    ],
+    "faqs": [
+      {
+        "question": "How are files processed?",
+        "answer": "Files are parsed directly in browser memory."
+      }
+    ],
+    "relatedToolSlugs": [
+      "pdf-merge",
+      "image-compressor",
+      "word-counter"
+    ],
+    "isPopular": true
+  },
+  "age-calculator": {
+    "slug": "age-calculator",
+    "name": "Age Calculator",
+    "shortName": "Age Calculator",
+    "category": "date-time",
+    "categoryName": "Date & Time",
+    "description": "Calculate your exact age in years, months, weeks, days, hours, and minutes, plus next birthday countdown.",
+    "longDescription": "Find out your exact age to the day and minute. View interesting milestones like days lived, total breaths, total heartbeats, and days until your next birthday.",
+    "iconName": "Calendar",
+    "metaTitle": "Age Calculator | TabBench",
+    "metaDescription": "Calculate your exact age in years, months, weeks, days, hours, and minutes from your date of birth. Accurate with leap-year handling.",
+    "keywords": [
+      "age calculator",
+      "calculate age from dob",
+      "chronological age calculator",
+      "age in days",
+      "birthday countdown"
+    ],
+    "features": [
+      "Exact age in Years, Months, Days",
+      "Total days, hours, minutes lived",
+      "Next birthday countdown",
+      "Day of week you were born"
+    ],
+    "formulas": [
+      {
+        "name": "Age Duration Calculation",
+        "expression": "Years = CurrentYear - BirthYear (adjusted for month/day)",
+        "explanation": "Calculate the exact elapsed calendar years, months, and remainder days from date of birth.",
+        "example": "Born Jan 15, 2000 -> 26 years, 7 months, 1 day (as of Aug 2026)."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Does this account for leap years?",
+        "answer": "Yes, exact calendar math accounts for leap years and month length variations."
+      }
+    ],
+    "relatedToolSlugs": [
+      "date-difference-calculator",
+      "percentage-calculator",
+      "emi-calculator"
+    ],
+    "isPopular": true
+  },
+  "gst-calculator": {
+    "slug": "gst-calculator",
+    "name": "GST Calculator",
+    "shortName": "GST Calculator",
+    "category": "calculators",
+    "categoryName": "Calculators & Finance",
+    "description": "Calculate GST (Goods & Services Tax) easily: Add GST to base amount or Reverse GST (extract tax from total) with standard 5%, 12%, 18%, 28% slabs.",
+    "longDescription": "Calculate inclusive and exclusive GST amounts in seconds. Determine CGST, SGST, IGST tax breakdown and find net pricing.",
+    "iconName": "Receipt",
+    "metaTitle": "GST Calculator | TabBench",
+    "metaDescription": "Calculate GST amounts instantly with inclusive and exclusive tax rates. View clear CGST, SGST, and IGST breakdowns directly in your browser.",
+    "keywords": [
+      "gst calculator",
+      "gst calculation online",
+      "inclusive gst calculator",
+      "exclusive gst calculator",
+      "reverse gst"
+    ],
+    "features": [
+      "Add GST & Remove GST modes",
+      "Standard slabs: 5%, 12%, 18%, 28%",
+      "CGST and SGST split breakdown",
+      "One-click copy"
+    ],
+    "formulas": [
+      {
+        "name": "GST Added (Exclusive)",
+        "expression": "GST Amount = (Price × GST%) / 100",
+        "explanation": "Total Amount = Price + GST Amount.",
+        "example": "Rs. 1,000 with 18% GST = Rs. 1,000 + Rs. 180 = Rs. 1,180."
       },
       {
-        name: "Reverse GST (Inclusive)",
-        expression: "GST Amount = Price - (Price × (100 / (100 + GST%)))",
-        explanation: "Calculates the base price and extracted GST from a tax-inclusive total.",
-        example: "Rs. 1,180 with 18% GST -> Base Price = Rs. 1,000, GST = Rs. 180."
+        "name": "Reverse GST (Inclusive)",
+        "expression": "GST Amount = Price - (Price × (100 / (100 + GST%)))",
+        "explanation": "Calculates the base price and extracted GST from a tax-inclusive total.",
+        "example": "Rs. 1,180 with 18% GST -> Base Price = Rs. 1,000, GST = Rs. 180."
       }
     ],
-    faqs: [
-      { question: "What is CGST and SGST?", answer: "For intra-state transactions, GST is split equally between Central GST (CGST) and State GST (SGST)." }
+    "faqs": [
+      {
+        "question": "What is CGST and SGST?",
+        "answer": "For intra-state transactions, GST is split equally between Central GST (CGST) and State GST (SGST)."
+      }
     ],
-    relatedToolSlugs: ["profit-margin-calculator", "discount-calculator", "emi-calculator"],
-    isPopular: true,
+    "relatedToolSlugs": [
+      "profit-margin-calculator",
+      "discount-calculator",
+      "emi-calculator"
+    ],
+    "isPopular": true
   },
-
-  // 15. EMI Calculator
   "emi-calculator": {
-    slug: "emi-calculator",
-    name: "Loan EMI Calculator",
-    shortName: "EMI Calculator",
-    category: "calculators",
-    categoryName: "Calculators & Finance",
-    description: "Calculate equated monthly installments (EMI) for home loans, car loans, and personal loans with total interest and amortization charts.",
-    longDescription: "Plan your loan repayment with our loan EMI calculator. Calculate monthly payments, total interest payable, and total cost of loan with interactive tenure sliders.",
-    iconName: "TrendingUp",
-    metaTitle: "EMI Calculator - Calculate Home, Car & Personal Loan Monthly EMI",
-    metaDescription: "Calculate loan EMI, total interest, and total repayment amount with amortization breakdown and visual pie chart.",
-    keywords: ["emi calculator", "loan emi calculator", "home loan emi", "car loan emi", "calculate monthly emi"],
-    features: ["Monthly EMI calculation", "Total interest vs principal visualizer", "Flexible tenure (years or months)", "Amortization table breakdown"],
-    formulas: [
+    "slug": "emi-calculator",
+    "name": "EMI Calculator",
+    "shortName": "EMI Calculator",
+    "category": "calculators",
+    "categoryName": "Calculators & Finance",
+    "description": "Calculate equated monthly installments (EMI) for home loans, car loans, and personal loans with total interest and amortization charts.",
+    "longDescription": "Plan your loan repayment with our loan EMI calculator. Calculate monthly payments, total interest payable, and total cost of loan with interactive tenure sliders.",
+    "iconName": "TrendingUp",
+    "metaTitle": "EMI Calculator | TabBench",
+    "metaDescription": "Calculate your monthly loan EMI, total payable interest, and amortization schedule instantly. Fast, accurate, and completely private.",
+    "keywords": [
+      "emi calculator",
+      "loan emi calculator",
+      "home loan emi",
+      "car loan emi calculator",
+      "monthly emi calculation"
+    ],
+    "features": [
+      "Monthly EMI calculation",
+      "Total interest vs principal visualizer",
+      "Flexible tenure (years or months)",
+      "Amortization table breakdown"
+    ],
+    "formulas": [
       {
-        name: "Standard EMI Formula",
-        expression: "EMI = [P × R × (1+R)^N] / [(1+R)^N - 1]",
-        explanation: "P = Principal loan amount, R = Monthly interest rate (Annual % / 12 / 100), N = Number of monthly installments.",
-        example: "Loan $100,000 at 8% for 10 years (120 months) = $1,213.28 per month."
+        "name": "Standard EMI Formula",
+        "expression": "EMI = [P × R × (1+R)^N] / [(1+R)^N - 1]",
+        "explanation": "P = Principal loan amount, R = Monthly interest rate (Annual % / 12 / 100), N = Number of monthly installments.",
+        "example": "Loan $100,000 at 8% for 10 years (120 months) = $1,213.28 per month."
       }
     ],
-    faqs: [
-      { question: "Can I reduce my EMI by paying extra principal?", answer: "Yes, prepaying principal reduces remaining tenure or monthly EMI obligation." }
+    "faqs": [
+      {
+        "question": "Can I reduce my EMI by paying extra principal?",
+        "answer": "Yes, prepaying principal reduces remaining tenure or monthly EMI obligation."
+      }
     ],
-    relatedToolSlugs: ["gst-calculator", "profit-margin-calculator", "percentage-calculator"],
-    isPopular: true,
+    "relatedToolSlugs": [
+      "gst-calculator",
+      "profit-margin-calculator",
+      "percentage-calculator"
+    ],
+    "isPopular": true
   },
-
-  // 16. Discount Calculator
   "discount-calculator": {
-    slug: "discount-calculator",
-    name: "Discount & Sale Price Calculator",
-    shortName: "Discount",
-    category: "calculators",
-    categoryName: "Calculators & Finance",
-    description: "Calculate final sale price, discount amount saved, and double discount / stackable coupon savings instantly.",
-    longDescription: "Find out how much you save during sales and clearance events. Calculate percentage discounts, fixed cash discounts, and additional coupon codes.",
-    iconName: "Tag",
-    metaTitle: "Discount Calculator - Calculate Sale Price & Money Saved",
-    metaDescription: "Calculate discounted price and total savings from percentage or cash discounts with extra coupon support.",
-    keywords: ["discount calculator", "sale price calculator", "percent off calculator", "shopping discount"],
-    features: ["Percent off and fixed amount discount", "Double discount (extra % off)", "Savings breakdown", "Visual discount tag"],
-    formulas: [
+    "slug": "discount-calculator",
+    "name": "Discount Calculator",
+    "shortName": "Discount Calculator",
+    "category": "calculators",
+    "categoryName": "Calculators & Finance",
+    "description": "Calculate final sale price, discount amount saved, and double discount / stackable coupon savings instantly.",
+    "longDescription": "Find out how much you save during sales and clearance events. Calculate percentage discounts, fixed cash discounts, and additional coupon codes.",
+    "iconName": "Tag",
+    "metaTitle": "Discount Calculator | TabBench",
+    "metaDescription": "Calculate sale prices, percentage discounts, and stacked savings instantly. See exact savings and final prices with zero calculation errors.",
+    "keywords": [
+      "discount calculator",
+      "sale price calculator",
+      "percent off calculator",
+      "double discount calculator",
+      "final price after discount"
+    ],
+    "features": [
+      "Percent off and fixed amount discount",
+      "Double discount (extra % off)",
+      "Savings breakdown",
+      "Visual discount tag"
+    ],
+    "formulas": [
       {
-        name: "Discounted Price Formula",
-        expression: "Sale Price = Original Price × (1 - Discount% / 100)",
-        explanation: "Savings = Original Price - Sale Price.",
-        example: "$80 item with 25% discount: Sale Price = $80 * 0.75 = $60 (You save $20)."
+        "name": "Discounted Price Formula",
+        "expression": "Sale Price = Original Price × (1 - Discount% / 100)",
+        "explanation": "Savings = Original Price - Sale Price.",
+        "example": "$80 item with 25% discount: Sale Price = $80 * 0.75 = $60 (You save $20)."
       }
     ],
-    faqs: [
-      { question: "How do double discounts work?", answer: "An extra 10% off an already 50% discounted item applies to the discounted price, not the original MSRP." }
+    "faqs": [
+      {
+        "question": "How do double discounts work?",
+        "answer": "An extra 10% off an already 50% discounted item applies to the discounted price, not the original MSRP."
+      }
     ],
-    relatedToolSlugs: ["percentage-calculator", "gst-calculator", "profit-margin-calculator"],
+    "relatedToolSlugs": [
+      "percentage-calculator",
+      "gst-calculator",
+      "profit-margin-calculator"
+    ]
   },
-
-  // 17. Profit Margin Calculator
   "profit-margin-calculator": {
-    slug: "profit-margin-calculator",
-    name: "Profit Margin & Markup Calculator",
-    shortName: "Profit Margin",
-    category: "business",
-    categoryName: "Business & Marketing",
-    description: "Calculate gross profit margin, markup percentage, revenue, and cost price with clear visual breakdowns.",
-    longDescription: "Optimize your product pricing, ecommerce stores, and quotes. Understand the crucial mathematical difference between Margin and Markup.",
-    iconName: "TrendingUp",
-    metaTitle: "Profit Margin & Markup Calculator - Pricing & Revenue Analysis",
-    metaDescription: "Calculate profit margin, markup percentage, gross profit, and required selling price with visual breakdowns.",
-    keywords: ["profit margin calculator", "markup calculator", "margin vs markup", "gross profit"],
-    features: ["Gross Margin & Markup calculation", "Required selling price estimator", "Margin vs Markup table"],
-    formulas: [
+    "slug": "profit-margin-calculator",
+    "name": "Profit Margin Calculator",
+    "shortName": "Profit Margin Calculator",
+    "category": "business",
+    "categoryName": "Business & Marketing",
+    "description": "Calculate gross profit margin, markup percentage, revenue, and cost price with clear visual breakdowns.",
+    "longDescription": "Optimize your product pricing, ecommerce stores, and quotes. Understand the crucial mathematical difference between Margin and Markup.",
+    "iconName": "TrendingUp",
+    "metaTitle": "Profit Margin Calculator | TabBench",
+    "metaDescription": "Calculate profit margins, markup percentages, gross profit, and required selling prices with instant formulas and visual breakdowns.",
+    "keywords": [
+      "profit margin calculator",
+      "markup calculator",
+      "gross profit margin calculator",
+      "margin vs markup",
+      "selling price calculator"
+    ],
+    "features": [
+      "Gross Margin & Markup calculation",
+      "Required selling price estimator",
+      "Margin vs Markup table"
+    ],
+    "formulas": [
       {
-        name: "Gross Profit Margin",
-        expression: "Margin % = ((Revenue - Cost) / Revenue) × 100",
-        explanation: "Margin calculates what fraction of each revenue dollar represents net profit after cost.",
-        example: "Cost = $60, Price = $100 -> Margin = 40%."
+        "name": "Gross Profit Margin",
+        "expression": "Margin % = ((Revenue - Cost) / Revenue) × 100",
+        "explanation": "Margin calculates what fraction of each revenue dollar represents net profit after cost.",
+        "example": "Cost = $60, Price = $100 -> Margin = 40%."
       }
     ],
-    faqs: [
-      { question: "Why is margin always lower than markup?", answer: "Margin divides profit by the higher selling price, markup divides profit by the lower cost." }
+    "faqs": [
+      {
+        "question": "Why is margin always lower than markup?",
+        "answer": "Margin divides profit by the higher selling price, markup divides profit by the lower cost."
+      }
     ],
-    relatedToolSlugs: ["percentage-calculator", "discount-calculator", "gst-calculator"],
+    "relatedToolSlugs": [
+      "percentage-calculator",
+      "discount-calculator",
+      "gst-calculator"
+    ]
   },
-
-  // 18. Case Converter
   "case-converter": {
-    slug: "case-converter",
-    name: "Case Converter & Text Cleaner",
-    shortName: "Case Converter",
-    category: "text",
-    categoryName: "Text & Writing",
-    description: "Convert text between UPPERCASE, lowercase, Title Case, camelCase, snake_case, kebab-case, clean spaces, and count words.",
-    longDescription: "Manipulate and format text in your browser. Clean messy copy, format code identifiers, strip redundant spaces, and capitalize headings.",
-    iconName: "Type",
-    metaTitle: "Case Converter Online - UPPERCASE, Title Case, camelCase & Text Cleaner",
-    metaDescription: "Convert text to UPPERCASE, lowercase, Title Case, Sentence case, camelCase, kebab-case, snake_case.",
-    keywords: ["case converter", "title case converter", "camelcase converter", "text cleaner"],
-    features: ["UPPERCASE, lowercase, Title Case, Sentence case", "camelCase, PascalCase, snake_case, kebab-case", "Clean extra whitespace"],
-    faqs: [
-      { question: "What rules does Title Case follow?", answer: "Capitalizes major words while keeping minor prepositions in lowercase." }
+    "slug": "case-converter",
+    "name": "Case Converter",
+    "shortName": "Case Converter",
+    "category": "text",
+    "categoryName": "Text & Writing",
+    "description": "Convert text between UPPERCASE, lowercase, Title Case, camelCase, snake_case, kebab-case, clean spaces, and count words.",
+    "longDescription": "Manipulate and format text in your browser. Clean messy copy, format code identifiers, strip redundant spaces, and capitalize headings.",
+    "iconName": "Type",
+    "metaTitle": "Case Converter | TabBench",
+    "metaDescription": "Convert text between UPPERCASE, lowercase, Title Case, camelCase, snake_case, and kebab-case instantly. Fast, clean formatting in your browser.",
+    "keywords": [
+      "case converter",
+      "uppercase converter",
+      "lowercase converter",
+      "title case converter",
+      "camelcase converter"
     ],
-    relatedToolSlugs: ["word-counter", "text-diff-checker", "json-formatter"],
+    "features": [
+      "UPPERCASE, lowercase, Title Case, Sentence case",
+      "camelCase, PascalCase, snake_case, kebab-case",
+      "Clean extra whitespace"
+    ],
+    "faqs": [
+      {
+        "question": "What rules does Title Case follow?",
+        "answer": "Capitalizes major words while keeping minor prepositions in lowercase."
+      }
+    ],
+    "relatedToolSlugs": [
+      "word-counter",
+      "text-diff-checker",
+      "json-formatter"
+    ]
   },
-
-  // 19. Date Difference Calculator
   "date-difference-calculator": {
-    slug: "date-difference-calculator",
-    name: "Date Difference & Duration Calculator",
-    shortName: "Date Difference",
-    category: "date-time",
-    categoryName: "Date & Time",
-    description: "Calculate exact days, business days, weeks, months, and years between two dates or add/subtract time from a date.",
-    longDescription: "Calculate calendar days, working/business days, and time intervals between any two dates. Plan deadlines or add/subtract days from today.",
-    iconName: "Clock",
-    metaTitle: "Date Difference Calculator - Days, Weeks, Business Days Between Dates",
-    metaDescription: "Calculate exact days, weeks, months, years, and business working days between two dates.",
-    keywords: ["date difference calculator", "days between dates", "business days calculator", "working days"],
-    features: ["Total calendar days", "Business days (excluding weekends)", "Add or subtract days/weeks/months"],
-    faqs: [
-      { question: "How does business day calculation work?", answer: "Iterates through the range and excludes Saturdays and Sundays." }
+    "slug": "date-difference-calculator",
+    "name": "Date Difference Calculator",
+    "shortName": "Date Difference Calculator",
+    "category": "date-time",
+    "categoryName": "Date & Time",
+    "description": "Calculate exact days, business days, weeks, months, and years between two dates or add/subtract time from a date.",
+    "longDescription": "Calculate calendar days, working/business days, and time intervals between any two dates. Plan deadlines or add/subtract days from today.",
+    "iconName": "Clock",
+    "metaTitle": "Date Difference Calculator | TabBench",
+    "metaDescription": "Calculate the exact number of days, weeks, months, and business days between two dates. Fast, accurate calendar arithmetic in your browser.",
+    "keywords": [
+      "date difference calculator",
+      "days between dates",
+      "business days calculator",
+      "working days between dates",
+      "date duration"
     ],
-    relatedToolSlugs: ["age-calculator", "percentage-calculator", "emi-calculator"],
+    "features": [
+      "Total calendar days",
+      "Business days (excluding weekends)",
+      "Add or subtract days/weeks/months"
+    ],
+    "faqs": [
+      {
+        "question": "How does business day calculation work?",
+        "answer": "Iterates through the range and excludes Saturdays and Sundays."
+      }
+    ],
+    "relatedToolSlugs": [
+      "age-calculator",
+      "percentage-calculator",
+      "emi-calculator"
+    ]
   },
-
-  // 20. Hash Generator (MD5, SHA-256)
   "hash-generator": {
-    slug: "hash-generator",
-    name: "Hash Generator (MD5, SHA-256, SHA-512)",
-    shortName: "Hash Generator",
-    category: "security",
-    categoryName: "Security & Generators",
-    description: "Generate MD5, SHA-1, SHA-256, and SHA-512 cryptographic hashes client-side in real-time.",
-    longDescription: "Compute secure cryptographic checksums and hashes for text strings using standard cryptographic algorithms right in your browser.",
-    iconName: "Lock",
-    metaTitle: "Hash Generator - MD5, SHA-256, SHA-512 Online Hash Tool",
-    metaDescription: "Generate cryptographic hashes (MD5, SHA-1, SHA-256, SHA-512) instantly in your browser. 100% private.",
-    keywords: ["hash generator", "sha256 generator", "md5 generator", "sha512 online", "hash string"],
-    features: ["MD5, SHA-1, SHA-256, SHA-512 algorithms", "Live real-time hash generation", "One-click copy hash", "Uppercase and lowercase hex"],
-    faqs: [
-      { question: "Can a hash be decrypted?", answer: "No, cryptographic hash functions are one-way functions." }
+    "slug": "hash-generator",
+    "name": "Hash Generator",
+    "shortName": "Hash Generator",
+    "category": "security",
+    "categoryName": "Security & Generators",
+    "description": "Generate MD5, SHA-1, SHA-256, and SHA-512 cryptographic hashes client-side in real-time.",
+    "longDescription": "Compute secure cryptographic checksums and hashes for text strings using standard cryptographic algorithms right in your browser.",
+    "iconName": "Lock",
+    "metaTitle": "Hash Generator | TabBench",
+    "metaDescription": "Generate cryptographic MD5, SHA-1, SHA-256, and SHA-512 hashes instantly in your browser. Secure, fast, and private client-side hashing.",
+    "keywords": [
+      "hash generator",
+      "sha256 generator",
+      "md5 generator online",
+      "sha512 generator",
+      "hash text string"
     ],
-    relatedToolSlugs: ["password-generator", "base64-converter", "uuid-generator"],
+    "features": [
+      "MD5, SHA-1, SHA-256, SHA-512 algorithms",
+      "Live real-time hash generation",
+      "One-click copy hash",
+      "Uppercase and lowercase hex"
+    ],
+    "faqs": [
+      {
+        "question": "Can a hash be decrypted?",
+        "answer": "No, cryptographic hash functions are one-way functions."
+      }
+    ],
+    "relatedToolSlugs": [
+      "password-generator",
+      "base64-converter",
+      "uuid-generator"
+    ]
   },
-
-  // 21. Text Diff Checker
   "text-diff-checker": {
-    slug: "text-diff-checker",
-    name: "Text Diff & Comparison Checker",
-    shortName: "Text Diff",
-    category: "text",
-    categoryName: "Text & Writing",
-    description: "Compare two text snippets side-by-side to highlight additions, deletions, and line-by-line differences.",
-    longDescription: "Find differences between two versions of text, code, or documentation. Visual line-by-line comparison highlighting exact edits.",
-    iconName: "GitCompare",
-    metaTitle: "Text Diff Checker - Compare Two Texts Side by Side",
-    metaDescription: "Compare two text documents online. Find added, removed, and modified lines with highlighted visual diffs.",
-    keywords: ["text diff checker", "compare text online", "diff checker", "text comparison"],
-    features: ["Side-by-side or unified diff view", "Added and deleted line highlights", "Word-level change detection", "Zero server upload"],
-    faqs: [
-      { question: "How does the diff algorithm work?", answer: "Compares lines sequentially to detect additions, deletions, and modifications." }
+    "slug": "text-diff-checker",
+    "name": "Text Diff Checker",
+    "shortName": "Text Diff Checker",
+    "category": "text",
+    "categoryName": "Text & Writing",
+    "description": "Compare two text snippets side-by-side to highlight additions, deletions, and line-by-line differences.",
+    "longDescription": "Find differences between two versions of text, code, or documentation. Visual line-by-line comparison highlighting exact edits.",
+    "iconName": "GitCompare",
+    "metaTitle": "Text Diff Checker | TabBench",
+    "metaDescription": "Compare two blocks of text side by side to find differences, added words, and removed lines. Private, instant in-browser comparison.",
+    "keywords": [
+      "text diff checker",
+      "compare text online",
+      "diff checker",
+      "text comparison tool",
+      "find differences in text"
     ],
-    relatedToolSlugs: ["word-counter", "case-converter", "json-formatter"],
+    "features": [
+      "Side-by-side or unified diff view",
+      "Added and deleted line highlights",
+      "Word-level change detection",
+      "Zero server upload"
+    ],
+    "faqs": [
+      {
+        "question": "How does the diff algorithm work?",
+        "answer": "Compares lines sequentially to detect additions, deletions, and modifications."
+      }
+    ],
+    "relatedToolSlugs": [
+      "word-counter",
+      "case-converter",
+      "json-formatter"
+    ]
   },
-
-  // 22. AI Formula & Tool Explainer
   "ai-explainer": {
-    slug: "ai-explainer",
-    name: "AI Tool & Formula Explainer",
-    shortName: "AI Explainer",
-    category: "ai-tools",
-    categoryName: "AI-Powered Tools",
-    description: "Get instant, plain-English explanations for complex formulas, financial calculations, regex patterns, or code snippets.",
-    longDescription: "An intelligent educational explainer that demystifies mathematical formulas, financial metrics, regex expressions, and code structures.",
-    iconName: "Sparkles",
-    metaTitle: "AI Formula & Math Explainer - Plain English Explanations",
-    metaDescription: "Understand math formulas, financial metrics, and regex in plain English with instant AI explanations.",
-    keywords: ["ai explainer", "explain math formula", "ai formula assistant", "explain regex online"],
-    features: ["Plain English math breakdowns", "Business scenario interpretations", "Regex & code pattern explainer", "Interactive query assistant"],
-    faqs: [
-      { question: "What topics can the AI explain?", answer: "Calculators, percentages, margin vs markup, GST, loan amortization, JSON syntax, and regex patterns." }
+    "slug": "ai-explainer",
+    "name": "AI Formula Explainer",
+    "shortName": "AI Formula Explainer",
+    "category": "ai-tools",
+    "categoryName": "AI-Powered Tools",
+    "description": "Get instant, plain-English explanations for complex formulas, financial calculations, regex patterns, or code snippets.",
+    "longDescription": "An intelligent educational explainer that demystifies mathematical formulas, financial metrics, regex expressions, and code structures.",
+    "iconName": "Sparkles",
+    "metaTitle": "AI Formula Explainer | TabBench",
+    "metaDescription": "Understand math formulas, financial metrics, code logic, and regex in plain English with instant AI-powered explanations.",
+    "keywords": [
+      "ai formula explainer",
+      "explain math formula",
+      "ai formula assistant",
+      "explain regex online",
+      "formula explainer"
     ],
-    relatedToolSlugs: ["percentage-calculator", "profit-margin-calculator", "json-formatter"],
+    "features": [
+      "Plain English math breakdowns",
+      "Business scenario interpretations",
+      "Regex & code pattern explainer",
+      "Interactive query assistant"
+    ],
+    "faqs": [
+      {
+        "question": "What topics can the AI explain?",
+        "answer": "Calculators, percentages, margin vs markup, GST, loan amortization, JSON syntax, and regex patterns."
+      }
+    ],
+    "relatedToolSlugs": [
+      "percentage-calculator",
+      "profit-margin-calculator",
+      "json-formatter"
+    ]
   },
-
-  // 32. Split PDF
   "split-pdf": {
-    slug: "split-pdf",
-    name: "Split PDF & Extract Pages",
-    shortName: "Split PDF",
-    category: "pdf-docs",
-    categoryName: "PDF & Documents",
-    description: "Extract specific pages or page ranges from a PDF into a new document, entirely in your browser.",
-    longDescription: "Pull selected pages out of a PDF into a new file using simple range syntax like 1-3, 5, 8-10. Runs client-side with pdf-lib, so contracts and statements are never uploaded.",
-    iconName: "Scissors",
-    metaTitle: "Split PDF Online Free - Extract Pages from PDF",
-    metaDescription: "Split a PDF and extract any pages or ranges into a new file. Free, no signup, and processed entirely in your browser.",
-    keywords: ["split pdf", "extract pages from pdf", "pdf splitter", "separate pdf pages", "pdf page extractor"],
-    features: ["Range syntax like 1-3, 5, 8-10", "Live count of selected pages", "Lossless page copying", "Nothing is uploaded"],
-    faqs: [
-      { question: "Does splitting reduce quality?", answer: "No. Pages are copied across byte-for-byte, so text, vectors, and images are preserved exactly." }
+    "slug": "split-pdf",
+    "name": "Split PDF",
+    "shortName": "Split PDF",
+    "category": "pdf-docs",
+    "categoryName": "PDF & Documents",
+    "description": "Extract specific pages or page ranges from a PDF into a new document, entirely in your browser.",
+    "longDescription": "Pull selected pages out of a PDF into a new file using simple range syntax like 1-3, 5, 8-10. Runs client-side with pdf-lib, so contracts and statements are never uploaded.",
+    "iconName": "Scissors",
+    "metaTitle": "Split PDF | TabBench",
+    "metaDescription": "Split PDF files and extract specific pages or custom page ranges into new documents. Fast, secure, and processed in your browser.",
+    "keywords": [
+      "split pdf",
+      "extract pages from pdf",
+      "pdf splitter online",
+      "separate pdf pages",
+      "extract page range pdf"
     ],
-    relatedToolSlugs: ["pdf-merge", "rotate-pdf", "pdf-to-jpg"],
-    isPopular: true,
+    "features": [
+      "Range syntax like 1-3, 5, 8-10",
+      "Live count of selected pages",
+      "Lossless page copying",
+      "Nothing is uploaded"
+    ],
+    "faqs": [
+      {
+        "question": "Does splitting reduce quality?",
+        "answer": "No. Pages are copied across byte-for-byte, so text, vectors, and images are preserved exactly."
+      }
+    ],
+    "relatedToolSlugs": [
+      "pdf-merge",
+      "rotate-pdf",
+      "pdf-to-jpg"
+    ],
+    "isPopular": true
   },
-
-  // 33. PDF to JPG
   "pdf-to-jpg": {
-    slug: "pdf-to-jpg",
-    name: "PDF to JPG & PNG Converter",
-    shortName: "PDF to JPG",
-    category: "pdf-docs",
-    categoryName: "PDF & Documents",
-    description: "Render every page of a PDF as a JPG or PNG image and download them individually or as a ZIP.",
-    longDescription: "Convert PDF pages into images at your chosen resolution using pdf.js. Download single pages or the whole document as a ZIP archive, with all rendering done inside your browser.",
-    iconName: "Image",
-    metaTitle: "PDF to JPG Converter Free - Convert PDF Pages to Images",
-    metaDescription: "Convert PDF pages to JPG or PNG images at up to 288 DPI. Download individually or as a ZIP. Free and fully client-side.",
-    keywords: ["pdf to jpg", "pdf to png", "convert pdf to image", "pdf page to image", "extract images from pdf"],
-    features: ["JPG or PNG output", "Selectable render resolution", "Batch ZIP download", "Rendered in your browser"],
-    faqs: [
-      { question: "What resolution should I choose?", answer: "2x (about 144 DPI) suits screen use. Choose 3x or 4x for printing, which produces larger files." }
+    "slug": "pdf-to-jpg",
+    "name": "PDF to JPG Converter",
+    "shortName": "PDF to JPG Converter",
+    "category": "pdf-docs",
+    "categoryName": "PDF & Documents",
+    "description": "Render every page of a PDF as a JPG or PNG image and download them individually or as a ZIP.",
+    "longDescription": "Convert PDF pages into images at your chosen resolution using pdf.js. Download single pages or the whole document as a ZIP archive, with all rendering done inside your browser.",
+    "iconName": "Image",
+    "metaTitle": "PDF to JPG Converter | TabBench",
+    "metaDescription": "Convert PDF pages into high-resolution JPG or PNG images (up to 288 DPI). Download individual pages or a ZIP archive.",
+    "keywords": [
+      "pdf to jpg",
+      "pdf to image converter",
+      "convert pdf to png",
+      "extract images from pdf",
+      "pdf pages to jpg"
     ],
-    relatedToolSlugs: ["image-to-pdf", "split-pdf", "image-compressor"],
-    isPopular: true,
+    "features": [
+      "JPG or PNG output",
+      "Selectable render resolution",
+      "Batch ZIP download",
+      "Rendered in your browser"
+    ],
+    "faqs": [
+      {
+        "question": "What resolution should I choose?",
+        "answer": "2x (about 144 DPI) suits screen use. Choose 3x or 4x for printing, which produces larger files."
+      }
+    ],
+    "relatedToolSlugs": [
+      "image-to-pdf",
+      "split-pdf",
+      "image-compressor"
+    ],
+    "isPopular": true
   },
-
-  // 34. Rotate PDF
   "rotate-pdf": {
-    slug: "rotate-pdf",
-    name: "Rotate PDF Pages",
-    shortName: "Rotate PDF",
-    category: "pdf-docs",
-    categoryName: "PDF & Documents",
-    description: "Rotate every page of a PDF by 90, 180, or 270 degrees and save the corrected document.",
-    longDescription: "Fix sideways or upside-down scans by rotating PDF pages. Rotation is added to any existing page rotation so already-landscape pages stay correct, and the file never leaves your browser.",
-    iconName: "RotateCw",
-    metaTitle: "Rotate PDF Online Free - Fix Sideways PDF Pages",
-    metaDescription: "Rotate PDF pages by 90, 180, or 270 degrees and download the fixed file. Free, private, and runs in your browser.",
-    keywords: ["rotate pdf", "turn pdf pages", "fix sideways pdf", "rotate pdf online free", "pdf orientation"],
-    features: ["90, 180 or 270 degree rotation", "Respects existing page rotation", "Lossless — no re-encoding", "Nothing is uploaded"],
-    faqs: [
-      { question: "Is the rotation permanent?", answer: "Yes. The rotation is written into the downloaded PDF, so every reader displays it the same way." }
+    "slug": "rotate-pdf",
+    "name": "Rotate PDF",
+    "shortName": "Rotate PDF",
+    "category": "pdf-docs",
+    "categoryName": "PDF & Documents",
+    "description": "Rotate every page of a PDF by 90, 180, or 270 degrees and save the corrected document.",
+    "longDescription": "Fix sideways or upside-down scans by rotating PDF pages. Rotation is added to any existing page rotation so already-landscape pages stay correct, and the file never leaves your browser.",
+    "iconName": "RotateCw",
+    "metaTitle": "Rotate PDF | TabBench",
+    "metaDescription": "Rotate PDF pages clockwise or counter-clockwise (90°, 180°, 270°) and save the corrected document. 100% private in-browser.",
+    "keywords": [
+      "rotate pdf",
+      "rotate pdf pages",
+      "turn pdf sideways",
+      "rotate pdf 90 degrees",
+      "fix upside down pdf"
     ],
-    relatedToolSlugs: ["split-pdf", "pdf-merge", "add-page-numbers"],
+    "features": [
+      "90, 180 or 270 degree rotation",
+      "Respects existing page rotation",
+      "Lossless — no re-encoding",
+      "Nothing is uploaded"
+    ],
+    "faqs": [
+      {
+        "question": "Is the rotation permanent?",
+        "answer": "Yes. The rotation is written into the downloaded PDF, so every reader displays it the same way."
+      }
+    ],
+    "relatedToolSlugs": [
+      "split-pdf",
+      "pdf-merge",
+      "add-page-numbers"
+    ]
   },
-
-  // 35. Add Page Numbers to PDF
   "add-page-numbers": {
-    slug: "add-page-numbers",
-    name: "Add Page Numbers to PDF",
-    shortName: "Add Page Numbers",
-    category: "pdf-docs",
-    categoryName: "PDF & Documents",
-    description: "Stamp sequential page numbers onto a PDF with a choice of position and starting number.",
-    longDescription: "Add clean page numbers to any PDF, choosing the corner they sit in and the number to start counting from. Useful for court filings, dissertations, and any document that must be paginated.",
-    iconName: "Hash",
-    metaTitle: "Add Page Numbers to PDF Free - Number PDF Pages",
-    metaDescription: "Add page numbers to a PDF online. Choose position and starting number. Free, no signup, processed in your browser.",
-    keywords: ["add page numbers to pdf", "number pdf pages", "pdf pagination", "insert page numbers pdf"],
-    features: ["Bottom centre, bottom right or top right", "Custom starting number", "Clean Helvetica numbering", "Nothing is uploaded"],
-    faqs: [
-      { question: "Can I start numbering from a page other than 1?", answer: "Yes. Set any starting number, which is useful when front matter is numbered separately." }
+    "slug": "add-page-numbers",
+    "name": "Add Page Numbers to PDF",
+    "shortName": "Add Page Numbers",
+    "category": "pdf-docs",
+    "categoryName": "PDF & Documents",
+    "description": "Stamp sequential page numbers onto a PDF with a choice of position and starting number.",
+    "longDescription": "Add clean page numbers to any PDF, choosing the corner they sit in and the number to start counting from. Useful for court filings, dissertations, and any document that must be paginated.",
+    "iconName": "Hash",
+    "metaTitle": "Add Page Numbers to PDF | TabBench",
+    "metaDescription": "Add page numbers to PDF documents with customizable placement, formatting, and starting numbers. Processed entirely in your browser.",
+    "keywords": [
+      "add page numbers to pdf",
+      "number pdf pages",
+      "pdf pagination online",
+      "insert page numbers in pdf",
+      "pdf page numbering"
     ],
-    relatedToolSlugs: ["pdf-merge", "split-pdf", "rotate-pdf"],
+    "features": [
+      "Bottom centre, bottom right or top right",
+      "Custom starting number",
+      "Clean Helvetica numbering",
+      "Nothing is uploaded"
+    ],
+    "faqs": [
+      {
+        "question": "Can I start numbering from a page other than 1?",
+        "answer": "Yes. Set any starting number, which is useful when front matter is numbered separately."
+      }
+    ],
+    "relatedToolSlugs": [
+      "pdf-merge",
+      "split-pdf",
+      "rotate-pdf"
+    ]
   },
-
-  // 36. Image Resizer
   "image-resizer": {
-    slug: "image-resizer",
-    name: "Image Resizer by Pixels & Percent",
-    shortName: "Image Resizer",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Resize any image to exact pixel dimensions or a percentage, with aspect ratio locking.",
-    longDescription: "Change an image's pixel dimensions precisely, with an optional aspect-ratio lock and high-quality resampling. Export as JPG, PNG, or WebP without uploading anything.",
-    iconName: "Scaling",
-    metaTitle: "Image Resizer Online Free - Resize Images by Pixel",
-    metaDescription: "Resize images to exact pixel dimensions or by percentage. Lock aspect ratio and export as JPG, PNG, or WebP. Free and private.",
-    keywords: ["image resizer", "resize image online", "change image dimensions", "resize photo pixels", "image size changer"],
-    features: ["Exact pixel width and height", "Aspect ratio lock", "25/50/75% quick presets", "JPG, PNG or WebP output"],
-    faqs: [
-      { question: "Does resizing lose quality?", answer: "Downscaling is essentially lossless to the eye. Enlarging cannot add detail that was never captured, so upscaled images look soft." }
+    "slug": "image-resizer",
+    "name": "Image Resizer",
+    "shortName": "Image Resizer",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Resize any image to exact pixel dimensions or a percentage, with aspect ratio locking.",
+    "longDescription": "Change an image's pixel dimensions precisely, with an optional aspect-ratio lock and high-quality resampling. Export as JPG, PNG, or WebP without uploading anything.",
+    "iconName": "Scaling",
+    "metaTitle": "Image Resizer | TabBench",
+    "metaDescription": "Resize images by exact width/height pixels or percentage scale. Maintain aspect ratios and download optimized images instantly.",
+    "keywords": [
+      "image resizer",
+      "resize image online",
+      "resize image by pixel",
+      "resize photo percentage",
+      "change image dimensions"
     ],
-    relatedToolSlugs: ["image-compressor", "crop-image", "png-to-jpg"],
-    isPopular: true,
+    "features": [
+      "Exact pixel width and height",
+      "Aspect ratio lock",
+      "25/50/75% quick presets",
+      "JPG, PNG or WebP output"
+    ],
+    "faqs": [
+      {
+        "question": "Does resizing lose quality?",
+        "answer": "Downscaling is essentially lossless to the eye. Enlarging cannot add detail that was never captured, so upscaled images look soft."
+      }
+    ],
+    "relatedToolSlugs": [
+      "image-compressor",
+      "crop-image",
+      "png-to-jpg"
+    ],
+    "isPopular": true
   },
-
-  // 37. Favicon Generator
   "favicon-generator": {
-    slug: "favicon-generator",
-    name: "Favicon Generator from Image",
-    shortName: "Favicon Generator",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Turn a logo into a full set of favicon PNGs at every size browsers and phones request.",
-    longDescription: "Generate favicons at 16px through 512px from a single logo, including the 180px Apple touch icon, packaged as a ZIP with a ready-to-paste HTML snippet and web manifest.",
-    iconName: "Star",
-    metaTitle: "Favicon Generator Free - Create Favicons from Image",
-    metaDescription: "Generate favicon PNGs from any logo at 16 to 512 pixels, with Apple touch icon and manifest. Free, no signup, client-side.",
-    keywords: ["favicon generator", "create favicon", "favicon from image", "apple touch icon generator", "website icon generator"],
-    features: ["Nine sizes from 16px to 512px", "Apple touch icon at 180px", "ZIP with HTML snippet and manifest", "Transparent or solid background"],
-    faqs: [
-      { question: "What source image works best?", answer: "A square image of at least 512x512. Simple, high-contrast marks stay legible at 16px; detailed logos do not." }
+    "slug": "favicon-generator",
+    "name": "Favicon Generator",
+    "shortName": "Favicon Generator",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Turn a logo into a full set of favicon PNGs at every size browsers and phones request.",
+    "longDescription": "Generate favicons at 16px through 512px from a single logo, including the 180px Apple touch icon, packaged as a ZIP with a ready-to-paste HTML snippet and web manifest.",
+    "iconName": "Star",
+    "metaTitle": "Favicon Generator | TabBench",
+    "metaDescription": "Generate multi-size website favicons (16x16, 32x32, 48x48, 180x180) and Apple touch icons from any logo or photo in seconds.",
+    "keywords": [
+      "favicon generator",
+      "create favicon",
+      "favicon from image",
+      "png to favicon",
+      "ico generator online"
     ],
-    relatedToolSlugs: ["image-resizer", "png-to-jpg", "crop-image"],
+    "features": [
+      "Nine sizes from 16px to 512px",
+      "Apple touch icon at 180px",
+      "ZIP with HTML snippet and manifest",
+      "Transparent or solid background"
+    ],
+    "faqs": [
+      {
+        "question": "What source image works best?",
+        "answer": "A square image of at least 512x512. Simple, high-contrast marks stay legible at 16px; detailed logos do not."
+      }
+    ],
+    "relatedToolSlugs": [
+      "image-resizer",
+      "png-to-jpg",
+      "crop-image"
+    ]
   },
-
-  // 38. Currency Converter
   "currency-converter": {
-    slug: "currency-converter",
-    name: "Currency Converter",
-    shortName: "Currency Converter",
-    category: "calculators",
-    categoryName: "Calculators & Finance",
-    description: "Convert dollar to rupee, rupee to dollar, and between 160+ world currencies at live mid-market exchange rates.",
-    longDescription: "Convert dollars to rupees, euros to rupees, and between more than 160 world currencies using live mid-market exchange rates, with the reverse rate and the bank margin explained alongside.",
-    iconName: "ArrowRightLeft",
-    metaTitle: "Currency Converter - Live Exchange Rates",
-    metaDescription: "Convert dollar to rupee and 160+ other currencies at live mid-market rates. Reverse rate shown instantly. Free, no signup, updated daily.",
-    // Broad aliases so the on-site search matches how people actually type:
-    // "dollar", "rupee", "$", "₹", "exchange" all reach this tool.
-    keywords: [
-      "dollar to rupee", "rupee to dollar", "usd to inr", "inr to usd",
-      "dollar", "rupee", "usd", "inr", "$", "₹",
-      "currency converter", "currency exchange", "exchange rate",
-      "money converter", "forex rate", "live exchange rate",
-      "euro to rupee", "eur to inr", "euro", "eur", "€",
-      "pound to rupee", "gbp to inr", "pound", "gbp", "£",
-      "dirham to rupee", "aed to inr", "dirham", "aed",
-      "riyal to rupee", "sar to inr", "riyal", "sar",
-      "cad to inr", "aud to inr", "sgd to inr", "yen", "jpy",
-      "convert currency", "1 usd to inr", "dollar rate today",
+    "slug": "currency-converter",
+    "name": "Currency Converter",
+    "shortName": "Currency Converter",
+    "category": "calculators",
+    "categoryName": "Calculators & Finance",
+    "description": "Convert dollar to rupee, rupee to dollar, and between 160+ world currencies at live mid-market exchange rates.",
+    "longDescription": "Convert dollars to rupees, euros to rupees, and between more than 160 world currencies using live mid-market exchange rates, with the reverse rate and the bank margin explained alongside.",
+    "iconName": "ArrowRightLeft",
+    "metaTitle": "Currency Converter | TabBench",
+    "metaDescription": "Convert global currencies with live exchange rates. Compare foreign exchange values instantly across USD, EUR, GBP, INR, and 160+ currencies.",
+    "keywords": [
+      "currency converter",
+      "exchange rate calculator",
+      "currency exchange",
+      "usd to inr",
+      "eur to usd"
     ],
-    features: ["Live mid-market rates", "160+ currencies", "One-tap swap and reverse rate", "Popular pairs preset"],
-    faqs: [
-      { question: "Why is my bank's rate worse than this?", answer: "This shows the mid-market rate. Banks and cards add a margin of roughly 1-4%, plus any fixed transfer fee." }
+    "features": [
+      "Live mid-market rates",
+      "160+ currencies",
+      "One-tap swap and reverse rate",
+      "Popular pairs preset"
     ],
-    relatedToolSlugs: ["percentage-calculator", "gst-calculator", "discount-calculator"],
-    isPopular: true,
+    "faqs": [
+      {
+        "question": "Why is my bank's rate worse than this?",
+        "answer": "This shows the mid-market rate. Banks and cards add a margin of roughly 1-4%, plus any fixed transfer fee."
+      }
+    ],
+    "relatedToolSlugs": [
+      "percentage-calculator",
+      "gst-calculator",
+      "discount-calculator"
+    ],
+    "isPopular": true
   },
-
-  // 39. Sample / Dummy File Generator
   "sample-file-generator": {
-    slug: "sample-file-generator",
-    name: "Sample File Generator",
-    shortName: "Sample Files",
-    category: "developer",
-    categoryName: "Developer & Data",
-    description: "Generate dummy images, PDFs, Word files, CSV, JSON, and video at an exact file size for testing uploads.",
-    longDescription: "Create placeholder files at any size you specify — sample images, PDFs, DOCX, CSV, JSON, text, and short videos — with randomised content each time. Built for testing upload limits, forms, and file handling.",
-    iconName: "Shuffle",
-    metaTitle: "Sample File Generator - Dummy Image, PDF & Video",
-    metaDescription: "Generate dummy files at an exact size: sample images, PDFs, Word docs, CSV, JSON and video. Free, random each time, no signup.",
-    keywords: [
-      "sample file generator", "dummy file generator", "test file generator",
-      "sample image download", "dummy image generator", "sample pdf download",
-      "dummy pdf", "sample docx", "test file 1mb", "sample video download",
-      "placeholder image", "dummy data file", "sample csv", "sample json",
-      "generate file of specific size", "10mb test file",
+    "slug": "sample-file-generator",
+    "name": "Sample File Generator",
+    "shortName": "Sample File Generator",
+    "category": "developer",
+    "categoryName": "Developer & Data",
+    "description": "Generate dummy images, PDFs, Word files, CSV, JSON, and video at an exact file size for testing uploads.",
+    "longDescription": "Create placeholder files at any size you specify — sample images, PDFs, DOCX, CSV, JSON, text, and short videos — with randomised content each time. Built for testing upload limits, forms, and file handling.",
+    "iconName": "Shuffle",
+    "metaTitle": "Sample File Generator | TabBench",
+    "metaDescription": "Generate dummy files of any exact size across PDF, JPG, PNG, MP4, CSV, and JSON formats for upload and performance testing.",
+    "keywords": [
+      "sample file generator",
+      "dummy file generator",
+      "test file download",
+      "sample files for testing",
+      "placeholder file generator"
     ],
-    features: ["Exact target file size", "Image, PDF, Word, CSV, JSON, video", "Randomised content every time", "Copy small images as data URLs"],
-    faqs: [
-      { question: "Are the files a real, valid format?", answer: "Yes. Every file opens in its normal application; padding uses regions each format ignores." }
+    "features": [
+      "Exact target file size",
+      "Image, PDF, Word, CSV, JSON, video",
+      "Randomised content every time",
+      "Copy small images as data URLs"
     ],
-    relatedToolSlugs: ["image-compressor", "pdf-compressor", "json-formatter"],
-    isPopular: true,
+    "faqs": [
+      {
+        "question": "Are the files a real, valid format?",
+        "answer": "Yes. Every file opens in its normal application; padding uses regions each format ignores."
+      }
+    ],
+    "relatedToolSlugs": [
+      "image-compressor",
+      "pdf-compressor",
+      "json-formatter"
+    ],
+    "isPopular": true
   },
-
-  // 40. Sample Image Generator
   "sample-image-generator": {
-    slug: "sample-image-generator",
-    name: "Sample Image Generator",
-    shortName: "Sample Images",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Generate random placeholder images at an exact file size in JPG, PNG, or WebP.",
-    longDescription: "Create dummy images at any file size you specify, with randomised artwork and dimensions every time. Built for testing upload limits, filling layouts, and checking image pipelines.",
-    iconName: "Image",
-    metaTitle: "Sample Image Generator - Dummy Image Any Size",
-    metaDescription: "Generate placeholder images at an exact file size in JPG, PNG or WebP. Random artwork each time, free, no signup.",
-    keywords: ["sample image", "dummy image generator", "placeholder image", "sample image download", "test image 1mb", "random image generator", "fake image generator"],
-    features: ["Exact target file size", "JPG, PNG or WebP", "Randomised artwork and dimensions", "Copy small images as data URLs"],
-    faqs: [
-      { question: "Are the images real image files?", answer: "Yes. Each is drawn on a canvas and encoded properly, so it opens in any image viewer or editor." }
+    "slug": "sample-image-generator",
+    "name": "Sample Image Generator",
+    "shortName": "Sample Image Generator",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Generate random placeholder images at an exact file size in JPG, PNG, or WebP.",
+    "longDescription": "Create dummy images at any file size you specify, with randomised artwork and dimensions every time. Built for testing upload limits, filling layouts, and checking image pipelines.",
+    "iconName": "Image",
+    "metaTitle": "Sample Image Generator | TabBench",
+    "metaDescription": "Generate placeholder and dummy images of any exact dimensions and file size. Perfect for web design, mockups, and upload testing.",
+    "keywords": [
+      "sample image generator",
+      "dummy image generator",
+      "placeholder image download",
+      "sample jpg test file",
+      "test image generator"
     ],
-    relatedToolSlugs: ["image-compressor", "image-resizer", "sample-file-generator"],
-    isPopular: true,
+    "features": [
+      "Exact target file size",
+      "JPG, PNG or WebP",
+      "Randomised artwork and dimensions",
+      "Copy small images as data URLs"
+    ],
+    "faqs": [
+      {
+        "question": "Are the images real image files?",
+        "answer": "Yes. Each is drawn on a canvas and encoded properly, so it opens in any image viewer or editor."
+      }
+    ],
+    "relatedToolSlugs": [
+      "image-compressor",
+      "image-resizer",
+      "sample-file-generator"
+    ],
+    "isPopular": true
   },
-
-  // 41. Sample PDF Generator
   "sample-pdf-generator": {
-    slug: "sample-pdf-generator",
-    name: "Sample PDF Generator",
-    shortName: "Sample PDFs",
-    category: "pdf-docs",
-    categoryName: "PDF & Documents",
-    description: "Generate dummy PDF files at an exact size, with a random number of pages and real text content.",
-    longDescription: "Create placeholder PDFs at any file size, each with a randomised page count and genuine text content built with pdf-lib. Useful for testing upload caps, PDF viewers, and document pipelines.",
-    iconName: "FileText",
-    metaTitle: "Sample PDF Generator - Dummy PDF of Any Size",
-    metaDescription: "Generate dummy PDF files at an exact size with real pages and text. Free, random each time, processed in your browser.",
-    keywords: ["sample pdf", "dummy pdf generator", "sample pdf download", "test pdf file", "pdf 1mb sample", "placeholder pdf", "fake pdf generator"],
-    features: ["Exact target file size", "Random page count and content", "Valid PDF that opens anywhere", "Nothing is uploaded"],
-    faqs: [
-      { question: "Do the PDFs actually open?", answer: "Yes. They are built with pdf-lib and contain real pages, headings, and body text." }
+    "slug": "sample-pdf-generator",
+    "name": "Sample PDF Generator",
+    "shortName": "Sample PDF Generator",
+    "category": "pdf-docs",
+    "categoryName": "PDF & Documents",
+    "description": "Generate dummy PDF files at an exact size, with a random number of pages and real text content.",
+    "longDescription": "Create placeholder PDFs at any file size, each with a randomised page count and genuine text content built with pdf-lib. Useful for testing upload caps, PDF viewers, and document pipelines.",
+    "iconName": "FileText",
+    "metaTitle": "Sample PDF Generator | TabBench",
+    "metaDescription": "Generate synthetic dummy PDF files of any exact file size with real pages and text for upload testing and PDF reader debugging.",
+    "keywords": [
+      "sample pdf generator",
+      "dummy pdf download",
+      "sample pdf for testing",
+      "test pdf file 1mb",
+      "placeholder pdf generator"
     ],
-    relatedToolSlugs: ["pdf-merge", "split-pdf", "sample-file-generator"],
+    "features": [
+      "Exact target file size",
+      "Random page count and content",
+      "Valid PDF that opens anywhere",
+      "Nothing is uploaded"
+    ],
+    "faqs": [
+      {
+        "question": "Do the PDFs actually open?",
+        "answer": "Yes. They are built with pdf-lib and contain real pages, headings, and body text."
+      }
+    ],
+    "relatedToolSlugs": [
+      "pdf-merge",
+      "split-pdf",
+      "sample-file-generator"
+    ]
   },
-
-  // 42. Sample Video Generator
   "sample-video-generator": {
-    slug: "sample-video-generator",
-    name: "Sample Video Generator",
-    shortName: "Sample Videos",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Generate a short random WebM video clip in your browser for testing uploads and players.",
-    longDescription: "Record a short animated WebM clip of any length between one and ten seconds, generated live in your browser. Useful for testing video uploads, players, and duration limits.",
-    iconName: "Shuffle",
-    metaTitle: "Sample Video Generator - Dummy WebM Test Clip",
-    metaDescription: "Generate a short sample video for testing uploads and players. Choose the length, recorded in your browser, free.",
-    keywords: ["sample video", "dummy video generator", "sample video download", "test video file", "placeholder video", "short test clip"],
-    features: ["1 to 10 second clips", "640x360 VP9 WebM", "Randomised animation each time", "Recorded locally, never uploaded"],
-    faqs: [
-      { question: "Can I choose the exact file size?", answer: "No. The browser's recorder picks its own bitrate, so you choose the duration and the size follows." }
+    "slug": "sample-video-generator",
+    "name": "Sample Video Generator",
+    "shortName": "Sample Video Generator",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Generate a short random WebM video clip in your browser for testing uploads and players.",
+    "longDescription": "Record a short animated WebM clip of any length between one and ten seconds, generated live in your browser. Useful for testing video uploads, players, and duration limits.",
+    "iconName": "Shuffle",
+    "metaTitle": "Sample Video Generator | TabBench",
+    "metaDescription": "Generate synthetic test video files (WebM/MP4) with customizable resolution, framerate, and duration for media player testing.",
+    "keywords": [
+      "sample video generator",
+      "dummy video download",
+      "test video file",
+      "sample mp4 test clip",
+      "sample webm generator"
     ],
-    relatedToolSlugs: ["sample-image-generator", "sample-file-generator", "image-compressor"],
+    "features": [
+      "1 to 10 second clips",
+      "640x360 VP9 WebM",
+      "Randomised animation each time",
+      "Recorded locally, never uploaded"
+    ],
+    "faqs": [
+      {
+        "question": "Can I choose the exact file size?",
+        "answer": "No. The browser's recorder picks its own bitrate, so you choose the duration and the size follows."
+      }
+    ],
+    "relatedToolSlugs": [
+      "sample-image-generator",
+      "sample-file-generator",
+      "image-compressor"
+    ]
   },
-
-  // 43. Sample Data File Generator
   "sample-data-generator": {
-    slug: "sample-data-generator",
-    name: "Sample CSV & JSON Generator",
-    shortName: "Sample Data",
-    category: "developer",
-    categoryName: "Developer & Data",
-    description: "Generate dummy CSV, JSON, and plain text files at an exact size with realistic placeholder records.",
-    longDescription: "Create test data files at any size — CSV with headers and rows, JSON arrays of records, or plain text. Useful for testing importers, parsers, and upload limits.",
-    iconName: "Code",
-    metaTitle: "Sample CSV & JSON Generator - Dummy Data Files",
-    metaDescription: "Generate dummy CSV, JSON and text files at an exact size with realistic placeholder records. Free and instant.",
-    keywords: ["sample csv", "dummy csv generator", "sample json file", "test data generator", "dummy data file", "sample csv download", "large csv for testing"],
-    features: ["CSV, JSON or plain text", "Exact target file size", "Realistic placeholder records", "Runs entirely in your browser"],
-    faqs: [
-      { question: "Is the data realistic?", answer: "It uses plausible names, emails, cities, and amounts — enough to exercise a parser or importer." }
+    "slug": "sample-data-generator",
+    "name": "Sample Data Generator",
+    "shortName": "Sample Data Generator",
+    "category": "developer",
+    "categoryName": "Developer & Data",
+    "description": "Generate dummy CSV, JSON, and plain text files at an exact size with realistic placeholder records.",
+    "longDescription": "Create test data files at any size — CSV with headers and rows, JSON arrays of records, or plain text. Useful for testing importers, parsers, and upload limits.",
+    "iconName": "Code",
+    "metaTitle": "Sample Data Generator | TabBench",
+    "metaDescription": "Generate realistic mock CSV and JSON datasets with names, emails, addresses, and timestamps for testing databases and APIs.",
+    "keywords": [
+      "sample data generator",
+      "dummy csv generator",
+      "mock json generator",
+      "sample test data",
+      "generate fake csv data"
     ],
-    relatedToolSlugs: ["json-formatter", "sample-file-generator", "text-diff-checker"],
+    "features": [
+      "CSV, JSON or plain text",
+      "Exact target file size",
+      "Realistic placeholder records",
+      "Runs entirely in your browser"
+    ],
+    "faqs": [
+      {
+        "question": "Is the data realistic?",
+        "answer": "It uses plausible names, emails, cities, and amounts — enough to exercise a parser or importer."
+      }
+    ],
+    "relatedToolSlugs": [
+      "json-formatter",
+      "sample-file-generator",
+      "text-diff-checker"
+    ]
   },
-
-  // 44. Notepad
   "notepad": {
-    slug: "notepad",
-    name: "Online Notepad & Quick Notes",
-    shortName: "Notepad",
-    category: "text",
-    categoryName: "Text & Writing",
-    description: "A distraction-free notepad that saves automatically to your browser. No account, no sync, no waiting.",
-    longDescription: "Jot notes, drafts, and snippets in a clean editor that autosaves to this browser as you type. Keep multiple notes, search across them, and export any note as a text file.",
-    iconName: "FileText",
-    metaTitle: "Online Notepad - Free Notes That Autosave",
-    metaDescription: "A free online notepad that saves as you type, with multiple notes and text export. No signup, works offline, stored only in your browser.",
-    keywords: ["online notepad", "notepad online free", "quick notes", "text editor online", "notes app browser", "scratchpad online", "notepad no login"],
-    features: ["Autosaves as you type", "Multiple notes with search", "Download any note as .txt", "Stored only in your browser"],
-    faqs: [
-      { question: "Where are my notes stored?", answer: "In this browser's local storage. They are not uploaded, and they will not appear on your other devices." }
+    "slug": "notepad",
+    "name": "Online Notepad",
+    "shortName": "Online Notepad",
+    "category": "text",
+    "categoryName": "Text & Writing",
+    "description": "A distraction-free notepad that saves automatically to your browser. No account, no sync, no waiting.",
+    "longDescription": "Jot notes, drafts, and snippets in a clean editor that autosaves to this browser as you type. Keep multiple notes, search across them, and export any note as a text file.",
+    "iconName": "FileText",
+    "metaTitle": "Online Notepad | TabBench",
+    "metaDescription": "A clean, distraction-free online notepad that autosaves your notes locally. No account required, 100% private, and works offline.",
+    "keywords": [
+      "online notepad",
+      "notepad online",
+      "quick notes online",
+      "browser notepad autosave",
+      "scratchpad online"
     ],
-    relatedToolSlugs: ["word-counter", "case-converter", "text-diff-checker"],
-    isPopular: true,
+    "features": [
+      "Autosaves as you type",
+      "Multiple notes with search",
+      "Download any note as .txt",
+      "Stored only in your browser"
+    ],
+    "faqs": [
+      {
+        "question": "Where are my notes stored?",
+        "answer": "In this browser's local storage. They are not uploaded, and they will not appear on your other devices."
+      }
+    ],
+    "relatedToolSlugs": [
+      "word-counter",
+      "case-converter",
+      "text-diff-checker"
+    ],
+    "isPopular": true
   },
-
-  // 45. Text to Speech
   "text-to-speech": {
-    slug: "text-to-speech",
-    name: "Text to Speech Reader",
-    shortName: "Text to Speech",
-    category: "text",
-    categoryName: "Text & Writing",
-    description: "Read any text aloud using your device's own voices, with adjustable speed and pitch.",
-    longDescription: "Paste text and have it read aloud using the voices installed on your device. Adjust speed and pitch, pause and resume, and proofread by ear. Nothing is sent anywhere.",
-    iconName: "Volume2",
-    metaTitle: "Text to Speech Online Free - Read Text Aloud",
-    metaDescription: "Convert text to speech in your browser with your device's own voices. Adjustable speed and pitch, free, and nothing is uploaded.",
-    keywords: ["text to speech", "text to voice", "read text aloud", "tts online free", "speech synthesis", "text reader online", "voice reader"],
-    features: ["Uses your device's built-in voices", "Adjustable speed and pitch", "Pause, resume and stop", "Text never leaves your device"],
-    faqs: [
-      { question: "Why do I only see a few voices?", answer: "Voices come from your operating system. Install more in your system's speech or accessibility settings." }
+    "slug": "text-to-speech",
+    "name": "Text to Speech",
+    "shortName": "Text to Speech",
+    "category": "text",
+    "categoryName": "Text & Writing",
+    "description": "Read any text aloud using your device's own voices, with adjustable speed and pitch.",
+    "longDescription": "Paste text and have it read aloud using the voices installed on your device. Adjust speed and pitch, pause and resume, and proofread by ear. Nothing is sent anywhere.",
+    "iconName": "Volume2",
+    "metaTitle": "Text to Speech | TabBench",
+    "metaDescription": "Convert written text into natural spoken audio directly in your browser. Choose system voices, adjust speed and pitch, and listen instantly.",
+    "keywords": [
+      "text to speech",
+      "text to speech online",
+      "tts reader",
+      "read text aloud",
+      "voice reader online"
     ],
-    relatedToolSlugs: ["speech-to-text", "word-counter", "notepad"],
-    isPopular: true,
+    "features": [
+      "Uses your device's built-in voices",
+      "Adjustable speed and pitch",
+      "Pause, resume and stop",
+      "Text never leaves your device"
+    ],
+    "faqs": [
+      {
+        "question": "Why do I only see a few voices?",
+        "answer": "Voices come from your operating system. Install more in your system's speech or accessibility settings."
+      }
+    ],
+    "relatedToolSlugs": [
+      "speech-to-text",
+      "word-counter",
+      "notepad"
+    ],
+    "isPopular": true
   },
-
-  // 46. Speech to Text
   "speech-to-text": {
-    slug: "speech-to-text",
-    name: "Voice to Text Dictation",
-    shortName: "Voice to Text",
-    category: "text",
-    categoryName: "Text & Writing",
-    description: "Dictate and get a live transcript you can edit, copy, or download. Supports Hindi, Tamil, and more.",
-    longDescription: "Speak and watch words appear as you talk, with support for English, Hindi, Bengali, Tamil, Telugu and more. Edit the transcript inline, then copy or download it. Note that browsers process speech in the cloud.",
-    iconName: "Mic",
-    metaTitle: "Voice to Text Online Free - Speech Dictation",
-    metaDescription: "Convert speech to text in your browser. Live transcript, 14 languages including Hindi and Tamil, editable and downloadable. Free.",
-    keywords: ["voice to text", "speech to text", "dictation online", "voice typing", "audio to text", "hindi voice typing", "speech recognition online"],
-    features: ["Live transcript as you speak", "14 languages including Hindi and Tamil", "Editable, copyable, downloadable", "No signup or install"],
-    faqs: [
-      { question: "Is my voice sent to a server?", answer: "In Chrome and Edge, yes — they use a cloud speech service. Safari transcribes on-device. This is a browser behaviour, not a site choice." }
+    "slug": "speech-to-text",
+    "name": "Speech to Text",
+    "shortName": "Speech to Text",
+    "category": "text",
+    "categoryName": "Text & Writing",
+    "description": "Dictate and get a live transcript you can edit, copy, or download. Supports Hindi, Tamil, and more.",
+    "longDescription": "Speak and watch words appear as you talk, with support for English, Hindi, Bengali, Tamil, Telugu and more. Edit the transcript inline, then copy or download it. Note that browsers process speech in the cloud.",
+    "iconName": "Mic",
+    "metaTitle": "Speech to Text | TabBench",
+    "metaDescription": "Dictate text and transcribe spoken voice into written text in real time. Free in-browser speech recognition with instant copying and export.",
+    "keywords": [
+      "speech to text",
+      "voice to text",
+      "voice dictation online",
+      "transcribe audio in browser",
+      "speech recognition online"
     ],
-    relatedToolSlugs: ["text-to-speech", "notepad", "word-counter"],
-    isPopular: true,
+    "features": [
+      "Live transcript as you speak",
+      "14 languages including Hindi and Tamil",
+      "Editable, copyable, downloadable",
+      "No signup or install"
+    ],
+    "faqs": [
+      {
+        "question": "Is my voice sent to a server?",
+        "answer": "In Chrome and Edge, yes — they use a cloud speech service. Safari transcribes on-device. This is a browser behaviour, not a site choice."
+      }
+    ],
+    "relatedToolSlugs": [
+      "text-to-speech",
+      "notepad",
+      "word-counter"
+    ],
+    "isPopular": true
   },
-
-  // 47. Video Downloader
   "video-downloader": {
-    slug: "video-downloader",
-    name: "Video Downloader",
-    shortName: "Video Downloader",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Download and inspect video files from direct, authorized, or self-hosted media streams.",
-    longDescription: "Inspect technical specifications including resolution, codecs, frame rate, bitrate, and duration from direct video URLs. Download permitted MP4, WebM, and MOV streams in original or extracted audio quality with zero server retention.",
-    iconName: "Video",
-    metaTitle: "Video Downloader - Download Online Videos | TabBench",
-    metaDescription: "Free online video downloader: inspect resolution, bitrate, codecs, and download authorized MP4 and WebM videos.",
-    keywords: [
+    "slug": "video-downloader",
+    "name": "Video Downloader",
+    "shortName": "Video Downloader",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Download and inspect video files from direct, authorized, or self-hosted media streams.",
+    "longDescription": "Inspect technical specifications including resolution, codecs, frame rate, bitrate, and duration from direct video URLs. Download permitted MP4, WebM, and MOV streams in original or extracted audio quality with zero server retention.",
+    "iconName": "Video",
+    "metaTitle": "Video Downloader | TabBench",
+    "metaDescription": "Inspect, analyze, and download accessible online video streams. View stream details, resolutions, and media links.",
+    "keywords": [
       "video downloader",
       "download video online",
-      "inspect video url",
-      "video metadata inspector",
-      "mp4 downloader",
-      "webm downloader",
-      "extract video audio",
-      "free video stream download",
+      "inspect video stream",
+      "web video downloader",
+      "media stream inspector"
     ],
-    features: [
+    "features": [
       "Direct MP4, WebM & MOV stream inspection",
       "Resolution, bitrate & codec analysis",
       "Quality selection with Highest Available badge",
       "Audio-only track extraction",
       "SSRF-protected secure retrieval",
-      "100% private in-browser processing",
+      "100% private in-browser processing"
     ],
-    formulas: [
+    "formulas": [
       {
-        name: "Video Bitrate & File Size Relationship",
-        expression: "File Size (MB) = (Bitrate (kbps) × Duration (seconds)) / 8000",
-        explanation: "The total file size of a video stream is directly determined by the combined video and audio bitrates multiplied by duration.",
-        example: "A 1080p stream at 5,000 kbps lasting 120 seconds = (5000 × 120) / 8000 = 75 MB.",
-      },
+        "name": "Video Bitrate & File Size Relationship",
+        "expression": "File Size (MB) = (Bitrate (kbps) × Duration (seconds)) / 8000",
+        "explanation": "The total file size of a video stream is directly determined by the combined video and audio bitrates multiplied by duration.",
+        "example": "A 1080p stream at 5,000 kbps lasting 120 seconds = (5000 × 120) / 8000 = 75 MB."
+      }
     ],
-    faqs: [
+    "faqs": [
       {
-        question: "Can I download videos from YouTube, TikTok, or Instagram?",
-        answer: "This tool strictly respects platform terms of service and copyright laws. It does not bypass DRM, paywalls, authentication, or technical platform restrictions. Only direct, authorized, or user-owned media streams are supported.",
+        "question": "Can I download videos from YouTube, TikTok, or Instagram?",
+        "answer": "This tool strictly respects platform terms of service and copyright laws. It does not bypass DRM, paywalls, authentication, or technical platform restrictions. Only direct, authorized, or user-owned media streams are supported."
       },
       {
-        question: "Are my inspected videos stored on TabBench servers?",
-        answer: "No. Processing is performed client-side in your browser. No files, URLs, or personal data are stored or retained on any server.",
-      },
+        "question": "Are my inspected videos stored on TabBench servers?",
+        "answer": "No. Processing is performed client-side in your browser. No files, URLs, or personal data are stored or retained on any server."
+      }
     ],
-    relatedToolSlugs: ["youtube-video-downloader", "instagram-video-downloader", "crop-image"],
-    isPopular: true,
+    "relatedToolSlugs": [
+      "youtube-video-downloader",
+      "instagram-video-downloader",
+      "crop-image"
+    ],
+    "isPopular": true
   },
-
-  // 48. YouTube Video Downloader
   "youtube-video-downloader": {
-    slug: "youtube-video-downloader",
-    name: "YouTube Video Downloader",
-    shortName: "YouTube Downloader",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Inspect video resolution, codecs, and download permitted YouTube streams and creative assets.",
-    longDescription: "Analyze stream dimensions, frame rate, audio codecs, and download permitted or self-hosted video streams. Adheres to platform copyright policies without DRM circumvention.",
-    iconName: "Video",
-    metaTitle: "YouTube Video Downloader - Stream & Media Inspector | TabBench",
-    metaDescription: "Inspect stream properties and download authorized YouTube media streams. Fast, free in-browser video inspector.",
-    keywords: ["youtube video downloader", "youtube downloader", "youtube stream inspector", "youtube audio extractor", "download youtube video free"],
-    features: ["YouTube stream analysis", "Resolution & audio track detection", "Highest quality auto-selection", "100% private in-browser"],
-    faqs: [
-      { question: "Can I download copyrighted YouTube content?", answer: "No. Only permitted, creative commons, or self-owned video streams are supported in compliance with platform terms." }
+    "slug": "youtube-video-downloader",
+    "name": "YouTube Video Downloader",
+    "shortName": "YouTube Downloader",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Inspect video resolution, codecs, and download permitted YouTube streams and creative assets.",
+    "longDescription": "Analyze stream dimensions, frame rate, audio codecs, and download permitted or self-hosted video streams. Adheres to platform copyright policies without DRM circumvention.",
+    "iconName": "Video",
+    "metaTitle": "YouTube Video Downloader | TabBench",
+    "metaDescription": "Analyze YouTube video streams, preview available resolutions, inspect audio/video tracks, and extract public media details.",
+    "keywords": [
+      "youtube video downloader",
+      "youtube downloader",
+      "download youtube video",
+      "inspect youtube stream",
+      "youtube media inspector"
     ],
-    relatedToolSlugs: ["video-downloader", "instagram-video-downloader", "tiktok-video-downloader"],
-    isPopular: true,
+    "features": [
+      "YouTube stream analysis",
+      "Resolution & audio track detection",
+      "Highest quality auto-selection",
+      "100% private in-browser"
+    ],
+    "faqs": [
+      {
+        "question": "Can I download copyrighted YouTube content?",
+        "answer": "No. Only permitted, creative commons, or self-owned video streams are supported in compliance with platform terms."
+      }
+    ],
+    "relatedToolSlugs": [
+      "video-downloader",
+      "instagram-video-downloader",
+      "tiktok-video-downloader"
+    ],
+    "isPopular": true
   },
-
-  // 49. Instagram Video Downloader
   "instagram-video-downloader": {
-    slug: "instagram-video-downloader",
-    name: "Instagram Video Downloader",
-    shortName: "Instagram Downloader",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Download and inspect Instagram Reels, Stories, and permitted video streams.",
-    longDescription: "Inspect aspect ratio (9:16 vertical / 1:1 square), resolution, and bitrate for Instagram videos and Reels. Download permitted media with zero server storage.",
-    iconName: "Video",
-    metaTitle: "Instagram Video Downloader - Reels & Media Inspector | TabBench",
-    metaDescription: "Inspect and download authorized Instagram videos and Reels. Fast in-browser media analysis.",
-    keywords: ["instagram video downloader", "instagram reel downloader", "download insta video", "instagram story video download", "insta media inspector"],
-    features: ["Reels & vertical video inspection", "Direct media retrieval", "Resolution & codec analysis", "100% client-side private"],
-    faqs: [
-      { question: "Can I download private Instagram posts?", answer: "No. Private accounts and DRM-protected streams cannot and should not be accessed without explicit authorization." }
+    "slug": "instagram-video-downloader",
+    "name": "Instagram Video Downloader",
+    "shortName": "Instagram Downloader",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Download and inspect Instagram Reels, Stories, and permitted video streams.",
+    "longDescription": "Inspect aspect ratio (9:16 vertical / 1:1 square), resolution, and bitrate for Instagram videos and Reels. Download permitted media with zero server storage.",
+    "iconName": "Video",
+    "metaTitle": "Instagram Video Downloader | TabBench",
+    "metaDescription": "Inspect and download Instagram Reels, stories, and video posts. Analyze public media streams directly in your browser.",
+    "keywords": [
+      "instagram video downloader",
+      "download instagram reel",
+      "instagram video download",
+      "insta media inspector"
     ],
-    relatedToolSlugs: ["video-downloader", "tiktok-video-downloader", "facebook-video-downloader"],
-    isPopular: true,
+    "features": [
+      "Reels & vertical video inspection",
+      "Direct media retrieval",
+      "Resolution & codec analysis",
+      "100% client-side private"
+    ],
+    "faqs": [
+      {
+        "question": "Can I download private Instagram posts?",
+        "answer": "No. Private accounts and DRM-protected streams cannot and should not be accessed without explicit authorization."
+      }
+    ],
+    "relatedToolSlugs": [
+      "video-downloader",
+      "tiktok-video-downloader",
+      "facebook-video-downloader"
+    ],
+    "isPopular": true
   },
-
-  // 50. Facebook Video Downloader
   "facebook-video-downloader": {
-    slug: "facebook-video-downloader",
-    name: "Facebook Video Downloader",
-    shortName: "Facebook Downloader",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Inspect and download public, authorized Facebook video streams.",
-    longDescription: "Check video resolution, aspect ratio, audio bitrate, and download authorized Facebook streams directly in your browser.",
-    iconName: "Video",
-    metaTitle: "Facebook Video Downloader - Stream Inspector | TabBench",
-    metaDescription: "Free Facebook video downloader and stream inspector. Analyze resolution, format, and download authorized video files.",
-    keywords: ["facebook video downloader", "fb video download", "facebook stream inspector", "download facebook video hd"],
-    features: ["Facebook stream analysis", "HD & SD format selection", "Audio track extraction", "Zero server retention"],
-    faqs: [
-      { question: "Can I download private Facebook group videos?", answer: "No. Only public, permitted, or self-hosted video streams are supported." }
+    "slug": "facebook-video-downloader",
+    "name": "Facebook Video Downloader",
+    "shortName": "Facebook Downloader",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Inspect and download public, authorized Facebook video streams.",
+    "longDescription": "Check video resolution, aspect ratio, audio bitrate, and download authorized Facebook streams directly in your browser.",
+    "iconName": "Video",
+    "metaTitle": "Facebook Video Downloader | TabBench",
+    "metaDescription": "Inspect public Facebook video streams, analyze resolutions, and download accessible media links quickly.",
+    "keywords": [
+      "facebook video downloader",
+      "download facebook video",
+      "fb video download online",
+      "facebook stream inspector"
     ],
-    relatedToolSlugs: ["video-downloader", "youtube-video-downloader", "instagram-video-downloader"],
-    isPopular: true,
+    "features": [
+      "Facebook stream analysis",
+      "HD & SD format selection",
+      "Audio track extraction",
+      "Zero server retention"
+    ],
+    "faqs": [
+      {
+        "question": "Can I download private Facebook group videos?",
+        "answer": "No. Only public, permitted, or self-hosted video streams are supported."
+      }
+    ],
+    "relatedToolSlugs": [
+      "video-downloader",
+      "youtube-video-downloader",
+      "instagram-video-downloader"
+    ],
+    "isPopular": true
   },
-
-  // 51. TikTok Video Downloader
   "tiktok-video-downloader": {
-    slug: "tiktok-video-downloader",
-    name: "TikTok Video Downloader",
-    shortName: "TikTok Downloader",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Inspect video resolution and download permitted TikTok videos and creative assets.",
-    longDescription: "Analyze 9:16 vertical video properties, duration, audio codecs, and retrieve permitted TikTok video files without watermarks or quality loss.",
-    iconName: "Video",
-    metaTitle: "TikTok Video Downloader - Media Inspector | TabBench",
-    metaDescription: "Download and inspect authorized TikTok videos in HD. Fast, secure in-browser video inspector.",
-    keywords: ["tiktok video downloader", "tiktok downloader", "download tiktok video hd", "tiktok video inspector", "tiktok audio extractor"],
-    features: ["Vertical 9:16 video analysis", "HD resolution detection", "Audio track extraction", "No app install required"],
-    faqs: [
-      { question: "Are videos downloaded in original quality?", answer: "Yes. When you choose the Highest Available quality, media is retrieved without generational re-encoding." }
+    "slug": "tiktok-video-downloader",
+    "name": "TikTok Video Downloader",
+    "shortName": "TikTok Downloader",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Inspect video resolution and download permitted TikTok videos and creative assets.",
+    "longDescription": "Analyze 9:16 vertical video properties, duration, audio codecs, and retrieve permitted TikTok video files without watermarks or quality loss.",
+    "iconName": "Video",
+    "metaTitle": "TikTok Video Downloader | TabBench",
+    "metaDescription": "Inspect and download public TikTok videos. Analyze media streams, audio tracks, and video properties in your browser.",
+    "keywords": [
+      "tiktok video downloader",
+      "download tiktok video",
+      "tiktok downloader no watermark info",
+      "tiktok stream inspector"
     ],
-    relatedToolSlugs: ["video-downloader", "instagram-video-downloader", "twitter-video-downloader"],
-    isPopular: true,
+    "features": [
+      "Vertical 9:16 video analysis",
+      "HD resolution detection",
+      "Audio track extraction",
+      "No app install required"
+    ],
+    "faqs": [
+      {
+        "question": "Are videos downloaded in original quality?",
+        "answer": "Yes. When you choose the Highest Available quality, media is retrieved without generational re-encoding."
+      }
+    ],
+    "relatedToolSlugs": [
+      "video-downloader",
+      "instagram-video-downloader",
+      "twitter-video-downloader"
+    ],
+    "isPopular": true
   },
-
-  // 52. Twitter / X Video Downloader
   "twitter-video-downloader": {
-    slug: "twitter-video-downloader",
-    name: "Twitter Video Downloader",
-    shortName: "Twitter Downloader",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Download and inspect Twitter / X videos, GIFs, and media streams.",
-    longDescription: "Inspect video bitrates, dimensions, and audio tracks for Twitter (X) video clips and animated GIFs. Save authorized files directly to your device.",
-    iconName: "Video",
-    metaTitle: "Twitter Video Downloader - X Media Inspector | TabBench",
-    metaDescription: "Download Twitter videos and X media streams in HD. Inspect resolution, format, and bitrate.",
-    keywords: ["twitter video downloader", "x video downloader", "download twitter video", "twitter gif download", "x media inspector"],
-    features: ["Twitter & X media stream analysis", "Multiple resolution options", "GIF & MP4 support", "100% private in browser"],
-    faqs: [
-      { question: "Can I download Twitter GIFs as MP4?", answer: "Yes. Twitter delivers animated GIFs as MP4 video streams, which can be downloaded directly." }
+    "slug": "twitter-video-downloader",
+    "name": "Twitter Video Downloader",
+    "shortName": "Twitter Downloader",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Download and inspect Twitter / X videos, GIFs, and media streams.",
+    "longDescription": "Inspect video bitrates, dimensions, and audio tracks for Twitter (X) video clips and animated GIFs. Save authorized files directly to your device.",
+    "iconName": "Video",
+    "metaTitle": "Twitter Video Downloader | TabBench",
+    "metaDescription": "Inspect and download Twitter / X videos and GIFs. Analyze video bitrate, resolution, and public media streams.",
+    "keywords": [
+      "twitter video downloader",
+      "x video downloader",
+      "download twitter video",
+      "twitter gif download",
+      "x media inspector"
     ],
-    relatedToolSlugs: ["video-downloader", "tiktok-video-downloader", "youtube-video-downloader"],
-    isPopular: true,
+    "features": [
+      "Twitter & X media stream analysis",
+      "Multiple resolution options",
+      "GIF & MP4 support",
+      "100% private in browser"
+    ],
+    "faqs": [
+      {
+        "question": "Can I download Twitter GIFs as MP4?",
+        "answer": "Yes. Twitter delivers animated GIFs as MP4 video streams, which can be downloaded directly."
+      }
+    ],
+    "relatedToolSlugs": [
+      "video-downloader",
+      "tiktok-video-downloader",
+      "youtube-video-downloader"
+    ],
+    "isPopular": true
   },
-
-  // Media players & PDF page editor
   "video-player": {
-    slug: "video-player",
-    name: "Online Video Player",
-    shortName: "Video Player",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Play MP4, WebM, MOV and more straight from your device, with speed control, picture-in-picture and a playlist.",
-    longDescription: "Open any video your browser can decode and play it with full transport controls, adjustable speed, picture-in-picture and a multi-file playlist. Files play from disk and are never uploaded.",
-    iconName: "Film",
-    metaTitle: "Online Video Player - Play MP4, WebM & MOV Free",
-    metaDescription: "Play video files in your browser with speed control, picture-in-picture and a playlist. No upload, no signup, works offline.",
-    keywords: ["online video player", "play mp4 online", "webm player", "mov player", "browser video player", "video player no download"],
-    features: ["Plays MP4, WebM, MOV and Ogg", "0.5x to 2x playback speed", "Picture-in-picture and fullscreen", "Multi-file playlist"],
-    faqs: [
-      { question: "Is my video uploaded?", answer: "No. The file is read from disk and played locally, so even multi-gigabyte videos open instantly." }
+    "slug": "video-player",
+    "name": "Video Player",
+    "shortName": "Video Player",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Play MP4, WebM, MOV and more straight from your device, with speed control, picture-in-picture and a playlist.",
+    "longDescription": "Open any video your browser can decode and play it with full transport controls, adjustable speed, picture-in-picture and a multi-file playlist. Files play from disk and are never uploaded.",
+    "iconName": "Film",
+    "metaTitle": "Video Player | TabBench",
+    "metaDescription": "Play MP4, WebM, MOV, and local video files in your browser with speed controls, playlists, and picture-in-picture. Nothing uploaded.",
+    "keywords": [
+      "online video player",
+      "video player online",
+      "play mp4 online",
+      "browser video player",
+      "play webm video"
     ],
-    relatedToolSlugs: ["audio-player", "video-downloader", "image-compressor"],
-    isPopular: true,
+    "features": [
+      "Plays MP4, WebM, MOV and Ogg",
+      "0.5x to 2x playback speed",
+      "Picture-in-picture and fullscreen",
+      "Multi-file playlist"
+    ],
+    "faqs": [
+      {
+        "question": "Is my video uploaded?",
+        "answer": "No. The file is read from disk and played locally, so even multi-gigabyte videos open instantly."
+      }
+    ],
+    "relatedToolSlugs": [
+      "audio-player",
+      "video-downloader",
+      "image-compressor"
+    ],
+    "isPopular": true
   },
-
   "audio-player": {
-    slug: "audio-player",
-    name: "Online Audio Player",
-    shortName: "Audio Player",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Play MP3, WAV, FLAC, M4A and OGG files with a playlist and speed control, entirely in your browser.",
-    longDescription: "Open audio files from your device and play them with a queue, adjustable speed and full transport controls. Useful for reviewing recordings and lectures without installing anything.",
-    iconName: "Music",
-    metaTitle: "Online Audio Player - Play MP3, WAV & FLAC Free",
-    metaDescription: "Play MP3, WAV, FLAC and M4A files in your browser with a playlist and speed control. Nothing is uploaded.",
-    keywords: ["online audio player", "play mp3 online", "flac player browser", "wav player", "listen to audio file online"],
-    features: ["MP3, WAV, FLAC, M4A, OGG", "Queue multiple files", "0.5x to 2x speed", "Nothing leaves your device"],
-    faqs: [
-      { question: "Can I speed up a lecture recording?", answer: "Yes — playback speed runs from 0.5x to 2x, and pitch is preserved by the browser." }
+    "slug": "audio-player",
+    "name": "Audio Player",
+    "shortName": "Audio Player",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Play MP3, WAV, FLAC, M4A and OGG files with a playlist and speed control, entirely in your browser.",
+    "longDescription": "Open audio files from your device and play them with a queue, adjustable speed and full transport controls. Useful for reviewing recordings and lectures without installing anything.",
+    "iconName": "Music",
+    "metaTitle": "Audio Player | TabBench",
+    "metaDescription": "Play MP3, WAV, FLAC, M4A, and OGG audio files directly in your browser with playlist management and playback speed controls.",
+    "keywords": [
+      "online audio player",
+      "audio player online",
+      "play mp3 online",
+      "flac player browser",
+      "wav audio player"
     ],
-    relatedToolSlugs: ["video-player", "speech-to-text", "text-to-speech"],
+    "features": [
+      "MP3, WAV, FLAC, M4A, OGG",
+      "Queue multiple files",
+      "0.5x to 2x speed",
+      "Nothing leaves your device"
+    ],
+    "faqs": [
+      {
+        "question": "Can I speed up a lecture recording?",
+        "answer": "Yes — playback speed runs from 0.5x to 2x, and pitch is preserved by the browser."
+      }
+    ],
+    "relatedToolSlugs": [
+      "video-player",
+      "speech-to-text",
+      "text-to-speech"
+    ]
   },
-
   "pdf-editor": {
-    slug: "pdf-editor",
-    name: "PDF Editor",
-    shortName: "PDF Editor",
-    category: "pdf-docs",
-    categoryName: "PDF & Documents",
-    description: "Click any text in a PDF to retype it. Fill form fields, add text or signatures, and manage pages.",
-    longDescription: "Click a word on the page and retype it — the editor finds every line of text in your PDF and lets you replace it in place, matching the original position, size and colour. Also fills real form fields, adds text, images and signatures, and reorders, rotates or deletes pages. Everything runs in your browser.",
-    iconName: "FileText",
-    metaTitle: "PDF Editor Online Free - Edit Text & Form Fields",
-    metaDescription: "Edit PDF text and form fields, cover mistakes, add a signature, and manage pages. Free, no signup, nothing uploaded.",
-    keywords: ["pdf editor", "edit pdf online free", "edit pdf text", "change name in pdf", "fill pdf form", "add text to pdf", "pdf signature", "reorder pdf pages", "delete pdf pages"],
-    features: ["Edit real PDF form fields", "Add text or cover and retype", "Insert signature or image", "Reorder, rotate and delete pages"],
-    faqs: [
-      { question: "Can I edit text already in the PDF?", answer: "If it is a form field, yes — directly. Otherwise cover it and type over the top, which is how PDF editors handle flattened text." }
+    "slug": "pdf-editor",
+    "name": "PDF Editor",
+    "shortName": "PDF Editor",
+    "category": "pdf-docs",
+    "categoryName": "PDF & Documents",
+    "description": "Click any text in a PDF to retype it. Fill form fields, add text or signatures, and manage pages.",
+    "longDescription": "Click a word on the page and retype it — the editor finds every line of text in your PDF and lets you replace it in place, matching the original position, size and colour. Also fills real form fields, adds text, images and signatures, and reorders, rotates or deletes pages. Everything runs in your browser.",
+    "iconName": "FileText",
+    "metaTitle": "PDF Editor | TabBench",
+    "metaDescription": "Edit PDF text, fill form fields, add annotations and signatures, and manage pages directly in your browser. No signup, zero uploads.",
+    "keywords": [
+      "pdf editor",
+      "edit pdf online",
+      "edit pdf text free",
+      "fill pdf form online",
+      "add signature to pdf"
     ],
-    relatedToolSlugs: ["split-pdf", "pdf-merge", "rotate-pdf"],
-    isPopular: true,
+    "features": [
+      "Edit real PDF form fields",
+      "Add text or cover and retype",
+      "Insert signature or image",
+      "Reorder, rotate and delete pages"
+    ],
+    "faqs": [
+      {
+        "question": "Can I edit text already in the PDF?",
+        "answer": "If it is a form field, yes — directly. Otherwise cover it and type over the top, which is how PDF editors handle flattened text."
+      }
+    ],
+    "relatedToolSlugs": [
+      "split-pdf",
+      "pdf-merge",
+      "rotate-pdf"
+    ],
+    "isPopular": true
   },
-
-  // ffmpeg.wasm media editors
   "video-cutter": {
-    slug: "video-cutter",
-    name: "Video Cutter & Trimmer",
-    shortName: "Video Cutter",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Trim a video to any start and end point without re-encoding — instant and lossless.",
-    longDescription: "Cut a clip out of any video by dragging start and end handles, then download it. The trim copies streams rather than re-encoding, so it finishes almost immediately and loses no quality.",
-    iconName: "Scissors",
-    metaTitle: "Video Cutter Online Free - Trim Video No Upload",
-    metaDescription: "Trim and cut video online without re-encoding or uploading. Lossless, instant, and free — runs entirely in your browser.",
-    keywords: ["video cutter", "trim video online", "cut video free", "video trimmer", "crop video length", "shorten video online"],
-    features: ["Lossless stream copy — no re-encode", "Drag to set start and end", "Preview before cutting", "Runs entirely in your browser"],
-    faqs: [
-      { question: "Does trimming reduce quality?", answer: "No. The cut copies streams rather than re-encoding, so the output is bit-identical to the source within the range you kept." }
+    "slug": "video-cutter",
+    "name": "Video Cutter",
+    "shortName": "Video Cutter",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Trim a video to any start and end point without re-encoding — instant and lossless.",
+    "longDescription": "Cut a clip out of any video by dragging start and end handles, then download it. The trim copies streams rather than re-encoding, so it finishes almost immediately and loses no quality.",
+    "iconName": "Scissors",
+    "metaTitle": "Video Cutter | TabBench",
+    "metaDescription": "Trim and cut video clips to any start and end timestamp without re-encoding. Lossless, instant, and runs 100% locally in your browser.",
+    "keywords": [
+      "video cutter",
+      "trim video online",
+      "cut video free",
+      "video trimmer online",
+      "shorten video file"
     ],
-    relatedToolSlugs: ["audio-remover", "video-player", "video-downloader"],
-    isPopular: true,
+    "features": [
+      "Lossless stream copy — no re-encode",
+      "Drag to set start and end",
+      "Preview before cutting",
+      "Runs entirely in your browser"
+    ],
+    "faqs": [
+      {
+        "question": "Does trimming reduce quality?",
+        "answer": "No. The cut copies streams rather than re-encoding, so the output is bit-identical to the source within the range you kept."
+      }
+    ],
+    "relatedToolSlugs": [
+      "audio-remover",
+      "video-player",
+      "video-downloader"
+    ],
+    "isPopular": true
   },
-
   "audio-remover": {
-    slug: "audio-remover",
-    name: "Remove Audio from Video",
-    shortName: "Audio Remover",
-    category: "image-media",
-    categoryName: "Image & Media",
-    description: "Strip the sound from a video, or pull the audio out as a separate file — both without re-encoding.",
-    longDescription: "Mute a video by removing its audio track entirely, or extract that audio as an .m4a file. Both are stream copies, so the video keeps its exact original quality and the audio keeps its original bitrate.",
-    iconName: "VolumeX",
-    metaTitle: "Remove Audio from Video Free - Mute or Extract",
-    metaDescription: "Remove sound from a video or extract the audio as a file. Lossless, no upload, no signup — works in your browser.",
-    keywords: ["remove audio from video", "mute video online", "extract audio from video", "silent video maker", "video to mp3", "strip audio track"],
-    features: ["Remove the audio track entirely", "Or extract audio as .m4a", "No re-encoding either way", "Nothing is uploaded"],
-    faqs: [
-      { question: "Will the video quality change?", answer: "No. The video stream is copied untouched; only the audio track is dropped." }
+    "slug": "audio-remover",
+    "name": "Remove Audio from Video",
+    "shortName": "Remove Audio from Video",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Strip the sound from a video, or pull the audio out as a separate file — both without re-encoding.",
+    "longDescription": "Mute a video by removing its audio track entirely, or extract that audio as an .m4a file. Both are stream copies, so the video keeps its exact original quality and the audio keeps its original bitrate.",
+    "iconName": "VolumeX",
+    "metaTitle": "Remove Audio from Video | TabBench",
+    "metaDescription": "Mute video or extract audio tracks as separate files without re-encoding. Fast, lossless, and completely client-side.",
+    "keywords": [
+      "remove audio from video",
+      "mute video online",
+      "extract audio from video",
+      "silent video maker",
+      "strip audio track"
     ],
-    relatedToolSlugs: ["video-cutter", "audio-player", "video-player"],
-    isPopular: true,
-  },
+    "features": [
+      "Remove the audio track entirely",
+      "Or extract audio as .m4a",
+      "No re-encoding either way",
+      "Nothing is uploaded"
+    ],
+    "faqs": [
+      {
+        "question": "Will the video quality change?",
+        "answer": "No. The video stream is copied untouched; only the audio track is dropped."
+      }
+    ],
+    "relatedToolSlugs": [
+      "video-cutter",
+      "audio-player",
+      "video-player"
+    ],
+    "isPopular": true
+  }
 };
 
 export function getAllTools(): ToolDefinition[] {
   return Object.values(TOOLS_REGISTRY);
-}
-
-export function getPopularTools(): ToolDefinition[] {
-  return Object.values(TOOLS_REGISTRY).filter((t) => t.isPopular);
 }
 
 export function getToolBySlug(slug: string): ToolDefinition | undefined {
@@ -1394,11 +2267,15 @@ export function getToolBySlug(slug: string): ToolDefinition | undefined {
 }
 
 export function getToolsByCategory(category: string): ToolDefinition[] {
-  return Object.values(TOOLS_REGISTRY).filter((t) => t.category === category);
+  return Object.values(TOOLS_REGISTRY).filter((tool) => tool.category === category);
+}
+
+export function getPopularTools(): ToolDefinition[] {
+  return Object.values(TOOLS_REGISTRY).filter((tool) => tool.isPopular);
 }
 
 export function getRelatedTools(tool: ToolDefinition): ToolDefinition[] {
   return tool.relatedToolSlugs
     .map((slug) => TOOLS_REGISTRY[slug])
-    .filter(Boolean) as ToolDefinition[];
+    .filter((t): t is ToolDefinition => !!t);
 }

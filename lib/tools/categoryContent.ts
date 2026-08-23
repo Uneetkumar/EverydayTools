@@ -17,8 +17,8 @@ export interface CategoryContent {
 
 export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
   calculators: {
-    heading: "Free online calculators for finance and everyday maths",
-    metaTitle: "Free Online Calculators - EMI, GST, Percentage",
+    heading: "Online Calculators & Financial Tools",
+    metaTitle: "Online Calculators | TabBench",
     metaDescription:
       "Free browser calculators for percentages, loan EMI, GST, and discounts. Instant results with the formula shown, no signup required.",
     keywords: [
@@ -55,8 +55,8 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     ],
   },
   "date-time": {
-    heading: "Date and time calculators",
-    metaTitle: "Date Calculators - Age & Days Between Dates",
+    heading: "Date & Time Calculators",
+    metaTitle: "Date & Time Calculators | TabBench",
     metaDescription:
       "Calculate exact age, the number of days between two dates, and working-day counts. Handles leap years correctly, free and private.",
     keywords: [
@@ -92,8 +92,8 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     ],
   },
   text: {
-    heading: "Text and writing tools",
-    metaTitle: "Free Text Tools - Word Counter & Case Converter",
+    heading: "Text & Writing Tools",
+    metaTitle: "Text & Writing Tools | TabBench",
     metaDescription:
       "Count words and characters, convert text case, and compare two versions of a document. Runs in your browser, safe for unpublished drafts.",
     keywords: [
@@ -129,8 +129,8 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     ],
   },
   developer: {
-    heading: "Developer and data tools",
-    metaTitle: "Free Developer Tools - JSON, Base64, JWT",
+    heading: "Developer & Data Tools",
+    metaTitle: "Developer & Data Tools | TabBench",
     metaDescription:
       "Format JSON, decode JWTs, convert Base64, generate UUIDs, and encode URLs. Everything runs locally, so tokens and payloads stay private.",
     keywords: [
@@ -167,8 +167,8 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     ],
   },
   "image-media": {
-    heading: "Image tools and converters",
-    metaTitle: "Free Image Tools - Compress, Convert & Crop",
+    heading: "Image & Media Tools",
+    metaTitle: "Image & Media Tools | TabBench",
     metaDescription:
       "Compress images to 50KB or 100KB, convert PNG to JPG, crop to any ratio, and generate QR codes. No upload, no watermark, no signup.",
     keywords: [
@@ -204,8 +204,8 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     ],
   },
   "pdf-docs": {
-    heading: "PDF and document tools",
-    metaTitle: "Free PDF Tools - Merge, Compress & Convert",
+    heading: "PDF & Document Tools",
+    metaTitle: "PDF & Document Tools | TabBench",
     metaDescription:
       "Merge PDFs, compress large files, remove passwords, convert images to PDF, and export to Word. Processed in your browser, never uploaded.",
     keywords: [
@@ -242,8 +242,8 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     ],
   },
   security: {
-    heading: "Security tools and generators",
-    metaTitle: "Free Security Tools - Password & Hash Generator",
+    heading: "Security & Generator Tools",
+    metaTitle: "Security & Generator Tools | TabBench",
     metaDescription:
       "Generate cryptographically secure passwords and compute MD5, SHA-1, SHA-256, and SHA-512 hashes. Generated locally and never transmitted.",
     keywords: [
@@ -279,8 +279,8 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     ],
   },
   business: {
-    heading: "Business and margin calculators",
-    metaTitle: "Business Calculators - Profit Margin & Markup",
+    heading: "Business & Marketing Calculators",
+    metaTitle: "Business & Marketing Calculators | TabBench",
     metaDescription:
       "Calculate profit margin, markup, and the selling price needed to hit a target margin. Shows both figures side by side to avoid the usual mix-up.",
     keywords: [
@@ -316,8 +316,8 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
     ],
   },
   "ai-tools": {
-    heading: "AI-powered explainers",
-    metaTitle: "AI Formula Explainer - Maths, Finance & Regex",
+    heading: "AI Formula & Productivity Tools",
+    metaTitle: "AI-Powered Tools | TabBench",
     metaDescription:
       "Get plain-English explanations of formulas, financial metrics, and regular expressions, with worked examples you can follow.",
     keywords: [

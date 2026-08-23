@@ -23,37 +23,27 @@ export const CONTENT_LAST_UPDATED = "2026-08-17T00:00:00.000Z";
 export function constructToolMetadata(tool: ToolDefinition): Metadata {
   const url = `${SITE_CONFIG.domain}/tools/${tool.slug}`;
 
-  // Optimal Title (50-60 characters)
-  let title = `${tool.shortName} - Free Online Tool | TabBench`;
-  if (title.length > 60) {
-    title = `${tool.shortName} | TabBench`;
-  } else if (title.length < 50) {
-    title = `${tool.shortName} - Free Online Utility | TabBench`;
+  // Prioritize curated metaTitle or construct "Tool Name | Site Name"
+  let title = tool.metaTitle?.trim() || `${tool.name} | ${SITE_CONFIG.name}`;
+  if (!title.includes(SITE_CONFIG.name)) {
+    title = `${title} | ${SITE_CONFIG.name}`;
   }
 
-  // Optimal Description (135-160 characters)
-  let description = tool.description.trim();
-  if (description.length < 130) {
-    description = `${description} 100% free to use for everyone with zero signup, instant processing, and total browser privacy.`;
-  }
+  // Prioritize curated metaDescription, ensuring 120-160 chars
+  let description = (tool.metaDescription || tool.description || "").trim();
   if (description.length > 160) {
     description = description.slice(0, 157).trim() + "...";
   }
 
   return {
     // `absolute` opts out of the root layout's "%s | TabBench" template.
-    // Without it the suffix is added twice ("... | TabBench |
-    // TabBench"), which also pushed every title past the 60-char target
-    // the length logic above is trying to hit.
     title: { absolute: title },
     description,
     keywords: [
       ...tool.keywords,
-      "free online tool",
-      "free for all",
-      "no login required",
-      "client side private tool",
-      "unlimited free use",
+      "online tool",
+      "client-side privacy",
+      "tabbench",
     ],
     alternates: {
       canonical: url,
@@ -88,20 +78,17 @@ export function constructPageMetadata({
 }): Metadata {
   const url = `${SITE_CONFIG.domain}${path}`;
 
-  // Ensure title fits optimal length
-  let optTitle = title;
-  if (!optTitle.includes("TabBench")) {
-    optTitle = `${title} | TabBench`;
+  // Ensure title fits optimal format
+  let optTitle = title.trim();
+  if (!optTitle.includes(SITE_CONFIG.name)) {
+    optTitle = `${optTitle} | ${SITE_CONFIG.name}`;
   }
   if (optTitle.length > 60) {
     optTitle = optTitle.slice(0, 57).trim() + "...";
   }
 
-  // Ensure description fits optimal length (130-160 chars)
+  // Ensure description fits optimal length
   let optDesc = description.trim();
-  if (optDesc.length < 130) {
-    optDesc = `${optDesc} 100% free to use for all users with zero signups and instant client-side privacy.`;
-  }
   if (optDesc.length > 160) {
     optDesc = optDesc.slice(0, 157).trim() + "...";
   }
@@ -111,10 +98,10 @@ export function constructPageMetadata({
     description: optDesc,
     keywords: [
       ...keywords,
-      "free online tools",
-      "free calculators",
-      "free web utilities",
-      "free for all",
+      "online tools",
+      "calculators",
+      "developer utilities",
+      "tabbench",
     ],
     alternates: {
       canonical: url,
