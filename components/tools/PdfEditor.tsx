@@ -648,8 +648,8 @@ function getLuminance(hex: string): number {
     const bg = sampleBackground(r);
     const ink = sampleInk(r);
     const page = pages[r.page];
-    const padX = 1.5 / page.width;
-    const padY = 2.0 / page.height;
+    const padX = Math.max(3.5 / page.width, 0.005);
+    const padY = Math.max(4.0 / page.height, 0.006);
     const coverId = crypto.randomUUID();
     const textId = crypto.randomUUID();
 
@@ -669,8 +669,8 @@ function getLuminance(hex: string): number {
         color: bg,
         x: Math.max(0, r.x - padX),
         y: Math.max(0, r.y - padY),
-        w: r.w + padX * 2,
-        h: r.h + padY * 2,
+        w: r.w + padX * 2.2,
+        h: r.h + padY * 2.4,
       },
       {
         id: textId,
@@ -712,8 +712,8 @@ function getLuminance(hex: string): number {
     snapshot();
     const page = pages[pageIndex];
     if (!page) return;
-    const padX = 2.0 / page.width;
-    const padY = 2.5 / page.height;
+    const padX = Math.max(3.5 / page.width, 0.005);
+    const padY = Math.max(4.0 / page.height, 0.006);
     const coverId = crypto.randomUUID();
     const textId = crypto.randomUUID();
 
@@ -733,8 +733,8 @@ function getLuminance(hex: string): number {
         color: "#ffffff",
         x: Math.max(0, line.x - padX),
         y: Math.max(0, line.y - padY),
-        w: line.w + padX * 2,
-        h: line.h + padY * 2,
+        w: line.w + padX * 2.2,
+        h: line.h + padY * 2.4,
       },
       {
         id: textId,
@@ -1428,10 +1428,11 @@ function getLuminance(hex: string): number {
               a.isItalic
             );
             const size = a.size ?? 14;
+            const baselineY = py - size * 0.82;
             a.text.split("\n").forEach((line, n) => {
               page.drawText(line, {
                 x: px,
-                y: py - size - n * size * 1.2,
+                y: baselineY - n * size * 1.15,
                 size,
                 font,
                 color: hexToRgb(a.color || "#000000"),
@@ -1451,8 +1452,10 @@ function getLuminance(hex: string): number {
               height: (a.h ?? 0.12) * height,
             });
           } else if (a.type === "formfield") {
-            const size = a.size ?? 13;
+            const size = a.size ?? 12;
             const textVal = a.fieldValue || a.text || "";
+            const fw = (a.w ?? 0.16) * width;
+            const fh = (a.h ?? 0.028) * height;
 
             if (a.fieldType === "checkbox") {
               const isChecked = a.fieldValue === "on" || a.fieldValue === "true";
@@ -1466,16 +1469,27 @@ function getLuminance(hex: string): number {
                 });
               }
             } else if (textVal) {
+              // 1. Draw opaque white background cover to completely erase/cover any previous text underneath
+              page.drawRectangle({
+                x: px,
+                y: py - fh,
+                width: fw,
+                height: fh,
+                color: rgb(1, 1, 1),
+              });
+
+              // 2. Draw clean replacement text neatly inside the field box
               const font = resolveFont(
                 a.fontCategory,
                 a.isBold,
                 a.isItalic
               );
               const fontColor = a.color ? hexToRgb(a.color) : rgb(0.05, 0.08, 0.15);
-              // Draw clean typed text directly onto document
+              const textY = py - fh + Math.max(2, (fh - size) / 2);
+
               page.drawText(textVal, {
-                x: px,
-                y: py - size - 2,
+                x: px + 3,
+                y: textY,
                 size,
                 font,
                 color: fontColor,
@@ -2165,8 +2179,8 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                           <div
                             className={`flex h-full w-full items-center rounded transition-all ${
                               isSelected
-                                ? "border-2 border-blue-600 bg-blue-50/50 shadow-xs"
-                                : "border border-blue-400/40 bg-blue-50/20 hover:border-blue-500 hover:bg-blue-50/30"
+                                ? "border-2 border-blue-600 bg-white shadow-xs"
+                                : "border border-blue-400/50 bg-white hover:border-blue-600"
                             } px-1.5 py-0.5`}
                           >
                             {a.fieldType === "checkbox" ? (
@@ -2267,7 +2281,17 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                         {isSelected && !isEditing && (
                           <div
                             onClick={(e) => e.stopPropagation()}
-                            className="absolute -top-10 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white/95 px-2 py-1 shadow-xl backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95 z-40"
+                            className={`absolute z-40 flex items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white/95 px-2 py-1 shadow-xl backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95 max-w-[90vw] whitespace-nowrap ${
+                              a.y < 0.08
+                                ? "top-[calc(100%+8px)]"
+                                : "-top-10"
+                            } ${
+                              a.x < 0.18
+                                ? "left-0 translate-x-0"
+                                : a.x > 0.72
+                                ? "right-0 translate-x-0"
+                                : "left-1/2 -translate-x-1/2"
+                            }`}
                           >
                             {/* SIGNATURE SPECIFIC TOOLBAR */}
                             {a.type === "signature" && (
@@ -2567,8 +2591,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                             )}
 
                             {(a.type === "whiteout" ||
-                              a.type === "highlight" ||
-                              a.type === "formfield") && (
+                              a.type === "highlight") && (
                               <div className="flex items-center gap-0.5 border-l border-slate-200 pl-1 dark:border-slate-700">
                                 <button
                                   onClick={() =>
