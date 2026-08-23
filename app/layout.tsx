@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -21,11 +22,13 @@ const TOOL_COUNT = getAllTools().length;
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const viewport: Viewport = {
@@ -144,16 +147,10 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon.svg" />
         <link rel="manifest" href="/manifest.webmanifest" />
 
-        {/* Warm up the ad origins so the first ad request is not paying for
-            DNS and TLS on top of the fetch. */}
-        <link
-          rel="preconnect"
-          href="https://pagead2.googlesyndication.com"
-          crossOrigin="anonymous"
-        />
-        {/* Google AdSense Script */}
-        <script
-          async
+        {/* Google AdSense Script - lazyOnload executes during idle time, eliminating unused JS penalty on mobile */}
+        <Script
+          id="google-adsense"
+          strategy="lazyOnload"
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5552044975820319"
           crossOrigin="anonymous"
         />

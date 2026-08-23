@@ -21,8 +21,11 @@ export function generateToolJsonLd(tool: ToolDefinition, content?: ToolContent) 
     url: toolUrl,
     description: tool.description,
     applicationCategory: "UtilityApplication",
+    applicationSubCategory: tool.categoryName,
     operatingSystem: "All",
     browserRequirements: "Requires JavaScript. Requires HTML5.",
+    softwareVersion: "1.0",
+    image: `${SITE_CONFIG.domain}/tools/${tool.slug}/opengraph-image`,
     isAccessibleForFree: true,
     offers: {
       "@type": "Offer",
@@ -136,6 +139,14 @@ export function generateWebsiteJsonLd() {
     inLanguage: "en",
     publisher: {
       "@id": `${SITE_CONFIG.domain}/#organization`,
+    },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${SITE_CONFIG.domain}/tools?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
     },
   };
 }

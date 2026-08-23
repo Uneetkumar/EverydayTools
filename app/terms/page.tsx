@@ -1,5 +1,6 @@
 import React from "react";
 import { constructPageMetadata } from "@/lib/seo/metadata";
+import { generateBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import Breadcrumbs from "@/components/Breadcrumbs";
 
 export const metadata = constructPageMetadata({
@@ -9,8 +10,18 @@ export const metadata = constructPageMetadata({
 });
 
 export default function TermsPage() {
+  const breadcrumbSchema = generateBreadcrumbJsonLd([
+    { name: "Home", path: "" },
+    { name: "Terms of Service", path: "/terms" },
+  ]);
+
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       <Breadcrumbs items={[{ name: "Terms of Service" }]} />
 
       <div className="space-y-3">
@@ -49,6 +60,7 @@ export default function TermsPage() {
           </p>
         </section>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

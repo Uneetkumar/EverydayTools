@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   PDFDocument,
   StandardFonts,
@@ -46,6 +47,15 @@ import {
   Bold,
   Italic,
   FileUp,
+  ChevronsLeft,
+  ChevronsRight,
+  Maximize2,
+  Minimize2,
+  ShieldCheck,
+  UserCheck,
+  Globe,
+  Sparkles,
+  Shapes,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { loadPdfJs, pdfDocumentOptions } from "@/lib/pdf/loader";
@@ -60,14 +70,14 @@ export type EditorTool =
   | "signature"
   | "image";
 
-export type EditorTab = "edit" | "pages" | "fields";
+export type EditorTab = "edit" | "annotate" | "forms" | "organize" | "batch";
 
 export type FontCategory = "sans-serif" | "serif" | "monospace";
 
 export interface Annot {
   id: string;
   page: number;
-  type: "text" | "whiteout" | "highlight" | "image" | "draw" | "signature";
+  type: "text" | "whiteout" | "highlight" | "image" | "draw" | "signature" | "formfield";
   x: number; // fraction of page width (0 to 1)
   y: number; // fraction of page height (0 to 1)
   w?: number; // fraction
@@ -82,6 +92,10 @@ export interface Annot {
   opacity?: number;
   points?: { x: number; y: number }[]; // for freehand draw (fractions)
   lineWidth?: number;
+  fieldName?: string;
+  fieldType?: "text" | "checkbox" | "dropdown";
+  fieldValue?: string;
+  fieldOptions?: string[];
 }
 
 export interface TextRun {
@@ -149,42 +163,30 @@ function detectFontProperties(
   isBold: boolean;
   isItalic: boolean;
 } {
-  const combined = `${fontName || ""} ${styleObj?.fontFamily || ""}`.toLowerCase();
+  const cleanName = (fontName || "").replace(/^[A-Z]{6}\+/i, "");
+  const cleanFamily = (styleObj?.fontFamily || "").replace(/^[A-Z]{6}\+/i, "");
+  const combined = `${cleanName} ${cleanFamily}`.toLowerCase();
 
   const isBold =
-    combined.includes("bold") ||
-    combined.includes("black") ||
-    combined.includes("heavy") ||
-    combined.includes("700") ||
-    combined.includes("800") ||
-    combined.includes("900") ||
-    /-b\b|_b\b|\bbold\b/i.test(combined);
+    /\b(bold|black|heavy|semibold|semi-bold|demibold|demi|medium|w[6-9]|700|800|900)\b/i.test(combined) ||
+    /[-_,](bd|bold|black|heavy|b|semibold|sb)\b/i.test(combined) ||
+    /boldmt|boldps/i.test(combined);
 
   const isItalic =
-    combined.includes("italic") ||
-    combined.includes("oblique") ||
-    combined.includes("slanted") ||
-    /-i\b|_i\b|\bitalic\b/i.test(combined);
+    /\b(italic|oblique|slanted|kursiv)\b/i.test(combined) ||
+    /[-_,](it|italic|oblique|i)\b/i.test(combined) ||
+    /italicmt|obliquemt/i.test(combined);
 
   let fontCategory: FontCategory = "sans-serif";
   if (
-    combined.includes("times") ||
-    combined.includes("serif") ||
-    combined.includes("georgia") ||
-    combined.includes("garamond") ||
-    combined.includes("roman") ||
-    combined.includes("cambria") ||
-    combined.includes("minion") ||
-    combined.includes("baskerville")
+    /\b(times|serif|georgia|garamond|roman|cambria|minion|baskerville|palatino|century|bookman|charter)\b/i.test(combined) ||
+    /[-_,](roman|serif)\b/i.test(combined) ||
+    /timesnewroman/i.test(combined)
   ) {
     fontCategory = "serif";
   } else if (
-    combined.includes("courier") ||
-    combined.includes("mono") ||
-    combined.includes("consolas") ||
-    combined.includes("code") ||
-    combined.includes("typewriter") ||
-    combined.includes("menlo")
+    /\b(courier|mono|consolas|code|typewriter|menlo|monaco|inconsolata|sourcecode)\b/i.test(combined) ||
+    /[-_,](mono|typewriter)\b/i.test(combined)
   ) {
     fontCategory = "monospace";
   }
@@ -205,6 +207,11 @@ export default function PdfEditor() {
   const [fields, setFields] = useState<FormFieldState[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // History stack for Undo / Redo
   const [history, setHistory] = useState<{ pages: PageState[]; annots: Annot[] }[]>([]);
@@ -234,6 +241,26 @@ export default function PdfEditor() {
   const sigCanvasRef = useRef<HTMLCanvasElement>(null);
   const isSigDrawing = useRef(false);
 
+  // Interactive Form Field Modal state
+  const [showFormFieldModal, setShowFormFieldModal] = useState(false);
+  const [formFieldName, setFormFieldName] = useState("");
+  const [formFieldType, setFormFieldType] = useState<"text" | "checkbox" | "dropdown">("text");
+  const [formFieldVal, setFormFieldVal] = useState("");
+  const [formFieldOpts, setFormFieldOpts] = useState("Option 1, Option 2, Option 3");
+  // Fullscreen state
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  useEffect(() => {
+    if (isFullscreen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isFullscreen]);
+
   // Drawing state
   const isDrawing = useRef(false);
   const currentDrawPoints = useRef<{ x: number; y: number }[]>([]);
@@ -242,6 +269,7 @@ export default function PdfEditor() {
   const stageRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<{ id: string; dx: number; dy: number; startX: number; startY: number } | null>(null);
+  const resizeRef = useRef<{ id: string; startX: number; startY: number; startW: number; startH: number; aspect: number } | null>(null);
   const inlineInputRef = useRef<HTMLTextAreaElement | null>(null);
   const sampleRef = useRef<CanvasRenderingContext2D | null>(null);
 
@@ -300,8 +328,12 @@ export default function PdfEditor() {
           e.preventDefault();
         }
       } else if (e.key === "Escape") {
-        setSelectedId(null);
-        setEditingId(null);
+        if (selectedId || editingId) {
+          setSelectedId(null);
+          setEditingId(null);
+        } else {
+          setIsFullscreen(false);
+        }
       }
     };
 
@@ -352,6 +384,15 @@ export default function PdfEditor() {
     }
   }, [editingId]);
 
+function getLuminance(hex: string): number {
+  const n = parseInt(hex.replace("#", ""), 16);
+  if (isNaN(n)) return 1;
+  const r = (n >> 16) & 255;
+  const g = (n >> 8) & 255;
+  const b = n & 255;
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+}
+
   /** Sample background colour of the text */
   const sampleBackground = (r: TextRun): string => {
     const ctx = sampleRef.current;
@@ -366,27 +407,33 @@ export default function PdfEditor() {
     const probe = (px: number, py: number) => {
       if (px < 0 || py < 0 || px >= W || py >= H) return;
       const d = ctx.getImageData(Math.floor(px), Math.floor(py), 1, 1).data;
+      if (d[3] < 128) return; // Skip transparent
       const key = toHex(d[0], d[1], d[2]);
-      counts.set(key, (counts.get(key) ?? 0) + 1);
+      // Only count light colors for background
+      if (getLuminance(key) > 0.4) {
+        counts.set(key, (counts.get(key) ?? 0) + 1);
+      }
     };
     for (let i = 0; i <= 10; i++) {
       const px = x0 + (w * i) / 10;
-      probe(px, y0 - Math.max(2, h * 0.35));
-      probe(px, y0 + h + Math.max(2, h * 0.35));
+      probe(px, y0 - Math.max(3, h * 0.4));
+      probe(px, y0 + h + Math.max(3, h * 0.4));
     }
     for (let i = 0; i <= 4; i++) {
       const py = y0 + (h * i) / 4;
-      probe(x0 - Math.max(3, w * 0.04), py);
-      probe(x0 + w + Math.max(3, w * 0.04), py);
+      probe(x0 - Math.max(4, w * 0.05), py);
+      probe(x0 + w + Math.max(4, w * 0.05), py);
     }
     let best = "#ffffff",
       n = 0;
-    for (const [k, v] of counts)
+    for (const [k, v] of counts) {
       if (v > n) {
         best = k;
         n = v;
       }
-    return best;
+    }
+    // Safeguard: paper background should always be clean white/light
+    return getLuminance(best) >= 0.5 ? best : "#ffffff";
   };
 
   /** Sample ink colour of the text */
@@ -404,13 +451,16 @@ export default function PdfEditor() {
     let bi = -1,
       bl = 1e9;
     for (let i = 0; i < d.length; i += 4) {
+      if (d[i + 3] < 128) continue;
       const lum = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
       if (lum < bl) {
         bl = lum;
         bi = i;
       }
     }
-    return bi < 0 ? "#000000" : toHex(d[bi], d[bi + 1], d[bi + 2]);
+    const sampled = bi < 0 ? "#000000" : toHex(d[bi], d[bi + 1], d[bi + 2]);
+    // If sampled ink is too light, force dark black for readability
+    return getLuminance(sampled) > 0.7 ? "#000000" : sampled;
   };
 
   const onFile = async (file: File | undefined) => {
@@ -435,6 +485,7 @@ export default function PdfEditor() {
 
       const next: PageState[] = [];
       const foundRuns: TextRun[] = [];
+      const foundFormAnnots: Annot[] = [];
 
       for (let i = 1; i <= doc.numPages; i++) {
         setStatus(`Rendering page ${i} of ${doc.numPages}…`);
@@ -447,12 +498,62 @@ export default function PdfEditor() {
 
         const base = page.getViewport({ scale: 1 });
 
+        // Extract widget annotations (AcroForms) to cleanly overlay and sync live text
+        try {
+          const annotations = await page.getAnnotations();
+          for (const annot of annotations) {
+            if (annot.subtype === "Widget" && annot.fieldName) {
+              const rect = annot.rect || [0, 0, 0, 0];
+              const x1 = Math.min(rect[0], rect[2]);
+              const x2 = Math.max(rect[0], rect[2]);
+              const y1 = Math.min(rect[1], rect[3]);
+              const y2 = Math.max(rect[1], rect[3]);
+              const fx = x1 / base.width;
+              const fy = (base.height - y2) / base.height;
+              const fw = Math.max(0.06, (x2 - x1) / base.width);
+              const fh = Math.max(0.03, (y2 - y1) / base.height);
+              const fType =
+                annot.fieldType === "Btn"
+                  ? "checkbox"
+                  : annot.fieldType === "Ch"
+                  ? "dropdown"
+                  : "text";
+              const fVal =
+                typeof annot.fieldValue === "string" ? annot.fieldValue : "";
+
+              foundFormAnnots.push({
+                id: `form-${i - 1}-${annot.fieldName}`,
+                page: i - 1,
+                type: "formfield",
+                x: fx,
+                y: fy,
+                w: fw,
+                h: fh,
+                fieldName: annot.fieldName,
+                fieldType: fType,
+                fieldValue: fVal,
+                text: fVal,
+                size: 12,
+              });
+            }
+          }
+        } catch {
+          // No widget annotations on this page
+        }
+
         try {
           const content = await page.getTextContent();
           content.items.forEach((item, k) => {
             if (!("str" in item) || !item.str.trim()) return;
             const t = pdfjs.Util.transform(base.transform, item.transform);
-            const size = Math.hypot(t[2], t[3]) || Math.hypot(t[0], t[1]) || 12;
+            const itemH =
+              "height" in item && typeof item.height === "number" && item.height > 0
+                ? item.height
+                : 0;
+            const scaleH = Math.hypot(t[2], t[3]) || Math.hypot(t[0], t[1]) || 0;
+            const rawSize =
+              itemH > 0 && itemH <= scaleH * 1.6 ? itemH : scaleH || 12;
+            const size = Math.round(rawSize * 10) / 10;
             if (size < 1) return;
             const width = item.width || item.str.length * size * 0.5;
 
@@ -522,6 +623,7 @@ export default function PdfEditor() {
       setPages(next);
       setRuns(foundRuns);
       setFields(foundFields);
+      setAnnots(foundFormAnnots);
       setPageIndex(0);
       setTab("edit");
       setStatus(null);
@@ -589,7 +691,175 @@ export default function PdfEditor() {
     setEditingId(textId);
   };
 
-  /** Stage click handler for placing tools */
+  /** Batch edit line handler */
+  const handleBatchLineSave = (
+    line: {
+      id: string;
+      originalText: string;
+      runs: TextRun[];
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      size: number;
+      fontCategory: FontCategory;
+      isBold: boolean;
+      isItalic: boolean;
+    },
+    newText: string
+  ) => {
+    if (!newText.trim() || newText === line.originalText) return;
+    snapshot();
+    const page = pages[pageIndex];
+    if (!page) return;
+    const padX = 2.0 / page.width;
+    const padY = 2.5 / page.height;
+    const coverId = crypto.randomUUID();
+    const textId = crypto.randomUUID();
+
+    // Mark all constituent runs as used
+    setUsedRuns((s) => {
+      const next = new Set(s);
+      line.runs.forEach((r) => next.add(r.id));
+      return next;
+    });
+
+    setAnnots((a) => [
+      ...a,
+      {
+        id: coverId,
+        page: pageIndex,
+        type: "whiteout",
+        color: "#ffffff",
+        x: Math.max(0, line.x - padX),
+        y: Math.max(0, line.y - padY),
+        w: line.w + padX * 2,
+        h: line.h + padY * 2,
+      },
+      {
+        id: textId,
+        page: pageIndex,
+        type: "text",
+        text: newText,
+        x: line.x,
+        y: line.y,
+        size: line.size,
+        color: "#000000",
+        fontCategory: line.fontCategory,
+        isBold: line.isBold,
+        isItalic: line.isItalic,
+      },
+    ]);
+  };
+
+  /** Helper to group raw text runs into coherent text lines for batch editing */
+  const getGroupedLines = () => {
+    const pageRuns = runs.filter((r) => r.page === pageIndex);
+    if (!pageRuns.length) return [];
+    const sorted = [...pageRuns].sort((a, b) => {
+      const dy = a.y - b.y;
+      if (Math.abs(dy) > 0.009) return dy;
+      return a.x - b.x;
+    });
+
+    const lines: {
+      id: string;
+      originalText: string;
+      currentText: string;
+      runs: TextRun[];
+      x: number;
+      y: number;
+      w: number;
+      h: number;
+      size: number;
+      fontCategory: FontCategory;
+      isBold: boolean;
+      isItalic: boolean;
+    }[] = [];
+
+    let currentLine: TextRun[] = [];
+
+    for (const r of sorted) {
+      if (!currentLine.length) {
+        currentLine.push(r);
+        continue;
+      }
+      const prev = currentLine[currentLine.length - 1];
+      if (Math.abs(r.y - prev.y) <= 0.009) {
+        currentLine.push(r);
+      } else {
+        const first = currentLine[0];
+        const minX = Math.min(...currentLine.map((x) => x.x));
+        const maxX = Math.max(...currentLine.map((x) => x.x + x.w));
+        const minY = Math.min(...currentLine.map((x) => x.y));
+        const maxH = Math.max(...currentLine.map((x) => x.h));
+        const text = currentLine.map((x) => x.str).join(" ").replace(/\s+/g, " ").trim();
+
+        // Check if there is an active edited annotation at this line
+        const existing = annots.find(
+          (a) =>
+            a.page === pageIndex &&
+            a.type === "text" &&
+            Math.abs(a.y - minY) < 0.015 &&
+            Math.abs(a.x - minX) < 0.05
+        );
+
+        if (text) {
+          lines.push({
+            id: currentLine.map((x) => x.id).join("_"),
+            originalText: text,
+            currentText: existing?.text || text,
+            runs: [...currentLine],
+            x: minX,
+            y: minY,
+            w: maxX - minX,
+            h: maxH,
+            size: first.size,
+            fontCategory: first.fontCategory,
+            isBold: currentLine.some((x) => x.isBold),
+            isItalic: currentLine.some((x) => x.isItalic),
+          });
+        }
+        currentLine = [r];
+      }
+    }
+
+    if (currentLine.length) {
+      const first = currentLine[0];
+      const minX = Math.min(...currentLine.map((x) => x.x));
+      const maxX = Math.max(...currentLine.map((x) => x.x + x.w));
+      const minY = Math.min(...currentLine.map((x) => x.y));
+      const maxH = Math.max(...currentLine.map((x) => x.h));
+      const text = currentLine.map((x) => x.str).join(" ").replace(/\s+/g, " ").trim();
+
+      const existing = annots.find(
+        (a) =>
+          a.page === pageIndex &&
+          a.type === "text" &&
+          Math.abs(a.y - minY) < 0.015 &&
+          Math.abs(a.x - minX) < 0.05
+      );
+
+      if (text) {
+        lines.push({
+          id: currentLine.map((x) => x.id).join("_"),
+          originalText: text,
+          currentText: existing?.text || text,
+          runs: [...currentLine],
+          x: minX,
+          y: minY,
+          w: maxX - minX,
+          h: maxH,
+          size: first.size,
+          fontCategory: first.fontCategory,
+          isBold: currentLine.some((x) => x.isBold),
+          isItalic: currentLine.some((x) => x.isItalic),
+        });
+      }
+    }
+
+    return lines;
+  };
   const handleStageClick = (e: React.MouseEvent) => {
     if (!stageRef.current) return;
     const r = stageRef.current.getBoundingClientRect();
@@ -708,6 +978,23 @@ export default function PdfEditor() {
     currentDrawPoints.current = [];
   };
 
+  /** Start corner drag resizing */
+  const startResizing = (e: React.PointerEvent, a: Annot) => {
+    e.stopPropagation();
+    if (!stageRef.current) return;
+    const w = a.w ?? (a.type === "signature" ? 0.28 : 0.25);
+    const h = a.h ?? (a.type === "signature" ? 0.1 : 0.04);
+    resizeRef.current = {
+      id: a.id,
+      startX: e.clientX,
+      startY: e.clientY,
+      startW: w,
+      startH: h,
+      aspect: w / Math.max(0.01, h),
+    };
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
   /** Pointer down on existing annotation for dragging */
   const onPointerDown = (e: React.PointerEvent, a: Annot) => {
     if (editingId === a.id) return;
@@ -725,12 +1012,34 @@ export default function PdfEditor() {
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
-  /** Pointer move for dragging */
+  /** Pointer move for dragging & resizing */
   const onPointerMove = (e: React.PointerEvent) => {
     if (tool === "draw") {
       onDrawMove(e);
       return;
     }
+    const res = resizeRef.current;
+    if (res && stageRef.current) {
+      const r = stageRef.current.getBoundingClientRect();
+      const dx = (e.clientX - res.startX) / r.width;
+      const targetAnnot = annots.find((a) => a.id === res.id);
+      const isAspectLocked =
+        targetAnnot?.type === "signature" || targetAnnot?.type === "image";
+
+      const newW = Math.max(0.04, Math.min(0.95, res.startW + dx));
+      const newH = isAspectLocked
+        ? Math.max(0.02, Math.min(0.9, newW / res.aspect))
+        : Math.max(
+            0.02,
+            Math.min(0.9, res.startH + (e.clientY - res.startY) / r.height)
+          );
+
+      setAnnots((list) =>
+        list.map((a) => (a.id === res.id ? { ...a, w: newW, h: newH } : a))
+      );
+      return;
+    }
+
     const d = dragRef.current;
     if (!d || !stageRef.current) return;
     const r = stageRef.current.getBoundingClientRect();
@@ -739,8 +1048,12 @@ export default function PdfEditor() {
     setAnnots((list) => list.map((a) => (a.id === d.id ? { ...a, x, y } : a)));
   };
 
-  /** End drag */
+  /** End drag or resize */
   const endDrag = () => {
+    if (resizeRef.current) {
+      snapshot();
+      resizeRef.current = null;
+    }
     if (dragRef.current) {
       const { id, startX, startY } = dragRef.current;
       const currentAnnot = annots.find((a) => a.id === id);
@@ -757,9 +1070,20 @@ export default function PdfEditor() {
 
   const removeAnnot = (id: string) => {
     snapshot();
+    const target = annots.find((a) => a.id === id);
+    if (target?.fieldName) {
+      setFields((list) => list.filter((f) => f.name !== target.fieldName));
+    }
     setAnnots((list) => list.filter((a) => a.id !== id));
     if (selectedId === id) setSelectedId(null);
     if (editingId === id) setEditingId(null);
+  };
+
+  const removeFormField = (name: string) => {
+    snapshot();
+    setFields((prev) => prev.filter((f) => f.name !== name));
+    setAnnots((prev) => prev.filter((a) => a.fieldName !== name));
+    setSelectedId(null);
   };
 
   const duplicateAnnot = (id: string) => {
@@ -823,6 +1147,72 @@ export default function PdfEditor() {
     ]);
     setSelectedId(id);
     setShowSignatureModal(false);
+    setTool("select");
+  };
+
+  /** Two-way Form Field value synchronization */
+  const updateFormFieldValue = (name: string, nextVal: string) => {
+    setFields((prev) => {
+      const exists = prev.some((f) => f.name === name);
+      if (exists) {
+        return prev.map((f) => (f.name === name ? { ...f, value: nextVal } : f));
+      }
+      return [...prev, { name, type: "text", value: nextVal }];
+    });
+    setAnnots((prev) =>
+      prev.map((a) =>
+        a.fieldName === name
+          ? { ...a, fieldValue: nextVal, text: nextVal }
+          : a
+      )
+    );
+  };
+
+  /** Insert Interactive Form Field */
+  const insertFormField = (
+    name: string,
+    type: "text" | "checkbox" | "dropdown" = "text",
+    val = "",
+    opts: string[] = []
+  ) => {
+    snapshot();
+    const id = crypto.randomUUID();
+    const fieldCleanName = name.trim() || `Field_${id.slice(0, 5)}`;
+    setAnnots((a) => [
+      ...a,
+      {
+        id,
+        page: pageIndex,
+        type: "formfield",
+        x: 0.2,
+        y: 0.25,
+        w: type === "checkbox" ? 0.035 : 0.16,
+        h: type === "checkbox" ? 0.03 : 0.028,
+        fieldName: fieldCleanName,
+        fieldType: type,
+        fieldValue: val,
+        fieldOptions: opts,
+        text: val,
+        size: fontSize || 12,
+        fontCategory: fontCategory || "sans-serif",
+        isBold,
+        isItalic,
+        color: textColor || "#0f172a",
+      },
+    ]);
+    setFields((prev) => [
+      ...prev.filter((f) => f.name !== fieldCleanName),
+      {
+        name: fieldCleanName,
+        type,
+        value: val,
+        options: opts,
+      },
+    ]);
+    setSelectedId(id);
+    setShowFormFieldModal(false);
+    setFormFieldName("");
+    setFormFieldVal("");
     setTool("select");
   };
 
@@ -1060,6 +1450,37 @@ export default function PdfEditor() {
               width: (a.w ?? 0.3) * width,
               height: (a.h ?? 0.12) * height,
             });
+          } else if (a.type === "formfield") {
+            const size = a.size ?? 13;
+            const textVal = a.fieldValue || a.text || "";
+
+            if (a.fieldType === "checkbox") {
+              const isChecked = a.fieldValue === "on" || a.fieldValue === "true";
+              if (isChecked) {
+                page.drawText("✓", {
+                  x: px + 2,
+                  y: py - size - 2,
+                  size: size + 2,
+                  font: helveticaBold,
+                  color: rgb(0.05, 0.08, 0.15),
+                });
+              }
+            } else if (textVal) {
+              const font = resolveFont(
+                a.fontCategory,
+                a.isBold,
+                a.isItalic
+              );
+              const fontColor = a.color ? hexToRgb(a.color) : rgb(0.05, 0.08, 0.15);
+              // Draw clean typed text directly onto document
+              page.drawText(textVal, {
+                x: px,
+                y: py - size - 2,
+                size,
+                font,
+                color: fontColor,
+              });
+            }
           } else if (a.type === "draw" && a.points && a.points.length > 1) {
             const drawColorRgb = hexToRgb(a.color || "#000000");
             for (let pIdx = 0; pIdx < a.points.length - 1; pIdx++) {
@@ -1096,7 +1517,7 @@ export default function PdfEditor() {
   }, []);
 
   const current = pages[pageIndex];
-  const selected = annots.find((a) => a.id === selectedId) ?? null;
+const selected = annots.find((a) => a.id === selectedId) ?? null;
   const pageAnnots = annots.filter((a) => a.page === pageIndex);
   const pageRuns = runs.filter(
     (r) => r.page === pageIndex && !usedRuns.has(r.id)
@@ -1104,32 +1525,73 @@ export default function PdfEditor() {
   const scale = current && stageW ? stageW / current.width : 1;
 
   return (
-    <div className="space-y-4">
-      {/* Upload Zone */}
-      {pages.length === 0 && (
-        <div className="relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-blue-400/60 dark:border-blue-500/40 bg-gradient-to-b from-blue-50/50 via-white to-slate-50/50 dark:from-slate-900/60 dark:via-slate-900 dark:to-slate-950 p-10 text-center transition-all hover:border-blue-500 hover:shadow-lg">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
-            <FileUp className="h-8 w-8" />
+    <div className="space-y-5">
+      {/* Top Header & Trust Badges */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/80 pb-4 dark:border-slate-800">
+        <div className="flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/20">
+            <Pencil className="h-6 w-6" />
           </div>
-          <div className="space-y-1">
-            <p className="text-base font-bold text-slate-900 dark:text-white">
-              Upload PDF to Edit Words & Match Fonts
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
+                PDF Editor
+              </h1>
+              <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300">
+                PRO STUDIO
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Edit text, add images, fill forms and annotate your PDF directly in the browser.
             </p>
-            <p className="max-w-md text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-              Click any text directly on the page to retype words with <strong>matching font style, weight, size, and color</strong>.
-            </p>
+          </div>
+        </div>
+
+        {/* Badges */}
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50/80 px-3 py-1.5 text-xs font-semibold text-emerald-700 shadow-2xs dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300">
+            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+            100% Private
+          </span>
+          <span className="flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/80 px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-2xs dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
+            <UserCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+            No Signup Required
+          </span>
+          <span className="flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50/80 px-3 py-1.5 text-xs font-semibold text-purple-700 shadow-2xs dark:border-purple-900/50 dark:bg-purple-950/40 dark:text-purple-300">
+            <Globe className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
+            Works in Browser
+          </span>
+        </div>
+      </div>
+
+      {/* Top Document / Uploader Action Bar */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 rounded-2xl border-2 border-dashed border-blue-400/70 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-blue-50/70 p-4 sm:p-5 shadow-xs transition-all hover:border-blue-500 hover:bg-blue-50/90 dark:border-blue-500/40 dark:from-blue-950/30 dark:via-indigo-950/20 dark:to-blue-950/30 dark:hover:border-blue-400">
+        {/* Left: Upload Target & Info with Small Compact Badges */}
+        <label className="group relative flex flex-1 cursor-pointer items-center gap-4 min-w-0">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600/10 text-blue-600 group-hover:scale-105 transition-transform dark:bg-blue-500/20 dark:text-blue-400">
+            <FileUp className="h-6 w-6" />
           </div>
 
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-            <span className="rounded-md bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300">
-              Font & Weight Matching
-            </span>
-            <span className="rounded-md bg-blue-50 px-2.5 py-1 text-[11px] font-medium text-blue-700 dark:bg-blue-950/50 dark:text-blue-300">
-              Direct In-Place Editing
-            </span>
-            <span className="rounded-md bg-amber-50 px-2.5 py-1 text-[11px] font-medium text-amber-700 dark:bg-amber-950/50 dark:text-amber-300">
-              100% Private (No Uploads)
-            </span>
+          <div className="min-w-0 space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate">
+                {pages.length > 0 ? "Replace PDF Document" : "Upload PDF to Edit"}
+              </p>
+
+              {/* Small Compact Alerts */}
+              <span className="inline-flex items-center gap-1 rounded-md border border-blue-200/80 bg-blue-100/50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/60 dark:text-blue-300">
+                Max 50 MB
+              </span>
+              <span className="inline-flex items-center gap-1 rounded-md border border-indigo-200/80 bg-indigo-100/50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/60 dark:text-indigo-300">
+                {pages.length > 0 ? `${pages.length} Pages Loaded` : "1 - 500 Pages"}
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+              {pages.length > 0
+                ? fileName
+                : "Click to browse or drag & drop your PDF file here · 100% private in-browser"}
+            </p>
           </div>
 
           <input
@@ -1140,8 +1602,34 @@ export default function PdfEditor() {
             aria-label="Choose a PDF"
             className="absolute inset-0 cursor-pointer opacity-0 disabled:cursor-wait"
           />
+        </label>
+
+        {/* Right Action Button: Choose PDF or Save PDF */}
+        <div className="shrink-0 flex items-center gap-2">
+          {pages.length === 0 ? (
+            <label className="relative flex cursor-pointer items-center justify-center rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/20 transition hover:bg-blue-700">
+              <span>Choose PDF File</span>
+              <input
+                type="file"
+                accept="application/pdf,.pdf"
+                disabled={busy}
+                onChange={(e) => onFile(e.target.files?.[0])}
+                aria-label="Choose a PDF"
+                className="absolute inset-0 cursor-pointer opacity-0 disabled:cursor-wait"
+              />
+            </label>
+          ) : (
+            <button
+              onClick={save}
+              disabled={pages.length === 0 || busy}
+              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/20 transition hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:pointer-events-none"
+            >
+              <Download className="h-4 w-4" />
+              <span>Save & Download PDF</span>
+            </button>
+          )}
         </div>
-      )}
+      </div>
 
       {busy && (
         <div className="flex items-center justify-center gap-3 rounded-2xl border border-blue-200 bg-blue-50/80 p-4 text-sm font-medium text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
@@ -1156,321 +1644,354 @@ export default function PdfEditor() {
         </div>
       )}
 
-      {/* Main PDF Editor Workspace */}
+      {/* Main Studio Workspace Layout */}
       {pages.length > 0 && !busy && (
-        <div className="space-y-3">
-          {/* Header Navigation & Main Actions Bar */}
-          <div className="sticky top-2 z-30 flex flex-wrap items-center justify-between gap-2.5 rounded-2xl border border-slate-200/80 bg-white/90 p-2.5 shadow-sm backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-900/90">
-            {/* Primary Mode Tabs */}
-            <div className="flex flex-wrap items-center gap-1.5">
-              {(
-                [
-                  ["edit", "Editor & Words", Pencil],
-                  [
-                    "fields",
-                    `Form Fields${fields.length ? ` (${fields.length})` : ""}`,
-                    ListChecks,
-                  ],
-                  ["pages", `Pages (${pages.length})`, Layers],
-                ] as const
-              ).map(([id, label, Icon]) => (
-                <button
-                  key={id}
-                  onClick={() => {
-                    setTab(id);
-                    setSelectedId(null);
-                    setEditingId(null);
-                  }}
-                  className={`flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold transition ${
-                    tab === id
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : "bg-slate-100/80 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" /> {label}
-                </button>
-              ))}
-            </div>
+        (() => {
+          const studioContent = (
+            <div
+              className={
+                isFullscreen
+                  ? "fixed inset-0 z-[999999] bg-slate-950 text-slate-100 flex flex-col h-screen w-screen overflow-hidden p-3 sm:p-4 select-none"
+                  : "space-y-4"
+              }
+            >
+              {/* Top Fullscreen Master Header (Single unified studio toolbar) */}
+              {isFullscreen && (
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/95 px-4 py-2.5 shadow-xl shrink-0">
+                  {/* Left: Document Info & Status */}
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600/20 text-blue-400">
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs sm:text-sm font-bold text-white truncate max-w-[180px] sm:max-w-xs">
+                        {fileName}
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        Page {pageIndex + 1} of {pages.length} · 100% In-Browser Private
+                      </p>
+                    </div>
+                  </div>
 
-            {/* Quick Actions (Undo, Redo, Zoom, Save) */}
-            <div className="flex items-center gap-1.5">
-              <button
-                onClick={undo}
-                disabled={!history.length}
-                title="Undo (Ctrl+Z)"
-                className="flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200 disabled:opacity-30 dark:bg-slate-800 dark:text-slate-200"
+                  {/* Center: Pagination & Zoom Controls */}
+                  <div className="flex items-center gap-2">
+                    {/* Pagination */}
+                    <div className="flex items-center gap-1 rounded-xl bg-slate-800/90 p-1 border border-slate-700">
+                      <button
+                        onClick={() => setPageIndex(0)}
+                        disabled={pageIndex === 0}
+                        title="First Page"
+                        className="rounded p-1 text-slate-300 hover:text-white disabled:opacity-30"
+                      >
+                        <ChevronsLeft className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+                        disabled={pageIndex === 0}
+                        title="Previous Page"
+                        className="rounded p-1 text-slate-300 hover:text-white disabled:opacity-30"
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" />
+                      </button>
+
+                      <span className="px-1.5 text-xs font-semibold tabular-nums text-white">
+                        {pageIndex + 1} / {pages.length}
+                      </span>
+
+                      <button
+                        onClick={() =>
+                          setPageIndex((p) => Math.min(pages.length - 1, p + 1))
+                        }
+                        disabled={pageIndex === pages.length - 1}
+                        title="Next Page"
+                        className="rounded p-1 text-slate-300 hover:text-white disabled:opacity-30"
+                      >
+                        <ChevronRight className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => setPageIndex(pages.length - 1)}
+                        disabled={pageIndex === pages.length - 1}
+                        title="Last Page"
+                        className="rounded p-1 text-slate-300 hover:text-white disabled:opacity-30"
+                      >
+                        <ChevronsRight className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Zoom */}
+                    <div className="flex items-center rounded-xl bg-slate-800/90 p-1 border border-slate-700">
+                      <button
+                        onClick={() => setZoom((z) => Math.max(0.4, z - 0.1))}
+                        title="Zoom Out"
+                        className="rounded p-1 text-slate-300 hover:text-white"
+                      >
+                        <Minus className="h-3 w-3" />
+                      </button>
+                      <span className="px-1.5 text-[11px] font-bold tabular-nums text-white">
+                        {Math.round(zoom * 100)}%
+                      </span>
+                      <button
+                        onClick={() => setZoom((z) => Math.min(3.0, z + 0.1))}
+                        title="Zoom In"
+                        className="rounded p-1 text-slate-300 hover:text-white"
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </div>
+
+                    <button
+                      onClick={() => setZoom(1)}
+                      title="Reset Zoom"
+                      className="rounded-lg bg-slate-800 px-2 py-1 text-[11px] font-semibold text-slate-300 hover:bg-slate-700 border border-slate-700"
+                    >
+                      100%
+                    </button>
+                    <button
+                      onClick={() => setZoom(1.35)}
+                      title="Fit Width (135%)"
+                      className="rounded-lg bg-slate-800 px-2 py-1 text-[11px] font-semibold text-slate-300 hover:bg-slate-700 border border-slate-700"
+                    >
+                      Fit Width
+                    </button>
+                  </div>
+
+                  {/* Right: Undo, Redo, Save PDF & Exit Fullscreen */}
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={undo}
+                      disabled={!history.length}
+                      title="Undo (Ctrl+Z)"
+                      className="flex items-center gap-1 rounded-lg bg-slate-800 px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 disabled:opacity-30 border border-slate-700"
+                    >
+                      <Undo2 className="h-3.5 w-3.5" />
+                    </button>
+
+                    <button
+                      onClick={redo}
+                      disabled={!redoStack.length}
+                      title="Redo (Ctrl+Y)"
+                      className="flex items-center gap-1 rounded-lg bg-slate-800 px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 disabled:opacity-30 border border-slate-700"
+                    >
+                      <Redo2 className="h-3.5 w-3.5" />
+                    </button>
+
+                    <button
+                      onClick={save}
+                      className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:from-blue-500 hover:to-indigo-500 transition"
+                    >
+                      <Download className="h-4 w-4" />
+                      <span>Save PDF</span>
+                    </button>
+
+                    <button
+                      onClick={() => setIsFullscreen(false)}
+                      title="Exit Full Screen (Esc)"
+                      className="flex items-center gap-1.5 rounded-xl bg-slate-800 px-3 py-2 text-xs font-bold text-slate-200 border border-slate-700 hover:bg-slate-700 hover:text-white transition"
+                    >
+                      <Minimize2 className="h-4 w-4 text-slate-400" />
+                      <span>Exit (Esc)</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* TWO-COLUMN SIDE-BY-SIDE GRID */}
+              <div
+                className={
+                  isFullscreen
+                    ? "flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-12 gap-4 h-full overflow-hidden"
+                    : "grid grid-cols-1 gap-4 lg:grid-cols-12 items-start"
+                }
               >
-                <Undo2 className="h-3.5 w-3.5" />
-              </button>
-
-              <button
-                onClick={redo}
-                disabled={!redoStack.length}
-                title="Redo (Ctrl+Y)"
-                className="flex items-center gap-1 rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200 disabled:opacity-30 dark:bg-slate-800 dark:text-slate-200"
-              >
-                <Redo2 className="h-3.5 w-3.5" />
-              </button>
-
-              <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
-
-              {/* Page Selector */}
-              <div className="flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 dark:bg-slate-800">
-                <button
-                  onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
-                  disabled={pageIndex === 0}
-                  className="rounded p-0.5 text-slate-600 hover:text-blue-600 disabled:opacity-30 dark:text-slate-300"
-                >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                </button>
-                <span className="text-[11px] font-semibold tabular-nums text-slate-700 dark:text-slate-200">
-                  {pageIndex + 1} / {pages.length}
-                </span>
-                <button
-                  onClick={() =>
-                    setPageIndex((p) => Math.min(pages.length - 1, p + 1))
+                {/* LEFT & CENTER CANVAS STAGE (8 COLS) */}
+                <div
+                  className={
+                    isFullscreen
+                      ? "lg:col-span-8 h-full min-h-0 flex flex-col"
+                      : "space-y-3 lg:col-span-8"
                   }
-                  disabled={pageIndex === pages.length - 1}
-                  className="rounded p-0.5 text-slate-600 hover:text-blue-600 disabled:opacity-30 dark:text-slate-300"
                 >
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </button>
-              </div>
+                  {/* Inline Stage Workspace Toolbar (Only shown in standard non-fullscreen mode) */}
+                  {!isFullscreen && (
+                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200/80 bg-white/95 p-2.5 shadow-2xs backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-900/95">
+                      {/* Document Preview & Pagination */}
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                          <FileText className="h-4 w-4 text-blue-600" /> Document Preview
+                        </span>
 
-              {/* Export PDF */}
-              <button
-                onClick={save}
-                className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition hover:from-blue-700 hover:to-indigo-700 hover:shadow-md"
+                        <div className="flex items-center gap-1 rounded-xl bg-slate-100/90 p-1 dark:bg-slate-800">
+                          <button
+                            onClick={() => setPageIndex(0)}
+                            disabled={pageIndex === 0}
+                            title="First Page"
+                            className="rounded p-1 text-slate-600 hover:text-blue-600 disabled:opacity-30 dark:text-slate-300"
+                          >
+                            <ChevronsLeft className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
+                            disabled={pageIndex === 0}
+                            title="Previous Page"
+                            className="rounded p-1 text-slate-600 hover:text-blue-600 disabled:opacity-30 dark:text-slate-300"
+                          >
+                            <ChevronLeft className="h-3.5 w-3.5" />
+                          </button>
+
+                          <span className="px-1 text-xs font-semibold tabular-nums text-slate-700 dark:text-slate-200">
+                            {pageIndex + 1} / {pages.length}
+                          </span>
+
+                          <button
+                            onClick={() =>
+                              setPageIndex((p) => Math.min(pages.length - 1, p + 1))
+                            }
+                            disabled={pageIndex === pages.length - 1}
+                            title="Next Page"
+                            className="rounded p-1 text-slate-600 hover:text-blue-600 disabled:opacity-30 dark:text-slate-300"
+                          >
+                            <ChevronRight className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            onClick={() => setPageIndex(pages.length - 1)}
+                            disabled={pageIndex === pages.length - 1}
+                            title="Last Page"
+                            className="rounded p-1 text-slate-600 hover:text-blue-600 disabled:opacity-30 dark:text-slate-300"
+                          >
+                            <ChevronsRight className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Zoom, Fullscreen, Undo, Redo, Download Actions */}
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => setIsFullscreen(true)}
+                          title="Enter Full Screen (Maximize view)"
+                          className="flex items-center gap-1.5 rounded-xl bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/80 dark:text-indigo-300 dark:hover:bg-indigo-900 transition shadow-2xs"
+                        >
+                          <Maximize2 className="h-3.5 w-3.5" />
+                          <span>Full Screen</span>
+                        </button>
+
+                        <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
+
+                        <div className="flex items-center rounded-xl bg-slate-100/90 p-0.5 dark:bg-slate-800">
+                          <button
+                            onClick={() => setZoom((z) => Math.max(0.4, z - 0.1))}
+                            title="Zoom Out"
+                            className="rounded p-1 text-slate-600 hover:text-blue-600 dark:text-slate-300"
+                          >
+                            <Minus className="h-3 w-3" />
+                          </button>
+                          <span className="px-1 text-[11px] font-bold tabular-nums text-slate-700 dark:text-slate-200">
+                            {Math.round(zoom * 100)}%
+                          </span>
+                          <button
+                            onClick={() => setZoom((z) => Math.min(3.0, z + 0.1))}
+                            title="Zoom In"
+                            className="rounded p-1 text-slate-600 hover:text-blue-600 dark:text-slate-300"
+                          >
+                            <Plus className="h-3 w-3" />
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => setZoom(1)}
+                          title="Reset Zoom to 100%"
+                          className="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                        >
+                          100%
+                        </button>
+
+                        <button
+                          onClick={() => setZoom(1.35)}
+                          title="Large View (135%)"
+                          className="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
+                        >
+                          Fit Width
+                        </button>
+
+                        <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
+
+                        <button
+                          onClick={undo}
+                          disabled={!history.length}
+                          title="Undo (Ctrl+Z)"
+                          className="flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-200 disabled:opacity-30 dark:bg-slate-800 dark:text-slate-200"
+                        >
+                          <Undo2 className="h-3.5 w-3.5" />
+                        </button>
+
+                        <button
+                          onClick={redo}
+                          disabled={!redoStack.length}
+                          title="Redo (Ctrl+Y)"
+                          className="flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-200 disabled:opacity-30 dark:bg-slate-800 dark:text-slate-200"
+                        >
+                          <Redo2 className="h-3.5 w-3.5" />
+                        </button>
+
+                        <button
+                          onClick={save}
+                          className="flex items-center gap-1 rounded-xl bg-blue-600 px-3 py-1 text-xs font-bold text-white shadow-2xs transition hover:bg-blue-700"
+                        >
+                          <Download className="h-3.5 w-3.5" /> Download
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Canvas Stage with Left Thumbnail Filmstrip */}
+                  <div
+                    className={`flex gap-3 rounded-2xl border border-slate-200/90 bg-slate-100/70 p-3 dark:border-slate-800 dark:bg-slate-950/60 ${
+                      isFullscreen
+                        ? "flex-1 min-h-0 h-full overflow-hidden"
+                        : "min-h-[750px] lg:h-[820px]"
+                    }`}
+                  >
+              {/* Left Page Filmstrip (Compact Thumbnails) */}
+              <div
+                className={`hidden sm:flex flex-col gap-2 overflow-y-auto w-20 shrink-0 pr-1 select-none ${
+                  isFullscreen ? "h-full" : "max-h-[760px]"
+                }`}
               >
-                <Download className="h-3.5 w-3.5" /> Save PDF
-              </button>
-            </div>
-          </div>
-
-          {/* EDIT MODE */}
-          {tab === "edit" && current && (
-            <div className="space-y-3">
-              {/* Secondary Visual Tool Bar & Active Font Controls */}
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/90 bg-slate-50/90 p-2 dark:border-slate-800 dark:bg-slate-900/60">
-                <div className="flex flex-wrap items-center gap-1.5">
+                {pages.map((p, i) => (
                   <button
-                    onClick={() => {
-                      setTool("select");
-                      setEditingId(null);
-                    }}
-                    title="Click any word to edit with matching font"
-                    className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                      tool === "select"
-                        ? "bg-blue-600 text-white shadow-xs"
-                        : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                    key={`${p.sourceIndex}-${i}`}
+                    onClick={() => setPageIndex(i)}
+                    className={`group relative aspect-[3/4] w-full overflow-hidden rounded-xl border-2 transition-all ${
+                      pageIndex === i
+                        ? "border-blue-600 ring-2 ring-blue-500/30 shadow-md scale-105"
+                        : "border-slate-200 bg-white opacity-70 hover:opacity-100 dark:border-slate-800 dark:bg-slate-900"
                     }`}
                   >
-                    <MousePointer2 className="h-3.5 w-3.5" /> Edit Words & Select
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setTool("text");
-                      setSelectedId(null);
-                      setEditingId(null);
-                    }}
-                    title="Click anywhere to type new text"
-                    className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
-                      tool === "text"
-                        ? "bg-blue-600 text-white shadow-xs"
-                        : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                    }`}
-                  >
-                    <Type className="h-3.5 w-3.5" /> Add Text
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setTool("whiteout");
-                      setSelectedId(null);
-                      setEditingId(null);
-                    }}
-                    title="Cover any area with background color"
-                    className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
-                      tool === "whiteout"
-                        ? "bg-blue-600 text-white shadow-xs"
-                        : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                    }`}
-                  >
-                    <Square className="h-3.5 w-3.5" /> Cover Area
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      setTool("highlight");
-                      setSelectedId(null);
-                      setEditingId(null);
-                    }}
-                    title="Highlight text with marker"
-                    className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition ${
-                      tool === "highlight"
-                        ? "bg-amber-500 text-white shadow-xs"
-                        : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                    }`}
-                  >
-                    <Highlighter className="h-3.5 w-3.5" /> Highlight
-                  </button>
-
-                  <button
-                    onClick={() => setShowSignatureModal(true)}
-                    title="Draw or insert signature"
-                    className="flex items-center gap-1.5 rounded-lg bg-white border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                  >
-                    <PenTool className="h-3.5 w-3.5" /> Sign
-                  </button>
-
-                  <label className="relative flex cursor-pointer items-center gap-1.5 rounded-lg bg-white border border-slate-200 px-2.5 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200">
-                    <ImageIcon className="h-3.5 w-3.5" /> Image
-                    <input
-                      type="file"
-                      accept="image/png,image/jpeg"
-                      onChange={(e) => addImage(e.target.files?.[0])}
-                      className="absolute inset-0 cursor-pointer opacity-0"
-                    />
-                  </label>
-                </div>
-
-                {/* Font Styling Controls for Text */}
-                <div className="flex items-center gap-1.5">
-                  {/* Font Family Selector */}
-                  <select
-                    value={fontCategory}
-                    onChange={(e) => {
-                      const cat = e.target.value as FontCategory;
-                      setFontCategory(cat);
-                      if (selectedId) patch(selectedId, { fontCategory: cat });
-                    }}
-                    className="rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                  >
-                    <option value="sans-serif">Sans (Helvetica / Arial)</option>
-                    <option value="serif">Serif (Times New Roman)</option>
-                    <option value="monospace">Mono (Courier New)</option>
-                  </select>
-
-                  {/* Font Size Selector */}
-                  <div className="flex items-center rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800">
-                    <button
-                      onClick={() => {
-                        const next = Math.max(6, fontSize - 1);
-                        setFontSize(next);
-                        if (selectedId) patch(selectedId, { size: next });
-                      }}
-                      className="p-1 text-slate-500 hover:text-blue-600"
-                      title="Decrease font size"
+                    {p.thumbnail && (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img
+                        src={p.thumbnail}
+                        alt={`Page ${i + 1}`}
+                        style={{ transform: `rotate(${p.rotation}deg)` }}
+                        className="h-full w-full object-contain pointer-events-none"
+                      />
+                    )}
+                    <span
+                      className={`absolute bottom-1 right-1 rounded px-1 text-[9px] font-bold ${
+                        pageIndex === i
+                          ? "bg-blue-600 text-white"
+                          : "bg-black/60 text-white"
+                      }`}
                     >
-                      <Minus className="h-3 w-3" />
-                    </button>
-                    <span className="px-1 text-[11px] font-semibold tabular-nums text-slate-700 dark:text-slate-200">
-                      {fontSize}pt
+                      {i + 1}
                     </span>
-                    <button
-                      onClick={() => {
-                        const next = Math.min(72, fontSize + 1);
-                        setFontSize(next);
-                        if (selectedId) patch(selectedId, { size: next });
-                      }}
-                      className="p-1 text-slate-500 hover:text-blue-600"
-                      title="Increase font size"
-                    >
-                      <Plus className="h-3 w-3" />
-                    </button>
-                  </div>
-
-                  {/* Bold & Italic Toggles */}
-                  <button
-                    onClick={() => {
-                      const next = !isBold;
-                      setIsBold(next);
-                      if (selectedId) patch(selectedId, { isBold: next });
-                    }}
-                    title="Bold"
-                    className={`rounded-lg p-1.5 border transition ${
-                      isBold
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                    }`}
-                  >
-                    <Bold className="h-3.5 w-3.5" />
                   </button>
-
-                  <button
-                    onClick={() => {
-                      const next = !isItalic;
-                      setIsItalic(next);
-                      if (selectedId) patch(selectedId, { isItalic: next });
-                    }}
-                    title="Italic"
-                    className={`rounded-lg p-1.5 border transition ${
-                      isItalic
-                        ? "bg-blue-600 text-white border-blue-600"
-                        : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-                    }`}
-                  >
-                    <Italic className="h-3.5 w-3.5" />
-                  </button>
-
-                  {/* Color Picker */}
-                  <div className="relative flex items-center">
-                    <input
-                      type="color"
-                      value={textColor}
-                      onChange={(e) => {
-                        setTextColor(e.target.value);
-                        if (selectedId) patch(selectedId, { color: e.target.value });
-                      }}
-                      title="Font Color"
-                      className="h-7 w-7 cursor-pointer rounded-lg border border-slate-200 bg-transparent p-0 dark:border-slate-700"
-                    />
-                  </div>
-
-                  {/* Zoom Controls */}
-                  <div className="flex items-center gap-1 rounded-lg bg-white border border-slate-200 px-1 py-0.5 dark:border-slate-700 dark:bg-slate-800 ml-1">
-                    <button
-                      onClick={() => setZoom((z) => Math.max(0.7, z - 0.15))}
-                      title="Zoom Out"
-                      className="rounded p-1 text-slate-600 hover:text-blue-600 dark:text-slate-300"
-                    >
-                      <ZoomOut className="h-3 w-3" />
-                    </button>
-                    <span className="text-[10px] font-semibold tabular-nums text-slate-600 dark:text-slate-300">
-                      {Math.round(zoom * 100)}%
-                    </span>
-                    <button
-                      onClick={() => setZoom((z) => Math.min(1.7, z + 0.15))}
-                      title="Zoom In"
-                      className="rounded p-1 text-slate-600 hover:text-blue-600 dark:text-slate-300"
-                    >
-                      <ZoomIn className="h-3 w-3" />
-                    </button>
-                  </div>
-                </div>
+                ))}
               </div>
 
-              {/* Status Hint */}
-              <div className="flex items-center justify-between rounded-lg bg-blue-50/80 px-3 py-1.5 text-xs text-blue-800 dark:bg-blue-950/40 dark:text-blue-200">
-                <span>
-                  ✨ <strong>Auto-Font Match Active:</strong> Clicking any word auto-detects its exact font category (Serif/Sans/Mono), weight (Bold/Regular), size, and ink color!
-                </span>
-                {pageRuns.length > 0 && (
-                  <button
-                    onClick={() => setShowRuns((s) => !s)}
-                    className="flex items-center gap-1 text-[11px] font-medium text-blue-600 hover:underline dark:text-blue-400"
-                  >
-                    {showRuns ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
-                    {showRuns ? "Hide Word Boxes" : "Show Word Boxes"}
-                  </button>
-                )}
-              </div>
-
-              {/* Main Document Canvas Viewport */}
+              {/* Center Canvas Viewport */}
               <div
                 ref={containerRef}
-                className="relative overflow-auto rounded-2xl border border-slate-200 bg-slate-100/70 p-4 text-center dark:border-slate-800 dark:bg-slate-950/60"
+                className="relative flex-1 overflow-auto rounded-xl bg-white shadow-sm dark:bg-slate-900 p-2 sm:p-4 grid place-items-center"
               >
                 <div
                   ref={stageRef}
@@ -1478,11 +1999,12 @@ export default function PdfEditor() {
                   onPointerDown={tool === "draw" ? startDrawing : undefined}
                   onPointerMove={onPointerMove}
                   onPointerUp={endDrag}
+                  onPointerLeave={endDrag}
                   style={{
                     width: `${zoom * 100}%`,
                     maxWidth: zoom > 1 ? undefined : "100%",
                   }}
-                  className={`relative mx-auto overflow-hidden rounded-xl border border-slate-200 bg-white shadow-md dark:border-slate-800 ${
+                  className={`relative mx-auto overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 ${
                     tool === "select" ? "" : "cursor-crosshair"
                   }`}
                 >
@@ -1502,7 +2024,6 @@ export default function PdfEditor() {
 
                   {/* Detectable Text Runs Overlay (Click to Edit Words Directly!) */}
                   {tool === "select" &&
-                    showRuns &&
                     pageRuns.map((r) => (
                       <button
                         key={r.id}
@@ -1523,7 +2044,7 @@ export default function PdfEditor() {
                       </button>
                     ))}
 
-                  {/* Render All Annotations / User Placed Elements */}
+                  {/* Active Annotations Layer */}
                   {pageAnnots.map((a) => {
                     const isSelected = selectedId === a.id;
                     const isEditing = editingId === a.id;
@@ -1541,12 +2062,12 @@ export default function PdfEditor() {
                         onClick={(e) => {
                           e.stopPropagation();
                           setSelectedId(a.id);
-                          if (a.type === "text") {
+                          if (a.type === "text" || a.type === "formfield") {
                             setFontCategory(a.fontCategory || "sans-serif");
                             setIsBold(!!a.isBold);
                             setIsItalic(!!a.isItalic);
-                            setFontSize(a.size ?? 14);
-                            setTextColor(a.color ?? "#000000");
+                            setFontSize(a.size ?? 12);
+                            setTextColor(a.color ?? "#0f172a");
                           }
                         }}
                         onDoubleClick={(e) => {
@@ -1571,7 +2092,7 @@ export default function PdfEditor() {
                               : `${(a.h ?? 0.04) * 100}%`,
                           background:
                             a.type === "whiteout"
-                              ? a.color || "#ffffff"
+                              ? (a.color && getLuminance(a.color) >= 0.5 ? a.color : "#ffffff")
                               : a.type === "highlight"
                               ? a.color || "#fef08a"
                               : undefined,
@@ -1579,7 +2100,7 @@ export default function PdfEditor() {
                             a.type === "highlight"
                               ? a.opacity ?? 0.45
                               : undefined,
-                          color: a.type === "text" ? a.color || "#000000" : undefined,
+                          color: a.type === "text" ? (a.color && getLuminance(a.color) < 0.8 ? a.color : "#0f172a") : undefined,
                           fontSize:
                             a.type === "text"
                               ? `${(a.size ?? 14) * scale}px`
@@ -1595,50 +2116,125 @@ export default function PdfEditor() {
                             : "cursor-pointer"
                         }`}
                       >
-                        {/* DIRECT INLINE EDITING */}
-                        {a.type === "text" && isEditing ? (
-                          <div className="relative z-30" onClick={(e) => e.stopPropagation()}>
+                        {/* Text Annotation Rendering */}
+                        {a.type === "text" ? (
+                          isEditing ? (
                             <textarea
                               ref={inlineInputRef}
-                              value={a.text ?? ""}
-                              rows={Math.max(1, (a.text ?? "").split("\n").length)}
-                              onChange={(e) =>
-                                patch(a.id, { text: e.target.value })
-                              }
-                              onBlur={() => setEditingId(null)}
+                              defaultValue={a.text}
+                              onBlur={(e) => {
+                                patch(a.id, { text: e.target.value });
+                                setEditingId(null);
+                              }}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter" && !e.shiftKey) {
                                   e.preventDefault();
-                                  setEditingId(null);
-                                } else if (e.key === "Escape") {
+                                  patch(a.id, {
+                                    text: (e.target as HTMLTextAreaElement).value,
+                                  });
                                   setEditingId(null);
                                 }
                               }}
+                              autoFocus
                               style={{
                                 color: a.color || "#000000",
-                                fontSize: `${(a.size ?? 14) * scale}px`,
-                                lineHeight: 1.2,
-                                fontFamily: getFontFamilyCss(a.fontCategory),
+                                fontFamily:
+                                  a.fontCategory === "serif"
+                                    ? "Georgia, serif"
+                                    : a.fontCategory === "monospace"
+                                    ? "monospace"
+                                    : "Inter, system-ui, sans-serif",
                                 fontWeight: a.isBold ? 700 : 400,
                                 fontStyle: a.isItalic ? "italic" : "normal",
-                                minWidth: "80px",
+                                fontSize: `${(a.size ?? 14) * scale}px`,
                               }}
-                              className="m-0 rounded border border-blue-500 bg-white/95 px-1.5 py-0.5 shadow-lg outline-none ring-2 ring-blue-500/50 dark:bg-slate-900"
+                              className="block min-w-[60px] resize-none border-0 bg-transparent p-0 outline-none"
                             />
-                            <div className="absolute -top-7 left-0 flex items-center gap-1 rounded bg-slate-900 px-1.5 py-0.5 text-[10px] text-white shadow">
-                              <span>Press Enter to save</span>
-                              <button
-                                onClick={() => setEditingId(null)}
-                                className="ml-1 text-emerald-400 hover:text-emerald-300"
-                              >
-                                <Check className="h-3 w-3" />
-                              </button>
-                            </div>
-                          </div>
-                        ) : a.type === "text" ? (
-                          <span className="px-0.5">{a.text || " "}</span>
+                          ) : (
+                            <span
+                              onDoubleClick={() => setEditingId(a.id)}
+                              className="block px-0.5 whitespace-pre"
+                            >
+                              {a.text || " "}
+                            </span>
+                          )
                         ) : null}
 
+                        {/* Interactive Form Field - Clean, High-Contrast Visible Value Rendering */}
+                        {a.type === "formfield" && (
+                          <div
+                            className={`flex h-full w-full items-center rounded transition-all ${
+                              isSelected
+                                ? "border-2 border-blue-600 bg-blue-50/50 shadow-xs"
+                                : "border border-blue-400/40 bg-blue-50/20 hover:border-blue-500 hover:bg-blue-50/30"
+                            } px-1.5 py-0.5`}
+                          >
+                            {a.fieldType === "checkbox" ? (
+                              <label className="flex items-center gap-1.5 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={a.fieldValue === "on" || a.fieldValue === "true"}
+                                  onChange={(e) =>
+                                    updateFormFieldValue(
+                                      a.fieldName || "",
+                                      e.target.checked ? "on" : ""
+                                    )
+                                  }
+                                  className="h-4 w-4 rounded accent-blue-600 cursor-pointer"
+                                />
+                                {isSelected && (
+                                  <span className="text-[10px] font-bold text-blue-700 truncate">
+                                    {a.fieldName || "Check"}
+                                  </span>
+                                )}
+                              </label>
+                            ) : a.fieldType === "dropdown" ? (
+                              <select
+                                value={a.fieldValue || ""}
+                                onChange={(e) =>
+                                  updateFormFieldValue(
+                                    a.fieldName || "",
+                                    e.target.value
+                                  )
+                                }
+                                style={{
+                                  fontSize: `${Math.min(24, Math.max(8, (a.size ?? 12) * scale))}px`,
+                                  fontFamily: getFontFamilyCss(a.fontCategory),
+                                  fontWeight: a.isBold ? 700 : 400,
+                                  fontStyle: a.isItalic ? "italic" : "normal",
+                                  color: a.color || "#0f172a",
+                                }}
+                                className="w-full rounded border border-slate-300/80 bg-white/90 px-1 py-0.5 text-xs font-semibold text-slate-950 focus:outline-none cursor-pointer"
+                              >
+                                {(a.fieldOptions || ["Option 1", "Option 2"]).map((opt) => (
+                                  <option key={opt} value={opt} className="text-slate-950">
+                                    {opt}
+                                  </option>
+                                ))}
+                              </select>
+                            ) : (
+                              <input
+                                type="text"
+                                value={a.fieldValue ?? a.text ?? ""}
+                                placeholder={isSelected ? `[${a.fieldName || "Type value"}]` : "Type value..."}
+                                onChange={(e) =>
+                                  updateFormFieldValue(
+                                    a.fieldName || "",
+                                    e.target.value
+                                  )
+                                }
+                                style={{
+                                  fontSize: `${Math.min(26, Math.max(8, (a.size ?? 12) * scale))}px`,
+                                  fontFamily: getFontFamilyCss(a.fontCategory),
+                                  fontWeight: a.isBold ? 700 : 400,
+                                  fontStyle: a.isItalic ? "italic" : "normal",
+                                  color: a.color || "#0f172a",
+                                }}
+                                className="w-full border-0 bg-transparent p-0 text-xs font-bold text-slate-950 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+                              />
+                            )}
+                          </div>
+                        )}
                         {/* Image / Signature Rendering */}
                         {(a.type === "image" || a.type === "signature") &&
                           a.dataUrl && (
@@ -1651,12 +2247,241 @@ export default function PdfEditor() {
                             />
                           )}
 
+                        {/* Corner Drag-to-Resize Handle */}
+                        {isSelected &&
+                          (a.type === "signature" ||
+                            a.type === "image" ||
+                            a.type === "whiteout" ||
+                            a.type === "highlight" ||
+                            a.type === "formfield") && (
+                            <div
+                              onPointerDown={(e) => startResizing(e, a)}
+                              title="Drag handle to resize width & height"
+                              className="absolute -bottom-2 -right-2 z-30 flex h-4 w-4 cursor-se-resize items-center justify-center rounded-full border-2 border-white bg-blue-600 shadow-md ring-2 ring-blue-500/50 transition-transform hover:scale-125"
+                            >
+                              <div className="h-1 w-1 rounded-full bg-white" />
+                            </div>
+                          )}
+
                         {/* Floating Quick Action Pill above Selected Item */}
                         {isSelected && !isEditing && (
                           <div
                             onClick={(e) => e.stopPropagation()}
-                            className="absolute -top-9 left-1/2 flex -translate-x-1/2 items-center gap-1 rounded-xl border border-slate-200/90 bg-white/95 p-1 shadow-lg backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95"
+                            className="absolute -top-10 left-1/2 flex -translate-x-1/2 items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white/95 px-2 py-1 shadow-xl backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95 z-40"
                           >
+                            {/* SIGNATURE SPECIFIC TOOLBAR */}
+                            {a.type === "signature" && (
+                              <>
+                                <span className="flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                  <PenTool className="h-3 w-3" /> Signature
+                                </span>
+                                <div className="flex items-center gap-0.5 border-l border-slate-200 pl-1 dark:border-slate-700">
+                                  <button
+                                    onClick={() => {
+                                      const nw = Math.max(0.06, (a.w ?? 0.28) * 0.85);
+                                      const nh = Math.max(0.02, (a.h ?? 0.1) * 0.85);
+                                      patch(a.id, { w: nw, h: nh });
+                                    }}
+                                    title="Scale Down (-15%)"
+                                    className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                  >
+                                    <Minus className="h-3 w-3" /> Smaller
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      const nw = Math.min(0.95, (a.w ?? 0.28) * 1.15);
+                                      const nh = Math.min(0.9, (a.h ?? 0.1) * 1.15);
+                                      patch(a.id, { w: nw, h: nh });
+                                    }}
+                                    title="Scale Up (+15%)"
+                                    className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                  >
+                                    <Plus className="h-3 w-3" /> Larger
+                                  </button>
+                                </div>
+                                <div className="flex items-center gap-0.5 border-l border-slate-200 pl-1 dark:border-slate-700">
+                                  <button
+                                    onClick={() => patch(a.id, { w: 0.18, h: 0.06 })}
+                                    title="Small Preset"
+                                    className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                  >
+                                    S
+                                  </button>
+                                  <button
+                                    onClick={() => patch(a.id, { w: 0.28, h: 0.10 })}
+                                    title="Medium Preset"
+                                    className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                  >
+                                    M
+                                  </button>
+                                  <button
+                                    onClick={() => patch(a.id, { w: 0.40, h: 0.14 })}
+                                    title="Large Preset"
+                                    className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                  >
+                                    L
+                                  </button>
+                                </div>
+                                <button
+                                  onClick={() => setShowSignatureModal(true)}
+                                  title="Replace with new signature"
+                                  className="flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
+                                >
+                                  <RefreshCw className="h-2.5 w-2.5" /> Re-sign
+                                </button>
+                              </>
+                            )}
+
+                            {/* IMAGE SPECIFIC TOOLBAR */}
+                            {a.type === "image" && (
+                              <>
+                                <span className="flex items-center gap-1 rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                                  <ImageIcon className="h-3 w-3" /> Image
+                                </span>
+                                <div className="flex items-center gap-0.5 border-l border-slate-200 pl-1 dark:border-slate-700">
+                                  <button
+                                    onClick={() => {
+                                      const nw = Math.max(0.05, (a.w ?? 0.3) * 0.85);
+                                      const nh = Math.max(0.03, (a.h ?? 0.12) * 0.85);
+                                      patch(a.id, { w: nw, h: nh });
+                                    }}
+                                    title="Scale Down (-15%)"
+                                    className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                  >
+                                    <Minus className="h-3 w-3" /> Smaller
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      const nw = Math.min(0.95, (a.w ?? 0.3) * 1.15);
+                                      const nh = Math.min(0.9, (a.h ?? 0.12) * 1.15);
+                                      patch(a.id, { w: nw, h: nh });
+                                    }}
+                                    title="Scale Up (+15%)"
+                                    className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                  >
+                                    <Plus className="h-3 w-3" /> Larger
+                                  </button>
+                                </div>
+                                <div className="flex items-center gap-0.5 border-l border-slate-200 pl-1 dark:border-slate-700">
+                                  <button
+                                    onClick={() => patch(a.id, { w: 0.20, h: 0.08 })}
+                                    title="Small Preset"
+                                    className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                  >
+                                    S
+                                  </button>
+                                  <button
+                                    onClick={() => patch(a.id, { w: 0.35, h: 0.14 })}
+                                    title="Medium Preset"
+                                    className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                  >
+                                    M
+                                  </button>
+                                  <button
+                                    onClick={() => patch(a.id, { w: 0.55, h: 0.22 })}
+                                    title="Large Preset"
+                                    className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                  >
+                                    L
+                                  </button>
+                                </div>
+                              </>
+                            )}
+
+                            {/* FORM FIELD SPECIFIC TOOLBAR */}
+                            {a.type === "formfield" && (
+                              <>
+                                <span className="flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                  <FileText className="h-3 w-3" /> Field
+                                </span>
+
+                                {/* Font Category Selector */}
+                                <select
+                                  value={a.fontCategory || "sans-serif"}
+                                  onChange={(e) => {
+                                    const cat = e.target.value as FontCategory;
+                                    patch(a.id, { fontCategory: cat });
+                                    setFontCategory(cat);
+                                  }}
+                                  className="rounded border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                >
+                                  <option value="sans-serif">Sans</option>
+                                  <option value="serif">Serif</option>
+                                  <option value="monospace">Mono</option>
+                                </select>
+
+                                {/* Font Size Controls */}
+                                <div className="flex items-center gap-0.5 border-l border-slate-200 pl-1 dark:border-slate-700">
+                                  <button
+                                    onClick={() => {
+                                      const next = Math.max(6, (a.size ?? 12) - 1);
+                                      patch(a.id, { size: next });
+                                      setFontSize(next);
+                                    }}
+                                    title="Decrease Font Size"
+                                    className="rounded p-0.5 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                  >
+                                    <Minus className="h-3 w-3" />
+                                  </button>
+                                  <span className="px-1 text-[10px] font-bold text-slate-700 dark:text-slate-200 tabular-nums">
+                                    {a.size ?? 12}pt
+                                  </span>
+                                  <button
+                                    onClick={() => {
+                                      const next = Math.min(48, (a.size ?? 12) + 1);
+                                      patch(a.id, { size: next });
+                                      setFontSize(next);
+                                    }}
+                                    title="Increase Font Size"
+                                    className="rounded p-0.5 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                  >
+                                    <Plus className="h-3 w-3" />
+                                  </button>
+                                </div>
+
+                                {/* Bold Toggle */}
+                                <button
+                                  onClick={() => {
+                                    const next = !a.isBold;
+                                    patch(a.id, { isBold: next });
+                                    setIsBold(next);
+                                  }}
+                                  title="Toggle Bold"
+                                  className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                                    a.isBold
+                                      ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                                      : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                  }`}
+                                >
+                                  B
+                                </button>
+
+                                {/* Box Width Controls */}
+                                <div className="flex items-center gap-0.5 border-l border-slate-200 pl-1 dark:border-slate-700">
+                                  <button
+                                    onClick={() => {
+                                      const nw = Math.max(0.06, (a.w ?? 0.16) * 0.85);
+                                      patch(a.id, { w: nw });
+                                    }}
+                                    title="Make Box Narrower"
+                                    className="rounded px-1 py-0.5 text-[10px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                  >
+                                    - Width
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      const nw = Math.min(0.9, (a.w ?? 0.16) * 1.15);
+                                      patch(a.id, { w: nw });
+                                    }}
+                                    title="Make Box Wider"
+                                    className="rounded px-1 py-0.5 text-[10px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                  >
+                                    + Width
+                                  </button>
+                                </div>
+                              </>
+                            )}
+
                             {a.type === "text" && (
                               <>
                                 <button
@@ -1743,9 +2568,8 @@ export default function PdfEditor() {
 
                             {(a.type === "whiteout" ||
                               a.type === "highlight" ||
-                              a.type === "image" ||
-                              a.type === "signature") && (
-                              <>
+                              a.type === "formfield") && (
+                              <div className="flex items-center gap-0.5 border-l border-slate-200 pl-1 dark:border-slate-700">
                                 <button
                                   onClick={() =>
                                     patch(a.id, {
@@ -1753,9 +2577,9 @@ export default function PdfEditor() {
                                     })
                                   }
                                   title="Narrower"
-                                  className="rounded p-1 text-slate-600 hover:bg-slate-100 dark:text-slate-300"
+                                  className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                                 >
-                                  <Minus className="h-3 w-3" />
+                                  <Minus className="h-3 w-3" /> Width
                                 </button>
                                 <button
                                   onClick={() =>
@@ -1764,28 +2588,30 @@ export default function PdfEditor() {
                                     })
                                   }
                                   title="Wider"
-                                  className="rounded p-1 text-slate-600 hover:bg-slate-100 dark:text-slate-300"
+                                  className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                                 >
-                                  <Plus className="h-3 w-3" />
+                                  <Plus className="h-3 w-3" /> Width
                                 </button>
-                              </>
+                              </div>
                             )}
 
-                            <button
-                              onClick={() => duplicateAnnot(a.id)}
-                              title="Duplicate"
-                              className="rounded p-1 text-slate-600 hover:bg-slate-100 dark:text-slate-300"
-                            >
-                              <Copy className="h-3 w-3" />
-                            </button>
+                            <div className="flex items-center gap-0.5 border-l border-slate-200 pl-1 dark:border-slate-700">
+                              <button
+                                onClick={() => duplicateAnnot(a.id)}
+                                title="Duplicate"
+                                className="flex items-center gap-1 rounded p-1 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                              >
+                                <Copy className="h-3.5 w-3.5" />
+                              </button>
 
-                            <button
-                              onClick={() => removeAnnot(a.id)}
-                              title="Delete"
-                              className="rounded p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </button>
+                              <button
+                                onClick={() => removeAnnot(a.id)}
+                                title="Delete"
+                                className="flex items-center gap-1 rounded p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -1794,278 +2620,746 @@ export default function PdfEditor() {
                 </div>
               </div>
             </div>
-          )}
+          </div>
 
-          {/* FORM FIELDS MODE */}
-          {tab === "fields" && (
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="mb-4">
-                <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                  Interactive Form Fields
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {fields.length > 0
-                    ? `Found ${fields.length} interactive form fields in this document. Edit values below and save.`
-                    : "No interactive PDF form fields found in this document. Use the Editor tab to click and retype text directly."}
-                </p>
+          {/* RIGHT STUDIO SIDEBAR (4 COLS) */}
+          <div
+            className={
+              isFullscreen
+                ? "lg:col-span-4 h-full min-h-0 overflow-y-auto space-y-4 pr-1"
+                : "space-y-4 lg:col-span-4"
+            }
+          >
+            <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
+              {/* Studio Sidebar Tabs Header */}
+              <div className="flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+                {(
+                  [
+                    ["edit", "Edit", Pencil],
+                    ["annotate", "Annotate", PenTool],
+                    ["forms", "Forms", FileText],
+                    ["organize", "Organize", Layers],
+                  ] as const
+                ).map(([tabId, tabLabel, Icon]) => (
+                  <button
+                    key={tabId}
+                    onClick={() => {
+                      setTab(tabId);
+                      setSelectedId(null);
+                      setEditingId(null);
+                    }}
+                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition ${
+                      tab === tabId
+                        ? "bg-white text-blue-600 shadow-2xs dark:bg-slate-900 dark:text-blue-400"
+                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span>{tabLabel}</span>
+                  </button>
+                ))}
               </div>
 
-              {fields.length > 0 && (
-                <div className="grid grid-cols-1 gap-4 @2xl:grid-cols-2">
-                  {fields.map((f, i) => (
-                    <label
-                      key={f.name}
-                      className="space-y-1 rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-950/40"
-                    >
-                      <span className="block truncate text-xs font-semibold text-slate-700 dark:text-slate-300">
-                        {f.name}
-                      </span>
-                      {f.type === "dropdown" ? (
-                        <select
-                          value={f.value}
-                          onChange={(e) =>
-                            setFields((p) =>
-                              p.map((x, j) =>
-                                j === i ? { ...x, value: e.target.value } : x
-                              )
-                            )
-                          }
-                          className="w-full cursor-pointer rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-white"
-                        >
-                          {(f.options ?? []).map((o) => (
-                            <option key={o} value={o}>
-                              {o}
-                            </option>
-                          ))}
-                        </select>
-                      ) : f.type === "checkbox" ? (
-                        <div className="flex items-center gap-2 pt-1">
-                          <input
-                            type="checkbox"
-                            checked={!!f.value}
-                            onChange={(e) =>
-                              setFields((p) =>
-                                p.map((x, j) =>
-                                  j === i
-                                    ? { ...x, value: e.target.checked ? "on" : "" }
-                                    : x
-                                )
-                              )
-                            }
-                            className="h-5 w-5 cursor-pointer accent-blue-600 rounded"
-                          />
-                          <span className="text-xs text-slate-500">Checked</span>
+              {/* TAB 1: EDIT CONTENT */}
+              {tab === "edit" && (
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+                      Edit Content
+                    </h4>
+                    <div className="space-y-2">
+                      {/* Edit Text Card */}
+                      <button
+                        onClick={() => {
+                          setTool("select");
+                          setEditingId(null);
+                        }}
+                        className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
+                          tool === "select"
+                            ? "border-blue-500 bg-blue-50/70 dark:border-blue-500 dark:bg-blue-950/40"
+                            : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900"
+                        }`}
+                      >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 font-bold">
+                          <Type className="h-5 w-5" />
                         </div>
-                      ) : (
+                        <div>
+                          <div className="text-xs font-bold text-slate-900 dark:text-white">
+                            Edit Text
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                            Click any word to retype with matching font
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* Add Image Card */}
+                      <label className="w-full flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left transition-all hover:border-emerald-300 hover:bg-emerald-50/30 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-900">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
+                          <ImageIcon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-900 dark:text-white">
+                            Add Image
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                            Insert image from your device
+                          </div>
+                        </div>
                         <input
-                          type="text"
-                          value={f.value}
-                          onChange={(e) =>
-                            setFields((p) =>
-                              p.map((x, j) =>
-                                j === i ? { ...x, value: e.target.value } : x
-                              )
-                            )
-                          }
-                          className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                          type="file"
+                          accept="image/png,image/jpeg"
+                          onChange={(e) => addImage(e.target.files?.[0])}
+                          className="hidden"
                         />
-                      )}
-                    </label>
-                  ))}
+                      </label>
+
+                      {/* Add Shape / Cover Card */}
+                      <button
+                        onClick={() => {
+                          setTool("whiteout");
+                          setEditingId(null);
+                        }}
+                        className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
+                          tool === "whiteout"
+                            ? "border-amber-500 bg-amber-50/70 dark:border-amber-500 dark:bg-amber-950/40"
+                            : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900"
+                        }`}
+                      >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-600/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
+                          <Shapes className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-900 dark:text-white">
+                            Add Shape / Cover
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                            Draw shapes and cover areas
+                          </div>
+                        </div>
+                      </button>
+
+                      {/* Add Interactive Form Field Card (Quick Access) */}
+                      <button
+                        onClick={() => setShowFormFieldModal(true)}
+                        className="w-full flex items-center gap-3 rounded-xl border border-indigo-200 bg-indigo-50/40 p-3 text-left transition-all hover:border-indigo-400 hover:bg-indigo-50/80 dark:border-indigo-900/50 dark:bg-indigo-950/20 dark:hover:border-indigo-500"
+                      >
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
+                          <FileText className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <span>Add Form Field / Input</span>
+                            <span className="rounded bg-indigo-600 px-1.5 py-0.2 text-[9px] font-bold text-white">NEW</span>
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                            Place fillable text box, checkbox, or dropdown
+                          </div>
+                        </div>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Active Typography Toolset */}
+                  <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-950/40 space-y-2">
+                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                      Typography & Styling
+                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <select
+                        value={fontCategory}
+                        onChange={(e) => {
+                          const cat = e.target.value as FontCategory;
+                          setFontCategory(cat);
+                          if (selectedId) patch(selectedId, { fontCategory: cat });
+                        }}
+                        className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                      >
+                        <option value="sans-serif">Sans (Helvetica)</option>
+                        <option value="serif">Serif (Times)</option>
+                        <option value="monospace">Mono (Courier)</option>
+                      </select>
+
+                      <div className="flex items-center rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+                        <button
+                          onClick={() => {
+                            const next = Math.max(6, fontSize - 1);
+                            setFontSize(next);
+                            if (selectedId) patch(selectedId, { size: next });
+                          }}
+                          className="p-1 text-slate-500 hover:text-blue-600"
+                        >
+                          <Minus className="h-3 w-3" />
+                        </button>
+                        <span className="px-1 text-[11px] font-bold tabular-nums text-slate-700 dark:text-slate-200">
+                          {fontSize}pt
+                        </span>
+                        <button
+                          onClick={() => {
+                            const next = Math.min(72, fontSize + 1);
+                            setFontSize(next);
+                            if (selectedId) patch(selectedId, { size: next });
+                          }}
+                          className="p-1 text-slate-500 hover:text-blue-600"
+                        >
+                          <Plus className="h-3 w-3" />
+                        </button>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          const next = !isBold;
+                          setIsBold(next);
+                          if (selectedId) patch(selectedId, { isBold: next });
+                        }}
+                        className={`rounded-lg p-1.5 ${
+                          isBold
+                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                            : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                        }`}
+                      >
+                        <Bold className="h-3.5 w-3.5" />
+                      </button>
+
+                      <button
+                        onClick={() => {
+                          const next = !isItalic;
+                          setIsItalic(next);
+                          if (selectedId) patch(selectedId, { isItalic: next });
+                        }}
+                        className={`rounded-lg p-1.5 ${
+                          isItalic
+                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                            : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
+                        }`}
+                      >
+                        <Italic className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* PAGE TOOLS */}
+                  <div>
+                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+                      Page Tools
+                    </h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={() => rotatePage(pageIndex, -90)}
+                        className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white p-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" /> Rotate Left
+                      </button>
+                      <button
+                        onClick={() => rotatePage(pageIndex, 90)}
+                        className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white p-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+                      >
+                        <RotateCw className="h-3.5 w-3.5" /> Rotate Right
+                      </button>
+                      <button
+                        onClick={() => removePage(pageIndex)}
+                        disabled={pages.length <= 1}
+                        className="col-span-2 flex items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50/60 p-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-30 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" /> Delete Page {pageIndex + 1}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TAB 2: ANNOTATE */}
+              {tab === "annotate" && (
+                <div className="space-y-3">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+                    Annotation Tools
+                  </h4>
+
+                  {/* Signature Card */}
+                  <button
+                    onClick={() => setShowSignatureModal(true)}
+                    className="w-full flex items-center gap-3 rounded-xl border border-indigo-200 bg-indigo-50/60 p-3 text-left transition hover:border-indigo-300 hover:bg-indigo-50 dark:border-indigo-900/60 dark:bg-indigo-950/40"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
+                      <PenTool className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900 dark:text-white">
+                        Create Signature
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Draw or type a handwritten signature
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Highlighter Card */}
+                  <button
+                    onClick={() => {
+                      setTool("highlight");
+                      setSelectedId(null);
+                    }}
+                    className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
+                      tool === "highlight"
+                        ? "border-amber-500 bg-amber-50/80 dark:border-amber-500 dark:bg-amber-950/50"
+                        : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900"
+                    }`}
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
+                      <Highlighter className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900 dark:text-white">
+                        Highlighter
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Highlight text with vibrant colors
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Freehand Draw Card */}
+                  <button
+                    onClick={() => {
+                      setTool("draw");
+                      setSelectedId(null);
+                    }}
+                    className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
+                      tool === "draw"
+                        ? "border-blue-500 bg-blue-50/80 dark:border-blue-500 dark:bg-blue-950/50"
+                        : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900"
+                    }`}
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
+                      <Pencil className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold text-slate-900 dark:text-white">
+                        Freehand Draw
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                        Draw freehand lines and marks
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              )}
+
+              {/* TAB 3: FORMS */}
+              {tab === "forms" && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                      Document Fields ({fields.length})
+                    </h4>
+                    <button
+                      onClick={() => setShowFormFieldModal(true)}
+                      className="flex items-center gap-1 rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-bold text-white shadow-2xs hover:bg-indigo-700"
+                    >
+                      <Plus className="h-3.5 w-3.5" /> Add Field
+                    </button>
+                  </div>
+
+                  {fields.length > 0 ? (
+                    <div className="space-y-2.5 max-h-[480px] overflow-y-auto pr-1">
+                      {fields.map((f) => (
+                        <div
+                          key={f.name}
+                          className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-1 dark:border-slate-800 dark:bg-slate-950/40"
+                        >
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="font-bold text-slate-800 dark:text-slate-200 truncate">
+                              🏷️ {f.name}
+                            </span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="rounded bg-slate-200/80 px-1.5 py-0.2 text-[9px] uppercase font-mono text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                {f.type}
+                              </span>
+                              <button
+                                onClick={() => removeFormField(f.name)}
+                                title={`Delete field "${f.name}"`}
+                                className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 transition"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {f.type === "dropdown" ? (
+                            <select
+                              value={f.value}
+                              onChange={(e) =>
+                                updateFormFieldValue(f.name, e.target.value)
+                              }
+                              className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                            >
+                              {(f.options ?? ["Option 1", "Option 2"]).map((o) => (
+                                <option key={o} value={o}>
+                                  {o}
+                                </option>
+                              ))}
+                            </select>
+                          ) : f.type === "checkbox" ? (
+                            <div className="flex items-center gap-2 pt-0.5">
+                              <input
+                                type="checkbox"
+                                checked={f.value === "on" || f.value === "true"}
+                                onChange={(e) =>
+                                  updateFormFieldValue(
+                                    f.name,
+                                    e.target.checked ? "on" : ""
+                                  )
+                                }
+                                className="h-4 w-4 rounded accent-blue-600 cursor-pointer"
+                              />
+                              <span className="text-xs text-slate-600 dark:text-slate-400">Checked</span>
+                            </div>
+                          ) : (
+                            <input
+                              type="text"
+                              value={f.value}
+                              placeholder={`Enter value for ${f.name}...`}
+                              onChange={(e) =>
+                                updateFormFieldValue(f.name, e.target.value)
+                              }
+                              className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-xs text-slate-500 dark:border-slate-800">
+                      No interactive fields yet. Click <strong>"+ Add Field"</strong> to place text boxes, checkboxes, or dropdowns.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB 4: ORGANIZE */}
+              {tab === "organize" && (
+                <div className="space-y-3">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+                    Organize Pages ({pages.length})
+                  </h4>
+                  <div className="grid grid-cols-2 gap-2.5 max-h-[500px] overflow-y-auto pr-1">
+                    {pages.map((p, i) => (
+                      <div
+                        key={`${p.sourceIndex}-${i}`}
+                        className={`group relative flex flex-col overflow-hidden rounded-xl border transition-all ${
+                          pageIndex === i
+                            ? "border-blue-500 shadow-md ring-2 ring-blue-500/20"
+                            : "border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950"
+                        }`}
+                      >
+                        <div
+                          onClick={() => setPageIndex(i)}
+                          className="relative aspect-[3/4] cursor-pointer overflow-hidden grid place-items-center bg-slate-200/50 dark:bg-slate-900"
+                        >
+                          {p.thumbnail && (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img
+                              src={p.thumbnail}
+                              alt={`Page ${i + 1}`}
+                              style={{ transform: `rotate(${p.rotation}deg)` }}
+                              className="max-h-full max-w-full transition-transform pointer-events-none"
+                            />
+                          )}
+                          <span className="absolute left-1.5 top-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white shadow">
+                            {i + 1}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center justify-around border-t border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900">
+                          <button
+                            onClick={() => movePage(i, -1)}
+                            disabled={i === 0}
+                            title="Move Left"
+                            className="rounded p-1 text-slate-500 hover:text-blue-600 disabled:opacity-25"
+                          >
+                            <ArrowLeft className="h-3 w-3" />
+                          </button>
+                          <button
+                            onClick={() => rotatePage(i, 90)}
+                            title="Rotate Right"
+                            className="rounded p-1 text-slate-500 hover:text-blue-600"
+                          >
+                            <RotateCw className="h-3 w-3" />
+                          </button>
+                          <button
+                            onClick={() => removePage(i)}
+                            disabled={pages.length <= 1}
+                            title="Delete Page"
+                            className="rounded p-1 text-slate-500 hover:text-red-500 disabled:opacity-25"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
+                          <button
+                            onClick={() => movePage(i, 1)}
+                            disabled={i === pages.length - 1}
+                            title="Move Right"
+                            className="rounded p-1 text-slate-500 hover:text-blue-600 disabled:opacity-25"
+                          >
+                            <ArrowRight className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
-          )}
-
-          {/* PAGES MANAGER MODE */}
-          {tab === "pages" && (
-            <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                    Organize & Rotate Pages
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Reorder pages, rotate sideways sheets, or delete unwanted pages.
-                  </p>
-                </div>
-              </div>
-
-              <ul className="grid grid-cols-2 gap-4 @sm:grid-cols-3 @md:grid-cols-4 @xl:grid-cols-6">
-                {pages.map((p, i) => (
-                  <li
-                    key={`${p.sourceIndex}-${i}`}
-                    className="group relative flex flex-col overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950 transition hover:shadow-md"
-                  >
-                    <div className="relative aspect-[3/4] overflow-hidden grid place-items-center bg-slate-200/50 dark:bg-slate-900">
-                      {p.thumbnail && (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img
-                          src={p.thumbnail}
-                          alt={`Page ${i + 1}`}
-                          style={{ transform: `rotate(${p.rotation}deg)` }}
-                          className="max-h-full max-w-full transition-transform"
-                        />
-                      )}
-                      <span className="absolute left-2 top-2 rounded-md bg-black/70 px-2 py-0.5 text-xs font-bold text-white shadow">
-                        {i + 1}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-around border-t border-slate-200 bg-white p-1.5 dark:border-slate-800 dark:bg-slate-900">
-                      <button
-                        onClick={() => movePage(i, -1)}
-                        disabled={i === 0}
-                        title="Move Left"
-                        className="rounded p-1 text-slate-500 hover:text-blue-600 disabled:opacity-25"
-                      >
-                        <ArrowLeft className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => rotatePage(i, -90)}
-                        title="Rotate Left"
-                        className="rounded p-1 text-slate-500 hover:text-blue-600"
-                      >
-                        <RotateCcw className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => rotatePage(i, 90)}
-                        title="Rotate Right"
-                        className="rounded p-1 text-slate-500 hover:text-blue-600"
-                      >
-                        <RotateCw className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => removePage(i)}
-                        disabled={pages.length <= 1}
-                        title="Delete Page"
-                        className="rounded p-1 text-slate-500 hover:text-red-500 disabled:opacity-25"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => movePage(i, 1)}
-                        disabled={i === pages.length - 1}
-                        title="Move Right"
-                        className="rounded p-1 text-slate-500 hover:text-blue-600 disabled:opacity-25"
-                      >
-                        <ArrowRight className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
+          </div>
         </div>
+      </div>
+          );
+
+          return isFullscreen && mounted
+            ? createPortal(studioContent, document.body)
+            : studioContent;
+        })()
       )}
 
-      {/* SIGNATURE MODAL */}
-      {showSignatureModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <PenTool className="h-5 w-5 text-blue-600" /> Create Signature
-              </h3>
-              <button
-                onClick={() => setShowSignatureModal(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
+      {/* SIGNATURE MODAL - PORTALED TO BODY FOR EXACT CENTER */}
+      {showSignatureModal && mounted &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex min-h-screen w-screen items-center justify-center bg-black/65 backdrop-blur-xs p-4 overflow-y-auto">
+            <div className="relative m-auto w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <PenTool className="h-5 w-5 text-blue-600" /> Create Signature
+                </h3>
+                <button
+                  onClick={() => setShowSignatureModal(false)}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
 
-            {/* Draw vs Type Switcher */}
-            <div className="flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
-              <button
-                onClick={() => setSigMode("draw")}
-                className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${
-                  sigMode === "draw"
-                    ? "bg-white text-blue-600 shadow-xs dark:bg-slate-900 dark:text-blue-400"
-                    : "text-slate-600 dark:text-slate-400"
-                }`}
-              >
-                Draw Signature
-              </button>
-              <button
-                onClick={() => setSigMode("type")}
-                className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${
-                  sigMode === "type"
-                    ? "bg-white text-blue-600 shadow-xs dark:bg-slate-900 dark:text-blue-400"
-                    : "text-slate-600 dark:text-slate-400"
-                }`}
-              >
-                Type Signature
-              </button>
-            </div>
+              {/* Draw vs Type Switcher */}
+              <div className="flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+                <button
+                  onClick={() => setSigMode("draw")}
+                  className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${
+                    sigMode === "draw"
+                      ? "bg-white text-blue-600 shadow-xs dark:bg-slate-900 dark:text-blue-400"
+                      : "text-slate-600 dark:text-slate-400"
+                  }`}
+                >
+                  Draw Signature
+                </button>
+                <button
+                  onClick={() => setSigMode("type")}
+                  className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${
+                    sigMode === "type"
+                      ? "bg-white text-blue-600 shadow-xs dark:bg-slate-900 dark:text-blue-400"
+                      : "text-slate-600 dark:text-slate-400"
+                  }`}
+                >
+                  Type Signature
+                </button>
+              </div>
 
-            {sigMode === "draw" ? (
-              <div className="space-y-2">
-                <div className="rounded-xl border border-slate-300 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-950">
-                  <canvas
-                    ref={sigCanvasRef}
-                    width={460}
-                    height={160}
-                    onMouseDown={handleSigCanvasDown}
-                    onMouseMove={handleSigCanvasMove}
-                    onMouseUp={handleSigCanvasUp}
-                    onMouseLeave={handleSigCanvasUp}
-                    className="w-full cursor-crosshair rounded-lg bg-white touch-none"
+              {sigMode === "draw" ? (
+                <div className="space-y-2">
+                  <div className="rounded-xl border border-slate-300 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-950">
+                    <canvas
+                      ref={sigCanvasRef}
+                      width={460}
+                      height={160}
+                      onMouseDown={handleSigCanvasDown}
+                      onMouseMove={handleSigCanvasMove}
+                      onMouseUp={handleSigCanvasUp}
+                      onMouseLeave={handleSigCanvasUp}
+                      className="w-full cursor-crosshair rounded-lg bg-white touch-none"
+                    />
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-slate-500">Draw with mouse or touchscreen</span>
+                    <button
+                      onClick={clearSigCanvas}
+                      className="text-red-600 hover:underline"
+                    >
+                      Clear pad
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <input
+                    type="text"
+                    placeholder="Type your full name..."
+                    value={typedSigText}
+                    onChange={(e) => setTypedSigText(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 p-3 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                  />
+                  {typedSigText && (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-800 dark:bg-slate-950">
+                      <p
+                        style={{
+                          fontFamily:
+                            "'Brush Script MT', 'Dancing Script', cursive, sans-serif",
+                        }}
+                        className="text-3xl italic text-slate-800 dark:text-slate-100"
+                      >
+                        {typedSigText}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  onClick={() => setShowSignatureModal(false)}
+                  className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={sigMode === "draw" ? saveDrawnSignature : saveTypedSignature}
+                  className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700"
+                >
+                  Insert Signature
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
+
+      {/* INTERACTIVE FORM FIELD CREATOR MODAL - PORTALED TO BODY FOR EXACT CENTER */}
+      {showFormFieldModal && mounted &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex min-h-screen w-screen items-center justify-center bg-black/65 backdrop-blur-xs p-4 overflow-y-auto">
+            <div className="relative m-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-indigo-600" /> Add Interactive Form Field
+                </h3>
+                <button
+                  onClick={() => setShowFormFieldModal(false)}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              <p className="text-xs text-slate-500">
+                Create an interactive AcroForm field that anyone can click, fill out, and edit in Adobe Acrobat, Chrome, or any PDF reader.
+              </p>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Field Identifier Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. full_name, invoice_date, customer_sign, agreed_terms"
+                    value={formFieldName}
+                    onChange={(e) => setFormFieldName(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 p-2.5 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
                   />
                 </div>
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-500">Draw with mouse or touchscreen</span>
-                  <button
-                    onClick={clearSigCanvas}
-                    className="text-red-600 hover:underline"
-                  >
-                    Clear pad
-                  </button>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Field Type
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(
+                      [
+                        ["text", "Text Input"],
+                        ["checkbox", "Checkbox"],
+                        ["dropdown", "Dropdown"],
+                      ] as const
+                    ).map(([type, label]) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => setFormFieldType(type)}
+                        className={`rounded-xl border p-2 text-xs font-semibold transition ${
+                          formFieldType === type
+                            ? "border-indigo-600 bg-indigo-50 text-indigo-700 dark:border-indigo-500 dark:bg-indigo-950/60 dark:text-indigo-300 shadow-xs"
+                            : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                <input
-                  type="text"
-                  placeholder="Type your full name..."
-                  value={typedSigText}
-                  onChange={(e) => setTypedSigText(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 p-3 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                />
-                {typedSigText && (
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-800 dark:bg-slate-950">
-                    <p
-                      style={{
-                        fontFamily:
-                          "'Brush Script MT', 'Dancing Script', cursive, sans-serif",
-                      }}
-                      className="text-3xl italic text-slate-800 dark:text-slate-100"
-                    >
-                      {typedSigText}
-                    </p>
+
+                {formFieldType === "dropdown" ? (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Dropdown Options (comma separated)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Option 1, Option 2, Option 3"
+                      value={formFieldOpts}
+                      onChange={(e) => setFormFieldOpts(e.target.value)}
+                      className="w-full rounded-xl border border-slate-300 p-2.5 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    />
+                  </div>
+                ) : formFieldType === "checkbox" ? (
+                  <div className="flex items-center gap-2 pt-1">
+                    <input
+                      type="checkbox"
+                      checked={formFieldVal === "on"}
+                      onChange={(e) => setFormFieldVal(e.target.checked ? "on" : "")}
+                      className="h-4 w-4 rounded accent-indigo-600"
+                    />
+                    <span className="text-xs text-slate-600 dark:text-slate-400">Default checked</span>
+                  </div>
+                ) : (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                      Default Initial Value (optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. John Doe / Initial text"
+                      value={formFieldVal}
+                      onChange={(e) => setFormFieldVal(e.target.value)}
+                      className="w-full rounded-xl border border-slate-300 p-2.5 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
+                    />
                   </div>
                 )}
               </div>
-            )}
 
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={() => setShowSignatureModal(false)}
-                className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={sigMode === "draw" ? saveDrawnSignature : saveTypedSignature}
-                className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700"
-              >
-                Insert Signature
-              </button>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowFormFieldModal(false)}
+                  className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const opts =
+                      formFieldType === "dropdown"
+                        ? formFieldOpts
+                            .split(",")
+                            .map((s: string) => s.trim())
+                            .filter(Boolean)
+                        : [];
+                    insertFormField(formFieldName, formFieldType, formFieldVal, opts);
+                  }}
+                  className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700"
+                >
+                  Insert Field onto Page
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

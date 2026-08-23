@@ -17,12 +17,15 @@ export default function FloatingToolsBackground() {
     let width = 0;
     let height = 0;
 
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      return;
+    }
+
     const handleResize = () => {
       if (!canvas || !ctx) return;
       width = window.innerWidth;
       height = window.innerHeight;
 
-      // On mobile devices, don't run heavy Canvas particle RAF loops to maintain 120 FPS scrolling
       if (width < 768) {
         canvas.style.display = "none";
         return;
@@ -41,10 +44,6 @@ export default function FloatingToolsBackground() {
 
     handleResize();
     window.addEventListener("resize", handleResize);
-
-    if (window.innerWidth < 768) {
-      return () => window.removeEventListener("resize", handleResize);
-    }
 
     // Subtle micro-particles restricted to the side margins (outer 25% on each side)
     const particleCount = 14;
@@ -122,8 +121,8 @@ export default function FloatingToolsBackground() {
       {/* Subtle Dot Grid */}
       <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] dark:bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:32px_32px] opacity-20" />
 
-      {/* Subtle edge particles canvas with DPR zoom scaling */}
-      <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
+      {/* Subtle edge particles canvas with DPR zoom scaling (Desktop only) */}
+      <canvas ref={canvasRef} className="hidden md:block absolute inset-0 w-full h-full" />
     </div>
   );
 }

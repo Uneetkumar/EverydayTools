@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { constructPageMetadata } from "@/lib/seo/metadata";
+import { generateBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import ContactForm from "./ContactForm";
 
 /**
@@ -17,5 +18,18 @@ export const metadata: Metadata = constructPageMetadata({
 });
 
 export default function ContactPage() {
-  return <ContactForm />;
+  const breadcrumbSchema = generateBreadcrumbJsonLd([
+    { name: "Home", path: "" },
+    { name: "Contact & Support", path: "/contact" },
+  ]);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <ContactForm />
+    </>
+  );
 }

@@ -18,16 +18,24 @@ export default function PwaManager() {
   const [installedSuccessfully, setInstalledSuccessfully] = useState(false);
 
   useEffect(() => {
-    // 1. Register Service Worker
+    // 1. Register Service Worker on idle / load to prevent blocking FCP
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then((reg) => {
-          console.log("PWA Service Worker registered:", reg.scope);
-        })
-        .catch((err) => {
-          console.warn("PWA Service Worker registration skipped:", err);
-        });
+      const registerSW = () => {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then((reg) => {
+            console.log("PWA Service Worker registered:", reg.scope);
+          })
+          .catch((err) => {
+            console.warn("PWA Service Worker registration skipped:", err);
+          });
+      };
+
+      if (document.readyState === "complete") {
+        setTimeout(registerSW, 1500);
+      } else {
+        window.addEventListener("load", () => setTimeout(registerSW, 1500), { once: true });
+      }
     }
 
     // 2. Detect if already running in standalone (installed) mode

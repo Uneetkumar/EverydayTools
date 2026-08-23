@@ -1,5 +1,6 @@
 import React from "react";
 import { constructPageMetadata } from "@/lib/seo/metadata";
+import { generateBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { CheckCircle2, BookOpen, ShieldAlert, Cpu } from "lucide-react";
 
@@ -10,8 +11,18 @@ export const metadata = constructPageMetadata({
 });
 
 export default function EditorialPolicyPage() {
+  const breadcrumbSchema = generateBreadcrumbJsonLd([
+    { name: "Home", path: "" },
+    { name: "Editorial Policy", path: "/editorial-policy" },
+  ]);
+
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
       <Breadcrumbs items={[{ name: "Editorial & Accuracy Policy" }]} />
 
       <div className="space-y-3">
@@ -60,6 +71,7 @@ export default function EditorialPolicyPage() {
           </p>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

@@ -7,55 +7,62 @@ import { constructToolMetadata } from "@/lib/seo/metadata";
 import { generateToolJsonLd } from "@/lib/seo/jsonld";
 import ToolShell from "@/components/ToolShell";
 
-// Interactive Tool Components
-import PercentageCalculator from "@/components/tools/PercentageCalculator";
-import ProfitMarginCalculator from "@/components/tools/ProfitMarginCalculator";
-import CaseConverter from "@/components/tools/CaseConverter";
-import JsonFormatter from "@/components/tools/JsonFormatter";
-import DateDifferenceCalculator from "@/components/tools/DateDifferenceCalculator";
-import WordCounter from "@/components/tools/WordCounter";
-import PasswordGenerator from "@/components/tools/PasswordGenerator";
-import Base64Converter from "@/components/tools/Base64Converter";
-import JwtDecoder from "@/components/tools/JwtDecoder";
-import UuidGenerator from "@/components/tools/UuidGenerator";
-import UrlEncoderDecoder from "@/components/tools/UrlEncoderDecoder";
-import QrCodeGenerator from "@/components/tools/QrCodeGenerator";
-import ImageCompressor from "@/components/tools/ImageCompressor";
-import PdfMerge from "@/components/tools/PdfMerge";
-import PdfCompressor from "@/components/tools/PdfCompressor";
-import AgeCalculator from "@/components/tools/AgeCalculator";
-import GstCalculator from "@/components/tools/GstCalculator";
-import EmiCalculator from "@/components/tools/EmiCalculator";
-import DiscountCalculator from "@/components/tools/DiscountCalculator";
-import HashGenerator from "@/components/tools/HashGenerator";
-import TextDiffChecker from "@/components/tools/TextDiffChecker";
-import AiExplainer from "@/components/tools/AiExplainer";
+import dynamic from "next/dynamic";
 
-// New High Priority Tools
-import ImageToPdf from "@/components/tools/ImageToPdf";
-import PdfToWord from "@/components/tools/PdfToWord";
-import WatermarkRemover from "@/components/tools/WatermarkRemover";
-import PngToJpg from "@/components/tools/PngToJpg";
-import UnlockPdf from "@/components/tools/UnlockPdf";
-import CropImage from "@/components/tools/CropImage";
+const ToolLoading = () => (
+  <div className="flex min-h-[280px] items-center justify-center rounded-2xl border border-slate-200/80 bg-white/50 p-8 dark:border-slate-800/80 dark:bg-slate-900/50">
+    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+      <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+      <span>Loading tool...</span>
+    </div>
+  </div>
+);
 
-// PDF & image workspace tools
-import SplitPdf from "@/components/tools/SplitPdf";
-import PdfToJpg from "@/components/tools/PdfToJpg";
-import RotatePdf from "@/components/tools/RotatePdf";
-import AddPageNumbers from "@/components/tools/AddPageNumbers";
-import ImageResizer from "@/components/tools/ImageResizer";
-import FaviconGenerator from "@/components/tools/FaviconGenerator";
-import CurrencyConverter from "@/components/tools/CurrencyConverter";
-import SampleFileGenerator from "@/components/tools/SampleFileGenerator";
-import NotePad from "@/components/tools/NotePad";
-import TextToSpeech from "@/components/tools/TextToSpeech";
-import SpeechToText from "@/components/tools/SpeechToText";
-import MediaPlayer from "@/components/tools/MediaPlayer";
-import PdfEditor from "@/components/tools/PdfEditor";
-import VideoCutter from "@/components/tools/VideoCutter";
-import AudioRemover from "@/components/tools/AudioRemover";
-import VideoDownloader from "@/components/tools/VideoDownloader";
+// Interactive Tool Components (Dynamic lazy-loaded for maximum mobile performance)
+const PercentageCalculator = dynamic(() => import("@/components/tools/PercentageCalculator"), { loading: ToolLoading });
+const ProfitMarginCalculator = dynamic(() => import("@/components/tools/ProfitMarginCalculator"), { loading: ToolLoading });
+const CaseConverter = dynamic(() => import("@/components/tools/CaseConverter"), { loading: ToolLoading });
+const JsonFormatter = dynamic(() => import("@/components/tools/JsonFormatter"), { loading: ToolLoading });
+const DateDifferenceCalculator = dynamic(() => import("@/components/tools/DateDifferenceCalculator"), { loading: ToolLoading });
+const WordCounter = dynamic(() => import("@/components/tools/WordCounter"), { loading: ToolLoading });
+const PasswordGenerator = dynamic(() => import("@/components/tools/PasswordGenerator"), { loading: ToolLoading });
+const Base64Converter = dynamic(() => import("@/components/tools/Base64Converter"), { loading: ToolLoading });
+const JwtDecoder = dynamic(() => import("@/components/tools/JwtDecoder"), { loading: ToolLoading });
+const UuidGenerator = dynamic(() => import("@/components/tools/UuidGenerator"), { loading: ToolLoading });
+const UrlEncoderDecoder = dynamic(() => import("@/components/tools/UrlEncoderDecoder"), { loading: ToolLoading });
+const QrCodeGenerator = dynamic(() => import("@/components/tools/QrCodeGenerator"), { loading: ToolLoading });
+const ImageCompressor = dynamic(() => import("@/components/tools/ImageCompressor"), { loading: ToolLoading });
+const PdfMerge = dynamic(() => import("@/components/tools/PdfMerge"), { loading: ToolLoading });
+const PdfCompressor = dynamic(() => import("@/components/tools/PdfCompressor"), { loading: ToolLoading });
+const AgeCalculator = dynamic(() => import("@/components/tools/AgeCalculator"), { loading: ToolLoading });
+const GstCalculator = dynamic(() => import("@/components/tools/GstCalculator"), { loading: ToolLoading });
+const EmiCalculator = dynamic(() => import("@/components/tools/EmiCalculator"), { loading: ToolLoading });
+const DiscountCalculator = dynamic(() => import("@/components/tools/DiscountCalculator"), { loading: ToolLoading });
+const HashGenerator = dynamic(() => import("@/components/tools/HashGenerator"), { loading: ToolLoading });
+const TextDiffChecker = dynamic(() => import("@/components/tools/TextDiffChecker"), { loading: ToolLoading });
+const AiExplainer = dynamic(() => import("@/components/tools/AiExplainer"), { loading: ToolLoading });
+const ImageToPdf = dynamic(() => import("@/components/tools/ImageToPdf"), { loading: ToolLoading });
+const PdfToWord = dynamic(() => import("@/components/tools/PdfToWord"), { loading: ToolLoading });
+const WatermarkRemover = dynamic(() => import("@/components/tools/WatermarkRemover"), { loading: ToolLoading });
+const PngToJpg = dynamic(() => import("@/components/tools/PngToJpg"), { loading: ToolLoading });
+const UnlockPdf = dynamic(() => import("@/components/tools/UnlockPdf"), { loading: ToolLoading });
+const CropImage = dynamic(() => import("@/components/tools/CropImage"), { loading: ToolLoading });
+const SplitPdf = dynamic(() => import("@/components/tools/SplitPdf"), { loading: ToolLoading });
+const PdfToJpg = dynamic(() => import("@/components/tools/PdfToJpg"), { loading: ToolLoading });
+const RotatePdf = dynamic(() => import("@/components/tools/RotatePdf"), { loading: ToolLoading });
+const AddPageNumbers = dynamic(() => import("@/components/tools/AddPageNumbers"), { loading: ToolLoading });
+const ImageResizer = dynamic(() => import("@/components/tools/ImageResizer"), { loading: ToolLoading });
+const FaviconGenerator = dynamic(() => import("@/components/tools/FaviconGenerator"), { loading: ToolLoading });
+const CurrencyConverter = dynamic(() => import("@/components/tools/CurrencyConverter"), { loading: ToolLoading });
+const SampleFileGenerator = dynamic(() => import("@/components/tools/SampleFileGenerator"), { loading: ToolLoading });
+const NotePad = dynamic(() => import("@/components/tools/NotePad"), { loading: ToolLoading });
+const TextToSpeech = dynamic(() => import("@/components/tools/TextToSpeech"), { loading: ToolLoading });
+const SpeechToText = dynamic(() => import("@/components/tools/SpeechToText"), { loading: ToolLoading });
+const MediaPlayer = dynamic(() => import("@/components/tools/MediaPlayer"), { loading: ToolLoading });
+const PdfEditor = dynamic(() => import("@/components/tools/PdfEditor"), { loading: ToolLoading });
+const VideoCutter = dynamic(() => import("@/components/tools/VideoCutter"), { loading: ToolLoading });
+const AudioRemover = dynamic(() => import("@/components/tools/AudioRemover"), { loading: ToolLoading });
+const VideoDownloader = dynamic(() => import("@/components/tools/VideoDownloader"), { loading: ToolLoading });
 
 interface ToolPageProps {
   params: Promise<{ slug: string }>;

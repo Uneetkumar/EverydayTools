@@ -131,10 +131,17 @@ const CATEGORY_COLORS: Record<
   },
 };
 
+const ALL_TOOLS = getAllTools();
+const POPULAR_TOOLS = getPopularTools();
+const CATEGORY_MAP_STATIC = TOOL_CATEGORIES.reduce((acc, cat) => {
+  acc[cat.id] = ALL_TOOLS.filter((t) => t.category === cat.id);
+  return acc;
+}, {} as Record<string, ToolDefinition[]>);
+
 export default function HomePage() {
   const router = useRouter();
-  const allTools = useMemo(() => getAllTools(), []);
-  const popularTools = useMemo(() => getPopularTools(), []);
+  const allTools = ALL_TOOLS;
+  const popularTools = POPULAR_TOOLS;
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -145,21 +152,21 @@ export default function HomePage() {
   const filteredTools = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
     if (!query) {
-      if (selectedCategory === "all") return allTools;
-      return allTools.filter((t) => t.category === selectedCategory);
+      if (selectedCategory === "all") return ALL_TOOLS;
+      return CATEGORY_MAP_STATIC[selectedCategory] || [];
     }
 
-    const matches = searchTools(allTools, query);
+    const matches = searchTools(ALL_TOOLS, query);
     return selectedCategory === "all"
       ? matches
       : matches.filter((t) => t.category === selectedCategory);
-  }, [allTools, searchQuery, selectedCategory]);
+  }, [searchQuery, selectedCategory]);
 
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
     // Same ranked search as the grid, so the dropdown never disagrees with it.
-    return searchTools(allTools, searchQuery, 7);
-  }, [allTools, searchQuery]);
+    return searchTools(ALL_TOOLS, searchQuery, 7);
+  }, [searchQuery]);
 
   useEffect(() => {
     setSelectedIndex(0);
