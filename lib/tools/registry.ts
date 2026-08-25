@@ -112,7 +112,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "json validator",
       "prettify json",
       "minify json",
-      "json parser"
+      "json parser",
+      "format json online",
+      "beautify json",
+      "json lint",
+      "json viewer",
+      "clean json",
+      "json repair"
     ],
     "features": [
       "Prettify with 2/4 spaces or tab",
@@ -149,7 +155,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "percent increase",
       "percent decrease",
       "percentage difference",
-      "calculate percentage"
+      "calculate percentage",
+      "percent of number",
+      "percentage formula",
+      "percent off calculator",
+      "percentage ratio",
+      "calculate percent online"
     ],
     "features": [
       "X% of Y calculation",
@@ -194,7 +205,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "character counter",
       "word count online",
       "character count with spaces",
-      "reading time calculator"
+      "reading time calculator",
+      "essay word counter",
+      "twitter character counter",
+      "paragraph counter",
+      "sentence counter",
+      "speaking time calculator"
     ],
     "features": [
       "Live words and characters counter",
@@ -217,20 +233,26 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
   },
   "password-generator": {
     "slug": "password-generator",
-    "name": "Password Generator",
+    "name": "Random Password Generator",
     "shortName": "Password Generator",
     "category": "security",
     "categoryName": "Security & Generators",
     "description": "Generate highly secure, cryptographically random passwords with customizable length, symbols, and memorability.",
     "longDescription": "Create uncrackable, cryptographically secure passwords using standard browser Crypto APIs. Customize length, uppercase, lowercase, numbers, and special symbols.",
     "iconName": "Shield",
-    "metaTitle": "Password Generator | TabBench",
+    "metaTitle": "Random Password Generator | TabBench",
     "metaDescription": "Generate strong, cryptographically secure passwords with custom length, symbols, numbers, and strength scoring. 100% private.",
     "keywords": [
       "password generator",
+      "random password generator",
       "strong password generator",
       "random password",
-      "secure password generator"
+      "secure password generator",
+      "random string generator",
+      "random key generator",
+      "generate password online",
+      "crypto password maker",
+      "secure pin generator"
     ],
     "features": [
       "Cryptographically secure (window.crypto)",
@@ -267,7 +289,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "base64 encoder",
       "base64 decoder",
       "encode base64 online",
-      "decode base64 to text"
+      "decode base64 to text",
+      "base64 string to ascii",
+      "utf8 base64 converter",
+      "url safe base64",
+      "base64 translator"
     ],
     "features": [
       "Encode text to Base64",
@@ -304,7 +330,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "decode jwt",
       "jwt token inspect",
       "jwt expiration checker",
-      "jwt payload viewer"
+      "jwt payload viewer",
+      "json web token decoder",
+      "jwt debugger",
+      "auth token viewer",
+      "bearer token decoder"
     ],
     "features": [
       "Decodes Header and Payload",
@@ -327,21 +357,26 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
   },
   "uuid-generator": {
     "slug": "uuid-generator",
-    "name": "UUID Generator",
+    "name": "UUID & GUID Generator",
     "shortName": "UUID Generator",
     "category": "developer",
     "categoryName": "Developer & Data",
     "description": "Generate cryptographically secure Version 4 UUIDs (GUIDs) in bulk with uppercase, hyphen, and quote formatting.",
     "longDescription": "Generate random v4 UUIDs for database primary keys, API tokens, and unique identifiers. Bulk generation up to 100 UUIDs at once.",
     "iconName": "Hash",
-    "metaTitle": "UUID Generator | TabBench",
+    "metaTitle": "UUID & GUID Generator | TabBench",
     "metaDescription": "Generate cryptographically secure Version 4 UUIDs (GUIDs) individually or in bulk. Customize hyphens, uppercase, and quote formatting.",
     "keywords": [
       "uuid generator",
+      "random uuid generator",
       "guid generator",
-      "v4 uuid",
-      "generate uuid online",
-      "bulk uuid generator"
+      "random id generator",
+      "v4 uuid online",
+      "bulk uuid generator",
+      "unique identifier generator",
+      "random guid",
+      "generate uuid v4",
+      "online guid maker"
     ],
     "features": [
       "RFC 4122 compliant v4 UUIDs",
@@ -378,7 +413,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "url encode online",
       "url decode",
       "percent encoding",
-      "parse url query parameters"
+      "parse url query parameters",
+      "uri component encode",
+      "decode url string",
+      "url parameter decoder",
+      "percent decode online"
     ],
     "features": [
       "encodeURIComponent support",
@@ -415,7 +454,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "create qr code",
       "custom qr code generator",
       "free qr code maker",
-      "download qr code png"
+      "download qr code png",
+      "generate qr online",
+      "wifi qr code generator",
+      "link to qr code",
+      "barcode qr maker"
     ],
     "features": [
       "URL, Text, and WiFi modes",
@@ -452,7 +495,14 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "compress image online",
       "compress jpeg",
       "compress png",
-      "reduce image file size"
+      "reduce image file size",
+      "compress image to 50kb",
+      "compress image to 100kb",
+      "compress image to 20kb",
+      "photo compressor",
+      "shrink image file",
+      "reduce photo size",
+      "image optimizer"
     ],
     "features": [
       "Compress to exact KB target (e.g. 50KB, 100KB)",
@@ -489,7 +539,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "convert jpg to pdf",
       "png to pdf",
       "combine images to pdf",
-      "convert photos to pdf"
+      "convert photos to pdf",
+      "jpg to pdf converter",
+      "pictures to pdf document",
+      "make pdf from photos",
+      "scan to pdf online",
+      "turn images into pdf"
     ],
     "features": [
       "Convert multiple images to multi-page PDF",
@@ -526,7 +581,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "word to pdf",
       "convert pdf to docx",
       "pdf to editable word",
-      "pdf to doc online"
+      "pdf to doc online",
+      "convert pdf to word doc",
+      "word docx to pdf",
+      "extract text from pdf",
+      "pdf document to word"
     ],
     "features": [
       "Convert PDF to editable DOCX",
@@ -563,7 +622,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "remove watermark from photo",
       "object eraser online",
       "erase stamp from image",
-      "clean image watermark"
+      "clean image watermark",
+      "remove logo from photo",
+      "erase date stamp image",
+      "retouch photo watermark",
+      "clean picture background"
     ],
     "features": [
       "Interactive watermark erase box",
@@ -600,7 +663,10 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "convert png to jpg",
       "png to jpeg converter",
       "transparent png to jpg",
-      "image format converter"
+      "image format converter",
+      "change png to jpg",
+      "turn png into jpeg",
+      "export png as jpg"
     ],
     "features": [
       "PNG to JPG conversion",
@@ -638,7 +704,10 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "convert jpg to png",
       "jpeg to png online",
       "convert photo to png",
-      "lossless image converter"
+      "lossless image converter",
+      "make png from jpg",
+      "turn jpeg into png",
+      "export jpg as png"
     ],
     "features": [
       "Lossless PNG export",
@@ -676,7 +745,10 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "convert jpg to webp",
       "convert png to webp",
       "webp converter online",
-      "next-gen image converter"
+      "next-gen image converter",
+      "compress to webp",
+      "turn photo to webp",
+      "make webp image"
     ],
     "features": [
       "Convert PNG and JPG to WebP",
@@ -714,7 +786,10 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "convert webp to jpg",
       "webp to jpeg converter",
       "save webp as jpg",
-      "webp image converter"
+      "webp image converter",
+      "open webp file",
+      "turn webp into jpeg",
+      "webp to png converter"
     ],
     "features": [
       "Convert WebP to JPG & PNG",
@@ -752,7 +827,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "remove pdf password",
       "unlock protected pdf",
       "pdf password remover",
-      "remove pdf print restrictions"
+      "remove pdf print restrictions",
+      "decrypt pdf online",
+      "unlock secured pdf",
+      "pdf permission remover",
+      "remove edit lock from pdf"
     ],
     "features": [
       "Remove restrictions and print locks",
@@ -789,7 +868,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "image cropper online",
       "crop photo",
       "crop square image",
-      "aspect ratio cropper"
+      "aspect ratio cropper",
+      "crop picture online",
+      "crop to 1:1 square",
+      "crop 16:9 banner",
+      "trim image borders",
+      "resize and crop photo"
     ],
     "features": [
       "Presets for 1:1, 16:9, 4:3, 9:16 Story",
@@ -826,7 +910,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "combine pdf",
       "combine pdf files",
       "pdf joiner",
-      "merge pdf files free"
+      "merge pdf files free",
+      "join pdf pages",
+      "attach pdfs together",
+      "combine multiple pdfs into one",
+      "merge pdf documents online"
     ],
     "features": [
       "Merge multiple PDFs",
@@ -863,7 +951,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "pdf inspector",
       "pdf metadata viewer",
       "check pdf page count",
-      "how to compress pdf"
+      "how to compress pdf",
+      "pdf info inspector",
+      "count pages in pdf",
+      "view pdf properties",
+      "inspect pdf document"
     ],
     "features": [
       "Page count detection",
@@ -900,7 +992,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "calculate age from dob",
       "chronological age calculator",
       "age in days",
-      "birthday countdown"
+      "birthday countdown",
+      "exact age in years months days",
+      "how old am i",
+      "dob calculator online",
+      "date of birth age"
     ],
     "features": [
       "Exact age in Years, Months, Days",
@@ -945,7 +1041,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "gst calculation online",
       "inclusive gst calculator",
       "exclusive gst calculator",
-      "reverse gst"
+      "reverse gst",
+      "calculate 18% gst",
+      "cgst sgst calculator",
+      "goods and services tax calculator",
+      "tax calculator india"
     ],
     "features": [
       "Add GST & Remove GST modes",
@@ -996,7 +1096,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "loan emi calculator",
       "home loan emi",
       "car loan emi calculator",
-      "monthly emi calculation"
+      "monthly emi calculation",
+      "personal loan emi calculator",
+      "housing loan emi",
+      "loan interest calculator",
+      "monthly installment calculator"
     ],
     "features": [
       "Monthly EMI calculation",
@@ -1041,7 +1145,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "sale price calculator",
       "percent off calculator",
       "double discount calculator",
-      "final price after discount"
+      "final price after discount",
+      "calculate savings",
+      "coupon discount calculator",
+      "clearance sale price",
+      "how much will i save"
     ],
     "features": [
       "Percent off and fixed amount discount",
@@ -1085,7 +1193,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "markup calculator",
       "gross profit margin calculator",
       "margin vs markup",
-      "selling price calculator"
+      "selling price calculator",
+      "calculate profit margin",
+      "cost price markup",
+      "ecommerce margin calculator",
+      "net profit calculator"
     ],
     "features": [
       "Gross Margin & Markup calculation",
@@ -1128,7 +1240,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "uppercase converter",
       "lowercase converter",
       "title case converter",
-      "camelcase converter"
+      "camelcase converter",
+      "snake case converter",
+      "kebab case converter",
+      "capital to small text",
+      "sentence case online",
+      "format text case"
     ],
     "features": [
       "UPPERCASE, lowercase, Title Case, Sentence case",
@@ -1163,7 +1280,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "days between dates",
       "business days calculator",
       "working days between dates",
-      "date duration"
+      "date duration",
+      "days between two dates",
+      "how many days until",
+      "weeks between dates",
+      "date interval calculator",
+      "calendar days calculator"
     ],
     "features": [
       "Total calendar days",
@@ -1198,7 +1320,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "sha256 generator",
       "md5 generator online",
       "sha512 generator",
-      "hash text string"
+      "hash text string",
+      "sha256 hash generator",
+      "md5 hash online",
+      "sha512 checksum",
+      "sha1 generator",
+      "crypto hash maker"
     ],
     "features": [
       "MD5, SHA-1, SHA-256, SHA-512 algorithms",
@@ -1234,7 +1361,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "compare text online",
       "diff checker",
       "text comparison tool",
-      "find differences in text"
+      "find differences in text",
+      "compare two text files",
+      "side by side text comparison",
+      "text difference finder",
+      "diff tool online"
     ],
     "features": [
       "Side-by-side or unified diff view",
@@ -1270,7 +1401,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "explain math formula",
       "ai formula assistant",
       "explain regex online",
-      "formula explainer"
+      "formula explainer",
+      "explain code ai",
+      "excel formula explainer",
+      "regex pattern explainer",
+      "ai code breakdown",
+      "plain english formula assistant",
+      "ai math demo"
     ],
     "features": [
       "Plain English math breakdowns",
@@ -1306,7 +1443,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "extract pages from pdf",
       "pdf splitter online",
       "separate pdf pages",
-      "extract page range pdf"
+      "extract page range pdf",
+      "cut pdf pages",
+      "save specific pages from pdf",
+      "separate pdf document",
+      "divide pdf online"
     ],
     "features": [
       "Range syntax like 1-3, 5, 8-10",
@@ -1343,7 +1484,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "pdf to image converter",
       "convert pdf to png",
       "extract images from pdf",
-      "pdf pages to jpg"
+      "pdf pages to jpg",
+      "convert pdf to images",
+      "extract jpg from pdf",
+      "pdf pages to png",
+      "save pdf as photos",
+      "pdf to image high res"
     ],
     "features": [
       "JPG or PNG output",
@@ -1380,7 +1526,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "rotate pdf pages",
       "turn pdf sideways",
       "rotate pdf 90 degrees",
-      "fix upside down pdf"
+      "fix upside down pdf",
+      "rotate pdf pages online",
+      "change pdf orientation",
+      "permanent pdf rotation",
+      "flip pdf pages"
     ],
     "features": [
       "90, 180 or 270 degree rotation",
@@ -1416,7 +1566,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "number pdf pages",
       "pdf pagination online",
       "insert page numbers in pdf",
-      "pdf page numbering"
+      "pdf page numbering",
+      "number pdf pages online",
+      "bates numbering pdf",
+      "insert page numbers into document",
+      "stamp page numbers pdf"
     ],
     "features": [
       "Bottom centre, bottom right or top right",
@@ -1452,7 +1606,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "resize image online",
       "resize image by pixel",
       "resize photo percentage",
-      "change image dimensions"
+      "change image dimensions",
+      "resize photo pixels",
+      "change image width height",
+      "scale image dimensions",
+      "photo resizer online",
+      "reduce image dimensions"
     ],
     "features": [
       "Exact pixel width and height",
@@ -1489,7 +1648,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "create favicon",
       "favicon from image",
       "png to favicon",
-      "ico generator online"
+      "ico generator online",
+      "make favicon online",
+      "generate apple touch icon",
+      "logo to favicon",
+      "ico maker",
+      "website icon generator"
     ],
     "features": [
       "Nine sizes from 16px to 512px",
@@ -1525,7 +1689,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "exchange rate calculator",
       "currency exchange",
       "usd to inr",
-      "eur to usd"
+      "eur to usd",
+      "usd to inr converter",
+      "dollar to rupee",
+      "currency exchange rates",
+      "convert money online",
+      "euro to inr",
+      "dirham to inr"
     ],
     "features": [
       "Live mid-market rates",
@@ -1548,7 +1718,7 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
   },
   "sample-file-generator": {
     "slug": "sample-file-generator",
-    "name": "Sample File Generator",
+    "name": "Sample & Dummy File Generator",
     "shortName": "Sample File Generator",
     "category": "developer",
     "categoryName": "Developer & Data",
@@ -1560,9 +1730,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     "keywords": [
       "sample file generator",
       "dummy file generator",
+      "demo file generator",
+      "random file generator",
       "test file download",
       "sample files for testing",
-      "placeholder file generator"
+      "placeholder file generator",
+      "mock file generator",
+      "demo files"
     ],
     "features": [
       "Exact target file size",
@@ -1585,7 +1759,7 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
   },
   "sample-image-generator": {
     "slug": "sample-image-generator",
-    "name": "Sample Image Generator",
+    "name": "Sample & Random Image Generator",
     "shortName": "Sample Image Generator",
     "category": "image-media",
     "categoryName": "Image & Media",
@@ -1596,10 +1770,15 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     "metaDescription": "Generate placeholder and dummy images of any exact dimensions and file size. Perfect for web design, mockups, and upload testing.",
     "keywords": [
       "sample image generator",
+      "random image generator",
       "dummy image generator",
+      "demo image generator",
       "placeholder image download",
       "sample jpg test file",
-      "test image generator"
+      "test image generator",
+      "random photo generator",
+      "mock picture",
+      "demo pictures"
     ],
     "features": [
       "Exact target file size",
@@ -1622,7 +1801,7 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
   },
   "sample-pdf-generator": {
     "slug": "sample-pdf-generator",
-    "name": "Sample PDF Generator",
+    "name": "Sample & Dummy PDF Generator",
     "shortName": "Sample PDF Generator",
     "category": "pdf-docs",
     "categoryName": "PDF & Documents",
@@ -1634,9 +1813,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     "keywords": [
       "sample pdf generator",
       "dummy pdf download",
+      "demo pdf generator",
+      "random pdf generator",
       "sample pdf for testing",
       "test pdf file 1mb",
-      "placeholder pdf generator"
+      "placeholder pdf generator",
+      "mock pdf file",
+      "demo document"
     ],
     "features": [
       "Exact target file size",
@@ -1658,7 +1841,7 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
   },
   "sample-video-generator": {
     "slug": "sample-video-generator",
-    "name": "Sample Video Generator",
+    "name": "Sample & Dummy Video Generator",
     "shortName": "Sample Video Generator",
     "category": "image-media",
     "categoryName": "Image & Media",
@@ -1670,9 +1853,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     "keywords": [
       "sample video generator",
       "dummy video download",
+      "demo video generator",
+      "random video generator",
       "test video file",
       "sample mp4 test clip",
-      "sample webm generator"
+      "sample webm generator",
+      "mock video clip"
     ],
     "features": [
       "1 to 10 second clips",
@@ -1694,7 +1880,7 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
   },
   "sample-data-generator": {
     "slug": "sample-data-generator",
-    "name": "Sample Data Generator",
+    "name": "Sample Data Generator (CSV & JSON)",
     "shortName": "Sample Data Generator",
     "category": "developer",
     "categoryName": "Developer & Data",
@@ -1707,8 +1893,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "sample data generator",
       "dummy csv generator",
       "mock json generator",
+      "demo data generator",
+      "random data generator",
       "sample test data",
-      "generate fake csv data"
+      "generate fake csv data",
+      "mock dataset"
     ],
     "features": [
       "CSV, JSON or plain text",
@@ -1744,7 +1933,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "notepad online",
       "quick notes online",
       "browser notepad autosave",
-      "scratchpad online"
+      "scratchpad online",
+      "free online text editor",
+      "demo notepad",
+      "temporary notes autosave",
+      "jot notes online",
+      "browser scratchpad"
     ],
     "features": [
       "Autosaves as you type",
@@ -1781,7 +1975,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "text to speech online",
       "tts reader",
       "read text aloud",
-      "voice reader online"
+      "voice reader online",
+      "convert text to audio",
+      "read aloud online",
+      "speech synthesizer",
+      "listen to article online",
+      "tts voice generator"
     ],
     "features": [
       "Uses your device's built-in voices",
@@ -1818,7 +2017,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "voice to text",
       "voice dictation online",
       "transcribe audio in browser",
-      "speech recognition online"
+      "speech recognition online",
+      "voice typing online",
+      "audio to text transcriber",
+      "live dictation tool",
+      "speech transcriber hindi english"
     ],
     "features": [
       "Live transcript as you speak",
@@ -1855,7 +2058,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "download video online",
       "inspect video stream",
       "web video downloader",
-      "media stream inspector"
+      "media stream inspector",
+      "download video from url",
+      "save online video",
+      "mp4 video downloader",
+      "stream video saver"
     ],
     "features": [
       "Direct MP4, WebM & MOV stream inspection",
@@ -1906,7 +2113,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "youtube downloader",
       "download youtube video",
       "inspect youtube stream",
-      "youtube media inspector"
+      "youtube media inspector",
+      "youtube video download online",
+      "save youtube video mp4",
+      "youtube resolution inspector",
+      "download public youtube stream"
     ],
     "features": [
       "YouTube stream analysis",
@@ -1942,7 +2153,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "instagram video downloader",
       "download instagram reel",
       "instagram video download",
-      "insta media inspector"
+      "insta media inspector",
+      "instagram reels downloader",
+      "save insta video",
+      "download instagram story",
+      "ig video saver online"
     ],
     "features": [
       "Reels & vertical video inspection",
@@ -1978,7 +2193,10 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "facebook video downloader",
       "download facebook video",
       "fb video download online",
-      "facebook stream inspector"
+      "facebook stream inspector",
+      "save facebook video mp4",
+      "fb watch downloader",
+      "facebook reel downloader"
     ],
     "features": [
       "Facebook stream analysis",
@@ -2014,7 +2232,10 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "tiktok video downloader",
       "download tiktok video",
       "tiktok downloader no watermark info",
-      "tiktok stream inspector"
+      "tiktok stream inspector",
+      "save tiktok video mp4",
+      "tiktok clip downloader",
+      "tiktok 9:16 video saver"
     ],
     "features": [
       "Vertical 9:16 video analysis",
@@ -2051,7 +2272,10 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "x video downloader",
       "download twitter video",
       "twitter gif download",
-      "x media inspector"
+      "x media inspector",
+      "download x video mp4",
+      "save tweet video",
+      "twitter mp4 downloader"
     ],
     "features": [
       "Twitter & X media stream analysis",
@@ -2088,7 +2312,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "video player online",
       "play mp4 online",
       "browser video player",
-      "play webm video"
+      "play webm video",
+      "local video player",
+      "play video in browser",
+      "mov player online",
+      "speed control video player"
     ],
     "features": [
       "Plays MP4, WebM, MOV and Ogg",
@@ -2125,7 +2353,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "audio player online",
       "play mp3 online",
       "flac player browser",
-      "wav audio player"
+      "wav audio player",
+      "play audio files online",
+      "m4a player online",
+      "browser music player",
+      "audio speed controller"
     ],
     "features": [
       "MP3, WAV, FLAC, M4A, OGG",
@@ -2147,21 +2379,28 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
   },
   "pdf-editor": {
     "slug": "pdf-editor",
-    "name": "PDF Editor",
+    "name": "PDF Editor & Form Filler",
     "shortName": "PDF Editor",
     "category": "pdf-docs",
     "categoryName": "PDF & Documents",
     "description": "Click any text in a PDF to retype it. Fill form fields, add text or signatures, and manage pages.",
     "longDescription": "Click a word on the page and retype it — the editor finds every line of text in your PDF and lets you replace it in place, matching the original position, size and colour. Also fills real form fields, adds text, images and signatures, and reorders, rotates or deletes pages. Everything runs in your browser.",
     "iconName": "FileText",
-    "metaTitle": "PDF Editor | TabBench",
+    "metaTitle": "PDF Editor & Form Filler | TabBench",
     "metaDescription": "Edit PDF text, fill form fields, add annotations and signatures, and manage pages directly in your browser. No signup, zero uploads.",
     "keywords": [
       "pdf editor",
       "edit pdf online",
       "edit pdf text free",
       "fill pdf form online",
-      "add signature to pdf"
+      "add signature to pdf",
+      "sign pdf online",
+      "draw on pdf",
+      "pdf annotations",
+      "fill form fields",
+      "whiteout pdf",
+      "redact pdf",
+      "modify pdf"
     ],
     "features": [
       "Edit real PDF form fields",
@@ -2198,7 +2437,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "trim video online",
       "cut video free",
       "video trimmer online",
-      "shorten video file"
+      "shorten video file",
+      "cut mp4 video clip",
+      "video splitter online",
+      "trim mp4 without reencoding",
+      "lossless video cutter"
     ],
     "features": [
       "Lossless stream copy — no re-encode",
@@ -2235,7 +2478,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "mute video online",
       "extract audio from video",
       "silent video maker",
-      "strip audio track"
+      "strip audio track",
+      "remove sound from mp4",
+      "mute mp4 file online",
+      "extract m4a from video",
+      "remove audio track"
     ],
     "features": [
       "Remove the audio track entirely",

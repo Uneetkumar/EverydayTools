@@ -26,7 +26,46 @@ const SYMBOL_WORDS: Record<string, string> = {
  * the tool definitions stay readable.
  */
 const ALIASES: Record<string, string[]> = {
-  // currency shorthand
+  // sample, demo & testing shorthand
+  demo: ["sample", "test", "dummy", "mock", "placeholder", "generator"],
+  sample: ["demo", "test", "dummy", "mock", "placeholder", "generator"],
+  random: ["generator", "uuid", "password", "sample", "dummy", "hash", "shuffle"],
+  test: ["sample", "demo", "dummy", "mock", "diff", "checker", "tester"],
+  dummy: ["sample", "demo", "mock", "placeholder", "generator"],
+  mock: ["sample", "demo", "dummy", "data", "json", "generator"],
+  placeholder: ["sample", "demo", "dummy", "image", "generator"],
+  fake: ["sample", "dummy", "mock", "generator"],
+
+  // pdf & document actions
+  pdf: ["editor", "merge", "split", "compress", "rotate", "word"],
+  edit: ["editor", "modify", "draw", "sign", "crop", "resizer", "diff"],
+  editor: ["edit", "draw", "sign", "fill", "form", "text"],
+  sign: ["signature", "pdf", "editor"],
+  draw: ["editor", "pdf", "draw"],
+  form: ["filler", "pdf", "editor", "formfield"],
+  fill: ["form", "pdf", "editor"],
+  whiteout: ["redact", "erase", "cover", "editor"],
+
+  // media & image actions
+  compress: ["compressor", "reduce", "shrink", "size", "kb", "mb", "optimizer"],
+  shrink: ["compress", "reduce"],
+  reduce: ["compress", "smaller"],
+  smaller: ["compress", "reduce"],
+  resize: ["resizer", "scale", "dimensions", "width", "height"],
+  crop: ["cut", "trim", "image"],
+  convert: ["converter", "transform", "export", "format"],
+  combine: ["merge", "join"],
+  join: ["merge", "combine"],
+  divide: ["split", "separate"],
+  separate: ["split", "divide"],
+  turn: ["rotate", "spin"],
+  erase: ["remove", "watermark", "whiteout"],
+  delete: ["remove", "audio", "watermark"],
+  mute: ["audio", "sound", "silent", "video"],
+  cut: ["cutter", "trim", "trimmer", "crop", "split"],
+  trim: ["cutter", "crop", "shorten"],
+
+  // currency & finance shorthand
   rs: ["rupee", "inr"],
   inr: ["rupee"],
   rupees: ["rupee"],
@@ -41,7 +80,13 @@ const ALIASES: Record<string, string[]> = {
   forex: ["currency", "exchange"],
   fx: ["currency", "exchange"],
   money: ["currency"],
-  // media shorthand
+  calc: ["calculator", "calculate"],
+  calculate: ["calculator"],
+  profit: ["margin", "markup", "business"],
+  loan: ["emi", "interest", "mortgage"],
+  tax: ["gst", "vat"],
+
+  // media formats & shorthand
   photo: ["image", "picture"],
   photos: ["image"],
   pic: ["image"],
@@ -49,32 +94,32 @@ const ALIASES: Record<string, string[]> = {
   picture: ["image"],
   img: ["image"],
   jpeg: ["jpg"],
-  vid: ["video", "download"],
-  video: ["download", "stream", "media"],
-  mp4: ["video", "media"],
-  webm: ["video", "media"],
+  vid: ["video", "download", "cutter"],
+  video: ["download", "stream", "media", "cutter", "player"],
+  mp4: ["video", "media", "download", "cutter"],
+  webm: ["video", "media", "clip"],
   mov: ["video", "media"],
-  stream: ["video", "download"],
-  // action shorthand
-  shrink: ["compress", "reduce"],
-  reduce: ["compress"],
-  smaller: ["compress"],
-  resize: ["resizer", "scale"],
-  combine: ["merge"],
-  join: ["merge"],
-  divide: ["split"],
-  separate: ["split"],
-  turn: ["rotate"],
-  erase: ["remove"],
-  delete: ["remove"],
-  // misc shorthand
-  pw: ["password"],
-  pass: ["password"],
-  qr: ["qrcode"],
-  doc: ["word", "document"],
-  docx: ["word"],
-  age: ["birthday"],
-  emi: ["loan"],
+  audio: ["sound", "voice", "speech", "tts", "mute"],
+  voice: ["speech", "audio", "transcriber", "tts"],
+  listen: ["speech", "tts", "player"],
+  transcribe: ["speech", "voice", "audio", "dictation"],
+
+  // developer & security shorthand
+  pw: ["password", "generator"],
+  pass: ["password", "generator"],
+  qr: ["qrcode", "generator"],
+  doc: ["word", "document", "docx"],
+  docx: ["word", "document"],
+  age: ["birthday", "date", "calculator"],
+  emi: ["loan", "calculator"],
+  auth: ["jwt", "token", "password"],
+  token: ["jwt", "decoder", "auth"],
+  guid: ["uuid", "generator"],
+  hash: ["sha256", "md5", "generator"],
+  diff: ["compare", "comparison", "difference"],
+  compare: ["diff", "checker", "text"],
+  notes: ["notepad", "scratchpad"],
+  note: ["notepad", "text"],
 };
 
 /**
