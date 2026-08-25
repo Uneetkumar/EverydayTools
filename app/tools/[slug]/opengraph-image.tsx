@@ -8,6 +8,8 @@ export const alt = "TabBench";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return getAllTools().map((tool) => ({ slug: tool.slug }));
 }

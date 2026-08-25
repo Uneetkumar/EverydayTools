@@ -162,8 +162,9 @@ export default function RootLayout({
             pick the wrong host. This sends it to the real domain, preserving
             the path. Runs before paint; scoped to that exact hostname so local
             development and the emulator are untouched. */}
-        <script
+        <Script
           id="canonical-host"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html:
               "(function(){try{if(location.hostname==='everydaytools-s.web.app'){location.replace('https://tabbench.com'+location.pathname+location.search+location.hash);}}catch(e){}})();",

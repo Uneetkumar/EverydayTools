@@ -15,6 +15,9 @@ interface GuidePageProps {
   params: Promise<{ slug: string }>;
 }
 
+export const dynamic = "force-static";
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return GUIDES.map((g) => ({ slug: g.slug }));
 }

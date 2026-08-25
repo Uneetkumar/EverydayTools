@@ -13,6 +13,8 @@ export const alt = "TabBench category";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return TOOL_CATEGORIES.filter(
     (cat) => getToolsByCategory(cat.id).length > 0

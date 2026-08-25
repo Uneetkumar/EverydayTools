@@ -13,6 +13,8 @@ export const alt = "TabBench guide";
 export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return GUIDES.map((g) => ({ slug: g.slug }));
 }

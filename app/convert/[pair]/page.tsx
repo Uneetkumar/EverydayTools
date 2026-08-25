@@ -16,6 +16,9 @@ interface PairPageProps {
   params: Promise<{ pair: string }>;
 }
 
+export const dynamic = "force-static";
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return CURRENCY_PAIRS.map((p) => ({ pair: p.slug }));
 }

@@ -23,6 +23,9 @@ interface CategoryPageProps {
   params: Promise<{ category: string }>;
 }
 
+export const dynamic = "force-static";
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   // Only categories that actually contain tools — an empty category page is a
   // thin page with nothing on it.
