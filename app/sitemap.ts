@@ -23,6 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: SITE_CONFIG.domain, lastModified },
     { url: `${SITE_CONFIG.domain}/tools`, lastModified },
+    { url: `${SITE_CONFIG.domain}/categories`, lastModified },
     { url: `${SITE_CONFIG.domain}/guides`, lastModified },
     { url: `${SITE_CONFIG.domain}/about`, lastModified },
     { url: `${SITE_CONFIG.domain}/contact`, lastModified },

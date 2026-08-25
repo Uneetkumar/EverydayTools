@@ -28,6 +28,8 @@ export async function generateMetadata({ params }: GuidePageProps): Promise<Meta
     description: guide.metaDescription,
     path: `/guides/${guide.slug}`,
     keywords: guide.keywords,
+    // This route ships its own opengraph-image.tsx.
+    ogImage: null,
   });
 }
 

@@ -43,6 +43,14 @@ export default function Footer() {
                   All Tools
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/categories"
+                  className="font-semibold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                >
+                  Browse by Category
+                </Link>
+              </li>
               {TOOL_CATEGORIES.map((cat) => (
                 <li key={cat.id}>
                   <Link

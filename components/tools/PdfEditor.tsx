@@ -96,6 +96,11 @@ export interface Annot {
   fieldType?: "text" | "checkbox" | "dropdown";
   fieldValue?: string;
   fieldOptions?: string[];
+  /** Colour sampled from the page, used to hide whatever sits under a field. */
+  bgColor?: string;
+  /** True for fields that already existed in the uploaded PDF. Those must not
+   *  be recreated on export — the document already owns their widgets. */
+  isSourceField?: boolean;
 }
 
 export interface TextRun {
@@ -145,6 +150,26 @@ const HIGHLIGHT_COLORS = [
   "#fbcfe8", // Pink
   "#fed7aa", // Orange
 ];
+
+/**
+ * PDF field names use "." to express hierarchy, and pdf-lib rejects duplicates
+ * outright, so a raw user string cannot be trusted as a field name.
+ */
+const sanitizeFieldName = (raw: string) =>
+  (raw || "")
+    .trim()
+    .replace(/\s+/g, "_")
+    .replace(/[^A-Za-z0-9_-]/g, "")
+    .slice(0, 48) || "field";
+
+const uniqueFieldName = (raw: string, taken: Set<string>) => {
+  const base = sanitizeFieldName(raw);
+  let name = base;
+  let n = 2;
+  while (taken.has(name)) name = `${base}_${n++}`;
+  taken.add(name);
+  return name;
+};
 
 const hexToRgb = (hex: string) => {
   const n = parseInt(hex.replace("#", ""), 16);
@@ -205,6 +230,10 @@ export default function PdfEditor() {
   const [usedRuns, setUsedRuns] = useState<Set<string>>(new Set());
   const [showRuns, setShowRuns] = useState(true);
   const [fields, setFields] = useState<FormFieldState[]>([]);
+  // Names of the document's own fields the user deleted. Dropping them from
+  // `fields` only stops us writing a value — the widget itself still lives in
+  // the file, so export has to remove them explicitly.
+  const [removedFields, setRemovedFields] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -393,8 +422,114 @@ function getLuminance(hex: string): number {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 }
 
+/**
+ * Guarantees ink stays readable against the background it is painted on.
+ *
+ * The editor keeps ONE `textColor` for every item type, and the palette offers
+ * white (needed for covers over dark artwork). Pick white anywhere, then add a
+ * form field, and the field inherits white ink on its own white widget
+ * background: the value is still visible in the side panel — which paints with
+ * theme colours, not the annotation's — but the page and the exported PDF both
+ * render an empty box. Canvas and export must apply this identically or the
+ * preview stops matching the file.
+ */
+function legibleInk(ink?: string, bg?: string): string {
+  const fg = ink || "#0f172a";
+  const back = bg || "#ffffff";
+  if (Math.abs(getLuminance(fg) - getLuminance(back)) >= 0.35) return fg;
+  return getLuminance(back) >= 0.5 ? "#0f172a" : "#ffffff";
+}
+
   /** Sample background colour of the text */
-  const sampleBackground = (r: TextRun): string => {
+  /**
+   * Colour a field widget must be painted so it disappears into the page.
+   *
+   * `sampleBackground` probes *around* a box — correct when covering a text run,
+   * wrong for a widget, which has to match what sits directly beneath it. A
+   * field dropped on a tinted table row would sample the white margin next to
+   * the row and export as a white patch on colour. Taking the modal colour
+   * inside the rect gets the fill instead: glyphs are a minority of the pixels,
+   * so the mode is the paper or band underneath.
+   */
+  /**
+   * Finds an empty band on the page to drop a new field into.
+   *
+   * The old fixed 20%/25% landed on body text on most real documents, so a
+   * fresh field appeared straddling a line of the invoice. Scans rows of the
+   * rendered page for a run tall enough to hold the field with nothing printed
+   * in it, preferring the first one below the top margin. Falls back to the old
+   * constant when the page is too dense to find a gap.
+   */
+  const findBlankSpot = (w: number, h: number): { x: number; y: number } => {
+    const fallback = { x: 0.2, y: 0.25 };
+    const ctx = sampleRef.current;
+    if (!ctx) return fallback;
+    const W = ctx.canvas.width,
+      H = ctx.canvas.height;
+    const x0 = Math.floor(0.08 * W);
+    const x1 = Math.min(W, Math.ceil((0.08 + w + 0.04) * W));
+    if (x1 <= x0) return fallback;
+
+    // One pass: mark each row as inked if any pixel in the band is clearly
+    // darker than the page. Sampling every 3rd pixel is ample for glyphs.
+    const inked: boolean[] = new Array(H).fill(false);
+    for (let y = 0; y < H; y++) {
+      const row = ctx.getImageData(x0, y, x1 - x0, 1).data;
+      for (let i = 0; i < row.length; i += 12) {
+        const lum = (0.299 * row[i] + 0.587 * row[i + 1] + 0.114 * row[i + 2]) / 255;
+        if (lum < 0.75) { inked[y] = true; break; }
+      }
+    }
+
+    const need = Math.ceil(h * H) + Math.ceil(0.006 * H); // field plus breathing room
+    let run = 0;
+    for (let y = Math.floor(0.06 * H); y < Math.floor(0.94 * H); y++) {
+      run = inked[y] ? 0 : run + 1;
+      if (run >= need) {
+        const top = y - run + 1 + Math.floor((run - need) / 2);
+        return { x: 0.08, y: top / H };
+      }
+    }
+    return fallback;
+  };
+
+  const sampleFillUnder = (r: { x: number; y: number; w: number; h: number }): string => {
+    const ctx = sampleRef.current;
+    if (!ctx) return "#ffffff";
+    const W = ctx.canvas.width,
+      H = ctx.canvas.height;
+    const x = Math.max(0, Math.floor(r.x * W));
+    const y = Math.max(0, Math.floor(r.y * H));
+    const w = Math.min(W - x, Math.max(1, Math.ceil(r.w * W)));
+    const h = Math.min(H - y, Math.max(1, Math.ceil(r.h * H)));
+    if (w <= 0 || h <= 0) return "#ffffff";
+    const d = ctx.getImageData(x, y, w, h).data;
+
+    // Bucket at 5 bits per channel. Coarser (3 bits) puts white paper and a
+    // pale tint in the same bucket, which is exactly the confusion this needs
+    // to avoid; finer defeats the grouping because the preview is a JPEG and
+    // a flat fill arrives as dozens of near-identical values.
+    const counts = new Map<number, { n: number; r: number; g: number; b: number }>();
+    for (let i = 0; i < d.length; i += 4) {
+      const key = ((d[i] >> 3) << 10) | ((d[i + 1] >> 3) << 5) | (d[i + 2] >> 3);
+      const e = counts.get(key);
+      if (e) { e.n++; e.r += d[i]; e.g += d[i + 1]; e.b += d[i + 2]; }
+      else counts.set(key, { n: 1, r: d[i], g: d[i + 1], b: d[i + 2] });
+    }
+
+    let best: { n: number; r: number; g: number; b: number } | null = null;
+    for (const e of counts.values()) if (!best || e.n > best.n) best = e;
+    if (!best) return "#ffffff";
+    // Average the real pixels in the winning bucket rather than reconstructing
+    // from the bucket index — a midpoint would render white paper as #f0f0f0.
+    return toHex(
+      Math.round(best.r / best.n),
+      Math.round(best.g / best.n),
+      Math.round(best.b / best.n)
+    );
+  };
+
+  const sampleBackground = (r: { x: number; y: number; w: number; h: number }): string => {
     const ctx = sampleRef.current;
     if (!ctx) return "#ffffff";
     const W = ctx.canvas.width,
@@ -437,7 +572,7 @@ function getLuminance(hex: string): number {
   };
 
   /** Sample ink colour of the text */
-  const sampleInk = (r: TextRun): string => {
+  const sampleInk = (r: { x: number; y: number; w: number; h: number }): string => {
     const ctx = sampleRef.current;
     if (!ctx) return "#000000";
     const W = ctx.canvas.width,
@@ -474,6 +609,7 @@ function getLuminance(hex: string): number {
     setUsedRuns(new Set());
     setSelectedId(null);
     setEditingId(null);
+    setRemovedFields([]);
     setStatus("Reading document…");
     try {
       const buf = await file.arrayBuffer();
@@ -534,6 +670,7 @@ function getLuminance(hex: string): number {
                 fieldValue: fVal,
                 text: fVal,
                 size: 12,
+                isSourceField: true,
               });
             }
           }
@@ -1071,8 +1208,10 @@ function getLuminance(hex: string): number {
   const removeAnnot = (id: string) => {
     snapshot();
     const target = annots.find((a) => a.id === id);
-    if (target?.fieldName) {
-      setFields((list) => list.filter((f) => f.name !== target.fieldName));
+    if (target?.isSourceField && target.fieldName) {
+      const name = target.fieldName;
+      setFields((list) => list.filter((f) => f.name !== name));
+      setRemovedFields((list) => [...list, name]);
     }
     setAnnots((list) => list.filter((a) => a.id !== id));
     if (selectedId === id) setSelectedId(null);
@@ -1083,6 +1222,7 @@ function getLuminance(hex: string): number {
     snapshot();
     setFields((prev) => prev.filter((f) => f.name !== name));
     setAnnots((prev) => prev.filter((a) => a.fieldName !== name));
+    setRemovedFields((prev) => [...prev, name]);
     setSelectedId(null);
   };
 
@@ -1150,18 +1290,30 @@ function getLuminance(hex: string): number {
     setTool("select");
   };
 
-  /** Two-way Form Field value synchronization */
-  const updateFormFieldValue = (name: string, nextVal: string) => {
-    setFields((prev) => {
-      const exists = prev.some((f) => f.name === name);
-      if (exists) {
-        return prev.map((f) => (f.name === name ? { ...f, value: nextVal } : f));
-      }
-      return [...prev, { name, type: "text", value: nextVal }];
-    });
+  /** Update one field by annotation identity. */
+  const setFieldValue = (a: Annot, nextVal: string) => {
+    setAnnots((prev) =>
+      prev.map((x) =>
+        x.id === a.id ? { ...x, fieldValue: nextVal, text: nextVal } : x
+      )
+    );
+    // Fields that came from the uploaded PDF are written back through `fields`
+    // on export, so that list has to track the edit too.
+    if (a.isSourceField && a.fieldName) {
+      setFields((prev) =>
+        prev.map((f) => (f.name === a.fieldName ? { ...f, value: nextVal } : f))
+      );
+    }
+  };
+
+  /** Update a document-owned field from the Forms panel, keyed by name. */
+  const updateSourceField = (name: string, nextVal: string) => {
+    setFields((prev) =>
+      prev.map((f) => (f.name === name ? { ...f, value: nextVal } : f))
+    );
     setAnnots((prev) =>
       prev.map((a) =>
-        a.fieldName === name
+        a.isSourceField && a.fieldName === name
           ? { ...a, fieldValue: nextVal, text: nextVal }
           : a
       )
@@ -1177,17 +1329,26 @@ function getLuminance(hex: string): number {
   ) => {
     snapshot();
     const id = crypto.randomUUID();
-    const fieldCleanName = name.trim() || `Field_${id.slice(0, 5)}`;
+    const taken = new Set<string>([
+      ...fields.map((f) => f.name),
+      ...annots
+        .filter((a) => a.type === "formfield" && a.fieldName)
+        .map((a) => a.fieldName as string),
+    ]);
+    const fieldCleanName = uniqueFieldName(name || "field", taken);
+
+    const w = type === "checkbox" ? 0.035 : 0.16;
+    const h = type === "checkbox" ? 0.03 : 0.028;
+    const spot = findBlankSpot(w, h);
+    const rect = { x: spot.x, y: spot.y, w, h };
+
     setAnnots((a) => [
       ...a,
       {
         id,
         page: pageIndex,
         type: "formfield",
-        x: 0.2,
-        y: 0.25,
-        w: type === "checkbox" ? 0.035 : 0.16,
-        h: type === "checkbox" ? 0.03 : 0.028,
+        ...rect,
         fieldName: fieldCleanName,
         fieldType: type,
         fieldValue: val,
@@ -1198,15 +1359,12 @@ function getLuminance(hex: string): number {
         isBold,
         isItalic,
         color: textColor || "#0f172a",
-      },
-    ]);
-    setFields((prev) => [
-      ...prev.filter((f) => f.name !== fieldCleanName),
-      {
-        name: fieldCleanName,
-        type,
-        value: val,
-        options: opts,
+        // Deliberately transparent. An opaque widget paints over whatever it
+        // is dropped on, and the default drop point routinely lands on body
+        // text — that is what erased the middle of an address line and read as
+        // the editor corrupting the page. Covering is a real need, but it is
+        // now an explicit choice via "Cover" in the Forms panel.
+        bgColor: undefined,
       },
     ]);
     setSelectedId(id);
@@ -1307,50 +1465,80 @@ function getLuminance(hex: string): number {
     setPageIndex((p) => Math.max(0, Math.min(p, pages.length - 2)));
   };
 
-  /** Export edited PDF with precise font family, bold, italic, and size embedding */
+  /**
+   * Export.
+   *
+   * This edits the SOURCE document in place rather than copying pages into a
+   * fresh one. Copying leaves any existing AcroForm widgets orphaned — they
+   * still render, but the new document's form does not list them, so a form
+   * that was fillable before goes dead on save. Editing in place keeps the
+   * document's own fields intact, and lets fields added here be registered as
+   * real, fillable fields instead of painted-on text.
+   */
   const save = async () => {
     if (!bytesRef.current || !pages.length) return;
     setBusy(true);
     setStatus("Generating PDF with your matching font edits…");
     try {
-      const src = await PDFDocument.load(bytesRef.current.slice(0));
+      const doc = await PDFDocument.load(bytesRef.current.slice(0));
+      const form = doc.getForm();
 
-      // Write form fields back
-      if (fields.length) {
+      // 0. Drop fields the user deleted, so the widget really goes away rather
+      //    than merely being left unwritten.
+      for (const name of removedFields) {
         try {
-          const form = src.getForm();
-          for (const f of fields) {
-            if (f.type === "text") form.getTextField(f.name).setText(f.value);
-            else if (f.type === "checkbox") {
-              const cb = form.getCheckBox(f.name);
-              if (f.value) cb.check();
-              else cb.uncheck();
-            } else if (f.type === "dropdown" && f.value) {
-              form.getDropdown(f.name).select(f.value);
-            }
-          }
+          form.removeField(form.getField(name));
         } catch (e) {
-          console.warn("Some form fields could not be written:", e);
+          console.warn(`Could not remove form field "${name}":`, e);
         }
       }
 
-      const out = await PDFDocument.create();
+      // 1. Push edited values into the document's own form fields.
+      for (const f of fields) {
+        try {
+          if (f.type === "text") form.getTextField(f.name).setText(f.value);
+          else if (f.type === "checkbox") {
+            const cb = form.getCheckBox(f.name);
+            if (f.value === "on" || f.value === "true") cb.check();
+            else cb.uncheck();
+          } else if (f.type === "dropdown" && f.value) {
+            form.getDropdown(f.name).select(f.value);
+          }
+        } catch (e) {
+          console.warn(`Could not write form field "${f.name}":`, e);
+        }
+      }
 
-      // Embed full font matrix for exact matching
-      const helvetica = await out.embedFont(StandardFonts.Helvetica);
-      const helveticaBold = await out.embedFont(StandardFonts.HelveticaBold);
-      const helveticaOblique = await out.embedFont(StandardFonts.HelveticaOblique);
-      const helveticaBoldOblique = await out.embedFont(StandardFonts.HelveticaBoldOblique);
+      // 2. Apply deletions and reordering. Skipped when nothing moved, so the
+      //    common single-page case never touches the page tree at all.
+      const orderChanged =
+        pages.length !== doc.getPageCount() ||
+        pages.some((p, i) => p.sourceIndex !== i);
+      if (orderChanged) {
+        const original = doc.getPages();
+        const wanted = pages
+          .map((p) => original[p.sourceIndex])
+          .filter(Boolean);
+        for (let i = doc.getPageCount() - 1; i >= 0; i--) doc.removePage(i);
+        wanted.forEach((pg, i) => doc.insertPage(i, pg));
+      }
 
-      const timesRoman = await out.embedFont(StandardFonts.TimesRoman);
-      const timesRomanBold = await out.embedFont(StandardFonts.TimesRomanBold);
-      const timesRomanItalic = await out.embedFont(StandardFonts.TimesRomanItalic);
-      const timesRomanBoldItalic = await out.embedFont(StandardFonts.TimesRomanBoldItalic);
+      // Embed the full matrix so exported text keeps the family/weight/style
+      // detected from the original run.
+      const helvetica = await doc.embedFont(StandardFonts.Helvetica);
+      const helveticaBold = await doc.embedFont(StandardFonts.HelveticaBold);
+      const helveticaOblique = await doc.embedFont(StandardFonts.HelveticaOblique);
+      const helveticaBoldOblique = await doc.embedFont(StandardFonts.HelveticaBoldOblique);
 
-      const courier = await out.embedFont(StandardFonts.Courier);
-      const courierBold = await out.embedFont(StandardFonts.CourierBold);
-      const courierOblique = await out.embedFont(StandardFonts.CourierOblique);
-      const courierBoldOblique = await out.embedFont(StandardFonts.CourierBoldOblique);
+      const timesRoman = await doc.embedFont(StandardFonts.TimesRoman);
+      const timesRomanBold = await doc.embedFont(StandardFonts.TimesRomanBold);
+      const timesRomanItalic = await doc.embedFont(StandardFonts.TimesRomanItalic);
+      const timesRomanBoldItalic = await doc.embedFont(StandardFonts.TimesRomanBoldItalic);
+
+      const courier = await doc.embedFont(StandardFonts.Courier);
+      const courierBold = await doc.embedFont(StandardFonts.CourierBold);
+      const courierOblique = await doc.embedFont(StandardFonts.CourierOblique);
+      const courierBoldOblique = await doc.embedFont(StandardFonts.CourierBoldOblique);
 
       const resolveFont = (
         category: FontCategory = "sans-serif",
@@ -1375,23 +1563,22 @@ function getLuminance(hex: string): number {
         }
       };
 
-      const copied = await out.copyPages(
-        src,
-        pages.map((p) => p.sourceIndex)
-      );
+      const livePages = doc.getPages();
+      // Seeded with the document's existing names so a new field can never
+      // collide with one already in the file.
+      const takenNames = new Set(form.getFields().map((f) => f.getName()));
 
-      for (let i = 0; i < copied.length; i++) {
-        const page = copied[i];
+      for (let i = 0; i < livePages.length && i < pages.length; i++) {
+        const page = livePages[i];
         const extra = pages[i].rotation;
         if (extra) {
           page.setRotation(degrees((page.getRotation().angle + extra) % 360));
         }
-        out.addPage(page);
 
         const { width, height } = page.getSize();
         const mine = annots.filter((x) => x.page === i);
 
-        // Sort covers first, then highlights, then text, images, drawings
+        // Covers first, then highlights, then everything drawn on top.
         const ordered = [
           ...mine.filter((a) => a.type === "whiteout"),
           ...mine.filter((a) => a.type === "highlight"),
@@ -1422,11 +1609,7 @@ function getLuminance(hex: string): number {
               opacity: a.opacity ?? 0.45,
             });
           } else if (a.type === "text" && a.text) {
-            const font = resolveFont(
-              a.fontCategory,
-              a.isBold,
-              a.isItalic
-            );
+            const font = resolveFont(a.fontCategory, a.isBold, a.isItalic);
             const size = a.size ?? 14;
             const baselineY = py - size * 0.82;
             a.text.split("\n").forEach((line, n) => {
@@ -1435,7 +1618,11 @@ function getLuminance(hex: string): number {
                 y: baselineY - n * size * 1.15,
                 size,
                 font,
-                color: hexToRgb(a.color || "#000000"),
+                // Same clamp the canvas applies, so the exported file matches
+                // the preview instead of writing ink the editor refused to show.
+                color: hexToRgb(
+                  a.color && getLuminance(a.color) < 0.8 ? a.color : "#0f172a"
+                ),
               });
             });
           } else if (
@@ -1443,8 +1630,8 @@ function getLuminance(hex: string): number {
             a.dataUrl
           ) {
             const img = a.dataUrl.startsWith("data:image/png")
-              ? await out.embedPng(a.dataUrl)
-              : await out.embedJpg(a.dataUrl);
+              ? await doc.embedPng(a.dataUrl)
+              : await doc.embedJpg(a.dataUrl);
             page.drawImage(img, {
               x: px,
               y: py - (a.h ?? 0.12) * height,
@@ -1452,48 +1639,77 @@ function getLuminance(hex: string): number {
               height: (a.h ?? 0.12) * height,
             });
           } else if (a.type === "formfield") {
+            // Already part of the document — its widget is on the page and its
+            // value was written above. Recreating it would duplicate the field.
+            if (a.isSourceField) continue;
+
             const size = a.size ?? 12;
-            const textVal = a.fieldValue || a.text || "";
             const fw = (a.w ?? 0.16) * width;
             const fh = (a.h ?? 0.028) * height;
+            const fx = px;
+            const fy = py - fh;
+            const font = resolveFont(a.fontCategory, a.isBold, a.isItalic);
+            const textColorRgb = hexToRgb(legibleInk(a.color, a.bgColor || "#ffffff"));
+            // undefined => no /BG entry => the page shows through. pdf-lib
+            // defaults this to opaque white when the key is absent, so it has
+            // to be passed explicitly as undefined.
+            const bg = a.bgColor ? hexToRgb(a.bgColor) : undefined;
+            const name = uniqueFieldName(a.fieldName || "field", takenNames);
 
-            if (a.fieldType === "checkbox") {
-              const isChecked = a.fieldValue === "on" || a.fieldValue === "true";
-              if (isChecked) {
-                page.drawText("✓", {
-                  x: px + 2,
-                  y: py - size - 2,
-                  size: size + 2,
-                  font: helveticaBold,
-                  color: rgb(0.05, 0.08, 0.15),
+            try {
+              if (a.fieldType === "checkbox") {
+                const box = Math.min(fw, fh);
+                const cb = form.createCheckBox(name);
+                cb.addToPage(page, {
+                  x: fx,
+                  y: fy,
+                  width: box,
+                  height: box,
+                  backgroundColor: bg,
+                  borderColor: textColorRgb,
+                  borderWidth: 1,
                 });
+                // pdf-lib renders the tick from ZapfDingbats. Drawing a "✓"
+                // with drawText instead throws — WinAnsi cannot encode U+2713.
+                if (a.fieldValue === "on" || a.fieldValue === "true") cb.check();
+              } else if (a.fieldType === "dropdown") {
+                const opts = (a.fieldOptions ?? []).filter(Boolean);
+                const dd = form.createDropdown(name);
+                if (opts.length) dd.setOptions(opts);
+                const chosen = a.fieldValue ?? "";
+                if (chosen && opts.includes(chosen)) dd.select(chosen);
+                dd.addToPage(page, {
+                  x: fx,
+                  y: fy,
+                  width: fw,
+                  height: fh,
+                  font,
+                  textColor: textColorRgb,
+                  backgroundColor: bg,
+                  borderColor: undefined,
+                  borderWidth: 0,
+                });
+                dd.setFontSize(size);
+              } else {
+                const tf = form.createTextField(name);
+                const val = a.fieldValue ?? a.text ?? "";
+                if (val) tf.setText(val);
+                tf.addToPage(page, {
+                  x: fx,
+                  y: fy,
+                  width: fw,
+                  height: fh,
+                  font,
+                  textColor: textColorRgb,
+                  backgroundColor: bg,
+                  borderColor: undefined,
+                  borderWidth: 0,
+                });
+                // Must follow addToPage: the /DA entry it needs is created there.
+                tf.setFontSize(size);
               }
-            } else if (textVal) {
-              // 1. Draw opaque white background cover to completely erase/cover any previous text underneath
-              page.drawRectangle({
-                x: px,
-                y: py - fh,
-                width: fw,
-                height: fh,
-                color: rgb(1, 1, 1),
-              });
-
-              // 2. Draw clean replacement text neatly inside the field box
-              const font = resolveFont(
-                a.fontCategory,
-                a.isBold,
-                a.isItalic
-              );
-              const fontColor = a.color ? hexToRgb(a.color) : rgb(0.05, 0.08, 0.15);
-              const textY = py - fh + Math.max(2, (fh - size) / 2);
-
-              page.drawText(textVal, {
-                x: px + 3,
-                y: textY,
-                size,
-                font,
-                color: fontColor,
-              });
+            } catch (e) {
+              console.warn(`Could not create form field "${name}":`, e);
             }
           } else if (a.type === "draw" && a.points && a.points.length > 1) {
             const drawColorRgb = hexToRgb(a.color || "#000000");
@@ -1511,7 +1727,17 @@ function getLuminance(hex: string): number {
         }
       }
 
-      const bytes = await out.save();
+      let bytes: Uint8Array;
+      try {
+        bytes = await doc.save();
+      } catch (e) {
+        // Appearance regeneration can fail on a value the field's font cannot
+        // encode (Hindi in a Helvetica field, say). Saving without it still
+        // produces a valid file; the reader renders the field on open.
+        console.warn("Falling back to save without appearance update:", e);
+        bytes = await doc.save({ updateFieldAppearances: false });
+      }
+
       downloadBlob(
         new Blob([bytes as BlobPart], { type: "application/pdf" }),
         `${fileName.replace(/\.pdf$/i, "") || "document"}-edited.pdf`
@@ -1533,6 +1759,11 @@ function getLuminance(hex: string): number {
   const current = pages[pageIndex];
 const selected = annots.find((a) => a.id === selectedId) ?? null;
   const pageAnnots = annots.filter((a) => a.page === pageIndex);
+  // Fields added in this session, across all pages — the Forms panel lists
+  // these alongside the fields the uploaded document already had.
+  const userFieldAnnots = annots.filter(
+    (a) => a.type === "formfield" && !a.isSourceField
+  );
   const pageRuns = runs.filter(
     (r) => r.page === pageIndex && !usedRuns.has(r.id)
   );
@@ -1548,9 +1779,11 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
+              {/* The page-level <h1> belongs to ToolShell. This is the widget's
+                  own heading, so it must not compete for that role. */}
+              <p className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
                 PDF Editor
-              </h1>
+              </p>
               <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300">
                 PRO STUDIO
               </span>
@@ -2177,11 +2410,21 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                         {/* Interactive Form Field - Clean, High-Contrast Visible Value Rendering */}
                         {a.type === "formfield" && (
                           <div
+                            style={{
+                              // Must be the exported widget background, not a
+                              // hardcoded white, or the preview cannot show a
+                              // mismatched cover colour.
+                              background: a.bgColor || "transparent",
+                              // pdf-lib insets field text by exactly 1pt
+                              // (borderWidth 0 + padding 1), so match it here
+                              // in the preview's own scale.
+                              padding: `${Math.max(1, 1 * scale)}px`,
+                            }}
                             className={`flex h-full w-full items-center rounded transition-all ${
                               isSelected
-                                ? "border-2 border-blue-600 bg-white shadow-xs"
-                                : "border border-blue-400/50 bg-white hover:border-blue-600"
-                            } px-1.5 py-0.5`}
+                                ? "border-2 border-blue-600 shadow-xs"
+                                : "border border-blue-400/50 hover:border-blue-600"
+                            }`}
                           >
                             {a.fieldType === "checkbox" ? (
                               <label className="flex items-center gap-1.5 cursor-pointer">
@@ -2189,10 +2432,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                   type="checkbox"
                                   checked={a.fieldValue === "on" || a.fieldValue === "true"}
                                   onChange={(e) =>
-                                    updateFormFieldValue(
-                                      a.fieldName || "",
-                                      e.target.checked ? "on" : ""
-                                    )
+                                    setFieldValue(a, e.target.checked ? "on" : "")
                                   }
                                   className="h-4 w-4 rounded accent-blue-600 cursor-pointer"
                                 />
@@ -2205,20 +2445,15 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                             ) : a.fieldType === "dropdown" ? (
                               <select
                                 value={a.fieldValue || ""}
-                                onChange={(e) =>
-                                  updateFormFieldValue(
-                                    a.fieldName || "",
-                                    e.target.value
-                                  )
-                                }
+                                onChange={(e) => setFieldValue(a, e.target.value)}
                                 style={{
-                                  fontSize: `${Math.min(24, Math.max(8, (a.size ?? 12) * scale))}px`,
+                                  fontSize: `${(a.size ?? 12) * scale}px`,
                                   fontFamily: getFontFamilyCss(a.fontCategory),
                                   fontWeight: a.isBold ? 700 : 400,
                                   fontStyle: a.isItalic ? "italic" : "normal",
-                                  color: a.color || "#0f172a",
+                                  color: legibleInk(a.color, a.bgColor || "#ffffff"),
                                 }}
-                                className="w-full rounded border border-slate-300/80 bg-white/90 px-1 py-0.5 text-xs font-semibold text-slate-950 focus:outline-none cursor-pointer"
+                                className="w-full cursor-pointer border-0 bg-transparent p-0 leading-none focus:outline-none"
                               >
                                 {(a.fieldOptions || ["Option 1", "Option 2"]).map((opt) => (
                                   <option key={opt} value={opt} className="text-slate-950">
@@ -2231,20 +2466,18 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                 type="text"
                                 value={a.fieldValue ?? a.text ?? ""}
                                 placeholder={isSelected ? `[${a.fieldName || "Type value"}]` : "Type value..."}
-                                onChange={(e) =>
-                                  updateFormFieldValue(
-                                    a.fieldName || "",
-                                    e.target.value
-                                  )
-                                }
+                                onChange={(e) => setFieldValue(a, e.target.value)}
                                 style={{
-                                  fontSize: `${Math.min(26, Math.max(8, (a.size ?? 12) * scale))}px`,
+                                  // No clamp: the exported field renders at
+                                  // `size` points, so the preview has to show
+                                  // exactly size * scale or the two disagree.
+                                  fontSize: `${(a.size ?? 12) * scale}px`,
                                   fontFamily: getFontFamilyCss(a.fontCategory),
                                   fontWeight: a.isBold ? 700 : 400,
                                   fontStyle: a.isItalic ? "italic" : "normal",
-                                  color: a.color || "#0f172a",
+                                  color: legibleInk(a.color, a.bgColor || "#ffffff"),
                                 }}
-                                className="w-full border-0 bg-transparent p-0 text-xs font-bold text-slate-950 placeholder:text-slate-400 focus:outline-none focus:ring-0"
+                                className="w-full border-0 bg-transparent p-0 leading-none placeholder:text-slate-400 focus:outline-none focus:ring-0"
                               />
                             )}
                           </div>
@@ -2973,7 +3206,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                      Document Fields ({fields.length})
+                      Document Fields ({fields.length + userFieldAnnots.length})
                     </h4>
                     <button
                       onClick={() => setShowFormFieldModal(true)}
@@ -2983,11 +3216,18 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                     </button>
                   </div>
 
-                  {fields.length > 0 ? (
+                  <p className="rounded-lg bg-indigo-50 px-2.5 py-2 text-[11px] leading-relaxed text-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-200">
+                    Fields are saved as real, fillable PDF fields. Reopen the exported
+                    file here or in any PDF reader and you only need to change the
+                    values — the layout stays put.
+                  </p>
+
+                  {fields.length + userFieldAnnots.length > 0 ? (
                     <div className="space-y-2.5 max-h-[480px] overflow-y-auto pr-1">
+                      {/* Fields that were already in the uploaded PDF */}
                       {fields.map((f) => (
                         <div
-                          key={f.name}
+                          key={`src-${f.name}`}
                           className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-1 dark:border-slate-800 dark:bg-slate-950/40"
                         >
                           <div className="flex items-center justify-between text-xs">
@@ -3011,9 +3251,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                           {f.type === "dropdown" ? (
                             <select
                               value={f.value}
-                              onChange={(e) =>
-                                updateFormFieldValue(f.name, e.target.value)
-                              }
+                              onChange={(e) => updateSourceField(f.name, e.target.value)}
                               className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
                             >
                               {(f.options ?? ["Option 1", "Option 2"]).map((o) => (
@@ -3028,32 +3266,162 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                 type="checkbox"
                                 checked={f.value === "on" || f.value === "true"}
                                 onChange={(e) =>
-                                  updateFormFieldValue(
-                                    f.name,
-                                    e.target.checked ? "on" : ""
-                                  )
+                                  updateSourceField(f.name, e.target.checked ? "on" : "")
                                 }
                                 className="h-4 w-4 rounded accent-blue-600 cursor-pointer"
                               />
-                              <span className="text-xs text-slate-600 dark:text-slate-400">Checked</span>
+                              <span className="text-xs text-slate-600 dark:text-slate-400">
+                                Checked
+                              </span>
                             </div>
                           ) : (
                             <input
                               type="text"
                               value={f.value}
                               placeholder={`Enter value for ${f.name}...`}
-                              onChange={(e) =>
-                                updateFormFieldValue(f.name, e.target.value)
-                              }
+                              onChange={(e) => updateSourceField(f.name, e.target.value)}
                               className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
                             />
                           )}
                         </div>
                       ))}
+
+                      {/* Fields added in this session */}
+                      {userFieldAnnots.map((a) => (
+                        <div
+                          key={a.id}
+                          onClick={() => {
+                            setPageIndex(a.page);
+                            setSelectedId(a.id);
+                          }}
+                          className={`cursor-pointer rounded-xl border p-3 space-y-1 transition ${
+                            selectedId === a.id
+                              ? "border-indigo-500 bg-indigo-50/60 ring-2 ring-indigo-500/20 dark:border-indigo-500 dark:bg-indigo-950/30"
+                              : "border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-950/40"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between text-xs">
+                            <input
+                              value={a.fieldName ?? ""}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => patch(a.id, { fieldName: e.target.value })}
+                              placeholder="Field name"
+                              title="The name this field will carry in the PDF"
+                              className="min-w-0 flex-1 rounded border-0 bg-transparent px-0 text-xs font-bold text-slate-800 outline-none focus:bg-white focus:px-1.5 focus:py-0.5 focus:ring-1 focus:ring-indigo-400 dark:text-slate-200 dark:focus:bg-slate-900"
+                            />
+                            <div className="flex shrink-0 items-center gap-1.5">
+                              <span className="rounded bg-indigo-100 px-1.5 py-0.2 text-[9px] uppercase font-mono text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                                {a.fieldType ?? "text"}
+                              </span>
+                              <span className="text-[9px] text-slate-400">p{a.page + 1}</span>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeAnnot(a.id);
+                                }}
+                                title="Delete this field"
+                                className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 transition"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {a.fieldType === "dropdown" ? (
+                            <select
+                              value={a.fieldValue ?? ""}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => setFieldValue(a, e.target.value)}
+                              className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                            >
+                              {(a.fieldOptions ?? ["Option 1", "Option 2"]).map((o) => (
+                                <option key={o} value={o}>
+                                  {o}
+                                </option>
+                              ))}
+                            </select>
+                          ) : a.fieldType === "checkbox" ? (
+                            <div className="flex items-center gap-2 pt-0.5">
+                              <input
+                                type="checkbox"
+                                checked={a.fieldValue === "on" || a.fieldValue === "true"}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) =>
+                                  setFieldValue(a, e.target.checked ? "on" : "")
+                                }
+                                className="h-4 w-4 rounded accent-blue-600 cursor-pointer"
+                              />
+                              <span className="text-xs text-slate-600 dark:text-slate-400">
+                                Checked
+                              </span>
+                            </div>
+                          ) : (
+                            <input
+                              type="text"
+                              value={a.fieldValue ?? ""}
+                              placeholder="Default value (can be left empty)"
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={(e) => setFieldValue(a, e.target.value)}
+                              className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                            />
+                          )}
+
+                          {/* Background is opt-in. A field that paints over the
+                              page erases whatever it sits on, so the default is
+                              transparent and covering is chosen deliberately. */}
+                          <div
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex items-center gap-1.5 pt-1"
+                          >
+                            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                              Background
+                            </span>
+                            <button
+                              onClick={() => patch(a.id, { bgColor: undefined })}
+                              title="Let the page show through (default)"
+                              className={`rounded px-1.5 py-0.5 text-[10px] font-semibold transition ${
+                                !a.bgColor
+                                  ? "bg-indigo-600 text-white"
+                                  : "bg-slate-200 text-slate-600 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300"
+                              }`}
+                            >
+                              None
+                            </button>
+                            <button
+                              onClick={() =>
+                                patch(a.id, {
+                                  bgColor: sampleFillUnder({
+                                    x: a.x,
+                                    y: a.y,
+                                    w: a.w ?? 0.16,
+                                    h: a.h ?? 0.028,
+                                  }),
+                                })
+                              }
+                              title="Fill with the colour of the page underneath, hiding whatever the field covers"
+                              className={`rounded px-1.5 py-0.5 text-[10px] font-semibold transition ${
+                                a.bgColor
+                                  ? "bg-indigo-600 text-white"
+                                  : "bg-slate-200 text-slate-600 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300"
+                              }`}
+                            >
+                              Cover
+                            </button>
+                            <input
+                              type="color"
+                              value={a.bgColor ?? "#ffffff"}
+                              onChange={(e) => patch(a.id, { bgColor: e.target.value })}
+                              aria-label="Exact background colour"
+                              title="Pick an exact background colour"
+                              className="h-5 w-7 cursor-pointer rounded border border-slate-300 bg-transparent p-0 dark:border-slate-700"
+                            />
+                          </div>
+                        </div>
+                      ))}
                     </div>
                   ) : (
                     <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-xs text-slate-500 dark:border-slate-800">
-                      No interactive fields yet. Click <strong>"+ Add Field"</strong> to place text boxes, checkboxes, or dropdowns.
+                      No interactive fields yet. Click <strong>&ldquo;+ Add Field&rdquo;</strong> to place text boxes, checkboxes, or dropdowns.
                     </div>
                   )}
                 </div>

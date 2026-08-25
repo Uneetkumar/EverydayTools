@@ -145,6 +145,9 @@ curl -s -o /dev/null -w "%{http_code}" https://rdap.verisign.com/com/v1/domain/N
 | Watermark tool dead | Canvas deadlock (above). Also: brush was sized in image px → 3.5 screen px on a 14MP photo. Now sized in screen px. |
 | FAQ invisible to crawlers | Accordion only rendered open answers. Now `<details>`. |
 | **PDF editor could not edit** | Detected AcroForm fields only. Real invoices/receipts have none, so the tool appeared dead — it offered a blank "New text" box and nothing else. Now uses `getTextContent()` to locate every painted text run and make it click-to-edit. |
+| **Form field value invisible** | Field ink came from the shared `textColor` state, whose palette includes white → white text on the field's white widget background. The side panel paints with theme colours so the value showed there while the page and the export were blank. `legibleInk(ink, bg)` now guards both canvas and export. |
+| **Field preview never matched the export** | Three separate divergences: the preview painted a hardcoded `bg-white` while the export painted `a.bgColor`; the preview clamped font size to `min(26, max(8, size*scale))` while the export used raw points; and the preview inset text by a fixed `px-1.5` while pdf-lib insets by exactly 1pt. All three now derive from the same values. |
+| **Field background sampled once** | `bgColor` was sampled at the default drop point and never again, so a dragged field kept the colour of where it was first inserted. Also sampled *around* the box (right for covering a text run, wrong for a widget fill). Now `sampleFillUnder` takes the modal colour *inside* the rect, re-sampled when a gesture settles. |
 | Multi-word search broken | Matched whole query as one substring, so "rs to" found nothing. Now tokenised with synonym groups. |
 
 ## 7. ⚠️ KNOWN PROBLEMS — unresolved
@@ -321,6 +324,147 @@ originals. Text on a coloured band got cover `rgb(231,240,255)`, not white.
   and extraction still returns it (verified: both old and new strings present).
   The UI warns on whiteout select; do not soften that copy.
 - Scanned PDFs yield zero runs. The UI says so and falls back to Cover + Add text.
+
+
+---
+
+## 15. PDF editor — form fields (audited 24 Aug 2026)
+
+Fields added in the editor are now written as **real AcroForm fields**, so the
+exported file can be reopened and refilled without redoing the layout.
+
+### Bugs found and fixed in this pass
+
+| Bug | Detail |
+|---|---|
+| **Empty field left the original text showing** | Export only painted a cover when the field had a value (`else if (textVal)`). Clearing a value therefore revealed whatever was underneath. The widget now carries an opaque `/BG`, which paints whether or not there is a value. |
+| **"Fields" were never real fields** | Export drew static text, so the saved PDF had no fillable fields at all — the entire point of the feature. Now uses `form.createTextField/createCheckBox/createDropdown` + `addToPage`. |
+| **Checking a checkbox crashed the whole export** | It drew a literal `"✓"`, and `WinAnsi cannot encode "✓" (0x2713)` — verified, it throws. Real checkboxes render from ZapfDingbats via pdf-lib, so the glyph is never encoded by us. |
+| **Cover colour hardcoded white** | `rgb(1,1,1)` scarred any coloured background. Now sampled from the page at insert time and stored as `bgColor`. |
+| **Existing form fields went dead on save** | `save()` copied pages into a new document, orphaning the source AcroForm — widgets still rendered but were no longer listed, so a fillable form stopped being fillable. Export now edits the source document **in place**. |
+| **Source fields were rendered twice** | They were written into the doc *and* redrawn as static text. Annots from the file carry `isSourceField` and are skipped on export. |
+| **Blank field name made the on-canvas input read-only** | The input was controlled but its `onChange` matched annots by `fieldName`; an empty name matched nothing, so typing did nothing. Updates are keyed on annotation id now. |
+| **Duplicate / invalid field names** | pdf-lib throws on duplicates, and `.` means hierarchy in a PDF field name. `sanitizeFieldName` + `uniqueFieldName` handle both (`customer.name` → `customername`, `agreed terms` → `agreed_terms`). |
+| **Deleting a document field did nothing** | It only dropped the value from `fields`; the widget survived. Tracked in `removedFields` and removed via `form.removeField()`. |
+
+### pdf-lib gotchas worth keeping
+
+1. **`setFontSize()` must come AFTER `addToPage()`** — otherwise
+   `No /DA (default appearance) entry found for field`. `addToPage` creates the /DA.
+2. **`addToPage` defaults are a white background and a black 1pt border.** Pass
+   `borderWidth: 0` and an explicit `backgroundColor`, or every field paints a box.
+   `borderColor: undefined` works — the widget code is `if (borderColor)`, and the
+   key being *present* is what skips the default.
+3. **Never `drawText("✓")`** with a standard font. WinAnsi cannot encode it.
+4. **In-place page reorder** is `removePage()` for every index, then
+   `insertPage(i, page)` in the new order. Skipped entirely unless the order
+   actually changed, so the common single-page case never touches the page tree.
+5. `doc.save()` regenerates field appearances and can throw on a value the
+   field's font cannot encode. Export falls back to
+   `save({ updateFieldAppearances: false })`.
+
+### Verified end-to-end
+
+Added a field over existing text, cleared its value, exported:
+- exported field is a real `PDFTextField` with `/MK << /BG [1 1 1] /R 0 >>`
+- reopening the export lists it as a **document** field, not a session one
+- pixels inside the field rect: **0.44% dark**; the same text line just outside
+  it: **27.27% dark** — the original text is genuinely covered
+- checkbox export completes with no error and round-trips as a checked `checkbox`
+
+
+---
+
+### Form fields — verified against a rendered export (25 Aug 2026)
+
+**Verify by rasterising the exported PDF, not by round-tripping numbers.**
+`addToPage(y)` vs `getRectangle().y` share a convention, so comparing them
+proves nothing. macOS has no `pdftoppm`, but Quick Look works:
+
+```bash
+qlmanage -t -s 1200 -o outdir file.pdf   # -> outdir/file.pdf.png
+```
+
+A drawn magenta rectangle at the same coords as a widget confirmed pdf-lib's
+`addToPage` y is bottom-left and lands exactly where intended — **geometry was
+never the bug.** What the render exposed was that the field's opaque white
+background was *erasing the page text it landed on* (an address line came out as
+`A-16 UGF1 Rail v` + white gap + `ziabad`).
+
+- **A form field must not destroy document content.** New fields are now
+  `bgColor: undefined` → no `/BG` → the page shows through. pdf-lib defaults
+  `backgroundColor` to opaque white when the key is *absent*, so it has to be
+  passed explicitly as `undefined`.
+- Covering is still available but **opt-in**, via Background `None` / `Cover` /
+  colour on each row in the Forms panel. `Cover` runs `sampleFillUnder` once at
+  the current position; it does not silently re-sample.
+- `findBlankSpot()` places new fields in an empty band instead of a hardcoded
+  20%/25%, which landed on body text on most real documents.
+
+### Field preview/export fidelity (25 Aug 2026)
+
+Measured, not assumed: the widget **rectangle** was already exact. Insert at
+`left 0.2000 top 0.2500 w 0.1600 h 0.0280` exported to the identical fractions,
+and so did a dragged field at `0.0529 / 0.3309`. The mismatch was everything
+*inside* the box.
+
+- Preview and export must read the **same** `a.bgColor` with the same default.
+  A hardcoded `bg-white` in the preview hides any mismatch until export.
+- pdf-lib insets field text by exactly **1pt** (`borderWidth 0 + padding 1`,
+  see `api/form/appearances.js`). The preview matches with `1 * scale` px.
+- Preview font size must be `size * scale` with **no clamp**; the old
+  `min(26, max(8, …))` silently disagreed with the exported point size.
+- `sampleFillUnder` quantises at **5 bits** per channel and then averages the
+  real pixels in the winning bucket. 3 bits put white paper and a pale tint in
+  the same bucket; reconstructing from the bucket midpoint rendered white as
+  `#f0f0f0`.
+- Re-sampling lives in an effect keyed on `[annots, pageIndex, gestureSettled]`,
+  **not** in `endDrag`. `endDrag` also fires on pointerleave, and the last
+  pointermove is the final `annots` change — it lands while `dragRef` is still
+  set, so an `endDrag`-based resample reads the previous position and lags by
+  exactly one move. `gestureSettled` is the explicit nudge that fixes it.
+
+## 16. SEO — additive pass (25 Aug 2026)
+
+**Nothing was removed.** Every pre-existing title, description, canonical,
+JSON-LD block, sitemap entry and robots rule is intact; the diff is additive
+plus two defect fixes.
+
+**Baseline found by auditing `out/`, not source** — 96 pages, all with title,
+description, canonical, og:title, twitter:card; 702 JSON-LD blocks; zero fake
+ratings; zero localhost/`.web.app` leaks; canonicals correctly self-referential.
+
+**Fixed**
+1. **36 pages shipped with no `og:image` / `twitter:image`** (categories 9,
+   convert 12, guides 8, static 7). Cause: Next replaces the `openGraph` object
+   wholesale rather than merging, so any page setting `openGraph` without
+   `images` silently loses the root layout's. Tool pages were unaffected only
+   because they have an `opengraph-image.tsx` file. Now 97/97.
+2. **`/tools/pdf-editor` rendered two `<h1>`** — the widget had its own heading
+   competing with ToolShell's. Demoted to `<p>`; ToolShell owns the page h1.
+
+**Added**
+- `lib/seo/og-template.tsx` — one OG card design, plus `clampForOg()`.
+- `opengraph-image.tsx` for `categories/[category]`, `guides/[slug]`,
+  `convert/[pair]` — 29 tailored cards. Firebase's existing
+  `**/opengraph-image` Content-Type rule already covers the nested paths.
+- `constructPageMetadata({ ogImage })` — defaults to the site card; pass
+  **`null`** on any route owning an `opengraph-image.tsx`, or the metadata
+  `images` overrides the tailored card.
+- `/categories` hub. The 9 category pages previously had no crawlable parent
+  (header dropdown only). Linked from footer + both nav menus + sitemap.
+- `scripts/seo-check.mjs`, wired as **`postbuild`** so every export is gated,
+  and as `npm run seo:check`.
+
+**The check is verified to fire** — tested against 7 injected defects: missing
+og:image, canonical pointing at the homepage, duplicate `<h1>`,
+`aggregateRating`, `.web.app` in a URL, a broken internal link, and `noindex`.
+All caught, exit 1. Do not let it become a check that always passes: if you
+change it, re-run the injection test.
+
+**Do not** apply the "put `<link rel="canonical" href="https://tabbench.com">`
+on every page" advice that circulated — it tells Google all 97 pages duplicate
+the homepage. `seo-check.mjs` now errors on exactly that.
 
 
 ## 11. Commands

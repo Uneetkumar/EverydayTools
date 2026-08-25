@@ -70,13 +70,29 @@ export function constructPageMetadata({
   description,
   path = "",
   keywords = [],
+  ogImage,
 }: {
   title: string;
   description: string;
   path?: string;
   keywords?: string[];
+  /**
+   * Social card for the page.
+   *
+   * Next merges `openGraph` by replacing the whole object, so a page that sets
+   * `openGraph` without `images` drops the one inherited from the root layout —
+   * which is why these pages were shipping with no og:image at all. Defaulting
+   * here restores it everywhere.
+   *
+   * Pass `null` on routes that own an `opengraph-image.tsx` file: the file
+   * convention injects the tag itself, and setting `images` here would override
+   * the tailored card with the generic one.
+   */
+  ogImage?: string | null;
 }): Metadata {
   const url = `${SITE_CONFIG.domain}${path}`;
+  const socialImage =
+    ogImage === null ? undefined : ogImage || `${SITE_CONFIG.domain}/opengraph-image`;
 
   // Ensure title fits optimal format
   let optTitle = title.trim();
@@ -113,12 +129,14 @@ export function constructPageMetadata({
       siteName: SITE_CONFIG.name,
       locale: "en_US",
       type: "website",
+      ...(socialImage ? { images: [{ url: socialImage, width: 1200, height: 630, alt: optTitle }] } : {}),
     },
     twitter: {
       card: "summary_large_image",
       title: optTitle,
       description: optDesc,
       creator: SITE_CONFIG.twitterHandle,
+      ...(socialImage ? { images: [socialImage] } : {}),
     },
   };
 }

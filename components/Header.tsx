@@ -170,6 +170,13 @@ export default function Header() {
                         </Link>
                       );
                     })}
+                    <Link
+                      href="/categories"
+                      onClick={() => setIsCategoriesDropdownOpen(false)}
+                      className="col-span-2 mt-1 rounded-xl border-t border-slate-100 dark:border-slate-800 px-2.5 pt-2.5 pb-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      Browse all categories →
+                    </Link>
                   </div>
                 )}
               </div>
@@ -366,13 +373,22 @@ export default function Header() {
                   <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                     Categories
                   </span>
-                  <Link
-                    href="/tools"
-                    onClick={() => setIsMobileMenuOpen(false)}
-                    className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-                  >
-                    All Tools
-                  </Link>
+                  <span className="flex items-center gap-2">
+                    <Link
+                      href="/categories"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      Browse all
+                    </Link>
+                    <Link
+                      href="/tools"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      All Tools
+                    </Link>
+                  </span>
                 </div>
                 <div className="grid grid-cols-1 gap-1">
                   {TOOL_CATEGORIES.map((cat) => {

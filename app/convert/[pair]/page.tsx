@@ -29,6 +29,8 @@ export async function generateMetadata({ params }: PairPageProps): Promise<Metad
     description: def.metaDescription,
     path: `/convert/${def.slug}`,
     keywords: def.keywords,
+    // This route ships its own opengraph-image.tsx.
+    ogImage: null,
   });
 }
 

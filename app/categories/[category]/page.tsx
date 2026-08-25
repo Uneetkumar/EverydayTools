@@ -47,6 +47,8 @@ export async function generateMetadata({
     description: content.metaDescription,
     path: `/categories/${category}`,
     keywords: content.keywords,
+    // This route ships its own opengraph-image.tsx.
+    ogImage: null,
   });
 }
 
