@@ -6,11 +6,9 @@ import { useRouter } from "next/navigation";
 import {
   TOOL_CATEGORIES,
   getAllTools,
-  getPopularTools,
   ToolDefinition,
 } from "@/lib/tools/registry";
 import { searchTools } from "@/lib/tools/search";
-import AdSlot from "@/components/AdSlot";
 import RecentTools from "@/components/RecentTools";
 import {
   Search,
@@ -26,7 +24,6 @@ import {
   ShieldCheck,
   CheckCircle2,
   X,
-  Star,
   Image as ImageIcon,
   FileText,
   Shield,
@@ -40,9 +37,14 @@ import {
   Tag,
   Lock,
   GitCompare,
-  Layers,
   Crop,
   ChevronRight,
+  LayoutGrid,
+  Flame,
+  Film,
+  Briefcase,
+  Smartphone,
+  CornerDownRight,
 } from "lucide-react";
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -69,70 +71,201 @@ const ICON_MAP: Record<string, React.ElementType> = {
   FileCheck: FileText,
   FilePlus: FileText,
   Crop,
+  Film,
+  Briefcase,
+  Smartphone,
 };
 
 const CATEGORY_COLORS: Record<
   string,
-  { bg: string; text: string; border: string; glow: string }
+  { bg: string; text: string; border: string; glow: string; iconBg: string }
 > = {
+  all: {
+    bg: "bg-blue-50 dark:bg-blue-950/80",
+    text: "text-blue-600 dark:text-blue-400",
+    border: "group-hover:border-blue-300 dark:group-hover:border-blue-700",
+    glow: "group-hover:shadow-blue-500/10",
+    iconBg: "bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20",
+  },
   calculators: {
     bg: "bg-blue-50 dark:bg-blue-950/80",
     text: "text-blue-600 dark:text-blue-400",
     border: "group-hover:border-blue-300 dark:group-hover:border-blue-700",
     glow: "group-hover:shadow-blue-500/10",
+    iconBg: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20",
   },
   "date-time": {
     bg: "bg-violet-50 dark:bg-violet-950/80",
     text: "text-violet-600 dark:text-violet-400",
     border: "group-hover:border-violet-300 dark:group-hover:border-violet-700",
     glow: "group-hover:shadow-violet-500/10",
+    iconBg: "bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20",
   },
   text: {
     bg: "bg-emerald-50 dark:bg-emerald-950/80",
     text: "text-emerald-600 dark:text-emerald-400",
     border: "group-hover:border-emerald-300 dark:group-hover:border-emerald-700",
     glow: "group-hover:shadow-emerald-500/10",
+    iconBg: "bg-purple-500/15 text-purple-600 dark:text-purple-400 border border-purple-500/20",
   },
   developer: {
     bg: "bg-indigo-50 dark:bg-indigo-950/80",
     text: "text-indigo-600 dark:text-indigo-400",
     border: "group-hover:border-indigo-300 dark:group-hover:border-indigo-700",
     glow: "group-hover:shadow-indigo-500/10",
+    iconBg: "bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20",
   },
   "image-media": {
     bg: "bg-sky-50 dark:bg-sky-950/80",
     text: "text-sky-600 dark:text-sky-400",
     border: "group-hover:border-sky-300 dark:group-hover:border-sky-700",
     glow: "group-hover:shadow-sky-500/10",
+    iconBg: "bg-pink-500/15 text-pink-600 dark:text-pink-400 border border-pink-500/20",
   },
   "pdf-docs": {
     bg: "bg-rose-50 dark:bg-rose-950/80",
     text: "text-rose-600 dark:text-rose-400",
     border: "group-hover:border-rose-300 dark:group-hover:border-rose-700",
     glow: "group-hover:shadow-rose-500/10",
+    iconBg: "bg-orange-500/15 text-orange-600 dark:text-orange-400 border border-orange-500/20",
   },
   security: {
     bg: "bg-amber-50 dark:bg-amber-950/80",
     text: "text-amber-600 dark:text-amber-400",
     border: "group-hover:border-amber-300 dark:group-hover:border-amber-700",
     glow: "group-hover:shadow-amber-500/10",
+    iconBg: "bg-teal-500/15 text-teal-600 dark:text-teal-400 border border-teal-500/20",
   },
   business: {
     bg: "bg-emerald-50 dark:bg-emerald-950/80",
     text: "text-emerald-600 dark:text-emerald-400",
     border: "group-hover:border-emerald-300 dark:group-hover:border-emerald-700",
     glow: "group-hover:shadow-emerald-500/10",
+    iconBg: "bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 border border-yellow-500/20",
   },
   "ai-tools": {
     bg: "bg-purple-50 dark:bg-purple-950/80",
     text: "text-purple-600 dark:text-purple-400",
     border: "group-hover:border-purple-300 dark:group-hover:border-purple-700",
     glow: "group-hover:shadow-purple-500/10",
+    iconBg: "bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-500/20",
   },
 };
 
+const CATEGORY_CARDS_META: Array<{
+  id: string;
+  name: string;
+  subtext: string;
+  icon: React.ElementType;
+}> = [
+  {
+    id: "all",
+    name: "All Tools",
+    subtext: "View all utilities",
+    icon: LayoutGrid,
+  },
+  {
+    id: "calculators",
+    name: "Calculators & Finance",
+    subtext: "EMI, GST, Percentage & more",
+    icon: Calculator,
+  },
+  {
+    id: "date-time",
+    name: "Date & Time",
+    subtext: "Age, Date Difference",
+    icon: Calendar,
+  },
+  {
+    id: "text",
+    name: "Text & Writing",
+    subtext: "Word Counter, Case & more",
+    icon: Type,
+  },
+  {
+    id: "developer",
+    name: "Developer & Data",
+    subtext: "JSON, Base64, UUID & more",
+    icon: Code,
+  },
+  {
+    id: "image-media",
+    name: "Image & Media",
+    subtext: "Compress, Convert, Crop & more",
+    icon: ImageIcon,
+  },
+  {
+    id: "pdf-docs",
+    name: "PDF & Documents",
+    subtext: "Edit, Convert, Merge & more",
+    icon: FileText,
+  },
+  {
+    id: "security",
+    name: "Security & Generators",
+    subtext: "Password, Hash, QR & more",
+    icon: Lock,
+  },
+  {
+    id: "business",
+    name: "Business & Marketing",
+    subtext: "Invoice, ROI & more",
+    icon: Briefcase,
+  },
+  {
+    id: "ai-tools",
+    name: "AI-Powered Tools",
+    subtext: "Smart utilities & helpers",
+    icon: Sparkles,
+  },
+];
+
+const POPULAR_TOOLS_SHOWCASE = [
+  {
+    name: "PDF Editor",
+    slug: "pdf-editor",
+    description: "Edit text, images & more in PDF",
+    icon: FileText,
+    color: "bg-rose-500/15 text-rose-500 border-rose-500/20",
+  },
+  {
+    name: "Image Compressor",
+    slug: "image-compressor",
+    description: "Compress JPG, PNG, WebP images",
+    icon: ImageIcon,
+    color: "bg-emerald-500/15 text-emerald-500 border-emerald-500/20",
+  },
+  {
+    name: "Percentage Calculator",
+    slug: "percentage-calculator",
+    description: "Calculate percentage, increase, decrease",
+    icon: Percent,
+    color: "bg-purple-500/15 text-purple-500 border-purple-500/20",
+  },
+  {
+    name: "Sample Video Generator",
+    slug: "sample-video-generator",
+    description: "Generate sample videos instantly",
+    icon: Film,
+    color: "bg-blue-500/15 text-blue-500 border-blue-500/20",
+  },
+  {
+    name: "Crop Image",
+    slug: "crop-image",
+    description: "Crop images to any size or ratio",
+    icon: Crop,
+    color: "bg-amber-500/15 text-amber-500 border-amber-500/20",
+  },
+  {
+    name: "Word Counter",
+    slug: "word-counter",
+    description: "Count words, characters & reading time",
+    icon: Type,
+    color: "bg-indigo-500/15 text-indigo-500 border-indigo-500/20",
+  },
+];
+
 const ALL_TOOLS = getAllTools();
-const POPULAR_TOOLS = getPopularTools();
 const CATEGORY_MAP_STATIC = TOOL_CATEGORIES.reduce((acc, cat) => {
   acc[cat.id] = ALL_TOOLS.filter((t) => t.category === cat.id);
   return acc;
@@ -141,7 +274,6 @@ const CATEGORY_MAP_STATIC = TOOL_CATEGORIES.reduce((acc, cat) => {
 export default function HomePage() {
   const router = useRouter();
   const allTools = ALL_TOOLS;
-  const popularTools = POPULAR_TOOLS;
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -164,7 +296,6 @@ export default function HomePage() {
 
   const searchResults = useMemo(() => {
     if (!searchQuery.trim()) return [];
-    // Same ranked search as the grid, so the dropdown never disagrees with it.
     return searchTools(ALL_TOOLS, searchQuery, 7);
   }, [searchQuery]);
 
@@ -206,8 +337,6 @@ export default function HomePage() {
       const targetTool = searchResults[selectedIndex] || searchResults[0];
       if (targetTool) {
         setIsDropdownOpen(false);
-        // Clear the query too, so returning to the homepage shows the full
-        // tool grid rather than the last search still applied.
         setSearchQuery("");
         router.push(`/tools/${targetTool.slug}`);
       }
@@ -216,26 +345,56 @@ export default function HomePage() {
     }
   };
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchResults.length > 0) {
+      const targetTool = searchResults[selectedIndex] || searchResults[0];
+      if (targetTool) {
+        setIsDropdownOpen(false);
+        setSearchQuery("");
+        router.push(`/tools/${targetTool.slug}`);
+      }
+    } else {
+      setIsDropdownOpen(false);
+    }
+  };
+
+  const handleCategoryClick = (catId: string) => {
+    setSearchQuery("");
+    if (selectedCategory === catId) {
+      setSelectedCategory("all");
+    } else {
+      setSelectedCategory(catId);
+    }
+  };
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-12">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-10">
       {/* 1. Hero Section */}
-      <section className="text-center max-w-4xl mx-auto space-y-5 pt-4">
-        <div className="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-50/90 dark:bg-blue-950/80 border border-blue-200/80 dark:border-blue-800/80 text-blue-700 dark:text-blue-300 text-xs font-semibold shadow-xs backdrop-blur-xs">
-          <Sparkles className="w-3.5 h-3.5 text-blue-600 animate-pulse" />
+      <section className="text-center max-w-4xl mx-auto space-y-4 pt-1">
+        {/* Sparkle Badge */}
+        <div className="inline-flex items-center space-x-2 px-3.5 py-1 rounded-full bg-blue-50/90 dark:bg-blue-950/80 border border-blue-200/80 dark:border-blue-800/80 text-blue-700 dark:text-blue-300 text-xs font-semibold shadow-xs backdrop-blur-xs">
+          <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
           <span>{allTools.length}+ Free Tools • 100% Client-Side Private • Zero Latency</span>
         </div>
 
-        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
-          Free Online Tools & Calculators
+        {/* Title */}
+        <h1 className="text-3xl sm:text-5xl lg:text-5.5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+          Free Online Tools &amp;{" "}
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-500 dark:from-blue-400 dark:to-indigo-400">
+            Calculators
+          </span>
         </h1>
-        <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
+
+        {/* Subtitle */}
+        <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 max-w-2xl mx-auto leading-relaxed">
           Fast, private browser utilities for students, developers, and creators. All calculations and file conversions run locally on your device.
         </p>
 
-        {/* Live Search Bar with Instant Autocomplete Dropdown */}
-        <div className="relative max-w-2xl mx-auto pt-2 z-30" ref={searchContainerRef}>
-          <div className="relative flex items-center">
-            <Search className="w-5 h-5 text-slate-400 absolute left-4 pointer-events-none" />
+        {/* Search Bar with Search Button */}
+        <div className="relative max-w-2xl mx-auto pt-1 z-30" ref={searchContainerRef}>
+          <form onSubmit={handleSearchSubmit} className="relative flex items-center">
+            <Search className="w-4 h-4 text-slate-400 absolute left-4 pointer-events-none" />
             <input
               type="text"
               value={searchQuery}
@@ -245,22 +404,29 @@ export default function HomePage() {
                 if (searchQuery.trim().length > 0) setIsDropdownOpen(true);
               }}
               placeholder={`Search ${allTools.length} tools (e.g. crop image, compress, pdf to word, emi, json)...`}
-              className="w-full pl-12 pr-10 py-3.5 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md text-sm text-slate-900 dark:text-white shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="w-full pl-11 pr-28 py-3 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md text-xs sm:text-sm text-slate-900 dark:text-white shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
             {searchQuery && (
               <button
+                type="button"
                 onClick={() => {
                   setSearchQuery("");
                   setIsDropdownOpen(false);
                 }}
-                className="absolute right-3.5 p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="absolute right-24 p-1 rounded-full text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               >
                 <X className="w-4 h-4" />
               </button>
             )}
-          </div>
+            <button
+              type="submit"
+              className="absolute right-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-semibold shadow-xs transition"
+            >
+              Search
+            </button>
+          </form>
 
-          {/* Autocomplete Results Dropdown (Same rich UX as header modal) */}
+          {/* Autocomplete Dropdown */}
           {isDropdownOpen && searchResults.length > 0 && (
             <div className="absolute top-full left-0 right-0 mt-2 p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl space-y-1 text-left animate-in fade-in-50 zoom-in-95 duration-150">
               <div className="px-3 py-1.5 text-[11px] font-bold text-slate-400 uppercase tracking-wider flex justify-between">
@@ -280,14 +446,14 @@ export default function HomePage() {
                       setIsDropdownOpen(false);
                       setSearchQuery("");
                     }}
-                    className={`flex items-center justify-between p-3 rounded-xl transition group ${
+                    className={`flex items-center justify-between p-2.5 rounded-xl transition group ${
                       isSelected
                         ? "bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800"
                         : "hover:bg-slate-50 dark:hover:bg-slate-800/80 border border-transparent"
                     }`}
                   >
                     <div className="flex items-center space-x-3 min-w-0">
-                      <div className="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                         <Icon className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
@@ -313,90 +479,100 @@ export default function HomePage() {
           )}
         </div>
 
-        {/* Category Filter Chips */}
-        <div className="flex flex-wrap items-center justify-center gap-1.5 pt-2">
-          <button
-            onClick={() => {
-              setSelectedCategory("all");
-              setSearchQuery("");
-            }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-              selectedCategory === "all" && !searchQuery
-                ? "bg-blue-600 text-white shadow-xs"
-                : "bg-white/80 dark:bg-slate-900/80 backdrop-blur-xs text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
-            }`}
-          >
-            All Tools ({allTools.length})
-          </button>
-          {TOOL_CATEGORIES.map((cat) => {
-            const count = allTools.filter((t) => t.category === cat.id).length;
-            const isCatActive = selectedCategory === cat.id && !searchQuery;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => {
-                  setSelectedCategory(cat.id);
-                  setSearchQuery("");
-                }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
-                  isCatActive
-                    ? "bg-blue-600 text-white shadow-xs"
-                    : "bg-white/80 dark:bg-slate-900/80 backdrop-blur-xs text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
-                }`}
-              >
-                {cat.name} ({count})
-              </button>
-            );
-          })}
+        {/* "Or browse by category" label */}
+        <div className="flex items-center justify-center space-x-1.5 text-xs text-slate-500 dark:text-slate-400 font-medium pt-1">
+          <span>Or browse by category</span>
+          <CornerDownRight className="w-3.5 h-3.5 text-blue-500" />
         </div>
       </section>
 
-      {/* Recently used — renders itself only when local history exists, and is
-          hidden while browsing a category or searching so it never competes
-          with the results the user asked for. */}
-      {selectedCategory === "all" && !searchQuery && (
-        <RecentTools variant="compact" />
-      )}
+      {/* 2. Sleek 10-Card Category Grid (2 rows of 5 on desktop) */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-3">
+        {CATEGORY_CARDS_META.map((cat) => {
+          const count =
+            cat.id === "all"
+              ? allTools.length
+              : allTools.filter((t) => t.category === cat.id).length;
+          const CatIcon = cat.icon;
+          const color = CATEGORY_COLORS[cat.id] || CATEGORY_COLORS.all;
+          const isSelected = selectedCategory === cat.id && !searchQuery;
 
-      {/* 2. Main Popular Tools Section (Above the Fold) */}
-      {selectedCategory === "all" && !searchQuery && (
-        <section id="popular" className="scroll-mt-24 space-y-4">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-slate-800">
-            <div className="flex items-center space-x-2">
-              <div className="w-6 h-6 rounded-lg bg-amber-50 dark:bg-amber-950/60 flex items-center justify-center">
-                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+          return (
+            <button
+              key={cat.id}
+              onClick={() => handleCategoryClick(cat.id)}
+              className={`p-3 rounded-2xl border transition-all duration-200 flex items-center space-x-3 text-left group backdrop-blur-xs ${
+                isSelected
+                  ? "bg-blue-50/80 dark:bg-blue-950/50 border-blue-500 ring-1 ring-blue-500 shadow-sm"
+                  : "bg-white/70 dark:bg-slate-900/70 border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-850"
+              }`}
+            >
+              <div
+                className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${color.iconBg}`}
+              >
+                <CatIcon className="w-4 h-4" />
               </div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                Most Popular Tools
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-blue-500 transition">
+                    {cat.name}
+                  </span>
+                  <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
+                    {count}
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                  {cat.subtext}
+                </p>
+              </div>
+            </button>
+          );
+        })}
+      </section>
+
+      {/* 3. Popular Tools Showcase (Directly below Category Grid) */}
+      {!searchQuery && selectedCategory === "all" && (
+        <section className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white/60 dark:bg-slate-900/50 backdrop-blur-xs p-4 sm:p-5 space-y-3.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                Popular Tools
               </h2>
             </div>
-            <span className="text-xs text-slate-400 font-medium">Top High-Use Utilities</span>
+            <button
+              onClick={() => {
+                const el = document.getElementById("all-categories");
+                if (el) el.scrollIntoView({ behavior: "smooth" });
+              }}
+              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center space-x-1 group"
+            >
+              <span>View all tools</span>
+              <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
+            </button>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {popularTools.map((tool) => {
-              const Icon = ICON_MAP[tool.iconName] || Calculator;
-              const colorInfo = CATEGORY_COLORS[tool.category] || CATEGORY_COLORS.calculators;
-
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3">
+            {POPULAR_TOOLS_SHOWCASE.map((tool) => {
+              const ToolIcon = tool.icon;
               return (
                 <Link
                   key={tool.slug}
                   href={`/tools/${tool.slug}`}
-                  className={`p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xs hover:bg-white dark:hover:bg-slate-900 ${colorInfo.border} tool-card-glow transition-all flex flex-col justify-between group relative overflow-hidden`}
+                  className="p-3 sm:p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-850 hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between group h-full"
                 >
-                  <div className="space-y-2.5">
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <div className={`w-8 h-8 rounded-xl ${colorInfo.bg} ${colorInfo.text} flex items-center justify-center group-hover:scale-110 transition`}>
-                        <Icon className="w-4 h-4" />
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105 ${tool.color}`}
+                      >
+                        <ToolIcon className="w-4 h-4" />
                       </div>
-                      <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
-                        Free
-                      </span>
                     </div>
 
                     <div>
-                      <h3 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition line-clamp-1">
-                        {tool.shortName}
+                      <h3 className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-blue-500 transition line-clamp-1">
+                        {tool.name}
                       </h3>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-2 leading-tight mt-0.5">
                         {tool.description}
@@ -404,9 +580,8 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center text-[11px] font-semibold text-blue-600 dark:text-blue-400 mt-3 group-hover:translate-x-0.5 transition">
-                    <span>Use {tool.shortName}</span>
-                    <ArrowRight className="w-3 h-3 ml-1" />
+                  <div className="flex justify-end pt-2 text-slate-400 group-hover:text-blue-500 transition">
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
                   </div>
                 </Link>
               );
@@ -415,7 +590,65 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* 3. Category Sections or Filtered Grid */}
+      {/* 4. Trust Badges & Feature Highlights */}
+      {!searchQuery && selectedCategory === "all" && (
+        <section className="rounded-2xl border border-slate-200/80 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/30 backdrop-blur-xs p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="flex items-start space-x-3">
+            <div className="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-500 border border-blue-500/20 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-4.5 h-4.5" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white">100% Private</h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                Everything runs in your browser. Your data never leaves your device.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start space-x-3">
+            <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center shrink-0">
+              <Zap className="w-4.5 h-4.5" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white">Zero Latency</h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                Instant results. No uploads, no waiting, no server delays.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start space-x-3">
+            <div className="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-500 border border-purple-500/20 flex items-center justify-center shrink-0">
+              <Lock className="w-4.5 h-4.5" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white">Secure &amp; Trusted</h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                Safe, reliable and ad-light experience for everyone.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start space-x-3">
+            <div className="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center shrink-0">
+              <Smartphone className="w-4.5 h-4.5" />
+            </div>
+            <div>
+              <h4 className="text-xs font-bold text-slate-900 dark:text-white">Works Offline</h4>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                Most tools work without internet connection.
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 5. Recently Used Tools */}
+      {selectedCategory === "all" && !searchQuery && (
+        <RecentTools variant="compact" />
+      )}
+
+      {/* 6. Filtered View / Full Category Breakdown (Restored to Exact Previous Card View) */}
       {filteredTools.length === 0 ? (
         <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-8 space-y-3">
           <p className="text-base font-semibold text-slate-800 dark:text-slate-200">
@@ -432,9 +665,68 @@ export default function HomePage() {
             Reset Search
           </button>
         </div>
-      ) : selectedCategory === "all" && !searchQuery ? (
-        /* Full Category Breakdown */
-        <div className="space-y-12">
+      ) : selectedCategory !== "all" || searchQuery ? (
+        /* Filtered Grid View */
+        <div className="space-y-4">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-slate-800">
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              {searchQuery
+                ? `Showing ${filteredTools.length} matching tools for "${searchQuery}"`
+                : `Showing ${filteredTools.length} tools in ${CATEGORY_CARDS_META.find((c) => c.id === selectedCategory)?.name || "Category"}`}
+            </div>
+            <button
+              onClick={() => {
+                setSelectedCategory("all");
+                setSearchQuery("");
+              }}
+              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Show all tools
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredTools.map((tool) => {
+              const Icon = ICON_MAP[tool.iconName] || Calculator;
+              const colorInfo = CATEGORY_COLORS[tool.category] || CATEGORY_COLORS.calculators;
+
+              return (
+                <Link
+                  key={tool.slug}
+                  href={`/tools/${tool.slug}`}
+                  title={`Open ${tool.name} free online tool`}
+                  aria-label={`Open ${tool.name}`}
+                  className={`group p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 ${colorInfo.border} tool-card-glow transition flex flex-col justify-between`}
+                >
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <div className={`w-8 h-8 rounded-lg ${colorInfo.bg} ${colorInfo.text} flex items-center justify-center`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <span className="text-[11px] font-semibold text-slate-400">
+                        {tool.categoryName}
+                      </span>
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
+                      {tool.name}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
+                      {tool.description}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center text-xs font-semibold text-blue-600 dark:text-blue-400 mt-4 group-hover:translate-x-1 transition">
+                    <span>Open {tool.shortName}</span>
+                    <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        /* Full Category Breakdown with Original Card Layout */
+        <div id="all-categories" className="space-y-12">
           {TOOL_CATEGORIES.map((cat) => {
             const categoryTools = allTools.filter((t) => t.category === cat.id);
             if (categoryTools.length === 0) return null;
@@ -517,7 +809,7 @@ export default function HomePage() {
           <section className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-8 sm:p-10 space-y-8">
             <div className="max-w-3xl space-y-3">
               <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                Why Choose TabBench? 100% Free, Private & Instant
+                Why Choose TabBench? 100% Free, Private &amp; Instant
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                 TabBench is an open, high-performance web utility suite engineered for students, software engineers, accountants, designers, and creators worldwide. Unlike traditional online conversion platforms that upload your sensitive documents, passwords, or images to third-party cloud servers, our architecture computes 100% of calculations and file operations directly inside your browser memory.
@@ -551,7 +843,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white">100% Free Forever</h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                  No paywalls, no monthly subscription fees, and no required registration. Enjoy unlimited access to all 31+ online calculators, formatters, and converters.
+                  No paywalls, no monthly subscription fees, and no required registration. Enjoy unlimited access to all {allTools.length}+ online calculators, formatters, and converters.
                 </p>
               </div>
             </div>
@@ -567,7 +859,7 @@ export default function HomePage() {
                     Are the tools really completely free to use?
                   </div>
                   <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                    Yes. All 31+ utilities on TabBench are 100% free with unlimited usage for personal, commercial, and educational purposes. No credit card or account is ever required.
+                    Yes. All {allTools.length}+ utilities on TabBench are 100% free with unlimited usage for personal, commercial, and educational purposes. No credit card or account is ever required.
                   </p>
                 </div>
 
@@ -582,51 +874,6 @@ export default function HomePage() {
               </div>
             </div>
           </section>
-        </div>
-      ) : (
-        /* Filtered Grid */
-        <div className="space-y-4">
-          <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
-            Showing {filteredTools.length} tools
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredTools.map((tool) => {
-              const Icon = ICON_MAP[tool.iconName] || Calculator;
-              const colorInfo = CATEGORY_COLORS[tool.category] || CATEGORY_COLORS.calculators;
-
-              return (
-                <Link
-                  key={tool.slug}
-                  href={`/tools/${tool.slug}`}
-                  title={`Open ${tool.name} free online tool`}
-                  aria-label={`Open ${tool.name}`}
-                  className={`group p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 ${colorInfo.border} tool-card-glow transition flex flex-col justify-between`}
-                >
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <div className={`w-8 h-8 rounded-lg ${colorInfo.bg} ${colorInfo.text} flex items-center justify-center`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <span className="text-[11px] font-semibold text-slate-400">
-                        {tool.categoryName}
-                      </span>
-                    </div>
-                    <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">
-                      {tool.name}
-                    </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed line-clamp-2">
-                      {tool.description}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center text-xs font-semibold text-blue-600 dark:text-blue-400 mt-4 group-hover:translate-x-1 transition">
-                    <span>Open {tool.shortName}</span>
-                    <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
         </div>
       )}
     </div>

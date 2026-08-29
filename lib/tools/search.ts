@@ -200,7 +200,7 @@ function blobHasToken(blob: string, token: string): boolean {
 }
 
 /** Returns 0 when any group is unmatched, so every typed word must land. */
-function scoreTool(tool: ToolDefinition, groups: string[][]): number {
+function scoreTool(tool: ToolDefinition, groups: string[][], rawQuery?: string): number {
   if (groups.length === 0) return 0;
   const blob = getBlob(tool);
   const name = normalize(`${tool.name} ${tool.shortName} ${tool.slug}`);
@@ -224,6 +224,17 @@ function scoreTool(tool: ToolDefinition, groups: string[][]): number {
     if (best === 0) return 0;
     score += best;
   }
+
+  // Exact phrase match bonus for multi-word queries
+  if (rawQuery) {
+    const norm = normalize(rawQuery);
+    if (norm.length > 2) {
+      if (name.includes(norm)) score += 60;
+      else if (keywords.includes(norm)) score += 35;
+      else if (blob.includes(norm)) score += 15;
+    }
+  }
+
   return score;
 }
 
@@ -240,7 +251,7 @@ export function searchTools(
   if (groups.length === 0) return limit ? tools.slice(0, limit) : tools;
 
   const scored = tools
-    .map((tool) => ({ tool, score: scoreTool(tool, groups) }))
+    .map((tool) => ({ tool, score: scoreTool(tool, groups, query) }))
     .filter((entry) => entry.score > 0)
     .sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
