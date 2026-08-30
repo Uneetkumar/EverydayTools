@@ -147,13 +147,12 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon.svg" />
         <link rel="manifest" href="/manifest.webmanifest" />
 
-        {/* Google AdSense Script - lazyOnload executes during idle time, eliminating unused JS penalty on mobile */}
-        <Script
-          id="google-adsense"
-          strategy="lazyOnload"
+        {/* Google AdSense */}
+        <script
+          async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5552044975820319"
           crossOrigin="anonymous"
-        />
+        ></script>
 
         {/* Firebase always serves the project's *.web.app hostname and it
             cannot be switched off, so the whole site is reachable on two
