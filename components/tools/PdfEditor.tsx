@@ -2920,9 +2920,9 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
               {tab === "edit" && (
                 <div className="space-y-4">
                   <div>
-                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
                       Edit Content
-                    </h4>
+                    </h3>
                     <div className="space-y-2">
                       {/* Edit Text Card */}
                       <button
@@ -3096,9 +3096,9 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
 
                   {/* PAGE TOOLS */}
                   <div>
-                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
                       Page Tools
-                    </h4>
+                    </h3>
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         onClick={() => rotatePage(pageIndex, -90)}
@@ -3127,9 +3127,9 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
               {/* TAB 2: ANNOTATE */}
               {tab === "annotate" && (
                 <div className="space-y-3">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
                     Annotation Tools
-                  </h4>
+                  </h3>
 
                   {/* Signature Card */}
                   <button
@@ -3205,9 +3205,9 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
               {tab === "forms" && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
                       Document Fields ({fields.length + userFieldAnnots.length})
-                    </h4>
+                    </h3>
                     <button
                       onClick={() => setShowFormFieldModal(true)}
                       className="flex items-center gap-1 rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-bold text-white shadow-2xs hover:bg-indigo-700"
@@ -3430,9 +3430,9 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
               {/* TAB 4: ORGANIZE */}
               {tab === "organize" && (
                 <div className="space-y-3">
-                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
                     Organize Pages ({pages.length})
-                  </h4>
+                  </h3>
                   <div className="grid grid-cols-2 gap-2.5 max-h-[500px] overflow-y-auto pr-1">
                     {pages.map((p, i) => (
                       <div

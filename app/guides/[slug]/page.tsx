@@ -42,7 +42,17 @@ export default async function GuidePage({ params }: GuidePageProps) {
   if (!guide) notFound();
 
   const tool = getToolBySlug(guide.toolSlug);
-  const others = GUIDES.filter((g) => g.slug !== guide.slug).slice(0, 5);
+  // Same rotation as the currency corridors: a fixed slice left the last
+  // guides in the registry with almost no inbound links.
+  const restGuides = GUIDES.filter((g) => g.slug !== guide.slug);
+  const guideStart =
+    restGuides.length > 0
+      ? GUIDES.findIndex((g) => g.slug === guide.slug) % restGuides.length
+      : 0;
+  const others = [
+    ...restGuides.slice(guideStart),
+    ...restGuides.slice(0, guideStart),
+  ].slice(0, 5);
   const url = `${SITE_CONFIG.domain}/guides/${guide.slug}`;
 
   // Article carries the authorship and freshness signals a bare page does not.

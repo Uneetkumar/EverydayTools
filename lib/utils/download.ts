@@ -4,10 +4,20 @@ import { recordResult } from "@/lib/history/results";
  * Universal, high-reliability download utility.
  * Guarantees instant 1-click downloads across Chrome, Safari (Desktop & iOS), Firefox, Edge, and Android.
  */
-export function downloadBlob(blob: Blob, filename: string): void {
+export function downloadBlob(
+  blob: Blob,
+  filename: string,
+  /**
+   * Tool the download belongs to. Optional: `recordResult` infers it from the
+   * URL, which is right for a tool rendered at /tools/<slug>. Pass it
+   * explicitly when the download happens somewhere the path would not identify
+   * the tool correctly.
+   */
+  toolSlug?: string
+): void {
   // Recording here rather than in each tool means every download is captured
   // from one place, and a tool added later gets history for free.
-  void recordResult(blob, filename);
+  void recordResult(blob, filename, toolSlug);
   const url = URL.createObjectURL(blob);
   downloadDataUrl(url, filename, true);
 }

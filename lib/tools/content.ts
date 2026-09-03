@@ -3421,6 +3421,774 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
     ],
   },
 
+  "sip-calculator": {
+    intro:
+      "A Systematic Investment Plan (SIP) is one of the most reliable wealth-building strategies, leveraging compounding and rupee-cost averaging to grow wealth over time. This calculator projects future maturity value, total principal invested, and estimated capital gains with live visual growth charts. Everything calculates locally on your device without saving your financial inputs.",
+    howTo: {
+      title: "How to calculate mutual fund SIP returns",
+      steps: [
+        "Enter your planned monthly investment amount into the deposit field or use the slider.",
+        "Set your expected annual rate of return (e.g. 12% to 14% for diversified equity index funds).",
+        "Choose your target investment duration in years to visualize long-term compounding.",
+        "Review the estimated maturity wealth, wealth gain multiplier, and year-by-year annual growth breakdown table.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Retirement and long-term corpus planning",
+        body:
+          "Calculate how small monthly contributions over 15 to 25 years can compound into substantial retirement capital.",
+      },
+      {
+        title: "Child higher education & milestone goals",
+        body:
+          "Determine the exact monthly SIP required to achieve a target corpus for college education or purchasing a home.",
+      },
+      {
+        title: "Comparing SIP growth vs Fixed Deposits",
+        body:
+          "Compare the compounding power of disciplined equity investment against traditional fixed-return debt instruments.",
+      },
+    ],
+    tips: [
+      "Starting an SIP 5 years earlier can double your eventual corpus due to the exponential nature of compound interest.",
+      "Equity mutual fund returns fluctuate in the short term; SIPs average out market volatility over 5+ year horizons.",
+      "Increasing your SIP amount annually by 10% (Step-Up SIP) can significantly accelerate your wealth accumulation.",
+      "All calculations assume reinvestment of returns with monthly compounding frequency.",
+    ],
+    extraFaqs: [
+      {
+        question: "What is rupee cost averaging in an SIP?",
+        answer:
+          "When markets fall, your fixed monthly allocation buys more fund units; when markets rise, it buys fewer units, averaging your cost per unit over time without requiring market timing.",
+      },
+      {
+        question: "Is SIP return guaranteed?",
+        answer:
+          "No. Mutual fund and stock market investments carry market risk. Expected return rates (such as 12%) are historical reference estimates, not guaranteed bank rates.",
+      },
+    ],
+  },
+
+  "compound-interest-calculator": {
+    intro:
+      "Compound interest is interest calculated on the initial principal and also on the accumulated interest of previous periods. Often referred to as the eighth wonder of the world, compound interest accelerates savings dramatically over long timeframes. This tool calculates future values across daily, monthly, quarterly, and annual compounding schedules with optional monthly additions.",
+    howTo: {
+      title: "How to calculate compound interest",
+      steps: [
+        "Enter your starting principal deposit amount.",
+        "Specify any additional regular monthly contributions you plan to make.",
+        "Input the annual interest rate (APY/APR) and total investment time horizon in years.",
+        "Select your account compounding frequency (e.g. daily, monthly, or annually) to compute the final maturity value.",
+      ],
+    },
+    useCases: [
+      {
+        title: "High-yield savings accounts & Certificates of Deposit (CDs)",
+        body:
+          "Calculate the exact interest payout from banks compounding interest monthly or daily.",
+      },
+      {
+        title: "Long-term investment portfolio compounding",
+        body:
+          "Model how reinvested dividend payments and asset growth accumulate over multiple decades.",
+      },
+      {
+        title: "Loan and mortgage debt growth",
+        body:
+          "Understand how compounding interest affects unpaid loan balances or credit card debts over time.",
+      },
+    ],
+    tips: [
+      "Daily compounding yields slightly higher returns than annual compounding at the same nominal interest rate.",
+      "The Rule of 72 provides a quick mental estimate: divide 72 by your interest rate to estimate how many years it takes to double your money.",
+      "Consistent regular monthly contributions can outweigh the starting principal in long-term wealth building.",
+    ],
+    extraFaqs: [
+      {
+        question: "What is Effective Annual Rate (EAR)?",
+        answer:
+          "Effective Annual Rate is the true annual interest rate earned after accounting for the compounding frequency, which is higher than the nominal stated interest rate when compounding occurs more than once per year.",
+      },
+      {
+        question: "How does compounding frequency impact returns?",
+        answer:
+          "More frequent compounding (e.g., daily vs annually) means accrued interest starts earning interest sooner, yielding a higher future value.",
+      },
+    ],
+  },
+
+  "bmi-calculator": {
+    intro:
+      "Body Mass Index (BMI) is a standardized screening metric used by the World Health Organization (WHO) and healthcare professionals to assess whether an individual has a healthy body weight relative to their height. This calculator provides instant BMI scores, classification categories, and healthy weight targets for both metric and imperial measurements.",
+    howTo: {
+      title: "How to calculate your BMI",
+      steps: [
+        "Select your preferred measurement unit: Metric (cm / kg) or Imperial (ft-in / lbs).",
+        "Enter your current age and gender.",
+        "Input your exact height and body weight.",
+        "View your BMI score, WHO weight category badge, and ideal healthy weight range.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Personal fitness & weight management",
+        body:
+          "Track progress towards a healthy weight range during diet or fitness programs.",
+      },
+      {
+        title: "Health screening & wellness checkups",
+        body:
+          "Quickly assess whether your weight falls into underweight, normal, overweight, or obesity classifications.",
+      },
+    ],
+    tips: [
+      "BMI is an effective population-level screening metric, but does not distinguish between muscle mass and fat tissue.",
+      "Athletes and bodybuilders with high muscle mass may register as 'overweight' despite having low body fat percentages.",
+      "For comprehensive health evaluation, combine BMI with waist-to-hip ratio and medical consultations.",
+    ],
+    extraFaqs: [
+      {
+        question: "What are the WHO BMI weight categories for adults?",
+        answer:
+          "Underweight: < 18.5 | Normal weight: 18.5 – 24.9 | Overweight: 25.0 – 29.9 | Obesity Class I: 30.0 – 34.9 | Severe Obesity Class II+: ≥ 35.0.",
+      },
+    ],
+  },
+
+  "lorem-ipsum-generator": {
+    intro:
+      "Lorem Ipsum has been the printing and typesetting industry's standard dummy text since the 1500s. It provides natural-looking distribution of letters without readable content distracting from layout and typography design. Generate clean paragraphs, sentences, words, or unordered list items with optional HTML markup.",
+    howTo: {
+      title: "How to generate Lorem Ipsum dummy text",
+      steps: [
+        "Choose whether you want paragraphs, individual sentences, words, or a bulleted list.",
+        "Set the desired quantity using the count box.",
+        "Toggle whether to start with the classic 'Lorem ipsum dolor sit amet' opening sentence.",
+        "Optionally enable HTML tags (<p>, <ul>) for immediate insertion into web code.",
+        "Click Copy Text to transfer the generated dummy copy to your clipboard.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Website layout wireframing & prototyping",
+        body:
+          "Fill placeholder areas in Figma, Sketch, or frontend web code to preview typography and spacing.",
+      },
+      {
+        title: "Graphic design & print mockups",
+        body:
+          "Demonstrate magazine, brochure, or flyer formatting to clients before final copy is drafted.",
+      },
+    ],
+    tips: [
+      "Using dummy text prevents stakeholders from focusing on copy typos instead of visual hierarchy during design reviews.",
+      "Enable HTML tags when copying directly into CMS editors or template code.",
+    ],
+    extraFaqs: [
+      {
+        question: "Is Lorem Ipsum completely random Latin?",
+        answer:
+          "No. It is derived from sections of Cicero's 45 BC philosophical treatise 'De finibus bonorum et malorum', altered to make the words nonsensical.",
+      },
+    ],
+  },
+
+  "slug-generator": {
+    intro:
+      "URL slugs are human-readable identifiers that form the end part of a web address. A clean, optimized slug improves search engine rankings, readability, and click-through rates. This tool converts any headline or title into a standardized, URL-safe slug with accent stripping, lowercase normalization, and stopword filtering.",
+    howTo: {
+      title: "How to generate an SEO URL slug",
+      steps: [
+        "Paste or type your article headline, product title, or page name into the input box.",
+        "Choose your separator character: Hyphen (-), Underscore (_), or Slash (/).",
+        "Toggle options for lowercase enforcement, number stripping, or stopword removal.",
+        "Copy the generated clean slug with a single click.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Blog posts & article permalinks",
+        body:
+          "Convert long blog post titles into clean, concise permalinks for WordPress, Ghost, or Next.js blogs.",
+      },
+      {
+        title: "E-commerce product URLs",
+        body:
+          "Generate clean product catalog URL structures that search engines can easily index.",
+      },
+    ],
+    tips: [
+      "Keep slugs between 3 to 5 words long for maximum SEO readability.",
+      "Always use hyphens rather than underscores in URLs, as search engines treat hyphens as word spaces.",
+    ],
+    extraFaqs: [
+      {
+        question: "Why should I remove stop words from URL slugs?",
+        answer:
+          "Removing filler words like 'a', 'the', and 'in' keeps the URL concise and focused on primary target keywords.",
+      },
+    ],
+  },
+
+  "json-to-csv": {
+    intro:
+      "JSON is the standard format for modern web APIs, while CSV is the universal standard for spreadsheets like Excel, Google Sheets, and databases. This bidirectional tool converts JSON arrays to CSV spreadsheets and parses CSV files back to clean JSON with full delimiter flexibility, running entirely in your local browser memory.",
+    howTo: {
+      title: "How to convert JSON to CSV and CSV to JSON",
+      steps: [
+        "Select your conversion direction: JSON to CSV or CSV to JSON.",
+        "Paste your data directly into the input area or upload a .json / .csv file.",
+        "Choose your column delimiter: Comma, Semicolon, Tab, or Pipe.",
+        "Inspect the converted output in real-time, copy to clipboard, or download as a standalone file.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Exporting API responses to Excel or Google Sheets",
+        body:
+          "Turn complex API response payloads into structured spreadsheet tables for business analysis.",
+      },
+      {
+        title: "Importing spreadsheet tables into database seed files",
+        body:
+          "Convert exported CSV tables into structured JSON arrays for populating database fixtures and tests.",
+      },
+    ],
+    tips: [
+      "Nested JSON objects are automatically flattened into quoted string representations.",
+      "The parser automatically handles quotes and escaped delimiters according to RFC 4180 CSV specifications.",
+    ],
+    extraFaqs: [
+      {
+        question: "Can I convert large CSV or JSON files?",
+        answer:
+          "Yes. Files up to several megabytes process in milliseconds because everything executes client-side without network upload bottlenecks.",
+      },
+    ],
+  },
+
+  "regex-tester": {
+    intro:
+      "Regular expressions (regex) are essential pattern-matching sequences used in programming, data validation, and text processing. This interactive regex debugger provides instant live match highlighting, capture group extraction, flag customization, and syntax error diagnostics using your browser's native JavaScript regex engine.",
+    howTo: {
+      title: "How to test and debug regular expressions",
+      steps: [
+        "Type your regular expression pattern between the delimiter slashes.",
+        "Toggle matching flags such as Global (g), Case-Insensitive (i), or Multiline (m).",
+        "Paste your target test string in the text editor area.",
+        "Review highlighted matches in real-time and inspect capture groups ($1, $2) in the match breakdown drawer.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Validating user input forms (Email, Phone, Postal Code)",
+        body:
+          "Test and refine regex patterns before embedding them into frontend validation schemas or backend API handlers.",
+      },
+      {
+        title: "Log parsing & data extraction",
+        body:
+          "Extract IP addresses, timestamps, error codes, and request IDs from server logs.",
+      },
+    ],
+    tips: [
+      "Always enable the Global (g) flag if you want to find all occurrences in a multi-line document.",
+      "Use non-capturing groups (?:...) when you need grouping logic without creating extra capture group outputs.",
+    ],
+    extraFaqs: [
+      {
+        question: "What does the 's' (dotAll) flag do?",
+        answer:
+          "The 's' flag allows the dot (.) character in your regex pattern to match newline characters as well as standard characters.",
+      },
+    ],
+  },
+
+  "html-entity-converter": {
+    intro:
+      "HTML entities are used to display reserved characters (like <, >, &) that would otherwise be interpreted as HTML markup by web browsers. This utility encodes plain text characters into safe HTML entities (named, decimal, or hex) and decodes entity strings back to readable text with 100% client-side privacy.",
+    howTo: {
+      title: "How to encode and decode HTML entities",
+      steps: [
+        "Select Encode mode to escape characters, or Decode mode to unescape entities.",
+        "Paste your raw HTML or encoded text into the left input area.",
+        "Choose your entity format: Named (&amp;), Decimal (&#38;), or Hex (&#x26;).",
+        "Copy the transformed output instantly to your clipboard.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Displaying code snippets on websites",
+        body:
+          "Escape HTML source code so that browsers render the literal markup inside <pre> and <code> blocks without executing it.",
+      },
+      {
+        title: "Sanitizing user inputs against XSS",
+        body:
+          "Convert angle brackets and quotes into safe entities before rendering user-submitted text.",
+      },
+    ],
+    tips: [
+      "Named entities like &copy; and &euro; are easiest to read in source code, while hex entities offer universal XML compatibility.",
+      "The five fundamental XML entities are: &amp; (&), &lt; (<), &gt; (>), &quot; (\"), and &apos; (').",
+    ],
+    extraFaqs: [
+      {
+        question: "What is the difference between decimal and hexadecimal HTML entities?",
+        answer:
+          "Decimal entities use base-10 Unicode code points (&#60;), while hex entities use base-16 hexadecimal notation (&#x3C;). Both render identically.",
+      },
+    ],
+  },
+
+  "color-converter": {
+    intro:
+      "Designers and frontend engineers frequently need to translate colors across HEX, RGB, HSL, and CMYK formats for web stylesheets, UI frameworks, and print graphics. This comprehensive tool converts color representations, computes WCAG luminance contrast, generates CSS custom properties, and creates harmonic color palettes.",
+    howTo: {
+      title: "How to convert colors and generate palettes",
+      steps: [
+        "Click the color preview swatch to pick a color, or type any valid HEX, RGB, or HSL value.",
+        "Instantly view converted values in HEX, RGB, HSL, CMYK, CSS variables, and normalized GL coordinates.",
+        "Click the copy icon next to any format to copy it to your clipboard.",
+        "Explore complementary, analogous, and triadic harmonic palettes at the bottom.",
+      ],
+    },
+    useCases: [
+      {
+        title: "CSS design token generation",
+        body:
+          "Convert brand HEX colors into HSL or CSS custom variables for modern responsive design systems.",
+      },
+      {
+        title: "Print & digital media conversion",
+        body:
+          "Check corresponding CMYK values when preparing digital web graphics for commercial printing.",
+      },
+    ],
+    tips: [
+      "HSL (Hue, Saturation, Lightness) is often the most intuitive model for building hover and active color variations.",
+      "Hexadecimal colors can be written in 3-character shorthand (#FFF) or full 6-character format (#FFFFFF).",
+    ],
+    extraFaqs: [
+      {
+        question: "How do alpha / opacity channels work in CSS colors?",
+        answer:
+          "In modern CSS, RGB and HSL accept alpha values using slash syntax: rgb(59 130 246 / 0.5) or rgba(59, 130, 246, 0.5).",
+      },
+    ],
+  },
+
+  "salary-calculator": {
+    intro:
+      "Understanding the difference between gross Cost to Company (CTC) and actual monthly in-hand take-home salary is critical for job negotiations, financial planning, and budgeting. This calculator breaks down basic pay, HRA, special allowances, Provident Fund (PF) contributions, and income tax deductions across standard tax regimes.",
+    howTo: {
+      title: "How to calculate take-home salary from CTC",
+      steps: [
+        "Enter your total annual Cost to Company (CTC) figure.",
+        "Set your variable performance bonus percentage (if applicable).",
+        "Select your preferred tax regime (New Tax Regime vs Old Tax Regime).",
+        "Toggle whether Employee Provident Fund (PF) is deducted.",
+        "Review your estimated monthly in-hand take-home pay and annual deduction summary.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Evaluating job offers & salary negotiations",
+        body:
+          "Determine the real monthly disposable income from job offers with complex variable structures.",
+      },
+      {
+        title: "Annual tax planning & financial budgeting",
+        body:
+          "Compare take-home compensation under the New and Old Tax Regimes to select the most tax-efficient structure.",
+      },
+    ],
+    tips: [
+      "Under the New Tax Regime, taxable income up to ₹7,00,000 qualifies for full tax rebate under Section 87A.",
+      "Employee PF contributions earn statutory compound interest and provide tax-advantaged retirement savings.",
+    ],
+    extraFaqs: [
+      {
+        question: "Why is in-hand salary significantly lower than CTC?",
+        answer:
+          "CTC includes employer-side expenses such as Employer PF, gratuity, health insurance, and variable bonus pools, while in-hand salary is what you receive after all employer and employee deductions.",
+      },
+    ],
+  },
+
+  "working-days-calculator": {
+    intro:
+      "Calculating the exact number of business days between two dates is essential for project management sprint planning, legal contract fulfillment, payroll processing, and delivery estimates. This tool calculates total working days and working hours between any two dates with customizable weekend schedules and public holiday exclusions.",
+    howTo: {
+      title: "How to calculate business working days",
+      steps: [
+        "Select your Start Date and End Date.",
+        "Choose your weekend schedule: Standard Saturday & Sunday, Sunday-only, or Friday & Saturday.",
+        "Optionally set standard working hours per day (e.g. 8 hours/day).",
+        "Add custom dates to the holiday exclusion list to omit public holidays.",
+        "View the total working days, working hours, and calendar day breakdown.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Project management & milestone planning",
+        body:
+          "Calculate true working capacity for engineering sprints and delivery milestones excluding non-working days.",
+      },
+      {
+        title: "Payroll, attendance & leave calculation",
+        body:
+          "Determine exact working days in a pay period or billing cycle for contract freelancers.",
+      },
+    ],
+    tips: [
+      "Both start and end dates are counted inclusively in the date range.",
+      "Custom added holidays that fall on existing weekend days are automatically deduplicated.",
+    ],
+    extraFaqs: [
+      {
+        question: "How many working days are in an average calendar year?",
+        answer:
+          "A standard 365-day year with Monday-to-Friday schedules has approximately 260 to 262 working days before subtracting public holidays.",
+      },
+    ],
+  },
+
+  "unix-timestamp-converter": {
+    intro:
+      "Unix epoch time represents the number of elapsed seconds since January 1, 1970 UTC. It is the universal standard for logging timestamps, database records, and distributed API communications. This utility converts Unix epoch timestamps to formatted UTC and local dates in real-time, complete with a live ticking epoch clock and reverse date-to-epoch converter.",
+    howTo: {
+      title: "How to convert Unix timestamps and dates",
+      steps: [
+        "Enter any Unix epoch timestamp in seconds or milliseconds.",
+        "Or use the date-time picker to convert a calendar date into epoch seconds.",
+        "Click 'Use Current' to immediately populate the current live timestamp.",
+        "Inspect decoded UTC, ISO 8601, local time, and relative duration strings with single-click copying.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Debugging database records & server logs",
+        body:
+          "Translate raw integer timestamps from PostgreSQL, MongoDB, or Redis into readable calendar dates.",
+      },
+      {
+        title: "API integration & JWT expiration verification",
+        body:
+          "Inspect token 'iat' (issued at) and 'exp' (expiration) integer claims during authentication development.",
+      },
+    ],
+    tips: [
+      "10-digit timestamps represent seconds (e.g. 1741000000), while 13-digit timestamps represent milliseconds.",
+      "The tool automatically detects whether an entered number represents seconds or milliseconds.",
+    ],
+    extraFaqs: [
+      {
+        question: "What is the Year 2038 Problem (Y2K38)?",
+        answer:
+          "On January 19, 2038, 32-bit signed integers will overflow past 2,147,483,647 seconds. Modern 64-bit systems resolve this with timestamps valid for billions of years.",
+      },
+    ],
+  },
+
+  "json-to-typescript": {
+    intro:
+      "Typing API response payloads manually is slow and error-prone. This developer tool parses any JSON object or array and automatically generates clean, strongly typed TypeScript interfaces or type aliases with customizable root naming, optional property toggles, and readonly modifiers.",
+    howTo: {
+      title: "How to generate TypeScript interfaces from JSON",
+      steps: [
+        "Paste your raw JSON payload into the input editor.",
+        "Specify the name of the root interface (e.g. UserProfile, ApiResponse).",
+        "Choose between Interface or Type Alias declarations.",
+        "Toggle optional (?) or readonly modifiers as needed for your codebase.",
+        "Copy the generated TypeScript definitions or download as a standalone .ts file.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Frontend API client typing",
+        body:
+          "Quickly generate TypeScript types for REST and GraphQL API responses in React, Next.js, and Vue applications.",
+      },
+      {
+        title: "Data model scaffolding",
+        body:
+          "Turn sample JSON payloads into clean contract interfaces during system architecture design.",
+      },
+    ],
+    tips: [
+      "Nested JSON structures are automatically converted into separate, reusable exported interfaces.",
+      "Unquoted keys with special characters are automatically wrapped in safe quotes.",
+    ],
+    extraFaqs: [
+      {
+        question: "How does the generator handle null or unknown array types?",
+        answer:
+          "Empty arrays default to unknown[], while fields with null values are typed as null or optional based on your selected settings.",
+      },
+    ],
+  },
+
+  "cron-explainer": {
+    intro:
+      "Cron expressions configure recurring automated tasks in Unix, Linux, GitHub Actions, AWS EventBridge, and Cloudflare Workers. However, cryptic 5-part cron syntax (* * * * *) is notoriously easy to misconfigure. This tool translates any cron string into clear English explanations and provides common schedule presets.",
+    howTo: {
+      title: "How to explain and build cron expressions",
+      steps: [
+        "Enter any standard 5-field cron expression into the input field.",
+        "Inspect the 5-field breakdown: Minute, Hour, Day of Month, Month, and Day of Week.",
+        "Read the generated plain English sentence explaining exactly when the task runs.",
+        "Click any common preset (e.g. Every Day at Midnight, Every Weekday) for instant configuration.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Configuring server backup & maintenance jobs",
+        body:
+          "Ensure database backup scripts and log rotation crons trigger at intended off-peak hours.",
+      },
+      {
+        title: "GitHub Actions & cloud scheduler workflows",
+        body:
+          "Verify schedule triggers for CI/CD pipelines, automated report generators, and heartbeat pings.",
+      },
+    ],
+    tips: [
+      "Day of week uses 0 for Sunday through 6 for Saturday in standard POSIX cron syntax.",
+      "Use commas to specify multiple values (e.g. 1,15 for days 1 and 15) and hyphens for ranges (e.g. 1-5 for Mon-Fri).",
+    ],
+    extraFaqs: [
+      {
+        question: "What does '*/15 * * * *' mean in cron?",
+        answer:
+          "It means 'every 15 minutes', triggering at minutes 0, 15, 30, and 45 past every hour of every day.",
+      },
+    ],
+  },
+
+  "utm-builder": {
+    intro:
+      "Urchin Tracking Module (UTM) parameters are standardized query string tags added to URLs to track the effectiveness of online marketing campaigns across Google Analytics and advertising platforms. This tool builds compliant tracking URLs and strips messy tracking parameters to create clean links.",
+    howTo: {
+      title: "How to build and clean UTM campaign URLs",
+      steps: [
+        "Enter your destination landing page URL.",
+        "Fill in the required campaign tags: Source (e.g. google, newsletter), Medium (e.g. cpc, email), and Campaign Name.",
+        "Optionally add Term (keywords) and Content (ad variant / CTA location).",
+        "Copy the generated tagged URL for your advertising campaign, or copy the clean stripped URL for sharing.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Social media marketing & ad campaigns",
+        body:
+          "Measure exact conversion sources from Twitter, LinkedIn, Facebook, and Instagram ads.",
+      },
+      {
+        title: "Email newsletter link tracking",
+        body:
+          "Identify which email campaigns and call-to-action buttons generate the highest user engagement.",
+      },
+    ],
+    tips: [
+      "Keep UTM tags lowercase to prevent duplicate campaign rows in Google Analytics reports.",
+      "Use underscores or hyphens instead of spaces in parameter values.",
+    ],
+    extraFaqs: [
+      {
+        question: "Will adding UTM parameters affect SEO rankings?",
+        answer:
+          "No, as long as your destination pages contain proper canonical tags pointing to the base clean URL.",
+      },
+    ],
+  },
+
+  "break-even-calculator": {
+    intro:
+      "Break-even analysis is a fundamental financial calculation that determines the exact sales volume and revenue required for a business to cover total costs. Below the break-even point is a loss; above it is profit. This tool calculates break-even units, break-even revenue, contribution margins, and projected ROI %.",
+    howTo: {
+      title: "How to calculate business break-even points",
+      steps: [
+        "Enter your total fixed business overhead costs (rent, payroll, utilities).",
+        "Enter your variable cost per unit (materials, manufacturing, shipping).",
+        "Enter your selling price per unit.",
+        "Set your expected sales volume to project net profit and Return on Investment (ROI).",
+      ],
+    },
+    useCases: [
+      {
+        title: "Product pricing & margin strategy",
+        body:
+          "Determine whether a proposed unit selling price yields achievable sales volume targets.",
+      },
+      {
+        title: "Startup business plans & investor pitches",
+        body:
+          "Demonstrate clear timelines and unit economics to reach operating profitability.",
+      },
+    ],
+    tips: [
+      "Lowering fixed costs or negotiating cheaper variable costs directly reduces the number of units needed to break even.",
+      "The contribution margin ratio represents the percentage of each sales dollar that contributes to paying fixed overhead.",
+    ],
+    extraFaqs: [
+      {
+        question: "What is the difference between fixed and variable costs?",
+        answer:
+          "Fixed costs remain constant regardless of production volume (e.g., rent, insurance), while variable costs increase proportionally with each unit produced (e.g., raw materials, packaging).",
+      },
+    ],
+  },
+
+  "contrast-checker": {
+    intro:
+      "Web Content Accessibility Guidelines (WCAG 2.1) require sufficient contrast between text and background colors so users with visual impairments can read content comfortably. This tool calculates exact luminance contrast ratios, evaluates AA and AAA compliance ratings, and previews colors under Protanopia, Deuteranopia, and Tritanopia color blindness.",
+    howTo: {
+      title: "How to check color contrast accessibility",
+      steps: [
+        "Pick or enter your text foreground color and background color.",
+        "Check the calculated contrast ratio score.",
+        "Review the compliance status badges for WCAG Level AA and AAA across normal and large text.",
+        "Inspect the live heading and paragraph preview box and color blindness filter simulations.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Website UI/UX accessibility compliance (ADA / Section 508 / WCAG)",
+        body:
+          "Verify design system color palettes before shipping production code to avoid legal and usability accessibility violations.",
+      },
+      {
+        title: "Design system color token auditing",
+        body:
+          "Audit primary, secondary, and muted button text contrasts in both dark and light UI themes.",
+      },
+    ],
+    tips: [
+      "WCAG 2.1 Level AA requires at least 4.5:1 for regular body text and at least 3.0:1 for large text (18pt+ or 14pt+ bold).",
+      "Level AAA represents the highest accessibility standard, requiring at least 7.0:1 for normal text.",
+    ],
+    extraFaqs: [
+      {
+        question: "What is considered 'large text' in WCAG guidelines?",
+        answer:
+          "Large text is defined as text that is at least 18 points (24px) regular weight, or 14 points (approx 18.66px) with bold weight.",
+      },
+    ],
+  },
+
+  "aspect-ratio-calculator": {
+    intro:
+      "Aspect ratio describes the proportional relationship between an image or video's width and height. Maintaining exact aspect ratios is vital when resizing media for YouTube, Instagram, TikTok, Twitter, and responsive web designs. This calculator simplifies dimensions into standard ratios and computes missing dimensions instantly.",
+    howTo: {
+      title: "How to calculate and resize aspect ratios",
+      steps: [
+        "Enter your original media width and height in pixels.",
+        "View the simplified aspect ratio (e.g. 16:9, 4:3, 1:1) and decimal ratio.",
+        "Enter a new width or new height in the resize calculator to automatically compute the matching dimension.",
+        "Click any standard preset (e.g. YouTube 16:9, Instagram 1:1) for one-click configuration.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Video editing & social media thumbnail creation",
+        body:
+          "Resize assets to exact platform resolutions (1920x1080 for YouTube, 1080x1920 for Reels/Shorts) without distortion.",
+      },
+      {
+        title: "Responsive web design & CSS aspect-ratio properties",
+        body:
+          "Calculate width and height attributes for <img> and <video> tags to prevent layout shifts (CLS).",
+      },
+    ],
+    tips: [
+      "Modern CSS supports the `aspect-ratio: 16 / 9;` property to maintain responsive containers automatically.",
+      "Dividing width by height gives the decimal aspect ratio (e.g. 1920 / 1080 = 1.777...).",
+    ],
+    extraFaqs: [
+      {
+        question: "What is the standard aspect ratio for high-definition video?",
+        answer:
+          "16:9 is the universal standard aspect ratio for high-definition television, YouTube videos, and computer displays.",
+      },
+    ],
+  },
+
+  "exif-viewer": {
+    intro:
+      "Exchangeable Image File Format (EXIF) metadata contains technical shooting data embedded in digital photos, including camera model, lens, shutter speed, ISO, focal length, date taken, and dimensions. This browser-based inspector extracts photo metadata locally on your device without uploading your personal photos to any server.",
+    howTo: {
+      title: "How to view photo EXIF metadata",
+      steps: [
+        "Drag and drop a photo into the upload dropzone, or click 'Choose Photo'.",
+        "Supports JPG, PNG, WEBP, and TIFF image formats.",
+        "Instantly view file size, MIME type, exact pixel dimensions, and camera parameters.",
+        "Verify your privacy: your images never leave your browser memory.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Photography camera settings analysis",
+        body:
+          "Inspect the aperture, ISO, and shutter speed used for a specific photo to learn and replicate shooting techniques.",
+      },
+      {
+        title: "Privacy verification before sharing photos online",
+        body:
+          "Check whether an image contains embedded timestamps or metadata before posting to public forums.",
+      },
+    ],
+    tips: [
+      "Most social media platforms (like Twitter and Instagram) automatically strip EXIF metadata when you upload images.",
+      "EXIF data is stored directly in the image file header bytes.",
+    ],
+    extraFaqs: [
+      {
+        question: "Why do some images have no camera EXIF data?",
+        answer:
+          "Images saved from web browsers, screenshots, or graphics exported from design software often omit camera EXIF metadata to reduce file size.",
+      },
+    ],
+  },
+
+  "markdown-table-generator": {
+    intro:
+      "Writing markdown tables by hand with pipes (|) and hyphens (---) is tedious and error-prone. This visual spreadsheet grid editor lets you build, format, and align table rows and columns effortlessly, outputting both clean GitHub Flavored Markdown and standard semantic HTML <table> markup.",
+    howTo: {
+      title: "How to generate Markdown and HTML tables",
+      steps: [
+        "Use the interactive spreadsheet grid to enter header names and cell values.",
+        "Click '+ Add Column' or '+ Add Row' to expand the table size.",
+        "Use the alignment toggles (Left, Center, Right) on any column header.",
+        "Copy the generated Markdown code or HTML table code with a single click.",
+      ],
+    },
+    useCases: [
+      {
+        title: "GitHub README & documentation tables",
+        body:
+          "Create feature comparison tables and API endpoint specs for GitHub repositories and README.md files.",
+      },
+      {
+        title: "Static site blogs (Hugo, Jekyll, Astro, Next.js)",
+        body:
+          "Format tabular data for markdown-powered static blogs and documentation sites.",
+      },
+    ],
+    tips: [
+      "Markdown tables require at least one header row and one delimiter row with at least 3 hyphens per column.",
+      "Colon placement in the header row defines alignment: `:---` (left), `:---:` (center), `---:` (right).",
+    ],
+    extraFaqs: [
+      {
+        question: "Does GitHub Flavored Markdown (GFM) support cell line breaks?",
+        answer:
+          "Standard markdown does not support multi-line text inside a single cell, but you can use `<br>` tags inside table cells for line breaks.",
+      },
+    ],
+  },
+
 };
 
 /** Returns the long-form content for a tool, if any has been written. */

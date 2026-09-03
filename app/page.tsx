@@ -45,6 +45,14 @@ import {
   Briefcase,
   Smartphone,
   CornerDownRight,
+  Scale,
+  FileSpreadsheet,
+  Palette,
+  DollarSign,
+  Eye,
+  Monitor,
+  Camera,
+  Table,
 } from "lucide-react";
 
 const ICON_MAP: Record<string, React.ElementType> = {
@@ -74,6 +82,14 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Film,
   Briefcase,
   Smartphone,
+  Scale,
+  FileSpreadsheet,
+  Palette,
+  DollarSign,
+  Eye,
+  Monitor,
+  Camera,
+  Table,
 };
 
 const CATEGORY_COLORS: Record<

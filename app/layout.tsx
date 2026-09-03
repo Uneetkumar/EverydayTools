@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -15,6 +14,7 @@ import {
   generateOrganizationJsonLd,
 } from "@/lib/seo/jsonld";
 import { getAllTools } from "@/lib/tools/registry";
+import { CANONICAL_HOST_SCRIPT } from "@/lib/seo/canonical-host";
 
 // Derived so the marketing copy cannot drift from the registry.
 const TOOL_COUNT = getAllTools().length;
@@ -156,17 +156,24 @@ export default function RootLayout({
 
         {/* Firebase always serves the project's *.web.app hostname and it
             cannot be switched off, so the whole site is reachable on two
-            domains. Canonicals already point at tabbench.com, but leaving the
-            duplicate answering 200 splits crawl budget and invites Google to
-            pick the wrong host. This sends it to the real domain, preserving
-            the path. Runs before paint; scoped to that exact hostname so local
-            development and the emulator are untouched. */}
-        <Script
+            domains — BOTH *.web.app and *.firebaseapp.com, neither of which
+            can be switched off. Canonicals already point at tabbench.com, but
+            a duplicate answering 200 with "index, follow" splits crawl budget
+            and invites Google to pick the wrong host.
+
+            A plain inline <script>, deliberately NOT next/script: with
+            `strategy="beforeInteractive"` Next serialises this into its
+            `self.__next_s` queue, so it only runs once the framework bundle
+            has loaded. A raw inline tag in <head> executes immediately and
+            does not depend on any JS chunk arriving. For a redirect that
+            should fire before anything renders, that difference matters.
+
+            See lib/seo/canonical-host.ts for why the hostname test is a
+            suffix match and why it cannot fire on production. */}
+        <script
           id="canonical-host"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
-            __html:
-              "(function(){try{if(location.hostname==='everydaytools-s.web.app'){location.replace('https://tabbench.com'+location.pathname+location.search+location.hash);}}catch(e){}})();",
+            __html: CANONICAL_HOST_SCRIPT,
           }}
         />
 

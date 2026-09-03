@@ -124,6 +124,25 @@ for (const p of indexable) {
   if (p.robots && /noindex/i.test(p.robots))
     err("indexing", p.route, `noindex on an indexable page: "${p.robots}"`);
 
+  // Alt text is both an accessibility requirement and how image search reads
+  // the page. A decorative image still needs alt="" to be explicitly silent.
+  for (const tag of p.html.match(/<img\b[^>]*>/g) ?? []) {
+    if (!/\balt=/.test(tag))
+      err("images", p.route, `<img> without alt: ${tag.slice(0, 70)}`);
+  }
+
+  // A skipped heading level (h1 straight to h3) breaks the document outline
+  // screen readers and crawlers both rely on.
+  const levels = [...p.html.matchAll(/<h([1-6])\b/g)].map((m) => +m[1]);
+  let prev = 0;
+  for (const lv of levels) {
+    if (prev && lv > prev + 1) {
+      warn("headings", p.route, `heading level skips h${prev} -> h${lv}`);
+      break;
+    }
+    prev = lv;
+  }
+
   // Fabricated review markup caused a policy problem here before.
   if (/"aggregateRating"/.test(p.html))
     err("structured-data", p.route, "aggregateRating present — not backed by real reviews");
@@ -177,6 +196,59 @@ if (!fs.existsSync(sitemapPath)) {
     if (!sitemapRoutes.has(r)) warn("sitemap", r, "page is built but absent from the sitemap (orphan)");
 }
 
+/* ------------------------------------------------------------------ */
+/* Duplicate-host guard                                                */
+/* ------------------------------------------------------------------ */
+// Firebase serves the project on <project>.web.app AND
+// <project>.firebaseapp.com and neither can be switched off, so every page has
+// to carry the guard that deindexes and redirects those hosts.
+//
+// This does not grep for the source text — it extracts the emitted script and
+// RUNS it against real hostnames. A guard that ships but never fires (an
+// over-escaped regex, say) looks identical to a working one under grep.
+{
+  const guardless = [];
+  for (const p of indexable) {
+    const m = p.html.match(/<script id="canonical-host"[^>]*>([\s\S]*?)<\/script>/);
+    if (!m) guardless.push(p.route);
+  }
+  if (guardless.length)
+    err("hosts", `${guardless.length} page(s)`, `canonical-host guard missing (e.g. ${guardless[0]})`);
+
+  const sample = indexable.find((p) => /<script id="canonical-host"/.test(p.html));
+  if (sample) {
+    const js = sample.html.match(/<script id="canonical-host"[^>]*>([\s\S]*?)<\/script>/)[1];
+    const run = (hostname) => {
+      let redirected = null;
+      let robots = null;
+      const loc = { hostname, pathname: "/x", search: "", hash: "", replace: (u) => (redirected = u) };
+      const doc = {
+        querySelector: () => null,
+        createElement: () => ({ setAttribute: (k, v) => { if (k === "content") robots = v; } }),
+        head: { appendChild: () => {} },
+      };
+      try { new Function("location", "document", js)(loc, doc); }
+      catch (e) { return { threw: e.message }; }
+      return { redirected, robots };
+    };
+
+    for (const dup of ["everydaytools-s.web.app", "everydaytools-s.firebaseapp.com"]) {
+      const r = run(dup);
+      if (r.threw) err("hosts", dup, `guard threw: ${r.threw}`);
+      else if (!r.redirected) err("hosts", dup, "guard does not redirect this duplicate host");
+      else if (!/^https:\/\/tabbench\.com/.test(r.redirected))
+        err("hosts", dup, `guard redirects to ${r.redirected}`);
+      else if (!/noindex/.test(r.robots ?? "")) err("hosts", dup, "guard does not apply noindex");
+    }
+    // The critical direction: it must NEVER fire on production or local dev.
+    for (const safe of ["tabbench.com", "www.tabbench.com", "localhost", "127.0.0.1"]) {
+      const r = run(safe);
+      if (r.redirected || r.robots)
+        err("hosts", safe, `guard fires on a host it must leave alone (redirect=${r.redirected}, robots=${r.robots})`);
+    }
+  }
+}
+
 if (!fs.existsSync(path.join(DIR, "robots.txt"))) {
   err("robots", "robots.txt", "not generated");
 } else {
@@ -198,17 +270,28 @@ const assetExists = (r) => {
   );
 };
 const broken = new Map();
+const inbound = new Map(indexable.map((p) => [p.route, new Set()]));
 for (const p of pages) {
   for (const m of p.html.matchAll(/href="(\/[^"#?]*)"/g)) {
     const target = m[1].replace(/\/$/, "") || "/";
     if (!assetExists(target)) {
       if (!broken.has(target)) broken.set(target, new Set());
       broken.get(target).add(p.route);
+      continue;
     }
+    // Self-links (a page's own canonical nav entry) are not inbound links.
+    if (target !== p.route && inbound.has(target)) inbound.get(target).add(p.route);
   }
 }
 for (const [target, from] of broken)
   err("links", target, `linked from ${from.size} page(s) but no such route (e.g. ${[...from][0]})`);
+
+// An orphan is reachable only from the sitemap. Crawlers discover and weight
+// pages through links, so a page nothing links to is effectively invisible.
+for (const [route, from] of inbound) {
+  if (from.size === 0) err("orphans", route, "no inbound internal links — reachable only via the sitemap");
+  else if (from.size <= 2) warn("orphans", route, `only ${from.size} inbound internal link(s)`);
+}
 
 /* ------------------------------------------------------------------ */
 /* Report                                                              */
@@ -228,7 +311,24 @@ const print = (label, list) => {
   }
 };
 
+// Coverage summary: not pass/fail, but the number that shows a regression at
+// a glance when a page type silently loses its schema.
+const schemaTypes = new Map();
+for (const p of indexable) {
+  for (const m of p.html.matchAll(/"@type"\s*:\s*"([A-Za-z]+)"/g)) {
+    const t = m[1];
+    if (!schemaTypes.has(t)) schemaTypes.set(t, new Set());
+    schemaTypes.get(t).add(p.route);
+  }
+}
+
 console.log(`\nSEO check — ${indexable.length} indexable pages in "${DIR}"`);
+const cov = [...schemaTypes.entries()]
+  .filter(([t]) => ["WebApplication", "Article", "CollectionPage", "FAQPage", "BreadcrumbList", "WebSite", "Organization"].includes(t))
+  .sort((a, b) => b[1].size - a[1].size)
+  .map(([t, s]) => `${t} ${s.size}`)
+  .join(" · ");
+if (cov) console.log(`schema coverage: ${cov}`);
 print("WARNINGS", warnings);
 print("ERRORS", errors);
 

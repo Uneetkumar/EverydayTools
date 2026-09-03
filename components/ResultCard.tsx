@@ -6,32 +6,59 @@ import confetti from "canvas-confetti";
 
 interface ResultCardProps {
   title?: string;
+  /**
+   * Alias for `title`. Several calculators were written against this name; it
+   * is accepted so both spellings work rather than forcing a rename across
+   * every call site. `title` wins if both are given.
+   */
+  label?: string;
   value: string | number;
   unit?: string;
   subtitle?: string;
+  /**
+   * How the number was derived, shown in the subtitle slot. Falls back to
+   * `subtitle` when not supplied.
+   */
+  formulaExplanation?: string;
+  /**
+   * Overrides what the copy button writes. Without it the card composes the
+   * value, unit and details itself, which is right for simple results but
+   * wrong when a calculator wants to copy a formatted breakdown.
+   */
+  copyText?: string;
+  /** Title used by the native share sheet. Defaults to the card heading. */
+  shareTitle?: string;
   details?: { label: string; value: string | number }[];
   highlightColor?: "indigo" | "emerald" | "amber" | "rose";
   showConfetti?: boolean;
 }
 
 export default function ResultCard({
-  title = "Calculation Result",
+  title,
+  label,
   value,
   unit = "",
   subtitle,
+  formulaExplanation,
+  copyText,
+  shareTitle,
   details = [],
   highlightColor = "indigo",
   showConfetti = false,
 }: ResultCardProps) {
+  const heading = title ?? label ?? "Calculation Result";
+  const caption = subtitle ?? formulaExplanation;
   const [copied, setCopied] = useState(false);
   const [shared, setShared] = useState(false);
 
   const handleCopy = async () => {
-    const textToCopy = `${value}${unit ? " " + unit : ""}${
-      details.length > 0
-        ? "\n" + details.map((d) => `${d.label}: ${d.value}`).join("\n")
-        : ""
-    }`;
+    const textToCopy =
+      copyText ??
+      `${value}${unit ? " " + unit : ""}${
+        details.length > 0
+          ? "\n" + details.map((d) => `${d.label}: ${d.value}`).join("\n")
+          : ""
+      }`;
 
     try {
       await navigator.clipboard.writeText(textToCopy);
@@ -53,7 +80,7 @@ export default function ResultCard({
     if (typeof navigator !== "undefined" && navigator.share) {
       try {
         await navigator.share({
-          title: "TabBench Result",
+          title: shareTitle ?? heading,
           text: `Check out this calculation: ${value} ${unit}`,
           url: window.location.href,
         });
@@ -103,7 +130,7 @@ export default function ResultCard({
       <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
           <Sparkles className={`w-3.5 h-3.5 ${currentTheme.text}`} />
-          {title}
+          {heading}
         </span>
         <div className="flex items-center space-x-1.5">
           <button
@@ -146,9 +173,9 @@ export default function ResultCard({
             </span>
           )}
         </div>
-        {subtitle && (
+        {caption && (
           <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2">
-            {subtitle}
+            {caption}
           </p>
         )}
       </div>

@@ -108,7 +108,7 @@ export default function WordCounter() {
       {/* Reading Time & Social Limits */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs">
         <div className="space-y-2">
-          <h4 className="font-bold text-slate-900 dark:text-white">Estimated Durations</h4>
+          <h3 className="font-bold text-slate-900 dark:text-white">Estimated Durations</h3>
           <div className="flex justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-950">
             <span className="text-slate-500">Reading Time (200 wpm):</span>
             <strong className="text-slate-900 dark:text-white">~{readingTimeMins} min</strong>
@@ -120,7 +120,7 @@ export default function WordCounter() {
         </div>
 
         <div className="space-y-2">
-          <h4 className="font-bold text-slate-900 dark:text-white">Social Platform Limits</h4>
+          <h3 className="font-bold text-slate-900 dark:text-white">Social Platform Limits</h3>
           <div className="flex justify-between p-2 rounded-lg bg-slate-50 dark:bg-slate-950">
             <span className="text-slate-500">Twitter / X ({charCount}/280):</span>
             <strong className={charCount > twitterLimit ? "text-rose-500" : "text-emerald-600"}>

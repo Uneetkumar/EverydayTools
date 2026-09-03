@@ -109,12 +109,12 @@ export function runSeoAudit(): SeoAuditReport {
       JSON.stringify(webAppSchema);
       JSON.stringify(breadcrumbSchema);
       if (faqSchema) JSON.stringify(faqSchema);
-    } catch (err: any) {
+    } catch (err: unknown) {
       issues.push({
         type: "error",
         category: "Structured Data",
         target: tool.slug,
-        message: `JSON-LD serialization error: ${err.message}`,
+        message: `JSON-LD serialization error: ${(err as Error).message}`,
       });
     }
   });

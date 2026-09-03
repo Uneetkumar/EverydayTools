@@ -47,7 +47,19 @@ export default async function CurrencyPairPage({ params }: PairPageProps) {
   const reverse = CURRENCY_PAIRS.find(
     (p) => p.from === def.to && p.to === def.from
   );
-  const others = CURRENCY_PAIRS.filter((p) => p.slug !== def.slug).slice(0, 8);
+  // Rotated, not sliced from the top: a fixed `.slice(0, 8)` linked only the
+  // first eight corridors in registry order, so the rest were reachable solely
+  // from the currency-converter tool page and the sitemap. Rotating the window
+  // by this pair's index guarantees every corridor is linked from somewhere.
+  const restPairs = CURRENCY_PAIRS.filter((p) => p.slug !== def.slug);
+  const pairStart =
+    restPairs.length > 0
+      ? CURRENCY_PAIRS.findIndex((p) => p.slug === def.slug) % restPairs.length
+      : 0;
+  const others = [
+    ...restPairs.slice(pairStart),
+    ...restPairs.slice(0, pairStart),
+  ].slice(0, 8);
 
   const faqs = [
     {

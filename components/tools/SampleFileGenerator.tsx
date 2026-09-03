@@ -1495,9 +1495,9 @@ export default function SampleFileGenerator({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <h4 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
                 Generated {kind === "video" ? "Video Sample" : "Sample Files"} ({items.length})
-              </h4>
+              </h3>
             </div>
             <button
               onClick={() => { items.forEach((i) => URL.revokeObjectURL(i.url)); setItems([]); }}

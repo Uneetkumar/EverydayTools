@@ -68,6 +68,10 @@ const WIDE_LAYOUT_TOOLS = new Set([
   "facebook-video-downloader",
   "tiktok-video-downloader",
   "twitter-video-downloader",
+  "json-to-csv",
+  "regex-tester",
+  "json-to-typescript",
+  "markdown-table-generator",
 ]);
 
 /**

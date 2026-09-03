@@ -2502,6 +2502,816 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "video-player"
     ],
     "isPopular": true
+  },
+  "sip-calculator": {
+    "slug": "sip-calculator",
+    "name": "SIP Calculator",
+    "shortName": "SIP Calculator",
+    "category": "calculators",
+    "categoryName": "Calculators & Finance",
+    "description": "Calculate returns on your Systematic Investment Plan (SIP) with annual growth projections.",
+    "longDescription": "Estimate your mutual fund SIP wealth growth, total invested amount, and compounding gains with instant interactive year-by-year projections.",
+    "iconName": "Calculator",
+    "metaTitle": "SIP Calculator | TabBench",
+    "metaDescription": "Calculate mutual fund SIP returns and maturity wealth with TabBench's free calculator. Live annual compounding breakdown and visual growth charts.",
+    "keywords": [
+      "sip calculator",
+      "mutual fund sip calculator",
+      "sip return calculator",
+      "systematic investment plan",
+      "sip maturity calculator",
+      "monthly sip calculator",
+      "calculate sip online"
+    ],
+    "features": [
+      "Monthly investment slider",
+      "Expected return rate projection",
+      "Visual invested vs returns ratio",
+      "Year-by-year growth table"
+    ],
+    "formulas": [
+      {
+        "name": "SIP Maturity Formula",
+        "expression": "M = P × [((1 + i)^n - 1) / i] × (1 + i)",
+        "explanation": "Where P is monthly deposit, i is periodic monthly interest rate (annual / 12), and n is total months.",
+        "example": "10,000/mo for 10 years at 12% returns ~23.23 Lakhs on an investment of 12 Lakhs."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "What is a good expected rate of return for equity SIP?",
+        "answer": "Historically, broad market index funds and diversified equity mutual funds have returned 12% to 14% CAGR over 10+ year horizons."
+      }
+    ],
+    "relatedToolSlugs": [
+      "compound-interest-calculator",
+      "emi-calculator",
+      "percentage-calculator"
+    ],
+    "isPopular": true
+  },
+  "compound-interest-calculator": {
+    "slug": "compound-interest-calculator",
+    "name": "Compound Interest Calculator",
+    "shortName": "Compound Interest",
+    "category": "calculators",
+    "categoryName": "Calculators & Finance",
+    "description": "Calculate compound interest with regular deposits, multiple compounding frequencies, and timeline breakdowns.",
+    "longDescription": "Compute exact compound interest growth on initial deposits and optional monthly contributions across daily, monthly, quarterly, and annual compounding periods.",
+    "iconName": "TrendingUp",
+    "metaTitle": "Compound Interest Calculator | TabBench",
+    "metaDescription": "Calculate compound interest growth with initial deposits, monthly contributions, and flexible compounding frequencies. 100% private in-browser tool.",
+    "keywords": [
+      "compound interest calculator",
+      "interest calculator",
+      "compound interest formula",
+      "daily compound interest",
+      "monthly compound interest",
+      "savings interest calculator"
+    ],
+    "features": [
+      "Daily to annual compounding frequencies",
+      "Optional monthly contribution support",
+      "Effective Annual Rate (EAR) calculation",
+      "Principal vs interest progress visualization"
+    ],
+    "formulas": [
+      {
+        "name": "Compound Interest Formula",
+        "expression": "A = P(1 + r/n)^(nt)",
+        "explanation": "Where P is principal, r is annual interest rate, n is compounding frequency per year, and t is time in years.",
+        "example": "50,000 at 8% compounded monthly for 5 years yields ~74,492."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "What is the difference between simple and compound interest?",
+        "answer": "Simple interest calculates returns only on the initial principal, while compound interest adds accumulated interest back to the principal for exponential growth."
+      }
+    ],
+    "relatedToolSlugs": [
+      "sip-calculator",
+      "emi-calculator",
+      "percentage-calculator"
+    ],
+    "isPopular": true
+  },
+  "bmi-calculator": {
+    "slug": "bmi-calculator",
+    "name": "BMI Calculator",
+    "shortName": "BMI Calculator",
+    "category": "calculators",
+    "categoryName": "Calculators & Finance",
+    "description": "Calculate Body Mass Index (BMI), healthy weight range, and WHO classification for adults.",
+    "longDescription": "Instant body mass index calculator supporting metric (cm/kg) and imperial (feet-inches/lbs) units with WHO classification categories and ideal weight ranges.",
+    "iconName": "Scale",
+    "metaTitle": "BMI Calculator | TabBench",
+    "metaDescription": "Calculate Body Mass Index (BMI) and ideal weight range instantly. Supports metric and imperial units with WHO classification categories.",
+    "keywords": [
+      "bmi calculator",
+      "body mass index",
+      "calculate bmi",
+      "ideal weight calculator",
+      "bmi chart",
+      "healthy weight range",
+      "bmi metric imperial"
+    ],
+    "features": [
+      "Metric (cm/kg) and Imperial (ft-in/lbs)",
+      "WHO classification categories",
+      "Ideal healthy weight range",
+      "BMI Prime calculation"
+    ],
+    "formulas": [
+      {
+        "name": "BMI Formula",
+        "expression": "BMI = weight (kg) / [height (m)]²",
+        "explanation": "Body weight in kilograms divided by the square of height in meters.",
+        "example": "70 kg / (1.75 m)² = 22.86 (Normal weight)."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "What is considered a normal BMI score?",
+        "answer": "According to the World Health Organization (WHO), a BMI between 18.5 and 24.9 is considered normal healthy weight for adults."
+      }
+    ],
+    "relatedToolSlugs": [
+      "age-calculator",
+      "percentage-calculator"
+    ],
+    "isPopular": true
+  },
+  "lorem-ipsum-generator": {
+    "slug": "lorem-ipsum-generator",
+    "name": "Lorem Ipsum Generator",
+    "shortName": "Lorem Ipsum",
+    "category": "text",
+    "categoryName": "Text & Writing",
+    "description": "Generate clean placeholder Lorem Ipsum text by paragraphs, sentences, words, or lists.",
+    "longDescription": "A lightweight placeholder text generator for web designers, developers, and typesetters with customizable paragraph counts, HTML tag options, and instant one-click copying.",
+    "iconName": "Type",
+    "metaTitle": "Lorem Ipsum Generator | TabBench",
+    "metaDescription": "Generate placeholder Lorem Ipsum text by paragraphs, sentences, words, or lists. Includes optional HTML tags and one-click copy.",
+    "keywords": [
+      "lorem ipsum generator",
+      "dummy text generator",
+      "placeholder text",
+      "lorem ipsum",
+      "latin text generator",
+      "sample text generator"
+    ],
+    "features": [
+      "Paragraphs, sentences, words & list items",
+      "Optional HTML <p> / <li> tags",
+      "Start with 'Lorem ipsum' toggle",
+      "Live word and character counts"
+    ],
+    "faqs": [
+      {
+        "question": "Where does Lorem Ipsum originate?",
+        "answer": "It comes from sections 1.10.32 and 1.10.33 of Cicero's 'de Finibus Bonorum et Malorum' written in 45 BC."
+      }
+    ],
+    "relatedToolSlugs": [
+      "word-counter",
+      "case-converter",
+      "slug-generator"
+    ],
+    "isPopular": true
+  },
+  "slug-generator": {
+    "slug": "slug-generator",
+    "name": "URL Slug Generator",
+    "shortName": "Slug Generator",
+    "category": "text",
+    "categoryName": "Text & Writing",
+    "description": "Convert headlines and titles into clean, SEO-friendly URL slugs with customizable separators.",
+    "longDescription": "Generate clean, URL-safe permalinks from any article title, product name, or headline with accent stripping, lowercase formatting, and optional stop word removal.",
+    "iconName": "Link",
+    "metaTitle": "URL Slug Generator | TabBench",
+    "metaDescription": "Convert headlines and titles into clean, SEO-friendly URL slugs with customizable separators, accent stripping, and lowercase formatting.",
+    "keywords": [
+      "slug generator",
+      "url slug generator",
+      "seo slug generator",
+      "title to slug",
+      "permalink generator",
+      "url friendly string"
+    ],
+    "features": [
+      "Hyphen, underscore, and dot separators",
+      "Diacritic and accent normalization",
+      "Optional stop word removal",
+      "Live blog URL preview"
+    ],
+    "faqs": [
+      {
+        "question": "What makes a good SEO URL slug?",
+        "answer": "A good slug is concise, descriptive, lowercase, uses hyphens between words, and excludes special characters or punctuation."
+      }
+    ],
+    "relatedToolSlugs": [
+      "word-counter",
+      "case-converter",
+      "url-encoder-decoder"
+    ],
+    "isPopular": true
+  },
+  "json-to-csv": {
+    "slug": "json-to-csv",
+    "name": "JSON to CSV / CSV to JSON Converter",
+    "shortName": "JSON to CSV",
+    "category": "developer",
+    "categoryName": "Developer & Data",
+    "description": "Convert JSON arrays to CSV spreadsheets and CSV tables back to JSON with live preview and download.",
+    "longDescription": "Bidirectional converter between JSON API payloads and CSV tabular data. Handles custom delimiters, quoted text cells, instant copy, and file downloads 100% in your browser.",
+    "iconName": "FileSpreadsheet",
+    "metaTitle": "JSON to CSV & CSV to JSON Converter | TabBench",
+    "metaDescription": "Convert JSON to CSV spreadsheets and CSV to JSON arrays instantly in your browser. Supports custom delimiters, file upload, and direct download.",
+    "keywords": [
+      "json to csv",
+      "csv to json",
+      "convert json to spreadsheet",
+      "json to excel",
+      "csv parser",
+      "json converter online"
+    ],
+    "features": [
+      "Bidirectional JSON <-> CSV conversion",
+      "Comma, semicolon, tab, and pipe delimiters",
+      "Direct file upload (.json, .csv)",
+      "Instant copy and file download"
+    ],
+    "faqs": [
+      {
+        "question": "Is my data uploaded to any server?",
+        "answer": "No. The conversion runs completely within your browser's JavaScript memory. No data is sent over the network."
+      }
+    ],
+    "relatedToolSlugs": [
+      "json-formatter",
+      "json-to-typescript",
+      "base64-converter"
+    ],
+    "isPopular": true
+  },
+  "regex-tester": {
+    "slug": "regex-tester",
+    "name": "Regex Tester & Debugger",
+    "shortName": "Regex Tester",
+    "category": "developer",
+    "categoryName": "Developer & Data",
+    "description": "Test regular expressions with real-time match highlighting, capture group breakdown, and flags.",
+    "longDescription": "Interactive JavaScript regex testing utility with live multi-match highlighting, capture group inspection, syntax validation, and a quick cheat sheet reference.",
+    "iconName": "Code",
+    "metaTitle": "Regex Tester & Debugger | TabBench",
+    "metaDescription": "Test regular expressions in real-time with live match highlighting, capture groups breakdown, flag toggles, and regex cheat sheet.",
+    "keywords": [
+      "regex tester",
+      "regular expression tester",
+      "regex debugger",
+      "javascript regex tester",
+      "regex matcher",
+      "regex online"
+    ],
+    "features": [
+      "Live match highlighting",
+      "Capture groups ($1, $2) breakdown",
+      "Flag toggles (g, i, m, s, u)",
+      "Built-in regex cheat sheet"
+    ],
+    "faqs": [
+      {
+        "question": "Which regex engine does this tool use?",
+        "answer": "It uses your browser's native ECMAScript JavaScript RegExp engine supporting standard ES2024 features."
+      }
+    ],
+    "relatedToolSlugs": [
+      "json-formatter",
+      "url-encoder-decoder",
+      "cron-explainer"
+    ],
+    "isPopular": true
+  },
+  "html-entity-converter": {
+    "slug": "html-entity-converter",
+    "name": "HTML Entity Encoder / Decoder",
+    "shortName": "HTML Entity Converter",
+    "category": "developer",
+    "categoryName": "Developer & Data",
+    "description": "Escape and unescape special HTML characters with named, decimal, and hex entity options.",
+    "longDescription": "Convert reserved HTML characters into safe entities and decode encoded HTML entities back to plain text with instant live conversion.",
+    "iconName": "Code",
+    "metaTitle": "HTML Entity Encoder & Decoder | TabBench",
+    "metaDescription": "Encode reserved HTML characters to safe entities and decode HTML entities back to plain text. Supports named, decimal, and hex entities.",
+    "keywords": [
+      "html entity encoder",
+      "html entity decoder",
+      "escape html",
+      "unescape html",
+      "html entities online",
+      "special characters html"
+    ],
+    "features": [
+      "Bidirectional encode and decode",
+      "Named (&amp;), Decimal (&#38;), and Hex (&#x26;)",
+      "Instant copy to clipboard",
+      "Character count diagnostics"
+    ],
+    "faqs": [
+      {
+        "question": "Why do I need to escape HTML entities?",
+        "answer": "Escaping characters like <, >, and & prevents browser rendering confusion and protects against Cross-Site Scripting (XSS) vulnerabilities."
+      }
+    ],
+    "relatedToolSlugs": [
+      "url-encoder-decoder",
+      "base64-converter",
+      "json-formatter"
+    ],
+    "isPopular": true
+  },
+  "color-converter": {
+    "slug": "color-converter",
+    "name": "Color Converter & Palette Generator",
+    "shortName": "Color Converter",
+    "category": "developer",
+    "categoryName": "Developer & Data",
+    "description": "Convert HEX, RGB, HSL, and CMYK color codes with harmonic palette generation and WCAG contrast previews.",
+    "longDescription": "Comprehensive color conversion tool for web developers and UI designers. Converts across HEX, RGB, HSL, CMYK, CSS variables, and generates harmonic color schemes.",
+    "iconName": "Palette",
+    "metaTitle": "Color Converter & Palette Generator | TabBench",
+    "metaDescription": "Convert colors between HEX, RGB, HSL, and CMYK with live preview, CSS custom properties, and complementary/triadic palette generation.",
+    "keywords": [
+      "color converter",
+      "hex to rgb",
+      "rgb to hex",
+      "hex to hsl",
+      "cmyk converter",
+      "color palette generator",
+      "css color converter"
+    ],
+    "features": [
+      "HEX, RGB, HSL, CMYK & CSS variables",
+      "Live visual color picker",
+      "Complementary, analogous & triadic harmonies",
+      "One-click copy for all formats"
+    ],
+    "faqs": [
+      {
+        "question": "What is the difference between RGB and CMYK?",
+        "answer": "RGB is an additive color model used for digital screens, while CMYK is a subtractive color model used for physical printing."
+      }
+    ],
+    "relatedToolSlugs": [
+      "contrast-checker",
+      "favicon-generator",
+      "base64-converter"
+    ],
+    "isPopular": true
+  },
+  "salary-calculator": {
+    "slug": "salary-calculator",
+    "name": "Salary / Take-Home Pay Calculator",
+    "shortName": "Salary Calculator",
+    "category": "calculators",
+    "categoryName": "Calculators & Finance",
+    "description": "Calculate monthly take-home salary from annual CTC with tax slabs, PF, and deduction breakdown.",
+    "longDescription": "Break down annual compensation (CTC) into monthly in-hand take-home salary, basic pay, HRA, Provident Fund (PF), and estimated income tax deductions.",
+    "iconName": "DollarSign",
+    "metaTitle": "Salary Take-Home Pay Calculator | TabBench",
+    "metaDescription": "Calculate monthly in-hand salary from annual CTC. Breakdown basic pay, HRA, Provident Fund (PF), and income tax deductions accurately.",
+    "keywords": [
+      "salary calculator",
+      "in hand salary calculator",
+      "ctc to in hand calculator",
+      "take home pay calculator",
+      "salary deduction calculator",
+      "net salary calculator"
+    ],
+    "features": [
+      "Annual CTC to monthly in-hand conversion",
+      "Variable bonus percentage adjustment",
+      "Provident Fund (PF) and standard deductions",
+      "Detailed annual salary structure breakdown"
+    ],
+    "formulas": [
+      {
+        "name": "Take-Home Salary Formula",
+        "expression": "Net Monthly Salary = (Fixed Annual CTC - Total Annual Deductions) / 12",
+        "explanation": "Fixed compensation minus employee PF, income tax TDS, and professional tax, divided across 12 calendar months.",
+        "example": "12 LPA CTC with 10% bonus yields ~85,000 to ~88,000 monthly take-home depending on tax regime."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "What is the difference between CTC and in-hand salary?",
+        "answer": "CTC (Cost to Company) includes all employer expenses such as bonuses and employer PF contributions, while in-hand salary is the actual amount deposited into your bank account after deductions."
+      }
+    ],
+    "relatedToolSlugs": [
+      "gst-calculator",
+      "emi-calculator",
+      "percentage-calculator"
+    ],
+    "isPopular": true
+  },
+  "working-days-calculator": {
+    "slug": "working-days-calculator",
+    "name": "Working Days & Business Days Calculator",
+    "shortName": "Working Days",
+    "category": "date-time",
+    "categoryName": "Date & Time",
+    "description": "Calculate total business days and working hours between two dates excluding weekends and holidays.",
+    "longDescription": "Accurately compute total working days between any two dates with customizable weekend days (Sat-Sun, Sun-only, Fri-Sat), public holiday exclusions, and working hours estimates.",
+    "iconName": "Calendar",
+    "metaTitle": "Working Days & Business Days Calculator | TabBench",
+    "metaDescription": "Calculate business days and working hours between dates with customizable weekend schedules and public holiday exclusions. 100% private.",
+    "keywords": [
+      "working days calculator",
+      "business days calculator",
+      "calculate working days",
+      "days between dates excluding weekends",
+      "working hours calculator",
+      "business days between two dates"
+    ],
+    "features": [
+      "Customizable weekend schedules",
+      "Custom public holiday exclusion list",
+      "Total working hours calculation",
+      "Calendar days vs business days distribution"
+    ],
+    "faqs": [
+      {
+        "question": "Does this calculator include both start and end dates?",
+        "answer": "Yes, both start and end dates are evaluated inclusively in the date range."
+      }
+    ],
+    "relatedToolSlugs": [
+      "date-difference-calculator",
+      "age-calculator",
+      "unix-timestamp-converter"
+    ],
+    "isPopular": true
+  },
+  "unix-timestamp-converter": {
+    "slug": "unix-timestamp-converter",
+    "name": "Unix Timestamp & Epoch Converter",
+    "shortName": "Unix Timestamp",
+    "category": "date-time",
+    "categoryName": "Date & Time",
+    "description": "Convert Unix epoch timestamps to human-readable UTC and local dates, with live ticking epoch clock.",
+    "longDescription": "Bidirectional converter between Unix timestamps (seconds and milliseconds) and formatted UTC/local date-time strings with relative duration indicators.",
+    "iconName": "Clock",
+    "metaTitle": "Unix Timestamp & Epoch Converter | TabBench",
+    "metaDescription": "Convert Unix timestamps to human-readable UTC and local dates. Live ticking current epoch clock and reverse date-to-epoch converter.",
+    "keywords": [
+      "unix timestamp converter",
+      "epoch converter",
+      "timestamp to date",
+      "date to epoch",
+      "current unix timestamp",
+      "epoch time online"
+    ],
+    "features": [
+      "Live ticking epoch timestamp clock",
+      "Seconds and milliseconds auto-detection",
+      "UTC, ISO 8601, and local time conversions",
+      "Relative time ('X hours ago') indicator"
+    ],
+    "faqs": [
+      {
+        "question": "What is Unix epoch time?",
+        "answer": "Unix epoch time is the total number of seconds elapsed since 00:00:00 UTC on January 1, 1970, not counting leap seconds."
+      }
+    ],
+    "relatedToolSlugs": [
+      "date-difference-calculator",
+      "working-days-calculator",
+      "cron-explainer"
+    ],
+    "isPopular": true
+  },
+  "json-to-typescript": {
+    "slug": "json-to-typescript",
+    "name": "JSON to TypeScript Generator",
+    "shortName": "JSON to TypeScript",
+    "category": "developer",
+    "categoryName": "Developer & Data",
+    "description": "Generate clean, typed TypeScript interfaces and type definitions from JSON API payloads.",
+    "longDescription": "Instantly convert JSON objects and arrays into structured, nested TypeScript interfaces or type aliases with customizable root naming, optional properties, and readonly modifiers.",
+    "iconName": "Code",
+    "metaTitle": "JSON to TypeScript Generator | TabBench",
+    "metaDescription": "Convert JSON payloads into clean, typed TypeScript interfaces and type aliases. Supports nested objects, readonly modifiers, and .ts file export.",
+    "keywords": [
+      "json to typescript",
+      "json to ts",
+      "json to interface",
+      "typescript interface generator",
+      "json to type",
+      "generate typescript from json"
+    ],
+    "features": [
+      "Automatic nested interface generation",
+      "Interface or Type alias output",
+      "Optional and readonly field toggles",
+      "Single-click copy and .ts file download"
+    ],
+    "faqs": [
+      {
+        "question": "Does this tool handle nested arrays and objects?",
+        "answer": "Yes. It automatically extracts and names nested sub-objects into standalone exportable interfaces."
+      }
+    ],
+    "relatedToolSlugs": [
+      "json-formatter",
+      "json-to-csv",
+      "base64-converter"
+    ],
+    "isPopular": true
+  },
+  "cron-explainer": {
+    "slug": "cron-explainer",
+    "name": "Cron Expression Explainer & Builder",
+    "shortName": "Cron Explainer",
+    "category": "developer",
+    "categoryName": "Developer & Data",
+    "description": "Translate complex cron expressions into plain English schedules and build cron strings interactively.",
+    "longDescription": "Understand and debug 5-part cron syntax with clear English explanations, field breakdowns, and common schedule presets for cron jobs.",
+    "iconName": "Clock",
+    "metaTitle": "Cron Expression Explainer & Builder | TabBench",
+    "metaDescription": "Translate cron expressions into plain English explanations. Includes 5-field syntax breakdown and common schedule presets.",
+    "keywords": [
+      "cron explainer",
+      "cron expression builder",
+      "cron generator",
+      "cron schedule explainer",
+      "crontab guru alternative",
+      "explain cron syntax"
+    ],
+    "features": [
+      "Plain English schedule translation",
+      "5-field breakdown (Minute, Hour, Day, Month, Weekday)",
+      "Common schedule preset library",
+      "Instant copy to clipboard"
+    ],
+    "faqs": [
+      {
+        "question": "What do the 5 asterisks in a cron expression mean?",
+        "answer": "The 5 fields represent: Minute (0-59), Hour (0-23), Day of the Month (1-31), Month (1-12), and Day of the Week (0-6, with 0 being Sunday)."
+      }
+    ],
+    "relatedToolSlugs": [
+      "unix-timestamp-converter",
+      "regex-tester",
+      "json-formatter"
+    ],
+    "isPopular": true
+  },
+  "utm-builder": {
+    "slug": "utm-builder",
+    "name": "UTM Campaign Builder & Cleaner",
+    "shortName": "UTM Builder",
+    "category": "business",
+    "categoryName": "Business & Marketing",
+    "description": "Build marketing campaign tracking URLs and clean tracking parameters from existing links.",
+    "longDescription": "Generate standardized UTM campaign tracking links for Google Analytics with utm_source, utm_medium, utm_campaign, utm_term, and utm_content. Also strips trackers for clean URLs.",
+    "iconName": "Link",
+    "metaTitle": "UTM Campaign Builder & URL Cleaner | TabBench",
+    "metaDescription": "Create Google Analytics UTM campaign tracking URLs and strip tracking parameters for clean links. Free, client-side digital marketing tool.",
+    "keywords": [
+      "utm builder",
+      "utm generator",
+      "campaign url builder",
+      "google analytics utm builder",
+      "clean utm parameters",
+      "url tracker generator"
+    ],
+    "features": [
+      "Complete 5-parameter UTM generator",
+      "Paste-to-parse existing URLs",
+      "One-click tracker stripper (Clean URL)",
+      "Instant copy to clipboard"
+    ],
+    "faqs": [
+      {
+        "question": "What are the essential UTM parameters?",
+        "answer": "utm_source (where traffic comes from, e.g. google), utm_medium (marketing channel, e.g. cpc/email), and utm_campaign (the campaign name) are the standard required parameters."
+      }
+    ],
+    "relatedToolSlugs": [
+      "slug-generator",
+      "url-encoder-decoder",
+      "profit-margin-calculator"
+    ],
+    "isPopular": true
+  },
+  "break-even-calculator": {
+    "slug": "break-even-calculator",
+    "name": "Break-Even & ROI Calculator",
+    "shortName": "Break-Even Calculator",
+    "category": "business",
+    "categoryName": "Business & Marketing",
+    "description": "Calculate break-even units, break-even revenue, contribution margin, and projected ROI %.",
+    "longDescription": "Analyze business profitability by calculating the exact sales volume and revenue required to cover fixed and variable costs, plus unit contribution margins.",
+    "iconName": "TrendingUp",
+    "metaTitle": "Break-Even & ROI Calculator | TabBench",
+    "metaDescription": "Calculate business break-even sales volume, break-even revenue, unit contribution margin, and projected net profit/ROI percentage.",
+    "keywords": [
+      "break even calculator",
+      "break even point",
+      "calculate break even",
+      "contribution margin calculator",
+      "business roi calculator",
+      "profitability analysis"
+    ],
+    "features": [
+      "Break-even units and revenue calculation",
+      "Unit contribution margin and margin ratio",
+      "Projected sales volume profit/loss",
+      "Return on Investment (ROI) percentage"
+    ],
+    "formulas": [
+      {
+        "name": "Break-Even Units Formula",
+        "expression": "Break-Even Units = Fixed Costs / (Price per Unit - Variable Cost per Unit)",
+        "explanation": "Total fixed overhead divided by the profit margin generated per individual unit sold.",
+        "example": "50,000 fixed costs with 80 price and 30 variable cost = 1,000 units to break even."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "What does contribution margin mean?",
+        "answer": "Contribution margin is the portion of sales revenue from a single unit that remains after paying variable costs, which contributes towards covering fixed costs and generating profit."
+      }
+    ],
+    "relatedToolSlugs": [
+      "profit-margin-calculator",
+      "discount-calculator",
+      "gst-calculator"
+    ],
+    "isPopular": true
+  },
+  "contrast-checker": {
+    "slug": "contrast-checker",
+    "name": "WCAG Contrast Checker & Blindness Simulator",
+    "shortName": "Contrast Checker",
+    "category": "developer",
+    "categoryName": "Developer & Data",
+    "description": "Test color contrast against WCAG 2.1 AA/AAA standards with real-time color blindness simulations.",
+    "longDescription": "Ensure website accessibility by measuring exact luminance contrast ratios between text and background colors with WCAG 2.1 AA and AAA pass/fail ratings and color vision deficiency filters.",
+    "iconName": "Eye",
+    "metaTitle": "WCAG Color Contrast Checker & Blindness Simulator | TabBench",
+    "metaDescription": "Check color contrast compliance against WCAG 2.1 AA/AAA standards. Includes real-time Protanopia, Deuteranopia, and Tritanopia color blindness simulation.",
+    "keywords": [
+      "contrast checker",
+      "wcag contrast checker",
+      "color contrast calculator",
+      "accessibility contrast checker",
+      "color blindness simulator",
+      "wcag 2.1 aa aaa"
+    ],
+    "features": [
+      "Exact WCAG 2.1 contrast ratio calculation",
+      "AA & AAA compliance badges for normal and large text",
+      "Protanopia, Deuteranopia, Tritanopia simulations",
+      "Live heading and paragraph preview box"
+    ],
+    "faqs": [
+      {
+        "question": "What is the minimum WCAG AA contrast ratio?",
+        "answer": "WCAG 2.1 Level AA requires a contrast ratio of at least 4.5:1 for normal body text and at least 3.0:1 for large text (18pt / 24px or 14pt / 18.66px bold) and UI components."
+      }
+    ],
+    "relatedToolSlugs": [
+      "color-converter",
+      "favicon-generator",
+      "html-entity-converter"
+    ],
+    "isPopular": true
+  },
+  "aspect-ratio-calculator": {
+    "slug": "aspect-ratio-calculator",
+    "name": "Aspect Ratio Calculator & Resizer",
+    "shortName": "Aspect Ratio Calculator",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Calculate aspect ratios, proportional dimensions, and social media image presets.",
+    "longDescription": "Find simplified aspect ratios (16:9, 4:3, 1:1, 9:16) from pixel dimensions and automatically calculate proportional width or height during media resizing.",
+    "iconName": "Monitor",
+    "metaTitle": "Aspect Ratio Calculator & Resizer | TabBench",
+    "metaDescription": "Calculate aspect ratios from dimensions and resize images proportionally. Includes 16:9, 4:3, 1:1, 9:16, and social media resolution presets.",
+    "keywords": [
+      "aspect ratio calculator",
+      "image aspect ratio",
+      "calculate aspect ratio",
+      "16:9 calculator",
+      "proportional resize calculator",
+      "dimension calculator"
+    ],
+    "features": [
+      "Exact ratio simplification (e.g. 16:9)",
+      "Proportional resize dimension calculation",
+      "Visual scaled ratio preview box",
+      "Social media and HD resolution presets"
+    ],
+    "formulas": [
+      {
+        "name": "Proportional Dimension Formula",
+        "expression": "New Height = (New Width × Original Height) / Original Width",
+        "explanation": "Calculates proportional dimension preserving the original aspect ratio without distortion.",
+        "example": "Scaling 1920x1080 to a width of 1280 yields a proportional height of 720."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "What is the aspect ratio for YouTube thumbnails?",
+        "answer": "YouTube thumbnails use a 16:9 aspect ratio with a recommended resolution of 1280x720 pixels (minimum width 640px)."
+      }
+    ],
+    "relatedToolSlugs": [
+      "image-resizer",
+      "crop-image",
+      "image-compressor"
+    ],
+    "isPopular": true
+  },
+  "exif-viewer": {
+    "slug": "exif-viewer",
+    "name": "EXIF & Image Metadata Viewer",
+    "shortName": "EXIF Viewer",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Inspect camera EXIF data, dimensions, ISO, and file metadata completely in your browser.",
+    "longDescription": "View embedded photo metadata including camera model, dimensions, file size, modification dates, and color profiles without uploading files to any server.",
+    "iconName": "Camera",
+    "metaTitle": "EXIF & Image Metadata Viewer | TabBench",
+    "metaDescription": "Inspect photo EXIF metadata, camera info, dimensions, and file specs. 100% private client-side image analyzer.",
+    "keywords": [
+      "exif viewer",
+      "image metadata viewer",
+      "photo exif reader",
+      "read exif online",
+      "camera metadata inspector",
+      "view photo info"
+    ],
+    "features": [
+      "File size, format, and exact dimensions",
+      "Modification timestamp diagnostics",
+      "100% client-side privacy",
+      "Photo preview container"
+    ],
+    "faqs": [
+      {
+        "question": "Are my photos uploaded to a server to read EXIF?",
+        "answer": "No. The inspection runs entirely in your browser's local memory using FileReader API. Your images never leave your device."
+      }
+    ],
+    "relatedToolSlugs": [
+      "aspect-ratio-calculator",
+      "image-resizer",
+      "image-compressor"
+    ],
+    "isPopular": true
+  },
+  "markdown-table-generator": {
+    "slug": "markdown-table-generator",
+    "name": "Markdown Table Generator",
+    "shortName": "Markdown Table Generator",
+    "category": "developer",
+    "categoryName": "Developer & Data",
+    "description": "Create and edit Markdown tables in a visual spreadsheet grid with column alignment and HTML export.",
+    "longDescription": "Visual spreadsheet editor to build, customize, and export GitHub Flavored Markdown and HTML tables with cell alignment controls and row/column management.",
+    "iconName": "Table",
+    "metaTitle": "Markdown Table Generator | TabBench",
+    "metaDescription": "Create Markdown and HTML tables in an interactive visual spreadsheet editor with column alignment controls and one-click copy.",
+    "keywords": [
+      "markdown table generator",
+      "markdown table editor",
+      "create markdown table",
+      "html table to markdown",
+      "markdown grid editor",
+      "github markdown table"
+    ],
+    "features": [
+      "Interactive visual spreadsheet grid",
+      "Column alignment controls (Left, Center, Right)",
+      "Simultaneous Markdown and HTML code outputs",
+      "One-click copy to clipboard"
+    ],
+    "faqs": [
+      {
+        "question": "How do you align columns in Markdown tables?",
+        "answer": "Use :--- for left alignment, :---: for center alignment, and ---: for right alignment in the header delimiter row."
+      }
+    ],
+    "relatedToolSlugs": [
+      "json-to-csv",
+      "notepad",
+      "slug-generator"
+    ],
+    "isPopular": true
   }
 };
 

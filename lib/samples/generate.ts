@@ -1207,7 +1207,7 @@ export async function generateVideo(
 
   try {
     await new Promise<void>((resolve, reject) => {
-      let timeoutId: NodeJS.Timeout | number;
+      let timeoutId: NodeJS.Timeout | number | undefined;
 
       const onAbort = () => {
         clearTimeout(timeoutId as NodeJS.Timeout);

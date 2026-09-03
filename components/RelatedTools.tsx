@@ -1,7 +1,26 @@
 import React from "react";
 import Link from "next/link";
 import { ToolDefinition } from "@/lib/tools/registry";
-import { ArrowRight, Sparkles, Percent, TrendingUp, Type, Code, Clock, Calculator } from "lucide-react";
+import {
+  ArrowRight,
+  Sparkles,
+  Percent,
+  TrendingUp,
+  Type,
+  Code,
+  Clock,
+  Calculator,
+  Scale,
+  FileSpreadsheet,
+  Palette,
+  DollarSign,
+  Calendar,
+  Eye,
+  Monitor,
+  Camera,
+  Table,
+  Link as LinkIcon,
+} from "lucide-react";
 
 interface RelatedToolsProps {
   tools: ToolDefinition[];
@@ -14,6 +33,16 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Code,
   Clock,
   Calculator,
+  Scale,
+  FileSpreadsheet,
+  Palette,
+  DollarSign,
+  Calendar,
+  Eye,
+  Monitor,
+  Camera,
+  Table,
+  Link: LinkIcon,
 };
 
 export default function RelatedTools({ tools }: RelatedToolsProps) {

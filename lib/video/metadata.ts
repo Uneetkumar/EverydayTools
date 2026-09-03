@@ -177,7 +177,7 @@ export async function inspectVideoMetadata(
   timeoutMs = 15000
 ): Promise<VideoMetadata> {
   return new Promise(async (resolve, reject) => {
-    let timer: NodeJS.Timeout;
+    let timer: NodeJS.Timeout | undefined;
     let video: HTMLVideoElement | null = null;
     let isResolved = false;
 

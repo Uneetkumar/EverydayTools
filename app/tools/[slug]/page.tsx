@@ -64,6 +64,28 @@ const VideoCutter = dynamic(() => import("@/components/tools/VideoCutter"), { lo
 const AudioRemover = dynamic(() => import("@/components/tools/AudioRemover"), { loading: ToolLoading });
 const VideoDownloader = dynamic(() => import("@/components/tools/VideoDownloader"), { loading: ToolLoading });
 
+// New Tool Suite Imports
+const SipCalculator = dynamic(() => import("@/components/tools/SipCalculator"), { loading: ToolLoading });
+const CompoundInterestCalculator = dynamic(() => import("@/components/tools/CompoundInterestCalculator"), { loading: ToolLoading });
+const BmiCalculator = dynamic(() => import("@/components/tools/BmiCalculator"), { loading: ToolLoading });
+const LoremIpsumGenerator = dynamic(() => import("@/components/tools/LoremIpsumGenerator"), { loading: ToolLoading });
+const SlugGenerator = dynamic(() => import("@/components/tools/SlugGenerator"), { loading: ToolLoading });
+const JsonCsvConverter = dynamic(() => import("@/components/tools/JsonCsvConverter"), { loading: ToolLoading });
+const RegexTester = dynamic(() => import("@/components/tools/RegexTester"), { loading: ToolLoading });
+const HtmlEntityConverter = dynamic(() => import("@/components/tools/HtmlEntityConverter"), { loading: ToolLoading });
+const ColorConverter = dynamic(() => import("@/components/tools/ColorConverter"), { loading: ToolLoading });
+const SalaryCalculator = dynamic(() => import("@/components/tools/SalaryCalculator"), { loading: ToolLoading });
+const WorkingDaysCalculator = dynamic(() => import("@/components/tools/WorkingDaysCalculator"), { loading: ToolLoading });
+const UnixTimestampConverter = dynamic(() => import("@/components/tools/UnixTimestampConverter"), { loading: ToolLoading });
+const JsonToTypeScript = dynamic(() => import("@/components/tools/JsonToTypeScript"), { loading: ToolLoading });
+const CronExplainer = dynamic(() => import("@/components/tools/CronExplainer"), { loading: ToolLoading });
+const UtmBuilder = dynamic(() => import("@/components/tools/UtmBuilder"), { loading: ToolLoading });
+const BreakEvenCalculator = dynamic(() => import("@/components/tools/BreakEvenCalculator"), { loading: ToolLoading });
+const ContrastChecker = dynamic(() => import("@/components/tools/ContrastChecker"), { loading: ToolLoading });
+const AspectRatioCalculator = dynamic(() => import("@/components/tools/AspectRatioCalculator"), { loading: ToolLoading });
+const ExifViewer = dynamic(() => import("@/components/tools/ExifViewer"), { loading: ToolLoading });
+const MarkdownTableGenerator = dynamic(() => import("@/components/tools/MarkdownTableGenerator"), { loading: ToolLoading });
+
 interface ToolPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -220,6 +242,46 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <VideoDownloader platform="tiktok" />;
       case "twitter-video-downloader":
         return <VideoDownloader platform="twitter" />;
+      case "sip-calculator":
+        return <SipCalculator />;
+      case "compound-interest-calculator":
+        return <CompoundInterestCalculator />;
+      case "bmi-calculator":
+        return <BmiCalculator />;
+      case "lorem-ipsum-generator":
+        return <LoremIpsumGenerator />;
+      case "slug-generator":
+        return <SlugGenerator />;
+      case "json-to-csv":
+        return <JsonCsvConverter />;
+      case "regex-tester":
+        return <RegexTester />;
+      case "html-entity-converter":
+        return <HtmlEntityConverter />;
+      case "color-converter":
+        return <ColorConverter />;
+      case "salary-calculator":
+        return <SalaryCalculator />;
+      case "working-days-calculator":
+        return <WorkingDaysCalculator />;
+      case "unix-timestamp-converter":
+        return <UnixTimestampConverter />;
+      case "json-to-typescript":
+        return <JsonToTypeScript />;
+      case "cron-explainer":
+        return <CronExplainer />;
+      case "utm-builder":
+        return <UtmBuilder />;
+      case "break-even-calculator":
+        return <BreakEvenCalculator />;
+      case "contrast-checker":
+        return <ContrastChecker />;
+      case "aspect-ratio-calculator":
+        return <AspectRatioCalculator />;
+      case "exif-viewer":
+        return <ExifViewer />;
+      case "markdown-table-generator":
+        return <MarkdownTableGenerator />;
       default:
         return <PercentageCalculator />;
     }

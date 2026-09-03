@@ -34,7 +34,10 @@ export default function AboutPage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 my-8">
+      <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-8">
+        What makes TabBench different
+      </h2>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4 mb-8">
         <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-3">
           <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
             <Zap className="w-5 h-5" />

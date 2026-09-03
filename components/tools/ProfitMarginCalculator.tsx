@@ -219,10 +219,10 @@ export default function ProfitMarginCalculator() {
 
       {/* Margin vs Markup Conversion Cheat Sheet */}
       <div className="p-5 rounded-2xl bg-slate-50/50 dark:bg-slate-950/30 border border-slate-200/60 dark:border-slate-800/60">
-        <h4 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+        <h3 className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider mb-3 flex items-center gap-1.5">
           <Info className="w-3.5 h-3.5 text-indigo-500" />
           Margin vs. Markup Conversion Table
-        </h4>
+        </h3>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
           {[
             { margin: "10%", markup: "11.1%" },

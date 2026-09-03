@@ -31,9 +31,9 @@ export default function Footer() {
 
           {/* Col 2: Categories */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white mb-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white mb-3">
               Categories
-            </h3>
+            </h2>
             <ul className="space-y-2 text-xs">
               <li>
                 <Link
@@ -66,9 +66,9 @@ export default function Footer() {
 
           {/* Col 3: Popular Tools */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white mb-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white mb-3">
               Popular Tools
-            </h3>
+            </h2>
             <ul className="space-y-2 text-xs">
               {tools.slice(0, 5).map((tool) => (
                 <li key={tool.slug}>
@@ -85,9 +85,9 @@ export default function Footer() {
 
           {/* Col 4: Trust & Legal */}
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white mb-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-900 dark:text-white mb-3">
               Company & Legal
-            </h3>
+            </h2>
             <ul className="space-y-2 text-xs">
               <li>
                 <Link

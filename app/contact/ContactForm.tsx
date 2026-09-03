@@ -32,7 +32,7 @@ export default function ContactForm() {
             <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
               <CheckCircle className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-white">Message Received!</h3>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">Message Received!</h2>
             <p className="text-sm text-slate-600 dark:text-slate-400 max-w-sm mx-auto">
               Thank you for helping make TabBench better. Our editorial and development team will review your inquiry.
             </p>

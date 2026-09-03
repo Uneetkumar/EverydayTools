@@ -467,6 +467,119 @@ on every page" advice that circulated — it tells Google all 97 pages duplicate
 the homepage. `seo-check.mjs` now errors on exactly that.
 
 
+---
+
+## 17. SEO — second additive pass (25 Aug 2026)
+
+**Removed: none.** Additive plus four defect fixes surfaced by extending the
+validator.
+
+**Verified live** (not just locally):
+```
+http://tabbench.com        -> 301 https://tabbench.com/   OK
+https://tabbench.com       -> 200                          OK
+https://www.tabbench.com   -> connection refused           www is NOT configured
+https://everydaytools-s.web.app -> 200, canonical -> tabbench.com
+```
+The deployed build is current: `/categories` is live, per-page `og:image` is
+live, sitemap serves 95 URLs.
+
+**`www` is a dashboard action, not a code change.** Firebase `redirects` in
+`firebase.json` match on *path*, not host, and with `output: "export"` there is
+no server to branch on `Host`. Adding `www.tabbench.com` as a redirect domain
+must be done in the Firebase Hosting console. Today `www` simply does not
+resolve, so it creates no duplicate — it only loses any traffic linked that way.
+
+**Fixed (all found by the new checks, all previously invisible):**
+1. **`.slice(0, 8)` / `.slice(0, 5)` in the related blocks** always took the
+   *first* N in registry order, so the tail of `CURRENCY_PAIRS` and `GUIDES` was
+   never linked from anywhere — three corridors and two guides had a single
+   inbound link. Both now **rotate** the window by the current item's index,
+   which guarantees every sibling is linked from somewhere.
+2. `/about` jumped h1 -> h3 (feature cards had no section heading).
+3. `/contact` jumped h1 -> h3 — the h3s were the **footer** columns. Footer
+   headings are now h2: they sit in their own landmark and should not dangle
+   under the page h1.
+4. Promoting the footer then exposed **h2 -> h4** in four tool widgets
+   (WordCounter, SampleFileGenerator, ProfitMarginCalculator, PdfEditor) that
+   the footer's h3 had been masking. Now h3.
+
+**`scripts/seo-check.mjs` gained** (Phases 20/21/25/28/29):
+- orphan detection — **error** at 0 inbound internal links, **warn** at 1-2
+- `<img>` without `alt` — error
+- skipped heading levels — warn
+- structured-data coverage line, so a page type silently losing schema shows up
+
+Current: **0 errors, 0 warnings**, 95 indexable pages.
+`Organization 95 · WebSite 95 · BreadcrumbList 94 · FAQPage 86 ·
+WebApplication 57 · CollectionPage 12 · Article 8`
+
+**Deliberately not done, with reasons:**
+- **Sitemap index / split sitemaps** — 95 URLs against Google's 50,000 limit.
+  Splitting adds moving parts and buys nothing.
+- **Search Console query data** — no API access from here. Never invent
+  impressions, CTR or positions to justify a change.
+- **Core Web Vitals field data** — cannot be measured from a build. What is
+  measurable: 3.6 MB raw JS over 36 chunks (largest 448 KB); ffmpeg (31 MB) and
+  pdf.js (3.9 MB) are in `public/` and lazy-loaded, so they stay out of the
+  initial payload; the only third-party script is AdSense, already `async` with
+  a `preconnect`.
+- **AdSense on every page while `lib/ads/config.ts` has no slot IDs** — a
+  third-party connection on every page for zero fill. Flagged, not removed:
+  removing it is a product decision, and the intent is to enable ads.
+
+
+---
+
+## 18. Only tabbench.com is indexable (25 Aug 2026)
+
+**Firebase serves the project on THREE hostnames, not two.** The old guard only
+covered `everydaytools-s.web.app`. `everydaytools-s.firebaseapp.com` was also
+live, returning 200 with `<meta name="robots" content="index, follow">`.
+Neither can be switched off in Firebase.
+
+Guard now lives in `lib/seo/canonical-host.ts`:
+1. suffix test on `.web.app` / `.firebaseapp.com`
+2. sets `robots` to `noindex, follow` **before** redirecting, so a crawler that
+   renders but does not follow a JS navigation still gets the signal
+3. `location.replace` to `https://tabbench.com` + path
+
+**It is a plain inline `<script>`, deliberately not `next/script`.** With
+`strategy="beforeInteractive"` Next serialises the code into its
+`self.__next_s` queue, so it only runs after the framework bundle loads. A raw
+inline tag in `<head>` executes immediately with no chunk dependency. Do not
+"modernise" this back to `<Script>`.
+
+**Why not robots.txt `Disallow` on the duplicate:** blocking crawl stops Google
+ever seeing the canonical or the noindex, stranding whatever is already indexed.
+Disallow is the wrong tool for removing pages.
+
+**Why not a server-side 301:** `firebase.json` redirects match on *path*, not
+host, and `output: "export"` means there is no server to read the Host header.
+A Cloud Function rewrite could, but routing every request through a function to
+fix canonicalisation is a bad trade.
+
+**The check RUNS the guard, it does not grep for it.** `seo-check.mjs` extracts
+the emitted script and executes it against real hostnames, asserting it
+redirects + noindexes both Firebase hosts and — the direction that actually
+matters — that it does **nothing** on `tabbench.com`, `www.tabbench.com`,
+`localhost` and `127.0.0.1`. An over-escaped regex ships a guard that never
+fires and looks identical under grep.
+
+### Unblocking the new calculators
+
+Seven components were written against APIs that did not exist yet. Both were
+extended **additively**, so every existing call site is untouched:
+- `ResultCard` accepts `label` (alias for `title`), `formulaExplanation`
+  (falls back into the `subtitle` slot), `copyText` (overrides what the copy
+  button writes) and `shareTitle`. The card already implemented copy and share,
+  so these are overrides for existing behaviour, not new features.
+- `downloadBlob(blob, filename, toolSlug?)` — `recordResult` already took an
+  optional slug; it is now forwarded.
+
+Site is **115 pages / 77 tools** as a result.
+
+
 ## 11. Commands
 
 ```bash
