@@ -13,6 +13,9 @@ import {
   ShieldCheck,
   Globe,
   Trash2,
+  CheckCircle2,
+  FileText,
+  ImageIcon,
 } from "lucide-react";
 import { recognizeLocally, disposeOcr, type OcrProgress } from "@/lib/ocr/engine";
 import { recognizeWithGemini, describeGeminiError } from "@/lib/ocr/gemini";
@@ -38,9 +41,11 @@ export default function ImageToText() {
   const [output, setOutput] = useState<Output | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [dragActive, setDragActive] = useState(false);
   const previewRef = useRef<string | null>(null);
+  const resultRef = useRef<HTMLDivElement | null>(null);
 
-  // Object URLs leak until revoked, and this tool churns through images.
+  // Object URLs leak until revoked
   useEffect(() => {
     return () => {
       if (previewRef.current) URL.revokeObjectURL(previewRef.current);
@@ -48,18 +53,41 @@ export default function ImageToText() {
     };
   }, []);
 
-  const onFile = useCallback((next: File | undefined) => {
+  // Global Clipboard paste support (Ctrl+V / Cmd+V)
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf("image") !== -1) {
+          const blob = items[i].getAsFile();
+          if (blob) {
+            onFile(blob);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+  }, []);
+
+  const onFile = useCallback((next: File | undefined | null) => {
     if (!next) return;
     setError(null);
     setOutput(null);
 
     if (!next.type.startsWith("image/")) {
-      setError("That is not an image. Upload a PNG, JPG, WebP or BMP.");
+      setError("Please upload an image file (PNG, JPG, WebP, BMP).");
       return;
     }
     if (next.size > MAX_BYTES) {
       setError(
-        `That image is ${(next.size / 1024 / 1024).toFixed(1)}MB. Keep it under ${MAX_BYTES / 1024 / 1024}MB — larger images slow recognition down without reading any better.`
+        `Image size is ${(next.size / 1024 / 1024).toFixed(1)}MB. Maximum recommended size is ${
+          MAX_BYTES / 1024 / 1024
+        }MB.`
       );
       return;
     }
@@ -70,6 +98,25 @@ export default function ImageToText() {
     setPreview(url);
     setFile(next);
   }, []);
+
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      onFile(e.dataTransfer.files[0]);
+    }
+  };
 
   const run = async () => {
     if (!file) return;
@@ -91,11 +138,16 @@ export default function ImageToText() {
           confidence: r.confidence,
           elapsedMs: r.elapsedMs,
         });
-        if (!r.text)
+        if (!r.text) {
           setError(
-            "No text was recognised. If the image is a photo taken at an angle, or the text is handwritten, try the AI option — it handles both far better."
+            "No text was recognized with on-device OCR. If the image is handwritten or low contrast, try the Gemini AI mode."
           );
+        }
       }
+
+      setTimeout(() => {
+        resultRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }, 100);
     } catch (e) {
       setError(
         engine === "ai"
@@ -112,14 +164,14 @@ export default function ImageToText() {
     if (!output?.text) return;
     await navigator.clipboard.writeText(output.text);
     setCopied(true);
-    setTimeout(() => setCopied(false), 1800);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const save = () => {
     if (!output?.text) return;
     downloadBlob(
       new Blob([output.text], { type: "text/plain;charset=utf-8" }),
-      `${(file?.name ?? "extracted").replace(/\.[^.]+$/, "")}.txt`,
+      `${(file?.name ?? "extracted-text").replace(/\.[^.]+$/, "")}.txt`,
       "image-to-text"
     );
   };
@@ -136,192 +188,280 @@ export default function ImageToText() {
   const pct =
     progress?.progress != null ? Math.round(progress.progress * 100) : null;
 
+  const wordCount = output?.text ? output.text.trim().split(/\s+/).filter(Boolean).length : 0;
+  const charCount = output?.text ? output.text.length : 0;
+
   return (
-    <div className="space-y-5">
-      {/* Upload */}
-      <div className="relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50/60 p-8 text-center transition hover:border-blue-400 hover:bg-blue-50/30 dark:border-slate-700 dark:bg-slate-950/40">
-        <Upload className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-        <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-          {file ? file.name : "Upload an image to read its text"}
-        </p>
-        <p className="text-xs text-slate-500">
-          PNG, JPG, WebP or BMP · up to {MAX_BYTES / 1024 / 1024}MB · screenshots, scans and photos
-        </p>
-        <input
-          type="file"
-          accept="image/*"
-          disabled={busy}
-          aria-label="Choose an image"
-          onChange={(e) => onFile(e.target.files?.[0])}
-          className="absolute inset-0 cursor-pointer opacity-0 disabled:cursor-wait"
-        />
-      </div>
-
-      {/* Engine choice */}
-      <div className="grid grid-cols-1 gap-3 @lg:grid-cols-2">
-        <button
-          onClick={() => setEngine("local")}
-          aria-pressed={engine === "local"}
-          className={`rounded-2xl border p-4 text-left transition ${
-            engine === "local"
-              ? "border-emerald-500 bg-emerald-50/70 ring-2 ring-emerald-500/20 dark:border-emerald-600 dark:bg-emerald-950/30"
-              : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900"
+    <div className="space-y-6">
+      {/* Upload Dropzone */}
+      {!file ? (
+        <div
+          onDragEnter={handleDrag}
+          onDragLeave={handleDrag}
+          onDragOver={handleDrag}
+          onDrop={handleDrop}
+          className={`relative flex flex-col items-center justify-center p-8 sm:p-12 text-center rounded-3xl border-2 border-dashed transition-all duration-200 cursor-pointer ${
+            dragActive
+              ? "border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 scale-[0.99]"
+              : "border-slate-300 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-900/40 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-950/20"
           }`}
         >
-          <span className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
-            <Cpu className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-            On-device
-            <span className="ml-auto flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300">
-              <ShieldCheck className="h-3 w-3" /> Private
-            </span>
-          </span>
-          <span className="mt-1.5 block text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-            Runs entirely in your browser. The image is never uploaded. Best for
-            clear, printed, left-to-right text. Downloads about 9MB the first
-            time, then works offline.
-          </span>
-        </button>
-
-        <button
-          onClick={() => setEngine("ai")}
-          aria-pressed={engine === "ai"}
-          className={`rounded-2xl border p-4 text-left transition ${
-            engine === "ai"
-              ? "border-blue-500 bg-blue-50/70 ring-2 ring-blue-500/20 dark:border-blue-600 dark:bg-blue-950/30"
-              : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900"
-          }`}
-        >
-          <span className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white">
-            <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-            AI (Gemini)
-            <span className="ml-auto flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
-              <Globe className="h-3 w-3" /> Uploads
-            </span>
-          </span>
-          <span className="mt-1.5 block text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-            Far better at handwriting, tables, and non-English scripts.{" "}
-            <strong>The image is sent to Google to be processed</strong> — do not
-            use it for anything confidential.
-          </span>
-        </button>
-      </div>
-
-      {engine === "ai" && (
-        <p className="flex gap-2.5 rounded-xl border border-blue-200 bg-blue-50 p-3 text-xs leading-relaxed text-blue-900 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-200">
-          <Globe className="mt-0.5 h-4 w-4 shrink-0" />
-          <span>
-            Unlike every other tool here, this option leaves your browser. Your
-            image is uploaded to Google&rsquo;s Gemini API and processed on their
-            servers. Pick <strong>On-device</strong> for IDs, bank statements or
-            anything else you would rather not send anywhere.
-          </span>
-        </p>
-      )}
-
-      {/* Preview + action */}
-      {preview && (
-        <div className="grid grid-cols-1 gap-4 @2xl:grid-cols-[240px_1fr]">
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={preview} alt="Image queued for text extraction" className="h-auto w-full object-contain" />
+          <div className="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs mb-3">
+            <Upload className="w-7 h-7" />
           </div>
 
-          <div className="space-y-3">
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={run}
-                disabled={busy}
-                className="flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
-              >
-                {busy ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                {busy ? "Reading…" : "Extract text"}
-              </button>
-              <button
-                onClick={reset}
-                disabled={busy}
-                className="flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-200 disabled:opacity-50 dark:bg-slate-800 dark:text-slate-200"
-              >
-                <Trash2 className="h-4 w-4" /> Clear
-              </button>
+          <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+            Upload an image to extract text
+          </h3>
+          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-md">
+            Drag & drop, browse files, or press{" "}
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[10px] font-mono text-slate-700 dark:text-slate-300">
+              Ctrl+V
+            </kbd>{" "}
+            /{" "}
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[10px] font-mono text-slate-700 dark:text-slate-300">
+              ⌘V
+            </kbd>{" "}
+            to paste screenshots directly.
+          </p>
+
+          <div className="mt-5">
+            <span className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition">
+              Select Image File
+            </span>
+          </div>
+
+          <input
+            type="file"
+            accept="image/*"
+            disabled={busy}
+            aria-label="Choose an image file"
+            onChange={(e) => onFile(e.target.files?.[0])}
+            className="absolute inset-0 opacity-0 cursor-pointer disabled:cursor-wait"
+          />
+        </div>
+      ) : (
+        /* Image Loaded View */
+        <div className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/70 backdrop-blur-sm p-5 sm:p-6 shadow-sm space-y-5">
+          <div className="flex flex-col lg:flex-row gap-6 items-start">
+            {/* Left Preview Card */}
+            <div className="w-full lg:w-72 shrink-0 space-y-2">
+              <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 flex items-center justify-center min-h-[200px] max-h-[260px] p-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={preview!}
+                  alt="Source for OCR"
+                  className="w-full h-full object-contain max-h-[240px] rounded-lg"
+                />
+              </div>
+
+              <div className="flex items-center justify-between text-xs px-1 text-slate-500 dark:text-slate-400">
+                <span className="font-medium truncate max-w-[180px]">
+                  {file.name}
+                </span>
+                <span className="text-[11px] font-mono">
+                  {(file.size / 1024).toFixed(0)} KB
+                </span>
+              </div>
             </div>
 
-            {busy && (
-              <div className="space-y-1.5">
-                <p className="text-xs text-slate-500">
-                  {engine === "local"
-                    ? progress?.status ?? "Preparing the recogniser…"
-                    : "Sending to Gemini…"}
-                  {pct != null ? ` — ${pct}%` : ""}
-                </p>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-200 dark:bg-slate-800">
-                  <div
-                    className="h-full rounded-full bg-blue-600 transition-[width]"
-                    style={{ width: pct != null ? `${pct}%` : "35%" }}
-                  />
+            {/* Right Controls */}
+            <div className="flex-1 space-y-5 w-full">
+              {/* Minimalist Segmented Engine Switcher */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">
+                    Engine
+                  </span>
+                  <span className="text-[11px] text-slate-400">
+                    {engine === "local" ? "Runs locally in browser" : "Google Gemini Cloud AI"}
+                  </span>
                 </div>
-                {engine === "local" && (
-                  <p className="text-[11px] text-slate-400">
-                    The first run downloads the recognition model. Later runs are much quicker.
-                  </p>
+
+                <div className="p-1 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 flex gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setEngine("local")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                      engine === "local"
+                        ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-xs border border-slate-200/80 dark:border-slate-700/80"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                    }`}
+                  >
+                    <Cpu className={`w-3.5 h-3.5 ${engine === "local" ? "text-emerald-500" : "text-slate-400"}`} />
+                    <span>On-Device</span>
+                    <span className="text-[10px] font-normal px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                      Private
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setEngine("ai")}
+                    className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                      engine === "ai"
+                        ? "bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-300 shadow-xs border border-slate-200/80 dark:border-slate-700/80"
+                        : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                    }`}
+                  >
+                    <Sparkles className={`w-3.5 h-3.5 ${engine === "ai" ? "text-purple-500" : "text-slate-400"}`} />
+                    <span>Gemini AI</span>
+                    <span className="text-[10px] font-normal px-1.5 py-0.2 rounded bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-500/20">
+                      Smart
+                    </span>
+                  </button>
+                </div>
+
+                {/* Subtitle Information */}
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 px-1">
+                  {engine === "local" ? (
+                    <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
+                      <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
+                      Zero server upload. Image remains 100% in local memory.
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1.5 text-purple-700 dark:text-purple-300">
+                      <Sparkles className="w-3.5 h-3.5 shrink-0" />
+                      Enhanced transcription for handwritten notes, receipts & tables.
+                    </span>
+                  )}
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={run}
+                  disabled={busy}
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-bold shadow-md shadow-blue-600/20 transition disabled:opacity-60 disabled:cursor-wait cursor-pointer"
+                >
+                  {busy ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Extracting Text...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Extract Text</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={reset}
+                  disabled={busy}
+                  className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium transition cursor-pointer"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-slate-400" />
+                  <span>Change Image</span>
+                </button>
+              </div>
+
+              {/* Progress Bar */}
+              {busy && (
+                <div className="space-y-1.5 pt-1">
+                  <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 font-medium">
+                    <span>
+                      {engine === "local"
+                        ? progress?.status ?? "Initializing local recognizer..."
+                        : "Processing with Gemini AI..."}
+                    </span>
+                    {pct != null && <span>{pct}%</span>}
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
+                    <div
+                      className="h-full bg-blue-600 transition-all duration-300 rounded-full"
+                      style={{ width: pct != null ? `${pct}%` : "45%" }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error Banner */}
+      {error && (
+        <div className="flex items-start gap-3 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/30 p-4 text-rose-800 dark:text-rose-200">
+          <AlertTriangle className="w-5 h-5 shrink-0 text-rose-600 mt-0.5" />
+          <div className="text-xs leading-relaxed">{error}</div>
+        </div>
+      )}
+
+      {/* Extracted Output Panel */}
+      {output && (
+        <div
+          ref={resultRef}
+          className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-300"
+        >
+          {/* Top Result Toolbar */}
+          <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <span className="font-bold text-slate-900 dark:text-white">
+                  Extracted Text
+                </span>
+                <span className="text-slate-400">&bull;</span>
+                <span className="text-slate-500 dark:text-slate-400">
+                  {wordCount} words, {charCount} chars
+                </span>
+                {output.confidence != null && (
+                  <>
+                    <span className="text-slate-400">&bull;</span>
+                    <span className="text-slate-500 dark:text-slate-400">
+                      {output.confidence}% confidence
+                    </span>
+                  </>
                 )}
               </div>
-            )}
-          </div>
-        </div>
-      )}
+            </div>
 
-      {error && (
-        <div className="flex gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/40 dark:bg-amber-950/30">
-          <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
-          <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-200">{error}</p>
-        </div>
-      )}
-
-      {/* Result */}
-      {output && output.text && (
-        <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white">
-              Extracted text
-            </h2>
+            {/* Action Buttons */}
             <div className="flex items-center gap-2">
-              <span className="text-[11px] text-slate-400">
-                {output.engine === "local"
-                  ? `on-device · ${output.confidence}% confidence · ${output.elapsedMs}ms`
-                  : "Gemini"}
-              </span>
               <button
+                type="button"
                 onClick={copy}
-                className="flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer ${
+                  copied
+                    ? "bg-emerald-600 text-white shadow-emerald-500/20"
+                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20"
+                }`}
               >
-                {copied ? <Check className="h-3.5 w-3.5 text-emerald-600" /> : <Copy className="h-3.5 w-3.5" />}
-                {copied ? "Copied" : "Copy"}
+                {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copied ? "Copied!" : "Copy Text"}</span>
               </button>
+
               <button
+                type="button"
                 onClick={save}
-                className="flex items-center gap-1.5 rounded-lg bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition cursor-pointer"
+                title="Download as .txt file"
               >
-                <Download className="h-3.5 w-3.5" /> .txt
+                <Download className="w-3.5 h-3.5" />
+                <span>.txt</span>
               </button>
             </div>
           </div>
 
-          <textarea
-            value={output.text}
-            onChange={(e) => setOutput({ ...output, text: e.target.value })}
-            rows={14}
-            spellCheck={false}
-            aria-label="Extracted text, editable"
-            className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 p-3 font-mono text-xs leading-relaxed text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
-          />
-
-          {output.engine === "local" && (output.confidence ?? 100) < 70 && (
-            <p className="text-xs leading-relaxed text-amber-700 dark:text-amber-300">
-              Confidence is low, so expect mistakes. A straighter, better-lit or
-              higher-resolution image usually helps more than anything else — and
-              for handwriting the AI option is a different class of accurate.
-            </p>
-          )}
+          {/* Editable Text Area */}
+          <div className="p-4 sm:p-5">
+            <textarea
+              value={output.text}
+              onChange={(e) => setOutput({ ...output, text: e.target.value })}
+              rows={12}
+              spellCheck={false}
+              aria-label="Extracted editable text"
+              className="w-full p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950 font-mono text-xs sm:text-sm leading-relaxed text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+              placeholder="Extracted text will appear here..."
+            />
+          </div>
         </div>
       )}
     </div>

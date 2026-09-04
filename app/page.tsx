@@ -520,10 +520,10 @@ export default function HomePage() {
             <button
               key={cat.id}
               onClick={() => handleCategoryClick(cat.id)}
-              className={`p-3 rounded-2xl border transition-all duration-200 flex items-center space-x-3 text-left group backdrop-blur-xs ${
+              className={`p-3 rounded-2xl border transition-all duration-200 flex items-center space-x-3 text-left group backdrop-blur-xs cursor-pointer ${
                 isSelected
-                  ? "bg-blue-50/80 dark:bg-blue-950/50 border-blue-500 ring-1 ring-blue-500 shadow-sm"
-                  : "bg-white/70 dark:bg-slate-900/70 border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-white dark:hover:bg-slate-850"
+                  ? "bg-blue-500/10 dark:bg-blue-500/20 border-blue-500 dark:border-blue-400 ring-1 ring-blue-500/30 shadow-xs"
+                  : "bg-white/70 dark:bg-slate-900/60 border-slate-200/80 dark:border-slate-800/80 hover:border-blue-400/50 dark:hover:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/70"
               }`}
             >
               <div
@@ -578,7 +578,7 @@ export default function HomePage() {
                 <Link
                   key={tool.slug}
                   href={`/tools/${tool.slug}`}
-                  className="p-3 sm:p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-850 hover:border-slate-300 dark:hover:border-slate-700 transition flex flex-col justify-between group h-full"
+                  className="p-3 sm:p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 hover:bg-slate-50 dark:hover:bg-slate-800/70 hover:border-blue-400/50 dark:hover:border-slate-700 transition flex flex-col justify-between group h-full"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -796,7 +796,7 @@ export default function HomePage() {
                         href={`/tools/${tool.slug}`}
                         title={`Open ${tool.name} free online tool`}
                         aria-label={`Open ${tool.name}`}
-                        className="group p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-950/40 hover:bg-white dark:hover:bg-slate-900 tool-card-glow transition flex flex-col justify-between"
+                        className="group p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-950/40 hover:bg-slate-50 dark:hover:bg-slate-900/80 hover:border-blue-400/50 dark:hover:border-slate-700 tool-card-glow transition flex flex-col justify-between"
                       >
                         <div className="space-y-3">
                           <div className="flex items-center space-x-3">

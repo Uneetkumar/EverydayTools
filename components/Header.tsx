@@ -73,15 +73,26 @@ export default function Header() {
   }, []);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCategoriesDropdownOpen, setIsCategoriesDropdownOpen] = useState(false);
+  const [isPopularDropdownOpen, setIsPopularDropdownOpen] = useState(false);
 
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const categoriesDropdownRef = useRef<HTMLDivElement>(null);
+  const popularDropdownRef = useRef<HTMLDivElement>(null);
   const allTools = getAllTools();
 
   useEffect(() => {
     setMounted(true);
     const handleClickOutside = (e: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        categoriesDropdownRef.current &&
+        !categoriesDropdownRef.current.contains(e.target as Node)
+      ) {
         setIsCategoriesDropdownOpen(false);
+      }
+      if (
+        popularDropdownRef.current &&
+        !popularDropdownRef.current.contains(e.target as Node)
+      ) {
+        setIsPopularDropdownOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -112,7 +123,7 @@ export default function Header() {
       <header className="sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm transition-colors">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           {/* Logo & Main Nav */}
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-6 lg:space-x-8">
             <Link href="/" className="flex items-center space-x-2.5 group shrink-0">
               <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition">
                 <Calculator className="w-4 h-4" />
@@ -122,13 +133,16 @@ export default function Header() {
               </span>
             </Link>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center space-x-1">
+            {/* Desktop Navigation - Spacious & Clean */}
+            <nav className="hidden lg:flex items-center space-x-2">
               {/* Categories Mega Dropdown */}
-              <div className="relative" ref={dropdownRef}>
+              <div className="relative" ref={categoriesDropdownRef}>
                 <button
-                  onClick={() => setIsCategoriesDropdownOpen(!isCategoriesDropdownOpen)}
-                  className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition ${
+                  onClick={() => {
+                    setIsCategoriesDropdownOpen(!isCategoriesDropdownOpen);
+                    setIsPopularDropdownOpen(false);
+                  }}
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer ${
                     isCategoriesDropdownOpen
                       ? "bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400"
                       : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
@@ -181,25 +195,78 @@ export default function Header() {
                 )}
               </div>
 
-              <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-1.5" />
-
-              {/* Handpicked Most Popular Items */}
-              {TOP_POPULAR_TOOLS.map((tool) => (
-                <Link
-                  key={tool.slug}
-                  href={`/tools/${tool.slug}`}
-                  className="px-2.5 py-1.5 text-xs font-medium rounded-lg text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition truncate"
+              {/* Popular Tools Dropdown */}
+              <div className="relative" ref={popularDropdownRef}>
+                <button
+                  onClick={() => {
+                    setIsPopularDropdownOpen(!isPopularDropdownOpen);
+                    setIsCategoriesDropdownOpen(false);
+                  }}
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer ${
+                    isPopularDropdownOpen
+                      ? "bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  }`}
                 >
-                  {tool.name}
-                </Link>
-              ))}
+                  <span>Popular</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      isPopularDropdownOpen ? "rotate-180 text-blue-600" : "text-slate-400"
+                    }`}
+                  />
+                </button>
 
+                {isPopularDropdownOpen && (
+                  <div className="absolute left-0 mt-2 w-[280px] p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-1 animate-in fade-in-50 zoom-in-95 duration-150 z-50">
+                    {TOP_POPULAR_TOOLS.map((tool) => (
+                      <Link
+                        key={tool.slug}
+                        href={`/tools/${tool.slug}`}
+                        onClick={() => setIsPopularDropdownOpen(false)}
+                        className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition group"
+                      >
+                        <span className="font-semibold truncate">{tool.name}</span>
+                        <span className="text-[10px] text-slate-400 group-hover:text-blue-500">→</span>
+                      </Link>
+                    ))}
+                    <Link
+                      href="/tools"
+                      onClick={() => setIsPopularDropdownOpen(false)}
+                      className="block text-center pt-2 pb-1 border-t border-slate-100 dark:border-slate-800 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                    >
+                      View all {allTools.length}+ tools →
+                    </Link>
+                  </div>
+                )}
+              </div>
+
+              {/* Highlighted Image to Text OCR */}
+              <Link
+                href="/tools/image-to-text"
+                className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-blue-500/10 border border-purple-500/30 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 transition shadow-xs"
+                title="Extract text from images, scans & photos"
+              >
+                <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                <span>Image to Text</span>
+                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-purple-600 text-white">
+                  AI
+                </span>
+              </Link>
+
+              {/* All Tools Link */}
               <Link
                 href="/tools"
-                className="flex items-center space-x-1 px-2.5 py-1.5 text-xs font-semibold rounded-lg text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 transition"
+                className="px-3 py-1.5 text-xs font-semibold rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
               >
-                <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                <span>More</span>
+                All Tools
+              </Link>
+
+              {/* Guides */}
+              <Link
+                href="/guides"
+                className="px-3 py-1.5 text-xs font-semibold rounded-xl text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              >
+                Guides
               </Link>
             </nav>
           </div>
@@ -346,6 +413,21 @@ export default function Header() {
                 <Download className="w-4 h-4" />
                 <span>Install TabBench App</span>
               </button>
+
+              {/* Highlighted Image to Text OCR in Mobile */}
+              <Link
+                href="/tools/image-to-text"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-blue-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-bold text-xs"
+              >
+                <div className="flex items-center space-x-2">
+                  <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                  <span>Image to Text (OCR)</span>
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-purple-600 text-white">
+                  AI
+                </span>
+              </Link>
 
               {/* Top Popular Tools */}
               <div className="space-y-2">
