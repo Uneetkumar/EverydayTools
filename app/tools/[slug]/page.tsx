@@ -87,6 +87,13 @@ const AspectRatioCalculator = dynamic(() => import("@/components/tools/AspectRat
 const ExifViewer = dynamic(() => import("@/components/tools/ExifViewer"), { loading: ToolLoading });
 const MarkdownTableGenerator = dynamic(() => import("@/components/tools/MarkdownTableGenerator"), { loading: ToolLoading });
 
+// Phase 1 AI Tools
+const AiTextSummarizer = dynamic(() => import("@/components/tools/AiTextSummarizer"), { loading: ToolLoading });
+const AiTextRewriter = dynamic(() => import("@/components/tools/AiTextRewriter"), { loading: ToolLoading });
+const AiTextSimplifier = dynamic(() => import("@/components/tools/AiTextSimplifier"), { loading: ToolLoading });
+const AiKeywordExtractor = dynamic(() => import("@/components/tools/AiKeywordExtractor"), { loading: ToolLoading });
+const AiJsonExplainer = dynamic(() => import("@/components/tools/AiJsonExplainer"), { loading: ToolLoading });
+
 interface ToolPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -285,6 +292,16 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <ExifViewer />;
       case "markdown-table-generator":
         return <MarkdownTableGenerator />;
+      case "ai-text-summarizer":
+        return <AiTextSummarizer />;
+      case "ai-text-rewriter":
+        return <AiTextRewriter />;
+      case "ai-text-simplifier":
+        return <AiTextSimplifier />;
+      case "ai-keyword-extractor":
+        return <AiKeywordExtractor />;
+      case "ai-json-explainer":
+        return <AiJsonExplainer />;
       default:
         return <PercentageCalculator />;
     }

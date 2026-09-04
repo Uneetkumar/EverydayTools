@@ -3362,6 +3362,200 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "slug-generator"
     ],
     "isPopular": true
+  },
+  "ai-text-summarizer": {
+    "slug": "ai-text-summarizer",
+    "name": "AI Text Summarizer",
+    "shortName": "AI Summarizer",
+    "category": "ai-tools",
+    "categoryName": "AI-Powered Tools",
+    "description": "Summarize long articles, essays, reports, and documents into key takeaways with instant local processing.",
+    "longDescription": "Free online AI text summarizer that reduces lengthy text into concise summaries and structured bullet points. Runs privately in your browser with zero mandatory signups.",
+    "iconName": "Sparkles",
+    "metaTitle": "AI Text Summarizer | TabBench",
+    "metaDescription": "Summarize long articles, essays, and documents into concise summaries and key bullet points. 100% private in-browser AI processing.",
+    "keywords": [
+      "ai text summarizer",
+      "summarize text online",
+      "free article summarizer",
+      "document summarizer",
+      "ai summary generator",
+      "text condensation",
+      "key points extractor"
+    ],
+    "features": [
+      "Short, Medium, and Detailed summary lengths",
+      "Instant bullet-point takeaways",
+      "Zero server upload on-device privacy",
+      "Word reduction percentage statistics"
+    ],
+    "faqs": [
+      {
+        "question": "Is my text uploaded to a server?",
+        "answer": "By default, On-Device AI runs entirely within your browser memory. Text is never sent to external servers."
+      },
+      {
+        "question": "Is there a limit on text length?",
+        "answer": "You can summarize articles up to 4,000 characters per run for optimal in-browser performance."
+      }
+    ],
+    "relatedToolSlugs": [
+      "ai-text-rewriter",
+      "ai-text-simplifier",
+      "ai-keyword-extractor",
+      "word-counter"
+    ],
+    "isPopular": true
+  },
+  "ai-text-rewriter": {
+    "slug": "ai-text-rewriter",
+    "name": "AI Text Rewriter",
+    "shortName": "AI Rewriter",
+    "category": "ai-tools",
+    "categoryName": "AI-Powered Tools",
+    "description": "Rewrite text in professional, friendly, concise, formal, or casual tones while preserving core meaning.",
+    "longDescription": "Intelligent in-browser text rewriter and paraphrasing tool that transforms tone, polishes vocabulary, and enhances clarity with zero server costs.",
+    "iconName": "Sparkles",
+    "metaTitle": "AI Text Rewriter | TabBench",
+    "metaDescription": "Rewrite emails, essays, and text in professional, friendly, concise, or formal tones. Private client-side paraphrasing tool.",
+    "keywords": [
+      "ai text rewriter",
+      "paraphrasing tool online",
+      "rewrite email professional",
+      "sentence rewriter free",
+      "tone changer",
+      "ai paraphraser"
+    ],
+    "features": [
+      "6 Tone styles (Professional, Friendly, Concise, Formal, Casual, Simple)",
+      "Preserves facts, dates, and numbers",
+      "One-click copy and text download",
+      "Instant private processing"
+    ],
+    "faqs": [
+      {
+        "question": "Does rewriting change my original facts or dates?",
+        "answer": "No. The algorithmic rewriter is engineered to preserve factual figures, dates, proper nouns, and links."
+      }
+    ],
+    "relatedToolSlugs": [
+      "ai-text-summarizer",
+      "ai-text-simplifier",
+      "case-converter",
+      "text-diff-checker"
+    ],
+    "isPopular": true
+  },
+  "ai-text-simplifier": {
+    "slug": "ai-text-simplifier",
+    "name": "AI Text Simplifier",
+    "shortName": "AI Simplifier",
+    "category": "ai-tools",
+    "categoryName": "AI-Powered Tools",
+    "description": "Translate complex jargon, legalese, and dense academic text into plain, clear 8th-grade English.",
+    "longDescription": "Transform convoluted writing into clear, accessible plain English with Flesch-Kincaid readability scoring and jargon reduction.",
+    "iconName": "Sparkles",
+    "metaTitle": "AI Text Simplifier | TabBench",
+    "metaDescription": "Simplify legal, academic, and complex technical text into plain English. Free in-browser readability tool with instant jargon replacement.",
+    "keywords": [
+      "ai text simplifier",
+      "plain english translator",
+      "simplify legalese online",
+      "reading level improver",
+      "jargon replacer",
+      "clear writing tool"
+    ],
+    "features": [
+      "Automated complex jargon replacement",
+      "Flesch-Kincaid readability index",
+      "Passive voice and convoluted phrase reduction",
+      "Zero signup required"
+    ],
+    "faqs": [
+      {
+        "question": "What reading level does this target?",
+        "answer": "It targets an accessible 8th-grade plain-English reading standard suitable for general audiences."
+      }
+    ],
+    "relatedToolSlugs": [
+      "ai-text-rewriter",
+      "ai-text-summarizer",
+      "word-counter"
+    ]
+  },
+  "ai-keyword-extractor": {
+    "slug": "ai-keyword-extractor",
+    "name": "AI Keyword Extractor",
+    "shortName": "Keyword Extractor",
+    "category": "ai-tools",
+    "categoryName": "AI-Powered Tools",
+    "description": "Extract ranked keywords, search tags, and multi-word key phrases from articles and text.",
+    "longDescription": "Analyze text to extract high-relevance search keywords, tags, and n-gram phrases for SEO, indexing, and content research.",
+    "iconName": "Sparkles",
+    "metaTitle": "AI Keyword Extractor | TabBench",
+    "metaDescription": "Extract primary keywords, secondary tags, and key phrases from text in your browser. Free client-side SEO utility.",
+    "keywords": [
+      "ai keyword extractor",
+      "extract keywords from text",
+      "seo keyword tag generator",
+      "keyphrase extraction tool",
+      "content tag finder",
+      "n-gram extractor"
+    ],
+    "features": [
+      "Ranked primary and secondary keywords",
+      "Bigram and trigram keyphrase discovery",
+      "Term frequency scoring",
+      "Export as text or copy tags"
+    ],
+    "faqs": [
+      {
+        "question": "How are keywords ranked?",
+        "answer": "Keywords are ranked using frequency distribution and statistical relevance while filtering common stopwords."
+      }
+    ],
+    "relatedToolSlugs": [
+      "ai-text-summarizer",
+      "word-counter",
+      "slug-generator"
+    ]
+  },
+  "ai-json-explainer": {
+    "slug": "ai-json-explainer",
+    "name": "AI JSON Explainer",
+    "shortName": "JSON Explainer",
+    "category": "ai-tools",
+    "categoryName": "AI-Powered Tools",
+    "description": "Analyze and explain JSON payloads, nested schemas, data structures, and potential security issues.",
+    "longDescription": "Demystify complex API responses and JSON documents with deterministic schema visualization, field explanations, and architectural insights.",
+    "iconName": "Sparkles",
+    "metaTitle": "AI JSON Explainer | TabBench",
+    "metaDescription": "Explain JSON structures, object hierarchies, data types, and security insights in plain English. Fast, private in-browser analysis.",
+    "keywords": [
+      "ai json explainer",
+      "explain json payload",
+      "json schema explainer",
+      "api response analyzer",
+      "json structure viewer",
+      "understand json format"
+    ],
+    "features": [
+      "Deterministic AST structure parsing",
+      "Field-by-field plain English breakdown",
+      "Hierarchy depth and key count metrics",
+      "Security anomaly and secret detection"
+    ],
+    "faqs": [
+      {
+        "question": "Is my JSON validated using AI?",
+        "answer": "No, JSON syntax parsing is handled deterministically by the browser engine for 100% exact error detection, while AI provides the high-level explanation."
+      }
+    ],
+    "relatedToolSlugs": [
+      "json-formatter",
+      "json-to-typescript",
+      "json-to-csv"
+    ]
   }
 };
 

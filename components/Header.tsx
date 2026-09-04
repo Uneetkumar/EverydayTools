@@ -37,6 +37,16 @@ const ICON_MAP: Record<string, React.ElementType> = {
   "ai-tools": Sparkles,
 };
 
+const AI_TOOL_ICONS: Record<string, React.ElementType> = {
+  "ai-text-summarizer": FileText,
+  "ai-text-rewriter": Type,
+  "ai-text-simplifier": Sparkles,
+  "ai-keyword-extractor": Search,
+  "ai-json-explainer": Code,
+  "ai-explainer": Calculator,
+  "image-to-text": ImageIcon,
+};
+
 const TOP_POPULAR_TOOLS = [
   { name: "Compress Image", slug: "image-compressor" },
   { name: "PDF to Word", slug: "pdf-to-word" },
@@ -72,31 +82,100 @@ export default function Header() {
     return () => window.removeEventListener("keydown", onKey);
   }, []);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isCategoriesDropdownOpen, setIsCategoriesDropdownOpen] = useState(false);
-  const [isPopularDropdownOpen, setIsPopularDropdownOpen] = useState(false);
+  const [categoriesPinned, setCategoriesPinned] = useState(false);
+  const [categoriesHovered, setCategoriesHovered] = useState(false);
+  const [popularPinned, setPopularPinned] = useState(false);
+  const [popularHovered, setPopularHovered] = useState(false);
+  const [aiPinned, setAiPinned] = useState(false);
+  const [aiHovered, setAiHovered] = useState(false);
+
+  const categoriesTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const popularTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const aiTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const categoriesDropdownRef = useRef<HTMLDivElement>(null);
   const popularDropdownRef = useRef<HTMLDivElement>(null);
+  const aiDropdownRef = useRef<HTMLDivElement>(null);
   const allTools = getAllTools();
+  const aiTools = allTools.filter((t) => t.category === "ai-tools");
+
+  const isCategoriesDropdownOpen = categoriesPinned || categoriesHovered;
+  const isPopularDropdownOpen = popularPinned || popularHovered;
+  const isAiDropdownOpen = aiPinned || aiHovered;
+
+  const handleCategoriesMouseEnter = () => {
+    if (categoriesTimeoutRef.current) clearTimeout(categoriesTimeoutRef.current);
+    setCategoriesHovered(true);
+    if (!popularPinned) setPopularHovered(false);
+    if (!aiPinned) setAiHovered(false);
+  };
+
+  const handleCategoriesMouseLeave = () => {
+    if (categoriesTimeoutRef.current) clearTimeout(categoriesTimeoutRef.current);
+    categoriesTimeoutRef.current = setTimeout(() => {
+      setCategoriesHovered(false);
+    }, 150);
+  };
+
+  const handlePopularMouseEnter = () => {
+    if (popularTimeoutRef.current) clearTimeout(popularTimeoutRef.current);
+    setPopularHovered(true);
+    if (!categoriesPinned) setCategoriesHovered(false);
+    if (!aiPinned) setAiHovered(false);
+  };
+
+  const handlePopularMouseLeave = () => {
+    if (popularTimeoutRef.current) clearTimeout(popularTimeoutRef.current);
+    popularTimeoutRef.current = setTimeout(() => {
+      setPopularHovered(false);
+    }, 150);
+  };
+
+  const handleAiMouseEnter = () => {
+    if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
+    setAiHovered(true);
+    if (!categoriesPinned) setCategoriesHovered(false);
+    if (!popularPinned) setPopularHovered(false);
+  };
+
+  const handleAiMouseLeave = () => {
+    if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
+    aiTimeoutRef.current = setTimeout(() => {
+      setAiHovered(false);
+    }, 150);
+  };
+
+  const closeAllDropdowns = () => {
+    setCategoriesPinned(false);
+    setCategoriesHovered(false);
+    setPopularPinned(false);
+    setPopularHovered(false);
+    setAiPinned(false);
+    setAiHovered(false);
+  };
 
   useEffect(() => {
     setMounted(true);
     const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as Node;
       if (
         categoriesDropdownRef.current &&
-        !categoriesDropdownRef.current.contains(e.target as Node)
-      ) {
-        setIsCategoriesDropdownOpen(false);
-      }
-      if (
+        !categoriesDropdownRef.current.contains(target) &&
         popularDropdownRef.current &&
-        !popularDropdownRef.current.contains(e.target as Node)
+        !popularDropdownRef.current.contains(target) &&
+        aiDropdownRef.current &&
+        !aiDropdownRef.current.contains(target)
       ) {
-        setIsPopularDropdownOpen(false);
+        closeAllDropdowns();
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      if (categoriesTimeoutRef.current) clearTimeout(categoriesTimeoutRef.current);
+      if (popularTimeoutRef.current) clearTimeout(popularTimeoutRef.current);
+      if (aiTimeoutRef.current) clearTimeout(aiTimeoutRef.current);
+    };
   }, []);
 
   // Lock body scroll when mobile drawer is open
@@ -136,11 +215,18 @@ export default function Header() {
             {/* Desktop Navigation - Spacious & Clean */}
             <nav className="hidden lg:flex items-center space-x-2">
               {/* Categories Mega Dropdown */}
-              <div className="relative" ref={categoriesDropdownRef}>
+              <div
+                className="relative"
+                ref={categoriesDropdownRef}
+                onMouseEnter={handleCategoriesMouseEnter}
+                onMouseLeave={handleCategoriesMouseLeave}
+              >
                 <button
+                  type="button"
                   onClick={() => {
-                    setIsCategoriesDropdownOpen(!isCategoriesDropdownOpen);
-                    setIsPopularDropdownOpen(false);
+                    setCategoriesPinned((prev) => !prev);
+                    setPopularPinned(false);
+                    setAiPinned(false);
                   }}
                   className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer ${
                     isCategoriesDropdownOpen
@@ -158,7 +244,7 @@ export default function Header() {
 
                 {/* Dropdown Menu */}
                 {isCategoriesDropdownOpen && (
-                  <div className="absolute left-0 mt-2 w-[480px] p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl grid grid-cols-2 gap-1.5 animate-in fade-in-50 zoom-in-95 duration-150 z-50">
+                  <div className="absolute left-0 mt-1 w-[480px] p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl grid grid-cols-2 gap-1.5 animate-in fade-in-50 zoom-in-95 duration-150 z-50">
                     {TOOL_CATEGORIES.map((cat) => {
                       const Icon = ICON_MAP[cat.id] || Calculator;
                       const count = allTools.filter((t) => t.category === cat.id).length;
@@ -167,7 +253,7 @@ export default function Header() {
                         <Link
                           key={cat.id}
                           href={`/categories/${cat.id}`}
-                          onClick={() => setIsCategoriesDropdownOpen(false)}
+                          onClick={closeAllDropdowns}
                           className="flex items-center space-x-3 p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/80 transition group"
                         >
                           <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
@@ -186,7 +272,7 @@ export default function Header() {
                     })}
                     <Link
                       href="/categories"
-                      onClick={() => setIsCategoriesDropdownOpen(false)}
+                      onClick={closeAllDropdowns}
                       className="col-span-2 mt-1 rounded-xl border-t border-slate-100 dark:border-slate-800 px-2.5 pt-2.5 pb-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
                     >
                       Browse all categories →
@@ -196,11 +282,18 @@ export default function Header() {
               </div>
 
               {/* Popular Tools Dropdown */}
-              <div className="relative" ref={popularDropdownRef}>
+              <div
+                className="relative"
+                ref={popularDropdownRef}
+                onMouseEnter={handlePopularMouseEnter}
+                onMouseLeave={handlePopularMouseLeave}
+              >
                 <button
+                  type="button"
                   onClick={() => {
-                    setIsPopularDropdownOpen(!isPopularDropdownOpen);
-                    setIsCategoriesDropdownOpen(false);
+                    setPopularPinned((prev) => !prev);
+                    setCategoriesPinned(false);
+                    setAiPinned(false);
                   }}
                   className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer ${
                     isPopularDropdownOpen
@@ -217,12 +310,12 @@ export default function Header() {
                 </button>
 
                 {isPopularDropdownOpen && (
-                  <div className="absolute left-0 mt-2 w-[280px] p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-1 animate-in fade-in-50 zoom-in-95 duration-150 z-50">
+                  <div className="absolute left-0 mt-1 w-[280px] p-2 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl space-y-1 animate-in fade-in-50 zoom-in-95 duration-150 z-50">
                     {TOP_POPULAR_TOOLS.map((tool) => (
                       <Link
                         key={tool.slug}
                         href={`/tools/${tool.slug}`}
-                        onClick={() => setIsPopularDropdownOpen(false)}
+                        onClick={closeAllDropdowns}
                         className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 transition group"
                       >
                         <span className="font-semibold truncate">{tool.name}</span>
@@ -231,7 +324,7 @@ export default function Header() {
                     ))}
                     <Link
                       href="/tools"
-                      onClick={() => setIsPopularDropdownOpen(false)}
+                      onClick={closeAllDropdowns}
                       className="block text-center pt-2 pb-1 border-t border-slate-100 dark:border-slate-800 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
                     >
                       View all {allTools.length}+ tools →
@@ -240,18 +333,73 @@ export default function Header() {
                 )}
               </div>
 
-              {/* Highlighted Image to Text OCR */}
-              <Link
-                href="/tools/image-to-text"
-                className="flex items-center space-x-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-blue-500/10 border border-purple-500/30 text-purple-700 dark:text-purple-300 hover:bg-purple-500/20 transition shadow-xs"
-                title="Extract text from images, scans & photos"
+              {/* AI Tools Dropdown Menu */}
+              <div
+                className="relative"
+                ref={aiDropdownRef}
+                onMouseEnter={handleAiMouseEnter}
+                onMouseLeave={handleAiMouseLeave}
               >
-                <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                <span>Image to Text</span>
-                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-extrabold bg-purple-600 text-white">
-                  AI
-                </span>
-              </Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAiPinned((prev) => !prev);
+                    setCategoriesPinned(false);
+                    setPopularPinned(false);
+                  }}
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition cursor-pointer ${
+                    isAiDropdownOpen
+                      ? "bg-slate-100 dark:bg-slate-800 text-purple-600 dark:text-purple-400"
+                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                  <span>AI Tools</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                      isAiDropdownOpen ? "rotate-180 text-purple-600" : "text-slate-400"
+                    }`}
+                  />
+                </button>
+
+                {isAiDropdownOpen && (
+                  <div className="absolute left-0 mt-1 w-[500px] p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl grid grid-cols-2 gap-1.5 animate-in fade-in-50 zoom-in-95 duration-150 z-50">
+                    {aiTools.map((tool) => {
+                      const Icon = AI_TOOL_ICONS[tool.slug] || Sparkles;
+                      return (
+                        <Link
+                          key={tool.slug}
+                          href={`/tools/${tool.slug}`}
+                          onClick={closeAllDropdowns}
+                          className="flex items-center space-x-3 p-2.5 rounded-xl hover:bg-purple-50/70 dark:hover:bg-purple-950/40 transition group"
+                        >
+                          <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition">
+                            <Icon className="w-4 h-4" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 truncate">
+                              {tool.name}
+                            </div>
+                            <div className="text-[11px] text-slate-400 truncate">
+                              {tool.shortName || "On-Device AI"}
+                            </div>
+                          </div>
+                        </Link>
+                      );
+                    })}
+                    <Link
+                      href="/categories/ai-tools"
+                      onClick={closeAllDropdowns}
+                      className="col-span-2 mt-1 rounded-xl border-t border-slate-100 dark:border-slate-800 px-2.5 pt-2.5 pb-1 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline flex items-center justify-between"
+                    >
+                      <span>Browse all AI tools suite →</span>
+                      <span className="text-[10px] font-normal text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-full">
+                        ⚡ 100% Free & Private
+                      </span>
+                    </Link>
+                  </div>
+                )}
+              </div>
 
               {/* All Tools Link */}
               <Link
@@ -414,20 +562,47 @@ export default function Header() {
                 <span>Install TabBench App</span>
               </button>
 
-              {/* Highlighted Image to Text OCR in Mobile */}
-              <Link
-                href="/tools/image-to-text"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-purple-500/15 via-indigo-500/10 to-blue-500/15 border border-purple-500/30 text-purple-700 dark:text-purple-300 font-bold text-xs"
-              >
-                <div className="flex items-center space-x-2">
-                  <Sparkles className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                  <span>Image to Text (OCR)</span>
+              {/* AI Tools Section */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between px-1">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                    <span>AI Tools</span>
+                  </span>
+                  <Link
+                    href="/categories/ai-tools"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 hover:underline"
+                  >
+                    Browse all
+                  </Link>
                 </div>
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-purple-600 text-white">
-                  AI
-                </span>
-              </Link>
+                <div className="grid grid-cols-1 gap-1">
+                  {aiTools.map((tool) => {
+                    const Icon = AI_TOOL_ICONS[tool.slug] || Sparkles;
+                    return (
+                      <Link
+                        key={tool.slug}
+                        href={`/tools/${tool.slug}`}
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-purple-50 dark:hover:bg-purple-950/40 transition group"
+                      >
+                        <div className="flex items-center space-x-2.5 min-w-0">
+                          <div className="w-6 h-6 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+                            <Icon className="w-3.5 h-3.5" />
+                          </div>
+                          <span className="text-xs font-medium text-slate-800 dark:text-slate-200 group-hover:text-purple-600 dark:group-hover:text-purple-400 truncate">
+                            {tool.name}
+                          </span>
+                        </div>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/50 text-purple-600 dark:text-purple-400">
+                          AI
+                        </span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
 
               {/* Top Popular Tools */}
               <div className="space-y-2">

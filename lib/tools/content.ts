@@ -4189,6 +4189,208 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
     ],
   },
 
+  "ai-text-summarizer": {
+    intro:
+      "Long-form reports, research papers, and news articles often contain critical takeaways buried under thousands of words. This AI Text Summarizer extracts central themes and condensed bullet points in seconds. Running on-device by default, your reading material is processed entirely within your browser tab with zero cloud upload and zero subscription walls.",
+    howTo: {
+      title: "How to summarize text online",
+      steps: [
+        "Paste your article, essay, or meeting transcript into the input workspace.",
+        "Select your preferred summary length (Short, Medium, or Detailed).",
+        "Toggle bullet points if you prefer structured key takeaways.",
+        "Click 'Summarize Text' to generate instant local conclusions.",
+        "Copy or download the summarized output for your notes.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Executive briefing & document reading",
+        body:
+          "Condense 10-page market analyses or team updates into rapid 30-second bullet summaries before meetings.",
+      },
+      {
+        title: "Academic paper research",
+        body:
+          "Quickly review key findings across dozens of abstracts to determine which research papers require full reading.",
+      },
+      {
+        title: "Newsletter & content curation",
+        body:
+          "Extract key insights from long source articles to compose weekly roundups or social summaries.",
+      },
+    ],
+    tips: [
+      "For best results, ensure the input text contains complete paragraphs rather than broken bullet fragments.",
+      "Use 'Short' mode when preparing slide deck bullet points or quick summaries.",
+      "Switch to 'Detailed' mode when condensing technical reports where sub-conclusions matter.",
+    ],
+    extraFaqs: [
+      {
+        question: "How does on-device summarization work?",
+        answer:
+          "The on-device engine uses statistical sentence scoring and lexical analysis to rank sentences based on term frequency and information density without sending data across the network.",
+      },
+    ],
+  },
+
+  "ai-text-rewriter": {
+    intro:
+      "Finding the right tone is essential whether you are drafting a critical customer email, presenting a formal proposal, or shortening a wordy memo. This AI Text Rewriter transforms your writing across six distinct styles — Professional, Friendly, Concise, Formal, Casual, and Simple — while preserving your core factual data, figures, and dates.",
+    howTo: {
+      title: "How to rewrite text for different tones",
+      steps: [
+        "Enter or paste your draft message into the text box.",
+        "Choose the tone style that fits your audience (e.g. Professional or Concise).",
+        "Click 'Rewrite Text' to generate the updated version.",
+        "Review the transformed draft and copy or save the result.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Polishing workplace emails",
+        body:
+          "Convert quick conversational notes or abrupt messages into polished, professional workplace communications.",
+      },
+      {
+        title: "Eliminating wordiness & fluff",
+        body:
+          "Use the 'Concise' tone to cut filler phrases and improve readability for busy stakeholders.",
+      },
+      {
+        title: "Customer support responses",
+        body:
+          "Draft empathetic, friendly replies to customer inquiries while maintaining company policy clarity.",
+      },
+    ],
+    tips: [
+      "Select 'Concise' when you need to fit strict character limits or mobile chat messages.",
+      "Names, URLs, and numbers are protected so you don't need to manually re-verify data.",
+    ],
+    extraFaqs: [
+      {
+        question: "Is there a limit on how many times I can rewrite?",
+        answer:
+          "No. On-device rewriting runs in your browser without artificial quotas or payment barriers.",
+      },
+    ],
+  },
+
+  "ai-text-simplifier": {
+    intro:
+      "Legal contracts, terms of service, and dense technical manuals often use obscure jargon and convoluted sentence structures. The AI Text Simplifier translates difficult prose into clear, plain 8th-grade English while keeping instructions, numbers, and core legal meaning intact.",
+    howTo: {
+      title: "How to simplify complex text",
+      steps: [
+        "Paste your contract clause, academic abstract, or technical guide.",
+        "Click 'Simplify to Plain English'.",
+        "Review the simplified output alongside the automated readability score.",
+        "Copy or download the plain-English text with one click.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Understanding legal agreements & terms",
+        body:
+          "Translate complex terms of service clauses into straightforward statements you can easily understand.",
+      },
+      {
+        title: "Accessible customer documentation",
+        body:
+          "Simplify technical user manuals and FAQs so everyday users can follow instructions without confusion.",
+      },
+    ],
+    tips: [
+      "Check the Flesch-Kincaid readability score to gauge reading ease.",
+      "Jargon terms like 'aforementioned', 'heretofore', and 'utilize' are automatically mapped to conversational equivalents.",
+    ],
+    extraFaqs: [
+      {
+        question: "Does simplifying change legal validity?",
+        answer:
+          "The simplifier aims to clarify meaning for comprehension; always consult qualified legal counsel for binding legal decisions.",
+      },
+    ],
+  },
+
+  "ai-keyword-extractor": {
+    intro:
+      "Effective search optimization and content organization depend on discovering high-impact keywords and search tags. This AI Keyword Extractor scans your text to surface primary keywords, secondary tags, and multi-word key phrases using statistical relevance scoring.",
+    howTo: {
+      title: "How to extract keywords from text",
+      steps: [
+        "Paste your article, product description, or blog post.",
+        "Select your desired keyword limit (e.g. 10 or 15 keywords).",
+        "Click 'Extract Keywords' to view ranked single words and multi-word phrases.",
+        "Copy the tag list directly into your CMS, SEO tool, or document.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Blog & SEO meta tag optimization",
+        body:
+          "Discover high-frequency search keywords to include in title tags, headings, and meta descriptions.",
+      },
+      {
+        title: "Content indexing & tagging",
+        body:
+          "Generate taxonomy tags for large document archives, articles, or product catalogs automatically.",
+      },
+    ],
+    tips: [
+      "Longer text inputs (150+ words) produce more accurate statistical frequency distributions.",
+      "Multi-word key phrases (bigrams/trigrams) often make the most effective long-tail SEO targets.",
+    ],
+    extraFaqs: [
+      {
+        question: "Are common words like 'the' and 'is' excluded?",
+        answer:
+          "Yes. Common English stopwords are automatically filtered so only meaningful keywords are ranked.",
+      },
+    ],
+  },
+
+  "ai-json-explainer": {
+    intro:
+      "Complex nested JSON responses from REST and GraphQL APIs can be difficult to interpret quickly. The AI JSON Explainer parses JSON documents deterministically with native AST engines to visualize data types, nesting depths, field descriptions, and architectural insights in plain English.",
+    howTo: {
+      title: "How to explain JSON payloads",
+      steps: [
+        "Paste your JSON object, array, or API response into the editor.",
+        "Click 'Explain JSON Structure'.",
+        "Read the plain-English overview, field breakdown, and architectural insights.",
+        "Export the generated documentation as Markdown or text.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Onboarding developers to new APIs",
+        body:
+          "Quickly generate plain-English documentation for undocumented endpoints and webhook payloads.",
+      },
+      {
+        title: "Debugging nested payloads",
+        body:
+          "Identify hierarchy depth and nested models without manually clicking through complex JSON trees.",
+      },
+      {
+        title: "Security auditing",
+        body:
+          "Detect unmasked tokens, secret keys, or passwords embedded within client-facing JSON objects.",
+      },
+    ],
+    tips: [
+      "Paste valid JSON for complete field-by-field schema breakdown.",
+      "Check the insights section for warnings regarding excessive nesting depth or sensitive keys.",
+    ],
+    extraFaqs: [
+      {
+        question: "Is my JSON private?",
+        answer:
+          "Yes. Parsing and explanation happen 100% inside your local browser memory.",
+      },
+    ],
+  },
+
 };
 
 /** Returns the long-form content for a tool, if any has been written. */
