@@ -22,6 +22,7 @@
  * Check is the only thing standing between the free tier and a scraper.
  */
 import { app, ensureAppCheck } from "@/lib/firebase";
+import { GEMINI_MODEL_CANDIDATES, isModelNotFound } from "@/lib/ai/model-fallback";
 
 export interface CloudOcrResult {
   text: string;
@@ -53,26 +54,39 @@ const PROMPT = [
   "If there is no legible text, reply with exactly: NO_TEXT_FOUND",
 ].join(" ");
 
-const MODEL = "gemini-2.5-flash";
+const MODEL = process.env.NEXT_PUBLIC_GEMINI_MODEL || "gemini-2.5-flash";
 
 export async function recognizeWithGemini(file: Blob): Promise<CloudOcrResult> {
   // AI Logic is enforced; without a token this is rejected before Gemini.
   await ensureAppCheck();
   const { getAI, getGenerativeModel, GoogleAIBackend } = await import("firebase/ai");
 
+  // GoogleAIBackend is the Gemini Developer API, which has a free tier.
+  // VertexAIBackend would require the Blaze plan.
   const ai = getAI(app, { backend: new GoogleAIBackend() });
-  const model = getGenerativeModel(ai, { model: MODEL });
-
-  const result = await model.generateContent([
+  const parts = [
     { inlineData: { mimeType: file.type || "image/png", data: await toBase64(file) } },
     { text: PROMPT },
-  ]);
+  ];
 
-  const text = result.response.text().trim();
-  return {
-    text: text === "NO_TEXT_FOUND" ? "" : text,
-    model: MODEL,
-  };
+  // Same fallback reasoning as the text provider: a missing model id is worth
+  // retrying, anything else fails identically on every id.
+  let lastError: unknown = null;
+  for (const candidate of GEMINI_MODEL_CANDIDATES) {
+    try {
+      const model = getGenerativeModel(ai, { model: candidate });
+      const result = await model.generateContent(parts);
+      const text = result.response.text().trim();
+      return {
+        text: text === "NO_TEXT_FOUND" ? "" : text,
+        model: candidate,
+      };
+    } catch (e) {
+      lastError = e;
+      if (!isModelNotFound(e)) throw e;
+    }
+  }
+  throw lastError ?? new Error("No Gemini model responded.");
 }
 
 /**
@@ -82,13 +96,18 @@ export async function recognizeWithGemini(file: Blob): Promise<CloudOcrResult> {
  */
 export function describeGeminiError(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e);
-  if (/API has not been used|SERVICE_DISABLED|not enabled/i.test(msg))
-    return "Firebase AI Logic is not enabled for this project yet. Enable it in the Firebase console, then try again.";
+  // The raw message is always appended: a friendly sentence on its own hides
+  // the one detail needed to tell "service off" from "model name wrong".
+  const detail = ` (${msg})`;
+  if (/API has not been used|SERVICE_DISABLED|has not been enabled/i.test(msg))
+    return `Firebase AI Logic is not enabled for this project. Enable it in the Firebase console, then try again.${detail}`;
+  if (/not found|NOT_FOUND|404/i.test(msg))
+    return `The model "${MODEL}" was not found for this project. It may not be available on your plan or region.${detail}`;
   if (/app.?check|unauthorized|403|PERMISSION_DENIED/i.test(msg))
-    return "The request was rejected by App Check. Confirm App Check is configured for this domain.";
+    return `The request was rejected before reaching the model — usually App Check or an API restriction.${detail}`;
   if (/quota|RESOURCE_EXHAUSTED|429/i.test(msg))
-    return "The AI quota for this project is used up for now. The on-device option still works.";
-  if (/network|fetch|offline/i.test(msg))
-    return "Could not reach the AI service. Check your connection, or use the on-device option.";
+    return `The AI quota for this project is used up for now. The on-device option still works.${detail}`;
+  if (/network|fetch|offline|Failed to fetch/i.test(msg))
+    return `Could not reach the AI service. Check your connection, or use the on-device option.${detail}`;
   return `AI extraction failed: ${msg}`;
 }

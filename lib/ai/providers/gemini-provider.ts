@@ -1,5 +1,6 @@
 import { AIInput, AIOutput, AIProvider } from "../types";
 import { app, ensureAppCheck } from "@/lib/firebase";
+import { GEMINI_MODEL_CANDIDATES, isModelNotFound } from "../model-fallback";
 
 /**
  * Cloud AI via Firebase AI Logic, called straight from the browser.
@@ -26,6 +27,13 @@ import { app, ensureAppCheck } from "@/lib/firebase";
  * on AI Logic in the Firebase console. Without it, anyone can lift the public
  * firebaseConfig and spend the project's quota. App Check is not optional here.
  */
+/**
+ * Overridable because model availability shifts: ids get renamed, and some are
+ * not offered on every plan or region. Changing this should be an env change,
+ * not a source edit.
+ */
+const MODEL = process.env.NEXT_PUBLIC_GEMINI_MODEL || "gemini-2.5-flash";
+
 export class GeminiProvider implements AIProvider {
   id = "gemini" as const;
   name = "Google Gemini 2.5 Flash (Cloud)";
@@ -40,21 +48,39 @@ export class GeminiProvider implements AIProvider {
 
   async generate(input: AIInput): Promise<AIOutput> {
     const startTime = performance.now();
-    const model = "gemini-2.5-flash";
+    const model = MODEL;
 
     let text: string;
+    let usedModel = model;
     try {
       // Must precede the model call: AI Logic is enforced, so a request
       // without an App Check token is rejected before it reaches Gemini.
       await ensureAppCheck();
       const { getAI, getGenerativeModel, GoogleAIBackend } = await import("firebase/ai");
+      // GoogleAIBackend is the Gemini Developer API — the backend with a free
+      // tier. VertexAIBackend would require the Blaze plan.
       const ai = getAI(app, { backend: new GoogleAIBackend() });
-      const generativeModel = getGenerativeModel(ai, { model });
+      const prompt = buildTaskPrompt(input.task, input.text, input.options);
 
-      const result = await generativeModel.generateContent(
-        buildTaskPrompt(input.task, input.text, input.options)
-      );
-      text = result.response.text().trim();
+      let lastError: unknown = null;
+      let answer: string | null = null;
+      for (const candidate of GEMINI_MODEL_CANDIDATES) {
+        try {
+          const generativeModel = getGenerativeModel(ai, { model: candidate });
+          const result = await generativeModel.generateContent(prompt);
+          answer = result.response.text().trim();
+          usedModel = candidate;
+          break;
+        } catch (e) {
+          lastError = e;
+          // Only a missing model is worth retrying. A quota or App Check
+          // failure would fail identically on every id, so stop immediately
+          // rather than burning the rate limit proving it.
+          if (!isModelNotFound(e)) throw e;
+        }
+      }
+      if (answer === null) throw lastError ?? new Error("No Gemini model responded.");
+      text = answer;
     } catch (e) {
       throw new Error(describeAiError(e));
     }
@@ -66,7 +92,7 @@ export class GeminiProvider implements AIProvider {
     return {
       result: text,
       provider: "gemini",
-      modelUsed: model,
+      modelUsed: usedModel,
       elapsedMs: Math.round(performance.now() - startTime),
       metrics: {
         wordCount: text.split(/\s+/).filter(Boolean).length,
@@ -114,13 +140,31 @@ function buildTaskPrompt(
  */
 function describeAiError(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e);
-  if (/API has not been used|SERVICE_DISABLED|not enabled|404/i.test(msg))
-    return "Firebase AI Logic is not enabled for this project yet. Enable it in the Firebase console, then retry. On-Device AI works in the meantime.";
+
+  // Every branch appends the raw message. An earlier version returned only a
+  // friendly sentence, and because `404` was lumped in with "service disabled"
+  // it reported "AI Logic is not enabled" for a plain model-not-found — sending
+  // the reader to the console to re-enable something that was already on.
+  // A guess dressed up as a diagnosis is worse than no diagnosis.
+  const detail = ` (${msg})`;
+
+  // Genuinely disabled: the platform says so in these exact terms. 404 is NOT
+  // in this list — on this API a 404 almost always means the *model name* is
+  // wrong, not the service.
+  if (/API has not been used|SERVICE_DISABLED|has not been enabled/i.test(msg))
+    return `Firebase AI Logic is not enabled for this project. Enable it in the Firebase console, then retry.${detail}`;
+
+  if (/not found|NOT_FOUND|404/i.test(msg))
+    return `The model "${MODEL}" was not found for this project. It may not be available on your plan or in your region — try another model id.${detail}`;
+
   if (/app.?check|unauthorized|403|PERMISSION_DENIED/i.test(msg))
-    return "App Check rejected this request. Confirm App Check is registered for this domain.";
+    return `The request was rejected before reaching the model. This is usually App Check or an API restriction.${detail}`;
+
   if (/quota|RESOURCE_EXHAUSTED|429/i.test(msg))
-    return "The AI quota is used up for now. Switch to On-Device AI for unlimited free processing.";
-  if (/network|fetch|offline/i.test(msg))
-    return "Could not reach the AI service. Check your connection, or use On-Device AI.";
+    return `The AI quota is used up for now. Switch to On-Device AI for unlimited free processing.${detail}`;
+
+  if (/network|fetch|offline|Failed to fetch/i.test(msg))
+    return `Could not reach the AI service. Check your connection, or use On-Device AI.${detail}`;
+
   return `Cloud AI failed: ${msg}`;
 }
