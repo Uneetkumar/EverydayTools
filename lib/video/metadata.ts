@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from "@/lib/utils/net";
 /**
  * Video Metadata Inspection Engine.
  *
@@ -204,7 +205,7 @@ export async function inspectVideoMetadata(
       let contentSizeBytes: number | null = null;
       let contentType = "video/mp4";
       try {
-        const headRes = await fetch(url, {
+        const headRes = await fetchWithTimeout(url, {
           method: "HEAD",
           mode: "cors",
         });

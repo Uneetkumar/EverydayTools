@@ -60,14 +60,24 @@ export function ensureAppCheck(): Promise<void> {
         "App Check is enforced for this project but NEXT_PUBLIC_RECAPTCHA_SITE_KEY is not set, so no token can be produced."
       );
     }
+    const { withTimeout, AI_TIMEOUTS } = await import("@/lib/ai/timeout");
     const { initializeAppCheck, ReCaptchaEnterpriseProvider } = await import(
       "firebase/app-check"
     );
-    initializeAppCheck(app, {
-      provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
-      // Tokens expire; without this the first call after expiry fails.
-      isTokenAutoRefreshEnabled: true,
-    });
+    // Bounded: this pulls the reCAPTCHA Enterprise script from Google. If that
+    // is blocked by an extension, a firewall or an offline network, an
+    // unbounded await here is what leaves the UI spinning forever.
+    await withTimeout(
+      Promise.resolve().then(() =>
+        initializeAppCheck(app, {
+          provider: new ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY),
+          // Tokens expire; without this the first call after expiry fails.
+          isTokenAutoRefreshEnabled: true,
+        })
+      ),
+      AI_TIMEOUTS.appCheck,
+      "App Check setup"
+    );
   })();
 
   appCheckPromise = appCheckPromise.catch((e) => {

@@ -665,6 +665,51 @@ the page must not claim an unconditional privacy guarantee.
 - `CropImage`'s `fetch()` is a `data:` URL read, not a network call.
 
 
+---
+
+## 20. Nothing that touches the network may hang (25 Aug 2026)
+
+**Symptom:** the OCR tool sat on "Processing with Gemini AI…" forever. No error,
+no way back, and the on-device fallback sitting right there never offered.
+
+**Cause:** there were **no timeouts anywhere**. `fetch` has none by default, and
+the Firebase AI SDK exposes no abort signal. If a host accepted the connection
+and never answered — App Check waiting on a reCAPTCHA script that was blocked,
+a slow uplink on a multi-megabyte image — the promise never settled.
+
+An infinite spinner is worse than an error: the user cannot tell whether to wait
+or retry.
+
+**`lib/ai/timeout.ts`** — `withTimeout()` for promises with no abort signal.
+Budgets are backstops against hangs, not performance targets:
+`appCheck 15s · text 45s · vision 75s`.
+
+**`lib/utils/net.ts`** — `fetchWithTimeout()` using an **AbortController**, not
+`Promise.race`. It genuinely cancels the request, releasing the socket and the
+browser's connection slot instead of leaving it hanging until the tab closes.
+
+Now bounded:
+| Path | Was | Now |
+|---|---|---|
+| App Check init (reCAPTCHA script) | unbounded | 15s |
+| Gemini text | unbounded | 45s |
+| Gemini vision | unbounded | 75s |
+| Currency rates (2 providers) | unbounded | 10s each |
+| Video HEAD probe | unbounded | 12s |
+
+`lib/utils/download.ts` looked like a network call but fetches a `data:` URL —
+local, correctly left alone.
+
+**A timeout must not trigger the model fallback.** Retrying two more model ids
+would triple the wait for someone already staring at a spinner, so `TimeoutError`
+breaks the loop immediately. Only a genuine *model not found* retries.
+
+**Also fixed the likely cause, not just the symptom:** vision uploads are now
+downscaled to 2000px on the long edge and re-encoded as JPEG q0.85. base64
+inflates bytes ~33%, so a 1MB phone photo became a ~1.4MB inline payload for no
+benefit — text is legible well below 2000px and the model downsamples anyway.
+
+
 ## 11. Commands
 
 ```bash

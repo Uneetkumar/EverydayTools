@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from "@/lib/utils/net";
 /**
  * Live exchange-rate fetching.
  *
@@ -44,7 +45,7 @@ function writeCache(base: string, table: RateTable) {
 }
 
 async function fetchPrimary(base: string): Promise<RateTable> {
-  const res = await fetch(`https://open.er-api.com/v6/latest/${base}`);
+  const res = await fetchWithTimeout(`https://open.er-api.com/v6/latest/${base}`, {}, 10_000);
   if (!res.ok) throw new Error(`primary ${res.status}`);
   const json = await res.json();
   if (json.result !== "success" || !json.rates) throw new Error("primary shape");
@@ -59,7 +60,7 @@ async function fetchPrimary(base: string): Promise<RateTable> {
 }
 
 async function fetchFallback(base: string): Promise<RateTable> {
-  const res = await fetch(`https://api.frankfurter.dev/v1/latest?base=${base}`);
+  const res = await fetchWithTimeout(`https://api.frankfurter.dev/v1/latest?base=${base}`, {}, 10_000);
   if (!res.ok) throw new Error(`fallback ${res.status}`);
   const json = await res.json();
   if (!json.rates) throw new Error("fallback shape");

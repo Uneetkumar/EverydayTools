@@ -1,6 +1,7 @@
 import { AIInput, AIOutput, AIProvider } from "../types";
 import { app, ensureAppCheck } from "@/lib/firebase";
 import { GEMINI_MODEL_CANDIDATES, isModelNotFound } from "../model-fallback";
+import { withTimeout, AI_TIMEOUTS, TimeoutError } from "../timeout";
 
 /**
  * Cloud AI via Firebase AI Logic, called straight from the browser.
@@ -67,7 +68,11 @@ export class GeminiProvider implements AIProvider {
       for (const candidate of GEMINI_MODEL_CANDIDATES) {
         try {
           const generativeModel = getGenerativeModel(ai, { model: candidate });
-          const result = await generativeModel.generateContent(prompt);
+          const result = await withTimeout(
+            generativeModel.generateContent(prompt),
+            AI_TIMEOUTS.text,
+            `Gemini (${candidate})`
+          );
           answer = result.response.text().trim();
           usedModel = candidate;
           break;
@@ -76,6 +81,9 @@ export class GeminiProvider implements AIProvider {
           // Only a missing model is worth retrying. A quota or App Check
           // failure would fail identically on every id, so stop immediately
           // rather than burning the rate limit proving it.
+          // A timeout is not "wrong model" — retrying would triple the wait for
+          // a user who is already staring at a spinner.
+          if (e instanceof TimeoutError) throw e;
           if (!isModelNotFound(e)) throw e;
         }
       }
@@ -162,6 +170,9 @@ function describeAiError(e: unknown): string {
 
   if (/quota|RESOURCE_EXHAUSTED|429/i.test(msg))
     return `The AI quota is used up for now. Switch to On-Device AI for unlimited free processing.${detail}`;
+
+  if (/timed out/i.test(msg))
+    return `The AI did not respond in time. Switch to On-Device AI, which runs locally and has no network to wait on.${detail}`;
 
   if (/network|fetch|offline|Failed to fetch/i.test(msg))
     return `Could not reach the AI service. Check your connection, or use On-Device AI.${detail}`;

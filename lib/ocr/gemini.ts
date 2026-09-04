@@ -23,10 +23,56 @@
  */
 import { app, ensureAppCheck } from "@/lib/firebase";
 import { GEMINI_MODEL_CANDIDATES, isModelNotFound } from "@/lib/ai/model-fallback";
+import { withTimeout, AI_TIMEOUTS, TimeoutError } from "@/lib/ai/timeout";
 
 export interface CloudOcrResult {
   text: string;
   model: string;
+}
+
+/**
+ * Downscales before upload.
+ *
+ * base64 inflates bytes by about a third, so the 1MB photo a phone produces
+ * becomes a ~1.4MB inline payload — slow on a typical uplink and the main
+ * reason a request appears to hang. Gemini gains nothing from the extra
+ * pixels: text is legible well below 2000px on the long edge, and the model
+ * downsamples anyway.
+ *
+ * JPEG at 0.85 rather than PNG: OCR does not benefit from lossless encoding of
+ * a photograph, and PNG of a photo is several times larger.
+ */
+const MAX_EDGE = 2000;
+
+async function downscaleForUpload(file: Blob): Promise<Blob> {
+  if (typeof document === "undefined") return file;
+  try {
+    const bitmap = await createImageBitmap(file);
+    const longEdge = Math.max(bitmap.width, bitmap.height);
+    if (longEdge <= MAX_EDGE) {
+      bitmap.close();
+      return file;
+    }
+    const scale = MAX_EDGE / longEdge;
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    const ctx = canvas.getContext("2d");
+    if (!ctx) {
+      bitmap.close();
+      return file;
+    }
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    const out = await new Promise<Blob | null>((res) =>
+      canvas.toBlob(res, "image/jpeg", 0.85)
+    );
+    // Only accept the resize if it actually helped.
+    return out && out.size < file.size ? out : file;
+  } catch {
+    // An exotic format createImageBitmap cannot decode: send the original.
+    return file;
+  }
 }
 
 /** Gemini needs raw base64, without the `data:` prefix FileReader produces. */
@@ -64,8 +110,9 @@ export async function recognizeWithGemini(file: Blob): Promise<CloudOcrResult> {
   // GoogleAIBackend is the Gemini Developer API, which has a free tier.
   // VertexAIBackend would require the Blaze plan.
   const ai = getAI(app, { backend: new GoogleAIBackend() });
+  const upload = await downscaleForUpload(file);
   const parts = [
-    { inlineData: { mimeType: file.type || "image/png", data: await toBase64(file) } },
+    { inlineData: { mimeType: upload.type || "image/png", data: await toBase64(upload) } },
     { text: PROMPT },
   ];
 
@@ -75,7 +122,11 @@ export async function recognizeWithGemini(file: Blob): Promise<CloudOcrResult> {
   for (const candidate of GEMINI_MODEL_CANDIDATES) {
     try {
       const model = getGenerativeModel(ai, { model: candidate });
-      const result = await model.generateContent(parts);
+      const result = await withTimeout(
+        model.generateContent(parts),
+        AI_TIMEOUTS.vision,
+        `Gemini (${candidate})`
+      );
       const text = result.response.text().trim();
       return {
         text: text === "NO_TEXT_FOUND" ? "" : text,
@@ -83,6 +134,7 @@ export async function recognizeWithGemini(file: Blob): Promise<CloudOcrResult> {
       };
     } catch (e) {
       lastError = e;
+      if (e instanceof TimeoutError) throw e;
       if (!isModelNotFound(e)) throw e;
     }
   }
@@ -107,6 +159,9 @@ export function describeGeminiError(e: unknown): string {
     return `The request was rejected before reaching the model — usually App Check or an API restriction.${detail}`;
   if (/quota|RESOURCE_EXHAUSTED|429/i.test(msg))
     return `The AI quota for this project is used up for now. The on-device option still works.${detail}`;
+  if (/timed out/i.test(msg))
+    return `The AI did not respond in time. The on-device option runs locally and has no network to wait on.${detail}`;
+
   if (/network|fetch|offline|Failed to fetch/i.test(msg))
     return `Could not reach the AI service. Check your connection, or use the on-device option.${detail}`;
   return `AI extraction failed: ${msg}`;
