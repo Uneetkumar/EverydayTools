@@ -41,7 +41,11 @@ const FORMAT_STYLES: Record<
   sidebar: {
     wrapper: "w-full max-w-[300px]",
     minHeight: 600,
-    responsive: false,
+    // Matches the unit AdSense generated, which sets
+    // data-full-width-responsive="true". The wrapper still caps the unit at
+    // 300px, so this only lets the ad choose a better fit within that box
+    // rather than actually going full-bleed.
+    responsive: true,
   },
   leaderboard: {
     wrapper: "w-full max-w-[728px]",
@@ -98,14 +102,25 @@ export default function AdSlot({
       <ins
         ref={insRef}
         className="adsbygoogle block w-full"
-        style={{ display: "block", minHeight: style.minHeight }}
+        style={{
+          display: "block",
+          // AdSense's own in-article snippet centres the unit; fluid ads size
+          // themselves and look wrong left-aligned in a text column.
+          ...(format === "in-article" ? { textAlign: "center" as const } : {}),
+          // Not in AdSense's snippet, kept deliberately: reserving the height
+          // stops the ad shifting content when it fills. CLS is a ranking
+          // signal and a late-loading ad is a classic cause of failing it.
+          minHeight: style.minHeight,
+        }}
         data-ad-client={ADSENSE_CLIENT}
         data-ad-slot={slotId}
         data-ad-format={format === "in-article" ? "fluid" : "auto"}
         {...(format === "in-article"
-          ? { "data-ad-layout": "in-article" }
-          : {})}
-        data-full-width-responsive={style.responsive ? "true" : "false"}
+          ? // A fluid in-article unit takes its layout from data-ad-layout.
+            // data-full-width-responsive is a *display* attribute and has no
+            // meaning here, so it is omitted to match AdSense's snippet exactly.
+            { "data-ad-layout": "in-article" }
+          : { "data-full-width-responsive": style.responsive ? "true" : "false" })}
       />
     </div>
   );

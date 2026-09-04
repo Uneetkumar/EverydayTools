@@ -18,10 +18,17 @@ export const ADSENSE_CLIENT =
 
 /** Named placements → numeric AdSense slot IDs. Empty string = not configured. */
 export const AD_SLOTS = {
-  toolInArticle: process.env.NEXT_PUBLIC_AD_SLOT_TOOL_INARTICLE || "",
-  toolSidebar: process.env.NEXT_PUBLIC_AD_SLOT_TOOL_SIDEBAR || "",
+  // Real unit created in AdSense (in-article, fluid). Slot IDs are public —
+  // they ship in the page HTML — so committing it is fine and means every
+  // environment works without extra setup. The env var still overrides.
+  toolInArticle: process.env.NEXT_PUBLIC_AD_SLOT_TOOL_INARTICLE || "5272275416",
+  // Real unit created in AdSense (display, responsive).
+  toolSidebar: process.env.NEXT_PUBLIC_AD_SLOT_TOOL_SIDEBAR || "6393785397",
+  // No placement renders this yet — nothing calls <AdSlot placement="homeInFeed" />.
+  // Creating a unit for it in AdSense would be wasted until one does.
   homeInFeed: process.env.NEXT_PUBLIC_AD_SLOT_HOME_INFEED || "",
-  listingFooter: process.env.NEXT_PUBLIC_AD_SLOT_LISTING_FOOTER || "",
+  // Real unit created in AdSense (display, responsive).
+  listingFooter: process.env.NEXT_PUBLIC_AD_SLOT_LISTING_FOOTER || "3384478673",
 } as const;
 
 export type AdPlacement = keyof typeof AD_SLOTS;
