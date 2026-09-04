@@ -154,6 +154,22 @@ export default function RootLayout({
           crossOrigin="anonymous"
         ></script>
 
+        {/* Google reCAPTCHA Enterprise */}
+        <script
+          src="https://www.google.com/recaptcha/enterprise.js?render=6LfFkqgtAAAAAIESThxZ7ie3rcfMI3dmcC-fffBq"
+        ></script>
+        <script
+          id="recaptcha-enterprise-handler"
+          dangerouslySetInnerHTML={{
+            __html: `function onClick(e) {
+  e.preventDefault();
+  grecaptcha.enterprise.ready(async () => {
+    const token = await grecaptcha.enterprise.execute('6LfFkqgtAAAAAIESThxZ7ie3rcfMI3dmcC-fffBq', {action: 'LOGIN'});
+  });
+}`,
+          }}
+        />
+
         {/* Firebase always serves the project's *.web.app hostname and it
             cannot be switched off, so the whole site is reachable on two
             domains — BOTH *.web.app and *.firebaseapp.com, neither of which

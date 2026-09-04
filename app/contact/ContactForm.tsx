@@ -2,15 +2,27 @@
 
 import React, { useState } from "react";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { Mail, MessageSquare, CheckCircle, Send } from "lucide-react";
+import { Mail, MessageSquare, CheckCircle, Send, Loader2 } from "lucide-react";
+import { executeRecaptcha } from "@/lib/recaptcha";
 
 export default function ContactForm() {
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({ name: "", email: "", topic: "Feedback", message: "" });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitted(true);
+    setSubmitting(true);
+    try {
+      // Execute reCAPTCHA Enterprise protection
+      const token = await executeRecaptcha("CONTACT_FORM");
+      if (token) {
+        // Token obtained and ready to be verified on backend/API
+      }
+      setSubmitted(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -107,10 +119,20 @@ export default function ContactForm() {
 
             <button
               type="submit"
-              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold flex items-center justify-center space-x-2 transition shadow-md shadow-indigo-600/20"
+              disabled={submitting}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white text-xs font-semibold flex items-center justify-center space-x-2 transition shadow-md shadow-indigo-600/20"
             >
-              <Send className="w-3.5 h-3.5" />
-              <span>Submit Message</span>
+              {submitting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Submitting...</span>
+                </>
+              ) : (
+                <>
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Submit Message</span>
+                </>
+              )}
             </button>
           </form>
         )}

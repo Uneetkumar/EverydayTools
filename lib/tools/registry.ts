@@ -1304,6 +1304,56 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "emi-calculator"
     ]
   },
+  "image-to-text": {
+    "slug": "image-to-text",
+    "name": "Image to Text (OCR)",
+    "shortName": "Image to Text",
+    "category": "ai-tools",
+    "categoryName": "AI Tools",
+    "description": "Extract text from screenshots, scans and photos. Runs on your device, with an optional AI mode for handwriting.",
+    "longDescription": "Read the text out of any image and get it back as editable, copyable text. The default recogniser runs entirely in your browser, so the image is never uploaded. An optional AI mode handles handwriting, tables and non-English scripts that on-device OCR cannot.",
+    "iconName": "ScanText",
+    "metaTitle": "Image to Text (OCR) | TabBench",
+    "metaDescription": "Extract text from an image free. Runs in your browser so nothing is uploaded, with an optional AI mode for handwriting, tables and other scripts.",
+    "keywords": [
+      "image to text",
+      "extract text from image",
+      "ocr online free",
+      "photo to text converter",
+      "screenshot to text",
+      "picture to text",
+      "scan to text",
+      "handwriting to text",
+      "jpg to text",
+      "png to text"
+    ],
+    "features": [
+      "On-device OCR so the image never leaves your browser",
+      "Optional AI mode for handwriting and tables",
+      "Editable result with copy and .txt download",
+      "Confidence score so you know what to double-check"
+    ],
+    "faqs": [
+      {
+        "question": "Is my image uploaded anywhere?",
+        "answer": "Not in the default on-device mode: recognition runs in your browser and the image never leaves your device. The optional AI mode does upload it to Google's Gemini API, and the tool says so before you use it."
+      },
+      {
+        "question": "Why is the first run slow?",
+        "answer": "On-device mode downloads a recognition model of about 9MB the first time. Your browser caches it, so later runs start immediately and work offline."
+      },
+      {
+        "question": "Can it read handwriting?",
+        "answer": "On-device OCR is poor at handwriting. The AI mode handles it well, along with tables and non-Latin scripts."
+      }
+    ],
+    "relatedToolSlugs": [
+      "pdf-to-word",
+      "crop-image",
+      "image-compressor"
+    ],
+    "isPopular": true
+  },
   "hash-generator": {
     "slug": "hash-generator",
     "name": "Hash Generator",

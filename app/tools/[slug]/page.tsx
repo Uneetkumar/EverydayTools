@@ -60,6 +60,7 @@ const TextToSpeech = dynamic(() => import("@/components/tools/TextToSpeech"), { 
 const SpeechToText = dynamic(() => import("@/components/tools/SpeechToText"), { loading: ToolLoading });
 const MediaPlayer = dynamic(() => import("@/components/tools/MediaPlayer"), { loading: ToolLoading });
 const PdfEditor = dynamic(() => import("@/components/tools/PdfEditor"), { loading: ToolLoading });
+const ImageToText = dynamic(() => import("@/components/tools/ImageToText"), { loading: ToolLoading });
 const VideoCutter = dynamic(() => import("@/components/tools/VideoCutter"), { loading: ToolLoading });
 const AudioRemover = dynamic(() => import("@/components/tools/AudioRemover"), { loading: ToolLoading });
 const VideoDownloader = dynamic(() => import("@/components/tools/VideoDownloader"), { loading: ToolLoading });
@@ -170,6 +171,8 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <VideoCutter />;
       case "audio-remover":
         return <AudioRemover />;
+      case "image-to-text":
+        return <ImageToText />;
       case "pdf-editor":
         return <PdfEditor />;
       case "notepad":

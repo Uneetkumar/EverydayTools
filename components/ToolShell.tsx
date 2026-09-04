@@ -81,6 +81,9 @@ const WIDE_LAYOUT_TOOLS = new Set([
  * less than no claim at all.
  */
 const NETWORK_TOOLS = new Set([
+  // Default mode is on-device, but the optional AI mode uploads the image,
+  // so this page must not advertise an unconditional privacy guarantee.
+  "image-to-text",
   "currency-converter",
   "speech-to-text",
   "video-downloader",

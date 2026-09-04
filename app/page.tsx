@@ -288,6 +288,9 @@ const CATEGORY_MAP_STATIC = TOOL_CATEGORIES.reduce((acc, cat) => {
 }, {} as Record<string, ToolDefinition[]>);
 
 export default function HomePage() {
+  // Driven off the registry so adding an AI tool surfaces it here with no
+  // second place to remember to update.
+  const aiTools = getAllTools().filter((t) => t.category === "ai-tools");
   const router = useRouter();
   const allTools = ALL_TOOLS;
   const [searchQuery, setSearchQuery] = useState("");
@@ -820,6 +823,63 @@ export default function HomePage() {
               </section>
             );
           })}
+
+          {/* AI tools get their own band rather than being buried in the
+              category grid. They are the newest capability here and the one
+              users are least likely to guess exists, so discoverability
+              matters more than alphabetical tidiness. The privacy line is not
+              marketing: on-device is the default and the distinction is the
+              reason to trust the section at all. */}
+          {aiTools.length > 0 && (
+            <section className="rounded-3xl border border-blue-200/70 dark:border-blue-900/50 bg-gradient-to-br from-blue-50/80 to-indigo-50/60 dark:from-blue-950/30 dark:to-indigo-950/20 p-6 sm:p-8 space-y-5">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="max-w-2xl space-y-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-600 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-white">
+                    <Sparkles className="h-3 w-3" /> New
+                  </span>
+                  <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+                    AI tools that keep your files private
+                  </h2>
+                  <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
+                    Most AI tools upload whatever you give them. Ours run the model
+                    on your own device by default, so a scanned ID or a bank
+                    statement never leaves your browser. Where a cloud model is
+                    genuinely better &mdash; handwriting, tables, other scripts &mdash;
+                    it is an explicit choice, clearly labelled, never the default.
+                  </p>
+                </div>
+                <Link
+                  href="/categories/ai-tools"
+                  className="shrink-0 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700"
+                >
+                  Browse AI tools
+                </Link>
+              </div>
+
+              <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {aiTools.map((tool) => (
+                  <li key={tool.slug}>
+                    <Link
+                      href={`/tools/${tool.slug}`}
+                      className="group flex h-full flex-col rounded-2xl border border-white/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/70 p-4 transition hover:border-blue-300 hover:shadow-md dark:hover:border-blue-700"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-600 dark:bg-blue-950/70 dark:text-blue-400">
+                          <Sparkles className="h-4 w-4" />
+                        </span>
+                        <h3 className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
+                          {tool.name}
+                        </h3>
+                      </span>
+                      <p className="mt-2 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
+                        {tool.description}
+                      </p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
 
           {/* Comprehensive SEO Long-Form Article & Feature Guide */}
           <section className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-8 sm:p-10 space-y-8">

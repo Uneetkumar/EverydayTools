@@ -170,9 +170,17 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
           </ul>
         </section>
 
-        <div className="py-2">
-          <AdSlot placement="listingFooter" format="leaderboard" />
-        </div>
+        {/* A category holding one or two tools is a thin page: barely more than
+            a link to the tool itself. Monetising those is what AdSense calls
+            low-value content, and it is assessed across the whole site during
+            review — a handful of thin ad pages can hold back the rest. The
+            threshold is on tool count rather than a word count because that is
+            the thing that actually makes these pages thin. */}
+        {tools.length >= 4 && (
+          <div className="py-2">
+            <AdSlot placement="listingFooter" format="leaderboard" />
+          </div>
+        )}
 
         {content.faqs.length > 0 && <FaqSection faqs={content.faqs} />}
 
