@@ -21,7 +21,7 @@
  * anyone can point that same config at the endpoint and spend the quota. App
  * Check is the only thing standing between the free tier and a scraper.
  */
-import { app } from "@/lib/firebase";
+import { app, ensureAppCheck } from "@/lib/firebase";
 
 export interface CloudOcrResult {
   text: string;
@@ -56,6 +56,8 @@ const PROMPT = [
 const MODEL = "gemini-2.5-flash";
 
 export async function recognizeWithGemini(file: Blob): Promise<CloudOcrResult> {
+  // AI Logic is enforced; without a token this is rejected before Gemini.
+  await ensureAppCheck();
   const { getAI, getGenerativeModel, GoogleAIBackend } = await import("firebase/ai");
 
   const ai = getAI(app, { backend: new GoogleAIBackend() });

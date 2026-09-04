@@ -1627,6 +1627,66 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
     ],
   },
 
+  "image-to-text": {
+    intro:
+      "OCR turns a picture of text back into text you can select, search and edit. It matters more than it sounds: a scanned contract, a screenshot of an error message, a photographed receipt — all of them hold information your computer cannot read, because to the machine they are just coloured pixels arranged in shapes. This tool offers two recognisers with genuinely different trade-offs. The default runs entirely inside your browser: the image is never uploaded, it works offline once loaded, and there is no usage limit. The optional AI mode sends the image to Google and reads things the on-device engine cannot — handwriting, table layouts, and scripts other than Latin. Which one you should use depends less on quality than on what is in the picture.",
+    howTo: {
+      title: "How to extract text from an image",
+      steps: [
+        "Upload a PNG, JPG, WebP or BMP, or paste a screenshot straight from your clipboard.",
+        "Leave the recogniser on On-device unless you need what the AI mode adds. On-device keeps the image on your machine.",
+        "Press Extract text. The first on-device run downloads about 9MB of recognition data; after that it is cached and near-instant.",
+        "Read the confidence score. Below about 70% you should expect mistakes and check the result against the image.",
+        "Correct anything wrong directly in the output box, then copy it or download it as a .txt file.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Getting text out of a scanned PDF",
+        body:
+          "A scan has no text layer, which is why converting one to Word produces an empty document and why a PDF editor cannot find any words to change. Export the page as an image, run it through here, and you have text again. This is the single most common reason people need OCR.",
+      },
+      {
+        title: "Copying from a screenshot",
+        body:
+          "Error messages, chat threads and slides are constantly shared as images. Rather than retyping a stack trace by hand, extract it and paste it into your terminal or a search box.",
+      },
+      {
+        title: "Digitising receipts and invoices",
+        body:
+          "Photographs of receipts are awkward: the paper curves, the lighting is uneven, and the layout is columnar. The AI mode handles all three considerably better than the on-device engine, though it means uploading the image.",
+      },
+      {
+        title: "Reading handwriting",
+        body:
+          "Classical OCR is built around printed letterforms and does poorly on handwriting. If your image is handwritten, the on-device mode will likely return nonsense and the AI mode is the only realistic option.",
+      },
+    ],
+    tips: [
+      "Resolution matters more than file size. A sharp 1000px-wide crop of the text beats a 12MP photo of the whole page.",
+      "Straighten the image first if it was photographed at an angle: on-device OCR assumes roughly horizontal lines of text.",
+      "Crop to just the region you need. Less surrounding clutter means fewer spurious characters.",
+      "Low contrast is the most common cause of poor results. Dark text on a light background reads far better than grey on grey.",
+      "The on-device engine is English-only here. For other scripts, use the AI mode.",
+    ],
+    extraFaqs: [
+      {
+        question: "Which mode should I use for something confidential?",
+        answer:
+          "On-device, without exception. It runs in your browser and the image never leaves your machine, so an ID card, a bank statement or a medical letter stays with you. The AI mode uploads the image to Google and should not be used for anything you would not email.",
+      },
+      {
+        question: "Why is the accuracy lower than my phone's built-in scanner?",
+        answer:
+          "Phone scanners pre-process aggressively — deskewing, sharpening and thresholding the image before recognition, often using a dedicated model. Here you get the raw recogniser, so preparing the image yourself (crop, straighten, increase contrast) makes a large difference.",
+      },
+      {
+        question: "Does it keep the original layout?",
+        answer:
+          "Reading order is preserved and line breaks are usually right, but columns and tables are flattened by the on-device engine. The AI mode is asked to keep table rows together with tab-separated columns, which holds up reasonably well.",
+      },
+    ],
+  },
   "hash-generator": {
     intro:
       "A cryptographic hash reduces any input to a fixed-length fingerprint. The same input always produces the same hash, and any change — even a single bit — produces a completely different one. Hashes are used to verify file integrity, deduplicate content, and index data. This generator produces MD5, SHA-1, SHA-256, and SHA-512 digests in your browser, so the input is never transmitted.",

@@ -1,5 +1,5 @@
 import { AIInput, AIOutput, AIProvider } from "../types";
-import { app } from "@/lib/firebase";
+import { app, ensureAppCheck } from "@/lib/firebase";
 
 /**
  * Cloud AI via Firebase AI Logic, called straight from the browser.
@@ -44,6 +44,9 @@ export class GeminiProvider implements AIProvider {
 
     let text: string;
     try {
+      // Must precede the model call: AI Logic is enforced, so a request
+      // without an App Check token is rejected before it reaches Gemini.
+      await ensureAppCheck();
       const { getAI, getGenerativeModel, GoogleAIBackend } = await import("firebase/ai");
       const ai = getAI(app, { backend: new GoogleAIBackend() });
       const generativeModel = getGenerativeModel(ai, { model });

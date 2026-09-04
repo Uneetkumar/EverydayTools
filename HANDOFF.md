@@ -580,6 +580,91 @@ extended **additively**, so every existing call site is untouched:
 Site is **115 pages / 77 tools** as a result.
 
 
+---
+
+## 19. AI architecture (25 Aug 2026)
+
+**Site is 121 pages / 83 tools.**
+
+### The 404 that only happened in production
+
+`lib/ai/providers/gemini-provider.ts` used to `POST /api/ai/generate`. That
+route exists in the source and works under `npm run dev`, but:
+
+```
+next.config.ts:  output: process.env.NODE_ENV === "production" ? "export" : undefined
+```
+
+A static export **cannot emit API routes** — there is no server. `out/api` was
+never created, Firebase served 404, and users saw *"Server AI processing failed
+(404)"*. It looked perfect locally. This is the trap to remember: **anything
+under `app/api/` silently disappears in production.**
+
+Fixed by calling **Firebase AI Logic directly from the browser**. That is the
+right fit for a static site: it brokers the model call, so no Gemini API key is
+shipped. Prompts were carried over verbatim so results match what dev produced.
+
+### The three-link chain (each hid the next)
+
+1. API route 404 → now calls AI Logic directly
+2. AI Logic not enabled → enabled in console
+3. **App Check enforced but no client token** → the console read
+   `0% verified / 100% unverified` with status `Basic - Enforced`, so every
+   request would have been rejected anyway
+
+`ensureAppCheck()` in `lib/firebase.ts` fixes (3). It is **lazy and
+browser-only** on purpose: it pulls the reCAPTCHA Enterprise script, and paying
+that on every page load when most of 83 tools never touch the network is waste.
+Both cloud paths await it immediately before calling the model.
+
+The reCAPTCHA **site** key is committed as a default. It is public by design and
+committing it means the Firebase build needs no extra env setup — one less way
+for production to differ from dev. The reCAPTCHA **secret** key is the sensitive
+half and is not in this repo.
+
+### Two engines, deliberately
+
+- **On-device** (`lib/ai/nlp/*`, ~700 lines) — real TextRank/lexical
+  implementations, not stubs. **All five shared AI tools default to `"local"`**,
+  which is why the 404 only appeared when a user chose *Advanced Cloud*.
+- **Cloud** (Gemini 2.5 Flash) — opt-in.
+
+`components/tools/ImageToText.tsx` follows the same pattern: Tesseract.js
+on-device by default (self-hosted from `/public/tesseract`, ~9.5MB lazy), Gemini
+opt-in for handwriting/tables/non-Latin scripts. Verified 100% accurate on a
+rendered invoice in ~1s. It is in `NETWORK_TOOLS` because the AI mode uploads —
+the page must not claim an unconditional privacy guarantee.
+
+### Leftovers — all cleared (25 Aug 2026)
+
+1. **`app/api/ai/generate/route.ts` deleted**, along with `lib/ai/rate-limiter.ts`
+   whose only importer it was. The route could never execute in a static export
+   and hardcoded the Firebase API key. (`lib/firebase.ts` still contains that
+   key as `firebaseConfig.apiKey` — that one is public by design and required.)
+2. **The "DistilBART Summarizer" entry is gone.** `LOCAL_AI_MODELS` now carries
+   a comment explaining why, so nobody re-adds a model claim the code does not
+   implement. The heuristics are good; they are just not a neural model.
+3. **`ai-explainer` asks a real model.** `customQuestion` was previously
+   declared in state and never read — the tool was a static four-topic FAQ named
+   "AI Formula Explainer". It now has an Ask-anything box wired to Gemini, with
+   the curated answers kept and relabelled as hand-written.
+
+### Audit findings (same pass)
+
+- **`image-to-text` had no `content.ts` entry** — registry, route and component
+  existed but the long-form content did not, leaving a thin page that carried an
+  ad. Now 1,104 words.
+- **Five AI tools claimed "Client-Side Private" while offering a cloud mode.**
+  `ai-text-summarizer`, `ai-text-rewriter`, `ai-text-simplifier`,
+  `ai-keyword-extractor`, `ai-json-explainer` all default to on-device and work
+  offline, but each has an "Advanced Cloud" control that uploads the input. All
+  are now in `NETWORK_TOOLS`. The badge is blunter than ideal — it reads "needs
+  internet" for a tool that works offline by default — but erring toward a
+  weaker claim beats advertising a privacy guarantee a visible control breaks.
+- `lib/video/validators.ts` is unreferenced. Left in place; harmless.
+- `CropImage`'s `fetch()` is a `data:` URL read, not a network call.
+
+
 ## 11. Commands
 
 ```bash

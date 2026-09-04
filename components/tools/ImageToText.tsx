@@ -53,26 +53,6 @@ export default function ImageToText() {
     };
   }, []);
 
-  // Global Clipboard paste support (Ctrl+V / Cmd+V)
-  useEffect(() => {
-    const handlePaste = (e: ClipboardEvent) => {
-      const items = e.clipboardData?.items;
-      if (!items) return;
-
-      for (let i = 0; i < items.length; i++) {
-        if (items[i].type.indexOf("image") !== -1) {
-          const blob = items[i].getAsFile();
-          if (blob) {
-            onFile(blob);
-            break;
-          }
-        }
-      }
-    };
-
-    window.addEventListener("paste", handlePaste);
-    return () => window.removeEventListener("paste", handlePaste);
-  }, []);
 
   const onFile = useCallback((next: File | undefined | null) => {
     if (!next) return;
@@ -98,6 +78,29 @@ export default function ImageToText() {
     setPreview(url);
     setFile(next);
   }, []);
+
+  // Global Clipboard paste support (Ctrl+V / Cmd+V)
+  useEffect(() => {
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf("image") !== -1) {
+          const blob = items[i].getAsFile();
+          if (blob) {
+            onFile(blob);
+            break;
+          }
+        }
+      }
+    };
+
+    window.addEventListener("paste", handlePaste);
+    return () => window.removeEventListener("paste", handlePaste);
+    // onFile is a stable useCallback; listing it keeps the dependency
+    // honest without re-subscribing on every render.
+  }, [onFile]);
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();

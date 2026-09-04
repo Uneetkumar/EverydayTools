@@ -1,9 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { Sparkles, ArrowRight, BookOpen, Check, Copy } from "lucide-react";
+import { Sparkles, ArrowRight, BookOpen, Check, Copy, RefreshCw, AlertTriangle, Globe } from "lucide-react";
+import { GeminiProvider } from "@/lib/ai/providers/gemini-provider";
 import confetti from "canvas-confetti";
 
+/**
+ * Hand-written reference answers, not model output. They are instant, work
+ * offline and are checked for accuracy, which is exactly what a curated set
+ * should be — but they are NOT AI, and the tool must not imply otherwise.
+ * Free-form questions go to the model below; these do not.
+ */
 const EXPLANATION_KNOWLEDGE: Record<string, { title: string; answer: string; formula: string }> = {
   "margin-vs-markup": {
     title: "Margin vs. Markup Explained in Plain English",
@@ -35,6 +42,35 @@ export default function AiExplainer() {
   const [selectedTopic, setSelectedTopic] = useState<string>("margin-vs-markup");
   const [customQuestion, setCustomQuestion] = useState<string>("");
   const [copied, setCopied] = useState<boolean>(false);
+  // `customQuestion` used to be declared and never read: the tool was a static
+  // FAQ named "AI Formula Explainer". It now asks a real model.
+  const [aiAnswer, setAiAnswer] = useState<string | null>(null);
+  const [asking, setAsking] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  const askAi = async () => {
+    const q = customQuestion.trim();
+    if (!q || asking) return;
+    setAsking(true);
+    setAiError(null);
+    setAiAnswer(null);
+    try {
+      const out = await new GeminiProvider().generate({
+        text:
+          "Explain the following clearly and accurately for someone with no background in the subject. " +
+          "Show any formula involved and define each term. Use plain language, no more than 200 words. " +
+          "If the question is ambiguous, state the assumption you made.\n\nQuestion: " +
+          q,
+        task: "general",
+      });
+      setAiAnswer(out.result);
+    } catch (e) {
+      // GeminiProvider already turns SDK errors into actionable text.
+      setAiError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setAsking(false);
+    }
+  };
 
   const activeKnowledge = EXPLANATION_KNOWLEDGE[selectedTopic];
 
@@ -54,10 +90,65 @@ export default function AiExplainer() {
 
   return (
     <div className="space-y-6">
+      {/* Ask a real model. Kept above the curated chips because a free-form
+          question is what people arrive wanting; the presets are the fallback,
+          not the main event. */}
+      <div className="space-y-2 rounded-2xl border border-blue-200 bg-blue-50/60 p-4 dark:border-blue-900/50 dark:bg-blue-950/25">
+        <label
+          htmlFor="ai-question"
+          className="flex items-center gap-2 text-sm font-bold text-slate-900 dark:text-white"
+        >
+          <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+          Ask anything
+          <span className="ml-auto flex items-center gap-1 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-semibold text-blue-700 dark:bg-blue-900/60 dark:text-blue-300">
+            <Globe className="h-3 w-3" /> Sent to Google
+          </span>
+        </label>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <input
+            id="ai-question"
+            value={customQuestion}
+            onChange={(e) => setCustomQuestion(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") askAi();
+            }}
+            placeholder="e.g. Why does compound interest beat simple interest?"
+            className="flex-1 rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+          />
+          <button
+            onClick={askAi}
+            disabled={asking || !customQuestion.trim()}
+            className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+          >
+            {asking ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {asking ? "Thinking…" : "Explain"}
+          </button>
+        </div>
+
+        {aiError && (
+          <p className="flex gap-2 rounded-lg bg-amber-50 p-2.5 text-xs leading-relaxed text-amber-800 dark:bg-amber-950/30 dark:text-amber-200">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            {aiError}
+          </p>
+        )}
+
+        {aiAnswer && (
+          <div className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+            <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+              {aiAnswer}
+            </p>
+            <p className="mt-2 border-t border-slate-100 pt-2 text-[10px] text-slate-400 dark:border-slate-800">
+              Generated by Gemini. Check anything you intend to rely on \u2014 models
+              state wrong things confidently.
+            </p>
+          </div>
+        )}
+      </div>
+
       {/* Topic Preset Chips */}
       <div className="space-y-2">
         <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-          Select Topic to Explain
+          Or pick a hand-written explanation (instant, works offline)
         </span>
         <div className="flex flex-wrap gap-2">
           {[

@@ -81,6 +81,17 @@ const WIDE_LAYOUT_TOOLS = new Set([
  * less than no claim at all.
  */
 const NETWORK_TOOLS = new Set([
+  // Each of these defaults to the on-device engine and works offline, but all
+  // of them offer an "Advanced Cloud" mode that sends the user's text to
+  // Gemini. A page cannot advertise an unconditional privacy guarantee when a
+  // visible control on it uploads the input.
+  "ai-text-summarizer",
+  "ai-text-rewriter",
+  "ai-text-simplifier",
+  "ai-keyword-extractor",
+  "ai-json-explainer",
+  // Free-form questions go to Gemini; the curated answers do not.
+  "ai-explainer",
   // Default mode is on-device, but the optional AI mode uploads the image,
   // so this page must not advertise an unconditional privacy guarantee.
   "image-to-text",
