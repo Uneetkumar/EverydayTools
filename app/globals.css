@@ -150,6 +150,11 @@ div[class*="consent"] {
   border-radius: 16px !important;
 }
 
+/* Hide Google reCAPTCHA floating badge */
+.grecaptcha-badge {
+  visibility: hidden !important;
+}
+
 /* ---------------------------------------------------------------------------
    Interaction affordances
 

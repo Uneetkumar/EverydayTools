@@ -134,12 +134,30 @@ export default function Footer() {
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-8 mt-8 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+        <div className="pt-8 mt-8 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-3">
           <div>
             © {new Date().getFullYear()} TabBench. Built for speed, clarity, and utility.
           </div>
-          <div className="flex items-center space-x-4 mt-4 sm:mt-0">
-            <span>Global English Edition</span>
+          <div className="text-[11px] text-slate-400 dark:text-slate-500 text-center sm:text-right">
+            This site is protected by reCAPTCHA and the Google{" "}
+            <a
+              href="https://policies.google.com/privacy"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-indigo-600 dark:hover:text-indigo-400"
+            >
+              Privacy Policy
+            </a>{" "}
+            and{" "}
+            <a
+              href="https://policies.google.com/terms"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-indigo-600 dark:hover:text-indigo-400"
+            >
+              Terms of Service
+            </a>{" "}
+            apply.
           </div>
         </div>
       </div>
