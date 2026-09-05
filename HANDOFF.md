@@ -710,6 +710,51 @@ inflates bytes ~33%, so a 1MB phone photo became a ~1.4MB inline payload for no
 benefit — text is legible well below 2000px and the model downsamples anyway.
 
 
+---
+
+## 21. Cloud AI latency (25 Aug 2026)
+
+Four changes, in descending order of impact.
+
+**1. Thinking was the bulk of it.** Gemini 2.5 models run an internal reasoning
+pass before answering and the SDK docs note a higher budget "can also increase
+latency". Summarising a paragraph is not a puzzle, so that pass bought nothing.
+`thinkingConfig: { thinkingBudget: 0 }` in `lib/ai/generation-config.ts`.
+
+**The guard matters:** the SDK *throws* if you set a thinking budget on a model
+that does not support it, and the fallback chain includes 2.0 models. So it is
+applied only to ids matching `/gemini-2\.5/`. Do not "simplify" that away.
+
+**2. Streaming** (`generateContentStream`). Wall-clock is unchanged; the first
+words appear in ~1s instead of after the whole answer. `runAI()` in
+`lib/ai/run.ts` is the single entry point: it streams when the provider supports
+it, falls back to `generate` when it does not (the on-device engines are
+synchronous string transforms — faking chunks would add latency to disguise that
+they are already instant), and on a mid-stream failure clears the partial text
+before retrying non-streaming, so a user never sees half an answer swapped for a
+different one.
+
+The stream deliberately does **not** walk the model fallback chain — a
+mid-stream model swap would mean showing text and then replacing it. The
+non-streaming retry does.
+
+**3. Setup moved off the critical path.** A first cloud call had to import the
+Firebase AI chunk, initialise App Check (fetching the reCAPTCHA Enterprise
+script) and build the model handle before sending a byte. None of it depends on
+the prompt. `warmCloudAI()` fires when the user *selects* the cloud engine, so
+that cost overlaps with them typing. Wired once in `AIWorkspace` (covers all
+five text tools) plus the OCR toggle.
+
+**4. Smaller wins.** `maxOutputTokens` capped (2048 text / 4096 vision) so a
+rambling answer cannot stall the UI; the `getAI` handle is cached instead of
+rebuilt per call; vision uploads are downscaled to 2000px (a 1MB photo was a
+~1.4MB base64 payload for no accuracy gain).
+
+Streaming UI lives in `AIWorkspace` so all five tools share one appearance. It
+renders only while `busy && streamingText`, so a request failing before its
+first token does not flash an empty panel.
+
+
 ## 11. Commands
 
 ```bash

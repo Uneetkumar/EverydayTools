@@ -18,11 +18,19 @@ export default function AIError({
 
   return (
     <div className="flex items-start justify-between gap-3 p-4 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50/70 dark:bg-rose-950/30 text-rose-800 dark:text-rose-200 animate-in fade-in duration-150">
-      <div className="flex items-start space-x-2.5">
+      {/* min-w-0 is what actually stops the overflow: a flex child defaults to
+          min-width:auto, so a long unbroken string (an API error carrying a URL
+          or a JSON blob) refuses to shrink and pushes the whole panel wider
+          than the page. `break-words` then wraps inside that constrained box. */}
+      <div className="flex min-w-0 flex-1 items-start space-x-2.5">
         <AlertTriangle className="w-5 h-5 shrink-0 text-rose-600 mt-0.5" />
-        <div className="text-xs leading-relaxed">
+        <div className="min-w-0 text-xs leading-relaxed">
           <p className="font-semibold mb-0.5">Processing Notice</p>
-          <p>{error}</p>
+          {/* Capped height: a provider error can be hundreds of lines of JSON,
+              and burying the action buttons under it is worse than scrolling. */}
+          <p className="max-h-32 overflow-y-auto break-words whitespace-pre-wrap">
+            {error}
+          </p>
         </div>
       </div>
 

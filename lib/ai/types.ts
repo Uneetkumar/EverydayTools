@@ -42,4 +42,15 @@ export interface AIProvider {
   name: string;
   isAvailable(): Promise<boolean>;
   generate(input: AIInput): Promise<AIOutput>;
+  /**
+   * Emits text as it arrives, resolving with the same shape `generate` returns.
+   *
+   * Optional: the on-device engines are synchronous string transforms with
+   * nothing to stream, and faking chunks for them would add latency to hide
+   * that they are already instant. Callers fall back to `generate`.
+   */
+  generateStream?(
+    input: AIInput,
+    onChunk: (textSoFar: string) => void
+  ): Promise<AIOutput>;
 }

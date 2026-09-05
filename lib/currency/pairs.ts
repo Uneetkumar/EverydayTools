@@ -22,6 +22,21 @@ export interface CurrencyPair {
   keywords: string[];
   /** Two paragraphs of corridor-specific context. */
   body: string[];
+  /**
+   * Questions that are true of THIS corridor only.
+   *
+   * The four FAQs rendered by the page are generated from a shared template, so
+   * every corridor carried roughly 250 words of byte-identical answers against
+   * about 77 words of unique body — leaving sibling pages 72-79% word-identical.
+   * That is the near-duplicate pattern search engines demote, and a plausible
+   * cause of "crawled, currently not indexed".
+   *
+   * These are additive: nothing was removed. They lean on facts that genuinely
+   * differ between corridors — the currency's exchange-rate regime and the real
+   * reason people use the route — rather than reworded filler, which would not
+   * have helped.
+   */
+  extraFaqs: { question: string; answer: string }[];
 }
 
 export const CURRENCY_PAIRS: CurrencyPair[] = [
@@ -37,6 +52,18 @@ export const CURRENCY_PAIRS: CurrencyPair[] = [
       "The dollar-rupee rate is the most watched exchange rate in India, and for good reason: it prices everything from IT services exports and freelance invoices to the remittances sent home by the Indian diaspora, which is the largest in the world. When people say 'the rupee is falling', they almost always mean against the dollar.",
       "The figure here is the mid-market rate — the midpoint of the interbank market. It is the honest benchmark, but nobody sells dollars to you at it. A bank wire typically lands 1.5–3% below, and airport counters far worse, so treat this as the ceiling on what you should expect rather than the amount you will receive.",
     ],
+    extraFaqs: [
+      {
+        question: "Does the dollar-rupee rate move much day to day?",
+        answer:
+          "Both currencies float, though the Reserve Bank of India intervenes to smooth sharp swings rather than to hold a level. Day-to-day movement is usually small; the meaningful changes show up over weeks, which is why watching the rate for a few days before a large transfer tells you more than watching it for a few hours.",
+      },
+      {
+        question: "Is there a limit on sending dollars to India?",
+        answer:
+          "Money coming into India from abroad is not capped. Limits apply in the other direction, under India's Liberalised Remittance Scheme, so inbound transfers are constrained by your sending provider's own rules rather than by Indian regulation.",
+      },
+    ],
   },
   {
     slug: "inr-to-usd",
@@ -49,6 +76,18 @@ export const CURRENCY_PAIRS: CurrencyPair[] = [
     body: [
       "Converting rupees to dollars comes up for outward remittances — students paying overseas tuition, families supporting relatives abroad, and residents investing internationally under the Liberalised Remittance Scheme. It is also the calculation behind any dollar-denominated subscription or cloud bill you settle from an Indian account.",
       "Outward conversion carries costs inward transfers do not. Alongside the exchange margin, Indian outward remittances attract Tax Collected at Source above annual thresholds, and banks levy their own charges. Budget for the total landed cost, not just the rate shown here.",
+    ],
+    extraFaqs: [
+      {
+        question: "Is there a limit on sending rupees out of India?",
+        answer:
+          "Yes. India's Liberalised Remittance Scheme caps how much a resident individual may remit abroad per financial year, covering travel, education, investment and gifts together. Your bank applies this limit and will ask what the transfer is for, so the purpose you declare matters.",
+      },
+      {
+        question: "Why is the outbound rate worse than the inbound one?",
+        answer:
+          "Sending rupees out involves more paperwork and fewer competing providers than the heavily contested inbound remittance market. Less competition and higher compliance cost both show up in the spread you are quoted.",
+      },
     ],
   },
   {
@@ -63,6 +102,18 @@ export const CURRENCY_PAIRS: CurrencyPair[] = [
       "The UAE-to-India corridor is the largest remittance route on earth by volume, carrying tens of billions of dollars a year from a workforce of several million Indians in the Gulf. For most of them the dirham-rupee rate is not an abstraction — it directly determines how much reaches family at home each month.",
       "Because the dirham is pegged to the US dollar at a fixed rate, AED-INR moves almost entirely with the dollar-rupee rate rather than independently. That makes it unusually predictable: if you know where USD-INR is heading, you know where AED-INR is heading too.",
     ],
+    extraFaqs: [
+      {
+        question: "Does timing a dirham transfer help?",
+        answer:
+          "Barely, in the way people expect. The dirham is pegged to the US dollar, so AED-INR moves almost entirely with USD-INR rather than on its own. Watching dirham-rupee is really watching dollar-rupee.",
+      },
+      {
+        question: "Why are exchange houses often better than banks here?",
+        answer:
+          "This corridor carries enormous volume, and UAE exchange houses compete directly for it. That competition compresses margins in a way a general-purpose bank transfer usually cannot match.",
+      },
+    ],
   },
   {
     slug: "eur-to-inr",
@@ -75,6 +126,18 @@ export const CURRENCY_PAIRS: CurrencyPair[] = [
     body: [
       "Euro-rupee matters for trade with the European Union — India's largest trading bloc partner — and for the growing number of Indian students and professionals in Germany, France, and the Netherlands. It is also the rate behind European software and travel costs billed in euros.",
       "Unlike the dirham, the euro floats freely against the dollar, so EUR-INR moves on two independent forces at once: euro-dollar sentiment and dollar-rupee sentiment. That makes it noticeably more volatile than the pegged Gulf currencies, and worth checking close to the date you actually transact.",
+    ],
+    extraFaqs: [
+      {
+        question: "Does the euro rate differ between eurozone countries?",
+        answer:
+          "The underlying rate does not — the euro is one currency across the bloc. What differs is the sending bank's margin and fees, so the same transfer can cost noticeably different amounts from two different eurozone countries.",
+      },
+      {
+        question: "Why does the euro move against the rupee even when nothing changes in India?",
+        answer:
+          "Because a rate is a ratio of two currencies. European Central Bank decisions move the euro side on their own, which shows up as a change in EUR-INR even on a quiet day for the rupee.",
+      },
     ],
   },
   {
@@ -89,6 +152,18 @@ export const CURRENCY_PAIRS: CurrencyPair[] = [
       "The pound-rupee rate underpins one of the oldest migration and trade corridors between the two countries, covering a large British-Indian population, a steady flow of students to UK universities, and long-standing commercial ties.",
       "Sterling is among the more volatile major currencies, historically reacting sharply to domestic political and monetary news. For tuition fees or property transactions where the amount is large and the date is known in advance, that volatility is worth planning around rather than ignoring.",
     ],
+    extraFaqs: [
+      {
+        question: "Why did the pound-rupee rate change so much over the last decade?",
+        answer:
+          "Both currencies float, and the pound has had several sharp repricings driven by domestic politics and interest-rate decisions. Long-run charts on this pair reflect events in Britain at least as much as events in India.",
+      },
+      {
+        question: "Is a UK bank transfer or a specialist provider better?",
+        answer:
+          "Specialist remittance providers usually quote closer to the mid-market rate on this corridor. High-street banks tend to bundle their margin into the rate rather than charging an obvious fee.",
+      },
+    ],
   },
   {
     slug: "sar-to-inr",
@@ -101,6 +176,18 @@ export const CURRENCY_PAIRS: CurrencyPair[] = [
     body: [
       "Saudi Arabia hosts one of the largest Indian expatriate populations anywhere, and the riyal-rupee rate is a monthly calculation for a very large number of households across Kerala, Uttar Pradesh, and Bihar.",
       "Like the dirham, the riyal is pegged to the US dollar, so this rate tracks dollar-rupee almost exactly. Day-to-day movement in SAR-INR is really dollar-rupee movement wearing a different label.",
+    ],
+    extraFaqs: [
+      {
+        question: "Does the riyal rate move independently?",
+        answer:
+          "No. The Saudi riyal has been pegged to the US dollar for decades, so riyal-rupee tracks dollar-rupee. Any movement you see is the rupee side moving, not the riyal.",
+      },
+      {
+        question: "Does the day of the week affect a riyal transfer?",
+        answer:
+          "The rate itself does not change over the weekend because currency markets are closed, but settlement does. A transfer initiated Thursday evening in Saudi Arabia may not be processed until the following working week.",
+      },
     ],
   },
   {
@@ -115,6 +202,18 @@ export const CURRENCY_PAIRS: CurrencyPair[] = [
       "Canada has become one of the largest destinations for Indian students and skilled migrants, which has made CAD-INR a rate a great many families now watch — for tuition payments going out and remittances coming back.",
       "The Canadian dollar is a commodity currency, moving with oil prices and global growth expectations. That gives CAD-INR a different rhythm from the Gulf pegs: it can drift meaningfully over a few months on energy markets alone.",
     ],
+    extraFaqs: [
+      {
+        question: "Why does this corridor peak around certain months?",
+        answer:
+          "It carries a large share of student money. Volumes rise around Canadian university intake periods, when tuition and living costs are sent in larger single transfers than the typical monthly remittance.",
+      },
+      {
+        question: "Does the Canadian dollar follow the US dollar?",
+        answer:
+          "Partly. Both are floating and Canada's economy is closely tied to the United States, so the two often move in the same direction — but the Canadian dollar is also sensitive to oil prices in a way the US dollar is not.",
+      },
+    ],
   },
   {
     slug: "aud-to-inr",
@@ -127,6 +226,18 @@ export const CURRENCY_PAIRS: CurrencyPair[] = [
     body: [
       "Australia's large Indian student and professional community makes AUD-INR a regularly checked rate, particularly around university fee deadlines at the start of each semester.",
       "The Australian dollar is closely tied to commodity exports and to Chinese demand in particular, so AUD-INR often moves on news that has nothing to do with either Australia or India directly.",
+    ],
+    extraFaqs: [
+      {
+        question: "Why does the Australian dollar swing more than most?",
+        answer:
+          "It is heavily influenced by commodity prices and by demand from Asia, which makes it one of the more volatile major currencies. For a large transfer, that volatility is worth a few days of watching.",
+      },
+      {
+        question: "Does the time difference affect transfers?",
+        answer:
+          "It affects when a transfer is processed rather than the rate. Australian business hours fall largely outside Indian ones, so a transfer sent late in the Australian day often lands the following Indian working day.",
+      },
     ],
   },
   {
@@ -141,6 +252,18 @@ export const CURRENCY_PAIRS: CurrencyPair[] = [
       "Singapore is a major hub for Indian professionals in finance and technology, and a significant source of both remittances and investment into India.",
       "The Singapore dollar is managed against a basket of currencies rather than left to float freely, which historically makes it steadier than most. That relative stability is useful if you are converting regularly rather than once.",
     ],
+    extraFaqs: [
+      {
+        question: "Is the Singapore dollar pegged?",
+        answer:
+          "No, but it is not fully floating either. The Monetary Authority of Singapore manages it against a basket of currencies within an undisclosed band, which makes it steadier than a free-floating currency without being fixed.",
+      },
+      {
+        question: "Are transfers from Singapore usually fast?",
+        answer:
+          "Singapore's payment infrastructure is among the quickest, and many providers on this route settle same-day. The delay, when there is one, is normally on the receiving side rather than the sending one.",
+      },
+    ],
   },
   {
     slug: "kwd-to-inr",
@@ -153,6 +276,18 @@ export const CURRENCY_PAIRS: CurrencyPair[] = [
     body: [
       "The Kuwaiti dinar is the highest-valued currency in the world, so a single dinar converts to a large number of rupees. That makes small rate movements matter more per unit than in almost any other pair.",
       "Kuwait hosts a substantial Indian workforce, and the dinar is managed against a currency basket weighted heavily toward the US dollar — so this rate, too, largely follows dollar-rupee.",
+    ],
+    extraFaqs: [
+      {
+        question: "Why is one dinar worth so many rupees?",
+        answer:
+          "The Kuwaiti dinar is the highest-valued currency unit in the world. That is a matter of how the unit was originally denominated, not a measure of economic strength — it simply means small dinar amounts convert to large rupee ones, so rounding errors matter more here than in most corridors.",
+      },
+      {
+        question: "Is the dinar pegged to the dollar?",
+        answer:
+          "Not directly. Kuwait pegs the dinar to an undisclosed basket of currencies rather than to the dollar alone, so KWD-INR does not track USD-INR as tightly as the dirham or riyal do.",
+      },
     ],
   },
   {
@@ -167,6 +302,18 @@ export const CURRENCY_PAIRS: CurrencyPair[] = [
       "EUR-USD is the most heavily traded currency pair on the planet, accounting for roughly a fifth of all foreign exchange turnover. Its liquidity means spreads are the tightest available anywhere, and the mid-market rate is unusually close to what large players actually transact at.",
       "The pair moves mainly on the interest-rate gap between the US Federal Reserve and the European Central Bank. When one is expected to cut or raise before the other, this rate is where that expectation shows up first.",
     ],
+    extraFaqs: [
+      {
+        question: "Why is this the most traded currency pair?",
+        answer:
+          "It links the world's two largest reserve currencies, so it carries the deepest liquidity of any pair. That depth is why the spread between buying and selling is normally the tightest you will find anywhere.",
+      },
+      {
+        question: "What moves this rate most?",
+        answer:
+          "The interest-rate gap between the US Federal Reserve and the European Central Bank. When one is expected to move rates before the other, this pair usually reprices well ahead of the actual decision.",
+      },
+    ],
   },
   {
     slug: "gbp-to-usd",
@@ -179,6 +326,18 @@ export const CURRENCY_PAIRS: CurrencyPair[] = [
     body: [
       "Known in trading rooms as 'cable' — after the transatlantic telegraph cable that once carried its quotes — GBP-USD is among the oldest continuously quoted exchange rates in existence.",
       "It remains one of the more volatile major pairs, responding sharply to Bank of England decisions and UK political news. For anything large, checking close to the transaction date is worth more here than in steadier pairs.",
+    ],
+    extraFaqs: [
+      {
+        question: "Why is this pair nicknamed cable?",
+        answer:
+          "The name dates to the transatlantic telegraph cable that carried the sterling-dollar rate between London and New York in the nineteenth century. The nickname stuck long after the cable did.",
+      },
+      {
+        question: "Is sterling more volatile than the dollar?",
+        answer:
+          "Generally yes. The dollar is the world's reserve currency and tends to be bought during uncertainty, while sterling reacts more sharply to domestic political and economic news, so most of this pair's movement usually comes from the sterling side.",
+      },
     ],
   },
 ];

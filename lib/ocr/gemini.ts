@@ -23,7 +23,8 @@
  */
 import { app, ensureAppCheck } from "@/lib/firebase";
 import { GEMINI_MODEL_CANDIDATES, isModelNotFound } from "@/lib/ai/model-fallback";
-import { withTimeout, AI_TIMEOUTS, TimeoutError } from "@/lib/ai/timeout";
+import { withTimeout, AI_TIMEOUTS, TimeoutError , condenseProviderError } from "@/lib/ai/timeout";
+import { visionGenerationConfigFor } from "@/lib/ai/generation-config";
 
 export interface CloudOcrResult {
   text: string;
@@ -121,7 +122,10 @@ export async function recognizeWithGemini(file: Blob): Promise<CloudOcrResult> {
   let lastError: unknown = null;
   for (const candidate of GEMINI_MODEL_CANDIDATES) {
     try {
-      const model = getGenerativeModel(ai, { model: candidate });
+      const model = getGenerativeModel(ai, {
+        model: candidate,
+        generationConfig: visionGenerationConfigFor(candidate),
+      });
       const result = await withTimeout(
         model.generateContent(parts),
         AI_TIMEOUTS.vision,
@@ -150,7 +154,8 @@ export function describeGeminiError(e: unknown): string {
   const msg = e instanceof Error ? e.message : String(e);
   // The raw message is always appended: a friendly sentence on its own hides
   // the one detail needed to tell "service off" from "model name wrong".
-  const detail = ` (${msg})`;
+  // Condensed, not raw: a verbatim provider error is JSON and overflows.
+  const detail = ` (${condenseProviderError(msg)})`;
   if (/API has not been used|SERVICE_DISABLED|has not been enabled/i.test(msg))
     return `Firebase AI Logic is not enabled for this project. Enable it in the Firebase console, then try again.${detail}`;
   if (/not found|NOT_FOUND|404/i.test(msg))

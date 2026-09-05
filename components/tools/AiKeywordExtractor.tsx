@@ -8,6 +8,7 @@ import { LocalAIProvider } from "@/lib/ai/providers/local-provider";
 import { GeminiProvider } from "@/lib/ai/providers/gemini-provider";
 import { AIProviderType, AIOutput as AIOutputType } from "@/lib/ai/types";
 import { Hash, Tag } from "lucide-react";
+import { runAI } from "@/lib/ai/run";
 
 const SAMPLE_TEXT = `Next.js 15 delivers advanced React Server Components, hybrid static site generation, and optimized client bundles for superior Core Web Vitals. Web developers utilize Next.js for high-performance search engine optimization, server actions, dynamic caching, and seamless TypeScript integration across modern cloud hosting platforms like Firebase, Vercel, and Cloudflare Pages.`;
 
@@ -21,6 +22,8 @@ export default function AiKeywordExtractor() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [output, setOutput] = useState<AIOutputType | null>(null);
+  // Text as it streams in, before the final AIOutput lands.
+  const [partial, setPartial] = useState("");
 
   const handleRun = async () => {
     if (!input.trim()) {
@@ -30,14 +33,15 @@ export default function AiKeywordExtractor() {
 
     setBusy(true);
     setError(null);
+    setPartial("");
 
     try {
       const activeProvider = provider === "local" ? localProvider : geminiProvider;
-      const res = await activeProvider.generate({
+      const res = await runAI(activeProvider, {
         text: input,
         task: "keywords",
         options: { topN },
-      });
+      }, setPartial);
       setOutput(res);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
@@ -51,6 +55,7 @@ export default function AiKeywordExtractor() {
       <AIWorkspace
         provider={provider}
         onProviderChange={setProvider}
+        streamingText={partial}
         busy={busy}
         onRun={handleRun}
         runLabel="Extract Keywords"

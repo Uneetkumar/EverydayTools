@@ -20,6 +20,7 @@ import {
 import { recognizeLocally, disposeOcr, type OcrProgress } from "@/lib/ocr/engine";
 import { recognizeWithGemini, describeGeminiError } from "@/lib/ocr/gemini";
 import { downloadBlob } from "@/lib/utils/download";
+import { warmCloudAI } from "@/lib/ai/warm";
 
 type Engine = "local" | "ai";
 
@@ -300,7 +301,7 @@ export default function ImageToText() {
 
                   <button
                     type="button"
-                    onClick={() => setEngine("ai")}
+                    onClick={() => (setEngine("ai"), warmCloudAI())}
                     className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-xs font-semibold transition cursor-pointer ${
                       engine === "ai"
                         ? "bg-white dark:bg-slate-800 text-purple-600 dark:text-purple-300 shadow-xs border border-slate-200/80 dark:border-slate-700/80"
@@ -391,7 +392,12 @@ export default function ImageToText() {
       {error && (
         <div className="flex items-start gap-3 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/30 p-4 text-rose-800 dark:text-rose-200">
           <AlertTriangle className="w-5 h-5 shrink-0 text-rose-600 mt-0.5" />
-          <div className="text-xs leading-relaxed">{error}</div>
+          {/* Same containment as AIError: min-w-0 lets the flex child shrink,
+              break-words wraps long URLs, and the cap stops a JSON error dump
+              from pushing the layout sideways. */}
+          <div className="min-w-0 max-h-32 overflow-y-auto break-words whitespace-pre-wrap text-xs leading-relaxed">
+            {error}
+          </div>
         </div>
       )}
 

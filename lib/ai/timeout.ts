@@ -48,3 +48,30 @@ export function withTimeout<T>(
     }),
   ]).finally(() => clearTimeout(timer)) as Promise<T>;
 }
+
+/**
+ * Condenses a provider error into something a person can read.
+ *
+ * Gemini's 429 arrives as ~800 characters of JSON — quota metric names, help
+ * URLs, RetryInfo objects. Appending that verbatim to a friendly sentence (as an
+ * earlier version did) both overflowed the error panel and buried the one fact
+ * that matters: how long to wait.
+ *
+ * Keeps the first human sentence, pulls out the retry delay and the daily limit
+ * when present, and drops the JSON.
+ */
+export function condenseProviderError(msg: string, max = 220): string {
+  const retry = msg.match(/"retryDelay":"(\d+)s"/)?.[1];
+  const limit = msg.match(/limit:\s*(\d+)/)?.[1];
+
+  // Everything before the first "[" or "{" is the prose part.
+  let head = msg.split(/[[{]/)[0].trim();
+  head = head.replace(/\s+/g, " ");
+  if (head.length > max) head = head.slice(0, max).trim() + "…";
+
+  const extras: string[] = [];
+  if (limit) extras.push(`daily free-tier limit: ${limit} requests`);
+  if (retry) extras.push(`retry in ${retry}s`);
+
+  return extras.length ? `${head} (${extras.join("; ")})` : head;
+}

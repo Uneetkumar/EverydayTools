@@ -81,6 +81,11 @@ export default async function CurrencyPairPage({ params }: PairPageProps) {
       answer:
         "The providers refresh roughly once a day, and the exact timestamp is shown under the converter. That is appropriate for budgeting and comparing offers, but it is not a live trading feed.",
     },
+    // Corridor-specific questions come last so the shared, universally useful
+    // ones stay at the top where a first-time visitor looks. Nothing above was
+    // removed; these are additive, and they are what makes each corridor page
+    // substantially different from its eleven siblings.
+    ...def.extraFaqs,
   ];
 
   const breadcrumbSchema = generateBreadcrumbJsonLd([

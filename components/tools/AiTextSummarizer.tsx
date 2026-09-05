@@ -8,6 +8,7 @@ import { LocalAIProvider } from "@/lib/ai/providers/local-provider";
 import { GeminiProvider } from "@/lib/ai/providers/gemini-provider";
 import { AIProviderType, AIOutput as AIOutputType } from "@/lib/ai/types";
 import { AlignLeft, List, Sparkles } from "lucide-react";
+import { runAI } from "@/lib/ai/run";
 
 const SAMPLE_TEXT = `Artificial intelligence is transforming modern computing by shifting heavy computational workloads directly onto end-user client devices. Historically, web applications relied almost entirely on centralized cloud servers for natural language processing, image generation, and machine learning inference. However, modern client-side architectures leverage WebAssembly, WebGPU, and optimized quantized models running within the browser. This technological shift delivers three critical benefits: dramatic reductions in cloud server operating costs, zero latency responses with offline computing capabilities, and absolute user privacy since private data never leaves local device memory. By decoupling foundational utility tools from continuous cloud API calls, web platforms can offer free, unlimited, and sustainable software to millions of daily users without incurring prohibitive hosting fees.`;
 
@@ -22,6 +23,8 @@ export default function AiTextSummarizer() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [output, setOutput] = useState<AIOutputType | null>(null);
+  // Text as it streams in, before the final AIOutput lands.
+  const [partial, setPartial] = useState("");
 
   const handleRun = async () => {
     if (!input.trim()) {
@@ -31,14 +34,15 @@ export default function AiTextSummarizer() {
 
     setBusy(true);
     setError(null);
+    setPartial("");
 
     try {
       const activeProvider = provider === "local" ? localProvider : geminiProvider;
-      const res = await activeProvider.generate({
+      const res = await runAI(activeProvider, {
         text: input,
         task: "summarize",
         options: { length, bulletPoints },
-      });
+      }, setPartial);
       setOutput(res);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
@@ -52,6 +56,7 @@ export default function AiTextSummarizer() {
       <AIWorkspace
         provider={provider}
         onProviderChange={setProvider}
+        streamingText={partial}
         busy={busy}
         onRun={handleRun}
         runLabel="Summarize Text"

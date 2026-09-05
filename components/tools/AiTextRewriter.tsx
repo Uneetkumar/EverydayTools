@@ -8,6 +8,7 @@ import { LocalAIProvider } from "@/lib/ai/providers/local-provider";
 import { GeminiProvider } from "@/lib/ai/providers/gemini-provider";
 import { AIProviderType, AIOutput as AIOutputType } from "@/lib/ai/types";
 import { ToneType } from "@/lib/ai/nlp/rewriter";
+import { runAI } from "@/lib/ai/run";
 
 const SAMPLE_TEXT = `Hey boss, I'm gonna be a bit late to the morning sync because my train got stuck. Gonna try to jump on the call from my phone if I can. Let me know if we gotta reschedule our 1-on-1 talk for later today. Thanks a lot!`;
 
@@ -30,6 +31,8 @@ export default function AiTextRewriter() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [output, setOutput] = useState<AIOutputType | null>(null);
+  // Text as it streams in, before the final AIOutput lands.
+  const [partial, setPartial] = useState("");
 
   const handleRun = async () => {
     if (!input.trim()) {
@@ -39,14 +42,15 @@ export default function AiTextRewriter() {
 
     setBusy(true);
     setError(null);
+    setPartial("");
 
     try {
       const activeProvider = provider === "local" ? localProvider : geminiProvider;
-      const res = await activeProvider.generate({
+      const res = await runAI(activeProvider, {
         text: input,
         task: "rewrite",
         options: { tone },
-      });
+      }, setPartial);
       setOutput(res);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
@@ -60,6 +64,7 @@ export default function AiTextRewriter() {
       <AIWorkspace
         provider={provider}
         onProviderChange={setProvider}
+        streamingText={partial}
         busy={busy}
         onRun={handleRun}
         runLabel={`Rewrite as ${TONES.find((t) => t.id === tone)?.label || "Text"}`}

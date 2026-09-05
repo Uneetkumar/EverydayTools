@@ -1,7 +1,8 @@
 import { AIInput, AIOutput, AIProvider } from "../types";
 import { app, ensureAppCheck } from "@/lib/firebase";
 import { GEMINI_MODEL_CANDIDATES, isModelNotFound } from "../model-fallback";
-import { withTimeout, AI_TIMEOUTS, TimeoutError } from "../timeout";
+import { withTimeout, AI_TIMEOUTS, TimeoutError , condenseProviderError } from "../timeout";
+import { generationConfigFor } from "../generation-config";
 
 /**
  * Cloud AI via Firebase AI Logic, called straight from the browser.
@@ -35,6 +36,25 @@ import { withTimeout, AI_TIMEOUTS, TimeoutError } from "../timeout";
  */
 const MODEL = process.env.NEXT_PUBLIC_GEMINI_MODEL || "gemini-2.5-flash";
 
+/**
+ * One AI service handle for the page. `getAI` is cheap, but re-deriving it on
+ * every keystroke-triggered call is needless, and holding it keeps the
+ * dynamically imported chunk resident.
+ */
+let aiServicePromise: Promise<import("firebase/ai").AI> | null = null;
+
+async function getAiService() {
+  if (!aiServicePromise) {
+    aiServicePromise = (async () => {
+      const { getAI, GoogleAIBackend } = await import("firebase/ai");
+      // GoogleAIBackend is the Gemini Developer API — the backend with a free
+      // tier. VertexAIBackend would require the Blaze plan.
+      return getAI(app, { backend: new GoogleAIBackend() });
+    })();
+  }
+  return aiServicePromise;
+}
+
 export class GeminiProvider implements AIProvider {
   id = "gemini" as const;
   name = "Google Gemini 2.5 Flash (Cloud)";
@@ -57,17 +77,20 @@ export class GeminiProvider implements AIProvider {
       // Must precede the model call: AI Logic is enforced, so a request
       // without an App Check token is rejected before it reaches Gemini.
       await ensureAppCheck();
-      const { getAI, getGenerativeModel, GoogleAIBackend } = await import("firebase/ai");
-      // GoogleAIBackend is the Gemini Developer API — the backend with a free
-      // tier. VertexAIBackend would require the Blaze plan.
-      const ai = getAI(app, { backend: new GoogleAIBackend() });
+      const { getGenerativeModel } = await import("firebase/ai");
+      const ai = await getAiService();
       const prompt = buildTaskPrompt(input.task, input.text, input.options);
 
       let lastError: unknown = null;
       let answer: string | null = null;
       for (const candidate of GEMINI_MODEL_CANDIDATES) {
         try {
-          const generativeModel = getGenerativeModel(ai, { model: candidate });
+          const generativeModel = getGenerativeModel(ai, {
+            model: candidate,
+            // Disables the 2.5 "thinking" pass, which is the dominant latency
+            // cost for tasks that need no reasoning.
+            generationConfig: generationConfigFor(candidate),
+          });
           const result = await withTimeout(
             generativeModel.generateContent(prompt),
             AI_TIMEOUTS.text,
@@ -107,6 +130,70 @@ export class GeminiProvider implements AIProvider {
         charCount: text.length,
       },
     };
+  }
+
+  /**
+   * Streaming variant.
+   *
+   * Wall-clock time is unchanged; what changes is that the first words appear
+   * in about a second instead of the user watching a spinner until the whole
+   * answer is ready. For a paragraph of summary that is most of the perceived
+   * wait.
+   *
+   * The model fallback chain is deliberately NOT repeated here. A mid-stream
+   * model swap would mean showing text and then replacing it. If the stream
+   * fails, `runAI` falls back to the non-streaming path, which does try the
+   * whole chain.
+   */
+  async generateStream(
+    input: AIInput,
+    onChunk: (textSoFar: string) => void
+  ): Promise<AIOutput> {
+    const startTime = performance.now();
+    const model = GEMINI_MODEL_CANDIDATES[0];
+
+    try {
+      await ensureAppCheck();
+      const { getGenerativeModel } = await import("firebase/ai");
+      const ai = await getAiService();
+      const generativeModel = getGenerativeModel(ai, {
+        model,
+        generationConfig: generationConfigFor(model),
+      });
+
+      const { stream, response } = await withTimeout(
+        generativeModel.generateContentStream(
+          buildTaskPrompt(input.task, input.text, input.options)
+        ),
+        AI_TIMEOUTS.text,
+        `Gemini stream (${model})`
+      );
+
+      let acc = "";
+      for await (const chunk of stream) {
+        const piece = chunk.text();
+        if (piece) {
+          acc += piece;
+          onChunk(acc);
+        }
+      }
+
+      // `response` resolves when the stream completes and carries the
+      // aggregated result, which is authoritative over hand-accumulated text.
+      const final = (await response).text().trim() || acc.trim();
+      return {
+        result: final,
+        provider: "gemini",
+        modelUsed: model,
+        elapsedMs: Math.round(performance.now() - startTime),
+        metrics: {
+          wordCount: final.split(/\s+/).filter(Boolean).length,
+          charCount: final.length,
+        },
+      };
+    } catch (e) {
+      throw new Error(describeAiError(e));
+    }
   }
 }
 
@@ -154,7 +241,8 @@ function describeAiError(e: unknown): string {
   // it reported "AI Logic is not enabled" for a plain model-not-found — sending
   // the reader to the console to re-enable something that was already on.
   // A guess dressed up as a diagnosis is worse than no diagnosis.
-  const detail = ` (${msg})`;
+  // Condensed, not raw: a verbatim provider error is JSON and overflows.
+  const detail = ` (${condenseProviderError(msg)})`;
 
   // Genuinely disabled: the platform says so in these exact terms. 404 is NOT
   // in this list — on this API a 404 almost always means the *model name* is

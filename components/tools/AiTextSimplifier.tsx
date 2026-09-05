@@ -8,6 +8,7 @@ import { LocalAIProvider } from "@/lib/ai/providers/local-provider";
 import { GeminiProvider } from "@/lib/ai/providers/gemini-provider";
 import { AIProviderType, AIOutput as AIOutputType } from "@/lib/ai/types";
 import { CheckCircle2, FileText, Zap } from "lucide-react";
+import { runAI } from "@/lib/ai/run";
 
 const SAMPLE_TEXT = `Notwithstanding the aforementioned stipulations, the contractor shall endeavor to expeditiously facilitate the dissemination of all relevant documentation subsequent to the verification of compliance. In the event that extraneous impediments transpire, the party shall implement remedial measures to mitigate deleterious repercussions.`;
 
@@ -20,6 +21,8 @@ export default function AiTextSimplifier() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [output, setOutput] = useState<AIOutputType | null>(null);
+  // Text as it streams in, before the final AIOutput lands.
+  const [partial, setPartial] = useState("");
 
   const handleRun = async () => {
     if (!input.trim()) {
@@ -29,13 +32,14 @@ export default function AiTextSimplifier() {
 
     setBusy(true);
     setError(null);
+    setPartial("");
 
     try {
       const activeProvider = provider === "local" ? localProvider : geminiProvider;
-      const res = await activeProvider.generate({
+      const res = await runAI(activeProvider, {
         text: input,
         task: "simplify",
-      });
+      }, setPartial);
       setOutput(res);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : String(err));
@@ -49,6 +53,7 @@ export default function AiTextSimplifier() {
       <AIWorkspace
         provider={provider}
         onProviderChange={setProvider}
+        streamingText={partial}
         busy={busy}
         onRun={handleRun}
         runLabel="Simplify to Plain English"
