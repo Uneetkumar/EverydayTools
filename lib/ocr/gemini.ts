@@ -158,8 +158,10 @@ export function describeGeminiError(e: unknown): string {
   const detail = ` (${condenseProviderError(msg)})`;
   if (/API has not been used|SERVICE_DISABLED|has not been enabled/i.test(msg))
     return `Firebase AI Logic is not enabled for this project. Enable it in the Firebase console, then try again.${detail}`;
-  if (/not found|NOT_FOUND|404/i.test(msg))
-    return `The model "${MODEL}" was not found for this project. It may not be available on your plan or region.${detail}`;
+  if (/not found|NOT_FOUND|404/i.test(msg)) {
+    const failed = msg.match(/models\/([a-z0-9.-]+):/i)?.[1] ?? MODEL;
+    return `The model "${failed}" is not available to this project.${detail}`;
+  }
   if (/app.?check|unauthorized|403|PERMISSION_DENIED/i.test(msg))
     return `The request was rejected before reaching the model — usually App Check or an API restriction.${detail}`;
   if (/quota|RESOURCE_EXHAUSTED|429/i.test(msg))

@@ -20,6 +20,10 @@ import {
   Camera,
   Table,
   Link as LinkIcon,
+  QrCode,
+  ScanLine,
+  Barcode,
+  Scan,
 } from "lucide-react";
 
 interface RelatedToolsProps {
@@ -43,6 +47,10 @@ const ICON_MAP: Record<string, React.ElementType> = {
   Camera,
   Table,
   Link: LinkIcon,
+  QrCode,
+  ScanLine,
+  Barcode,
+  Scan,
 };
 
 export default function RelatedTools({ tools }: RelatedToolsProps) {

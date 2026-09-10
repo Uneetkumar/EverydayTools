@@ -52,6 +52,9 @@ interface ToolShellProps {
  */
 const WIDE_LAYOUT_TOOLS = new Set([
   "qr-code-generator",
+  "qr-code-scanner",
+  "barcode-generator",
+  "barcode-scanner",
   "crop-image",
   "watermark-remover",
   "image-compressor",

@@ -140,57 +140,84 @@ export class GeminiProvider implements AIProvider {
    * answer is ready. For a paragraph of summary that is most of the perceived
    * wait.
    *
-   * The model fallback chain is deliberately NOT repeated here. A mid-stream
-   * model swap would mean showing text and then replacing it. If the stream
-   * fails, `runAI` falls back to the non-streaming path, which does try the
-   * whole chain.
+   * The model chain IS walked here, but only up to the first emitted token.
+   *
+   * An earlier version pinned this to `CANDIDATES[0]` on the reasoning that a
+   * mid-stream model swap would show text and then replace it. That reasoning
+   * only holds *after* output has started. A model that is unavailable fails
+   * on the opening request, before a single token exists, and refusing to try
+   * the next id there meant streaming permanently failed on a project whose
+   * first-choice model simply is not offered — while the non-streaming path
+   * worked fine by falling through.
+   *
+   * So: retry freely until the first chunk arrives; never after.
    */
   async generateStream(
     input: AIInput,
     onChunk: (textSoFar: string) => void
   ): Promise<AIOutput> {
     const startTime = performance.now();
-    const model = GEMINI_MODEL_CANDIDATES[0];
+    const prompt = buildTaskPrompt(input.task, input.text, input.options);
 
     try {
       await ensureAppCheck();
       const { getGenerativeModel } = await import("firebase/ai");
       const ai = await getAiService();
-      const generativeModel = getGenerativeModel(ai, {
-        model,
-        generationConfig: generationConfigFor(model),
-      });
 
-      const { stream, response } = await withTimeout(
-        generativeModel.generateContentStream(
-          buildTaskPrompt(input.task, input.text, input.options)
-        ),
-        AI_TIMEOUTS.text,
-        `Gemini stream (${model})`
-      );
+      let lastError: unknown = null;
 
-      let acc = "";
-      for await (const chunk of stream) {
-        const piece = chunk.text();
-        if (piece) {
-          acc += piece;
-          onChunk(acc);
+      for (const candidate of GEMINI_MODEL_CANDIDATES) {
+        // Tracks whether this attempt has shown the user anything. Once it has,
+        // switching models would rewrite text already on screen, so we stop.
+        let emitted = false;
+        try {
+          const generativeModel = getGenerativeModel(ai, {
+            model: candidate,
+            generationConfig: generationConfigFor(candidate),
+          });
+
+          const { stream, response } = await withTimeout(
+            generativeModel.generateContentStream(prompt),
+            AI_TIMEOUTS.text,
+            `Gemini stream (${candidate})`
+          );
+
+          let acc = "";
+          for await (const chunk of stream) {
+            const piece = chunk.text();
+            if (piece) {
+              acc += piece;
+              emitted = true;
+              onChunk(acc);
+            }
+          }
+
+          // `response` resolves when the stream completes and carries the
+          // aggregated result, authoritative over hand-accumulated text.
+          const final = (await response).text().trim() || acc.trim();
+          return {
+            result: final,
+            provider: "gemini",
+            modelUsed: candidate,
+            elapsedMs: Math.round(performance.now() - startTime),
+            metrics: {
+              wordCount: final.split(/\s+/).filter(Boolean).length,
+              charCount: final.length,
+            },
+          };
+        } catch (e) {
+          lastError = e;
+          // Past the first token there is no safe recovery: the user is
+          // reading a partial answer and a different model would contradict it.
+          if (emitted) throw e;
+          if (e instanceof TimeoutError) throw e;
+          if (!isModelNotFound(e)) throw e;
+          // Unavailable model, nothing shown yet — try the next id.
+          onChunk("");
         }
       }
 
-      // `response` resolves when the stream completes and carries the
-      // aggregated result, which is authoritative over hand-accumulated text.
-      const final = (await response).text().trim() || acc.trim();
-      return {
-        result: final,
-        provider: "gemini",
-        modelUsed: model,
-        elapsedMs: Math.round(performance.now() - startTime),
-        metrics: {
-          wordCount: final.split(/\s+/).filter(Boolean).length,
-          charCount: final.length,
-        },
-      };
+      throw lastError ?? new Error("No Gemini model responded.");
     } catch (e) {
       throw new Error(describeAiError(e));
     }
@@ -250,8 +277,17 @@ function describeAiError(e: unknown): string {
   if (/API has not been used|SERVICE_DISABLED|has not been enabled/i.test(msg))
     return `Firebase AI Logic is not enabled for this project. Enable it in the Firebase console, then retry.${detail}`;
 
-  if (/not found|NOT_FOUND|404/i.test(msg))
-    return `The model "${MODEL}" was not found for this project. It may not be available on your plan or in your region — try another model id.${detail}`;
+  if (/not found|NOT_FOUND|404/i.test(msg)) {
+    // Name the model that actually failed, not the module default. Reporting
+    // `MODEL` meant every failure blamed "gemini-2.5-flash" even when a later
+    // candidate was the one that broke — the same misattribution as the old
+    // "404 means the service is disabled" bug, and just as misleading.
+    const failed = msg.match(/models\/([a-z0-9.-]+):/i)?.[1] ?? MODEL;
+    const others = GEMINI_MODEL_CANDIDATES.filter((m) => m !== failed);
+    return `The model "${failed}" is not available to this project${
+      others.length ? ` (also tried: ${others.join(", ")})` : ""
+    }.${detail}`;
+  }
 
   if (/app.?check|unauthorized|403|PERMISSION_DENIED/i.test(msg))
     return `The request was rejected before reaching the model. This is usually App Check or an API restriction.${detail}`;

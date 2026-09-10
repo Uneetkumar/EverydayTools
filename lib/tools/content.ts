@@ -601,6 +601,168 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
     ],
   },
 
+  "qr-code-scanner": {
+    intro:
+      "This client-side QR code scanner reads and decodes QR codes directly inside your web browser. Using your device camera or image uploads, it automatically parses the contents — transforming raw payloads into structured contact cards (vCards), Wi-Fi network credentials, clickable URLs, calendar events, and payment links with zero server uploads.",
+    howTo: {
+      title: "How to scan and extract QR code data",
+      steps: [
+        "Select your preferred scanning mode: 'Upload Image or Paste' to analyze a saved photo or screenshot, or 'Live Camera Scanner' to point your camera at a physical QR code.",
+        "When using camera mode, align the QR code inside the viewfinder box. The scanner recognizes the code automatically in milliseconds.",
+        "Review the structured extracted data. Click 'Save to Phone Contacts' for vCards, 'Copy Wi-Fi Password' for networks, or 'Open Website' for web URLs.",
+        "Switch to the 'Raw Payload' tab if you want to inspect or copy the exact underlying string encoded inside the QR matrix.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Extracting contact details from business cards",
+        body:
+          "Easily scan vCard QR codes on printed business cards, badges, and exhibition stands. Download the parsed .vcf file to import all phone numbers, email addresses, and job titles directly into your contacts.",
+      },
+      {
+        title: "Revealing hidden Wi-Fi credentials",
+        body:
+          "Scan hospitality or office Wi-Fi QR codes to view the network SSID, authentication type, and password in plain text, making it easy to share credentials with non-camera devices.",
+      },
+      {
+        title: "Auditing QR code security and destination URLs",
+        body:
+          "Inspect suspicious or unknown QR codes safely without automatically opening the browser. Review the destination link, protocol, and domain before choosing to open it.",
+      },
+    ],
+    tips: [
+      "Ensure sufficient lighting when scanning physical codes with your webcam or phone camera.",
+      "If scanning a crumpled or glossy paper QR code, angle the device slightly to eliminate harsh light glare.",
+      "You can paste screenshots directly into the scanner using Ctrl+V on Windows or Cmd+V on Mac.",
+      "All image decoding runs locally in browser WebAssembly and JavaScript — no camera video or image data is ever uploaded.",
+    ],
+    extraFaqs: [
+      {
+        question: "Is my camera stream or uploaded photo sent to any server?",
+        answer:
+          "No. All image processing and barcode extraction happen entirely inside your browser using client-side JavaScript. TabBench never receives, stores, or transmits your photos or video feed.",
+      },
+      {
+        question: "Can this tool read inverted (white on black) QR codes?",
+        answer:
+          "Yes. The decoding engine tests both standard dark-on-light and inverted light-on-dark orientations automatically.",
+      },
+      {
+        question: "What types of QR codes can be automatically parsed?",
+        answer:
+          "The extractor parses standard website URLs, vCard 3.0 business cards, Wi-Fi networks (WPA/WEP/Open), iCal calendar events, email links (mailto and MATMSG), phone calls (tel), SMS messages, UPI payments, and JSON data.",
+      },
+    ],
+  },
+
+  "barcode-generator": {
+    intro:
+      "Barcodes encode numbers and text into parallel lines with varying widths and spacings, readable by laser scanners and camera readers across retail, logistics, and warehousing. This generator creates crisp, high-precision barcodes directly in your browser with automatic check-digit calculation and vector SVG export.",
+    howTo: {
+      title: "How to generate custom barcodes",
+      steps: [
+        "Choose the required barcode symbology standard: Code 128 for shipping & logistics, EAN-13 for international retail, UPC-A for US/Canada retail, or Code 39 for industrial assets.",
+        "Enter your barcode value. If using EAN-13 or UPC-A, you can enter the initial digits and click 'Apply Check Digit' to let the system compute the mandatory check digit automatically.",
+        "Adjust bar height, width, quiet zone margins, and toggle human-readable text below the barcode.",
+        "Download your barcode as a high-resolution PNG for digital use or vector SVG for crisp, commercial print packaging.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Retail product packaging",
+        body:
+          "Generate EAN-13 or UPC-A barcodes for retail items, books, food packaging, and consumer goods compliant with point-of-sale checkout scanners.",
+      },
+      {
+        title: "Warehouse inventory & logistics tracking",
+        body:
+          "Produce Code 128 barcodes for SKU inventory labels, pallet routing tags, bin locations, and shipping manifest tracking.",
+      },
+      {
+        title: "Outer shipping carton marking",
+        body:
+          "Generate 14-digit ITF-14 barcodes engineered specifically to scan reliably when printed on coarse brown corrugated cardboard cartons.",
+      },
+    ],
+    tips: [
+      "Always maintain a clean quiet zone (margin) on both ends of the barcode — without margins, optical scanners cannot detect where the code begins.",
+      "Always export as vector SVG for print production. Bitmap PNGs scaled up in printing software can blur bar edges and cause scan failures.",
+      "High contrast is essential: always print dark bars (black or dark navy) on a clean white or light reflective background.",
+      "Test printed sample barcodes with a physical scanner or phone scanner app before beginning large print runs.",
+    ],
+    extraFaqs: [
+      {
+        question: "What is the difference between Code 128 and EAN-13?",
+        answer:
+          "Code 128 can encode letters, numbers, and symbols, making it the dominant choice for logistics, courier labels, and asset tags. EAN-13 is strictly numeric (13 digits) and is reserved for retail point-of-sale scanning globally.",
+      },
+      {
+        question: "How does the check digit calculation work?",
+        answer:
+          "Standards like EAN-13 and UPC-A use a modulo-10 algorithm with alternating weights (1 and 3). The generator computes this mathematically to ensure the final code passes scanner parity checks.",
+      },
+      {
+        question: "Can I print barcode labels directly from the browser?",
+        answer:
+          "Yes. Click 'Print Label' to open an optimized print dialog that renders the vector barcode cleanly on your local desktop or thermal label printer.",
+      },
+    ],
+  },
+
+  "barcode-scanner": {
+    intro:
+      "This client-side Barcode Scanner reads 1D linear barcodes and 2D matrix symbologies in real time using your device camera or uploaded image files. Ideal for warehouse inventory checks, retail product lookups, and batch scanning without dedicated handheld hardware.",
+    howTo: {
+      title: "How to scan and read barcodes",
+      steps: [
+        "Select 'Upload Image or Paste' to drop a photo or screenshot, or 'Live Camera Scanner' for continuous real-time reading.",
+        "Hold the barcode level within the viewfinder. The animated laser guide helps align horizontal barcodes for instant detection.",
+        "Once scanned, view the detected barcode standard, decoded value, and click 'Search Product Info' to check retail item details on Google.",
+        "Enable 'Batch Scan Mode' if you need to scan a succession of barcodes for inventory counting, then export the entire list to CSV.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Retail product lookup",
+        body:
+          "Scan EAN-13 or UPC barcodes on retail items to immediately look up product details, pricing, reviews, and specifications online.",
+      },
+      {
+        title: "Warehouse inventory & stock audits",
+        body:
+          "Use batch scan mode on mobile or tablet to scan boxes, assets, and bin tags in sequence without stopping, exporting the final scan manifest as CSV.",
+      },
+      {
+        title: "Shipping manifest verification",
+        body:
+          "Verify incoming and outgoing courier tracking numbers encoded in Code 128 or Code 39 format directly on your laptop webcam.",
+      },
+    ],
+    tips: [
+      "Hold the barcode perpendicular to the scanning line for the fastest read rates.",
+      "If scanning with a smartphone, hold the camera roughly 15–20 cm away to allow the lens to focus crisply.",
+      "Avoid strong reflections or glossy glare over the black bars by tilting the package slightly.",
+      "The scanner supports multi-symbology auto-detection, meaning you do not need to configure the barcode format ahead of time.",
+    ],
+    extraFaqs: [
+      {
+        question: "Which 1D and 2D barcode types are supported?",
+        answer:
+          "The scanner detects EAN-13, EAN-8, UPC-A, UPC-E, Code 128, Code 39, Interleaved 2 of 5 (ITF), Codabar, QR Code, and Data Matrix.",
+      },
+      {
+        question: "How does batch scanning work?",
+        answer:
+          "When Batch Scan Mode is turned on, the camera stays active after each scan and appends newly detected items to a list with timestamps, preventing accidental duplicates and offering a 1-click CSV download.",
+      },
+      {
+        question: "Is internet access required to scan barcodes?",
+        answer:
+          "No. All barcode recognition runs 100% locally in your browser. Internet access is only utilized if you choose to click the external product search link.",
+      },
+    ],
+  },
+
   "image-compressor": {
     intro:
       "Large images are the single biggest cause of slow pages and rejected uploads. Compressing an image trades a small amount of visual fidelity for a large reduction in file size, and for photographs the trade is usually invisible — a 4 MB phone photo commonly drops below 400 KB with no difference you can see at normal viewing size. This compressor uses the browser's own canvas encoder, so your images are never uploaded anywhere.",

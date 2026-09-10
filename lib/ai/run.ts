@@ -28,10 +28,19 @@ export async function runAI(
       onPartial("");
       try {
         return await provider.generate(input);
-      } catch {
-        // Report the streaming failure: it is the one the user actually hit,
-        // and the retry usually fails for the same underlying reason.
-        throw streamError;
+      } catch (fallbackError) {
+        // Report the FALLBACK's error, not the stream's.
+        //
+        // The earlier version rethrew `streamError` on the reasoning that it
+        // was "the one the user actually hit". In practice that hid the real
+        // blocker: a stream failing on an unavailable model, then a fallback
+        // failing on an exhausted daily quota, surfaced as "model not found"
+        // and sent the reader chasing a model id when the actual problem was
+        // that they were out of requests.
+        //
+        // The fallback ran second and tried every model, so its error is the
+        // more complete account of why nothing worked.
+        throw fallbackError;
       }
     }
   }

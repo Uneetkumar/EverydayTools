@@ -31,6 +31,9 @@ const JwtDecoder = dynamic(() => import("@/components/tools/JwtDecoder"), { load
 const UuidGenerator = dynamic(() => import("@/components/tools/UuidGenerator"), { loading: ToolLoading });
 const UrlEncoderDecoder = dynamic(() => import("@/components/tools/UrlEncoderDecoder"), { loading: ToolLoading });
 const QrCodeGenerator = dynamic(() => import("@/components/tools/QrCodeGenerator"), { loading: ToolLoading });
+const QrCodeScanner = dynamic(() => import("@/components/tools/QrCodeScanner"), { loading: ToolLoading });
+const BarcodeGenerator = dynamic(() => import("@/components/tools/BarcodeGenerator"), { loading: ToolLoading });
+const BarcodeScanner = dynamic(() => import("@/components/tools/BarcodeScanner"), { loading: ToolLoading });
 const ImageCompressor = dynamic(() => import("@/components/tools/ImageCompressor"), { loading: ToolLoading });
 const PdfMerge = dynamic(() => import("@/components/tools/PdfMerge"), { loading: ToolLoading });
 const PdfCompressor = dynamic(() => import("@/components/tools/PdfCompressor"), { loading: ToolLoading });
@@ -222,6 +225,12 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <UrlEncoderDecoder />;
       case "qr-code-generator":
         return <QrCodeGenerator />;
+      case "qr-code-scanner":
+        return <QrCodeScanner />;
+      case "barcode-generator":
+        return <BarcodeGenerator />;
+      case "barcode-scanner":
+        return <BarcodeScanner />;
       case "pdf-merge":
         return <PdfMerge />;
       case "pdf-compressor":

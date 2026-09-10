@@ -444,15 +444,16 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     "shortName": "QR Code Generator",
     "category": "image-media",
     "categoryName": "Image & Media",
-    "description": "Generate high-resolution custom QR codes for URLs, text, Wi-Fi passwords, emails, and phone numbers. Download as PNG or SVG.",
-    "longDescription": "Create clean QR codes instantly in your browser. Customize colors, error correction level, and size. Download high-res PNG for print or web.",
+    "description": "Generate high-resolution custom QR codes for URLs, vCards, Wi-Fi passwords, emails, phone calls, and events. Download as PNG or SVG.",
+    "longDescription": "Create clean QR codes instantly in your browser. Customize colors, error correction level, frame templates, and size. Download high-res PNG or SVG vector for print or web.",
     "iconName": "QrCode",
-    "metaTitle": "QR Code Generator | TabBench",
-    "metaDescription": "Create custom QR codes for URLs, WiFi networks, text, and contact cards. Customize colors, error correction, and download crisp PNGs.",
+    "metaTitle": "QR Code Generator | Free Custom QR Maker | TabBench",
+    "metaDescription": "Create custom QR codes for URLs, vCards, WiFi networks, phone calls, and calendar events. Customize colors, logos, frames, and download crisp PNGs.",
     "keywords": [
       "qr code generator",
       "create qr code",
       "custom qr code generator",
+      "vcard qr code generator",
       "free qr code maker",
       "download qr code png",
       "generate qr online",
@@ -461,21 +462,165 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "barcode qr maker"
     ],
     "features": [
-      "URL, Text, and WiFi modes",
-      "Custom foreground & background colors",
-      "Download as PNG",
-      "High error correction"
+      "URL, vCard 3.0, Wi-Fi, Phone, SMS, and Event modes",
+      "Custom foreground & background colors with contrast validator",
+      "High-res PNG (up to 2048px) and vector SVG exports",
+      "Center logo and presentation frame templates",
+      "100% private client-side browser generation"
     ],
     "faqs": [
       {
         "question": "Do these QR codes expire?",
         "answer": "No, these are standard static QR codes and will work indefinitely."
+      },
+      {
+        "question": "What information can I store in a vCard QR code?",
+        "answer": "You can store full contact details including first and last name, company, job title, work and mobile phone numbers, email, website, and physical address."
       }
     ],
     "relatedToolSlugs": [
-      "image-compressor",
-      "password-generator",
-      "pdf-merge"
+      "qr-code-scanner",
+      "barcode-generator",
+      "barcode-scanner"
+    ],
+    "isPopular": true
+  },
+  "qr-code-scanner": {
+    "slug": "qr-code-scanner",
+    "name": "QR Code Scanner & Data Extractor",
+    "shortName": "QR Scanner",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Scan QR codes from camera or upload images. Extract URLs, vCard contact cards, Wi-Fi passwords, and calendar events instantly.",
+    "longDescription": "Extract and decode data from any QR code completely client-side in your browser. Scan live using your device camera, drag and drop image files, or paste screenshots from your clipboard. Automatically parses vCards, Wi-Fi networks, links, events, and plain text with 1-click export.",
+    "iconName": "ScanLine",
+    "metaTitle": "QR Code Scanner & Data Extractor | TabBench",
+    "metaDescription": "Scan and decode QR codes from camera or images client-side. Extract vCards, Wi-Fi passwords, URLs, and events with zero uploads.",
+    "keywords": [
+      "qr code scanner",
+      "scan qr code",
+      "qr code reader",
+      "qr data extractor",
+      "read qr code online",
+      "qr scanner camera",
+      "extract vcard from qr",
+      "decode wifi qr code",
+      "free qr scanner"
+    ],
+    "features": [
+      "Live camera scanner with rear/front camera and flashlight support",
+      "Upload PNG, JPG, WebP, or SVG images with drag & drop",
+      "Paste QR code directly from clipboard (Ctrl+V)",
+      "Auto-extracts vCards with one-click .vcf address book download",
+      "Parses Wi-Fi credentials with one-click password copy",
+      "100% client-side privacy - no server uploads"
+    ],
+    "faqs": [
+      {
+        "question": "Does this QR scanner upload my photos or camera feed?",
+        "answer": "No. All camera frames and image files are analyzed locally inside your browser using JavaScript and WebAssembly. Nothing is ever transmitted to a server."
+      },
+      {
+        "question": "Can I save extracted vCard contacts directly to my phone?",
+        "answer": "Yes. When a vCard is detected, clicking 'Save to Phone Contacts' downloads a standard .vcf file that opens directly in iOS Contacts, Android Contacts, or Outlook."
+      }
+    ],
+    "relatedToolSlugs": [
+      "qr-code-generator",
+      "barcode-scanner",
+      "barcode-generator"
+    ],
+    "isPopular": true
+  },
+  "barcode-generator": {
+    "slug": "barcode-generator",
+    "name": "Barcode Generator",
+    "shortName": "Barcode Generator",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Generate custom barcodes in Code 128, EAN-13, UPC-A, Code 39, and ITF-14 formats. Download print-ready high-res PNG or vector SVG.",
+    "longDescription": "Create industry-standard barcodes directly in your browser. Supports EAN-13, UPC-A, Code 128, Code 39, ITF-14, and Pharmacode with automatic checksum computation, custom dimensions, color customization, and instant print layout.",
+    "iconName": "Barcode",
+    "metaTitle": "Barcode Generator | Free Online Barcode Maker | TabBench",
+    "metaDescription": "Create free standard barcodes online in Code 128, EAN-13, UPC, Code 39, and ITF-14. Customize size and colors, then download high-res PNG or SVG.",
+    "keywords": [
+      "barcode generator",
+      "barcode maker",
+      "create barcode online",
+      "free barcode generator",
+      "code 128 generator",
+      "ean 13 barcode generator",
+      "upc generator",
+      "printable barcode maker"
+    ],
+    "features": [
+      "Supports Code 128, EAN-13, UPC-A, Code 39, ITF-14, and Pharmacode",
+      "Automatic check digit and checksum calculation",
+      "Customizable bar height, width, margin, and typography",
+      "High-resolution PNG up to 4x scaling and scalable vector SVG",
+      "Instant print barcode label sheet layout",
+      "100% private browser client-side generation"
+    ],
+    "faqs": [
+      {
+        "question": "What is the difference between Code 128 and EAN-13?",
+        "answer": "Code 128 is an alphanumeric standard used globally in shipping, inventory, and logistics. EAN-13 is a numeric-only 13-digit standard specifically designed for retail point-of-sale scanning worldwide."
+      },
+      {
+        "question": "How do I print barcodes at high quality?",
+        "answer": "For best print results on commercial packaging and labels, download the SVG vector format which scales losslessly to any DPI without blurring."
+      }
+    ],
+    "relatedToolSlugs": [
+      "barcode-scanner",
+      "qr-code-generator",
+      "qr-code-scanner"
+    ],
+    "isPopular": true
+  },
+  "barcode-scanner": {
+    "slug": "barcode-scanner",
+    "name": "Barcode Scanner & Reader",
+    "shortName": "Barcode Scanner",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Scan and read 1D and 2D barcodes using your camera or image uploads. Recognizes EAN-13, UPC, Code 128, Code 39, and more.",
+    "longDescription": "Scan retail, shipping, and industrial barcodes client-side in real-time. Use your web camera or mobile camera, upload barcode photos, or paste from clipboard. Includes instant product lookup, audio confirmation, and batch scanning export to CSV.",
+    "iconName": "Scan",
+    "metaTitle": "Barcode Scanner & Reader Online | TabBench",
+    "metaDescription": "Scan 1D and 2D barcodes online using your camera or image files. Fast, private reader for EAN, UPC, Code 128, and Code 39 with batch export.",
+    "keywords": [
+      "barcode scanner",
+      "online barcode scanner",
+      "scan barcode with camera",
+      "barcode reader",
+      "read ean 13",
+      "upc barcode scanner",
+      "free barcode reader",
+      "batch barcode scanner"
+    ],
+    "features": [
+      "Live camera scanner with instant barcode symbology detection",
+      "Supports EAN-13, EAN-8, UPC-A, Code 128, Code 39, ITF, and more",
+      "Upload image files or paste screenshots directly (Ctrl+V)",
+      "Continuous batch scanning mode with CSV and text export",
+      "Instant product information search on Google",
+      "Runs entirely in your browser with complete privacy"
+    ],
+    "faqs": [
+      {
+        "question": "Which barcode formats can this scanner read?",
+        "answer": "It reads all major 1D linear barcodes including EAN-13, EAN-8, UPC-A, UPC-E, Code 128, Code 39, ITF, and Codabar, as well as 2D codes like QR Code and Data Matrix."
+      },
+      {
+        "question": "Can I scan multiple barcodes in a warehouse or store?",
+        "answer": "Yes. Enable 'Batch Scan Mode' to scan items continuously one after another. The scanner collects each barcode with timestamps and lets you export the full list as a CSV file."
+      }
+    ],
+    "relatedToolSlugs": [
+      "barcode-generator",
+      "qr-code-scanner",
+      "qr-code-generator"
     ],
     "isPopular": true
   },

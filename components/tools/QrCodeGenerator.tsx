@@ -29,10 +29,29 @@ import {
   User,
   ArrowRightLeft,
   X,
+  Phone,
+  MessageSquareText,
+  Calendar,
+  MapPin,
+  CreditCard,
+  Building,
+  Briefcase,
+  Map,
 } from "lucide-react";
 import confetti from "canvas-confetti";
 
-type QrTab = "url" | "text" | "wifi" | "email" | "whatsapp" | "vcard";
+type QrTab =
+  | "url"
+  | "vcard"
+  | "wifi"
+  | "phone"
+  | "sms"
+  | "email"
+  | "whatsapp"
+  | "event"
+  | "geo"
+  | "payment"
+  | "text";
 type FrameStyle = "none" | "badge" | "card" | "phone";
 type ErrorLevel = "L" | "M" | "Q" | "H";
 
@@ -111,10 +130,48 @@ export default function QrCodeGenerator() {
   const [waMsg, setWaMsg] = usePersistentState<string>("qr_wa_msg", "Hi! I found your QR code on TabBench.");
 
   // vCard / Contact
-  const [vcardName, setVcardName] = useState<string>("Alex Morgan");
-  const [vcardOrg, setVcardOrg] = useState<string>("TabBench");
-  const [vcardPhone, setVcardPhone] = useState<string>("+1 555-0199");
-  const [vcardEmail, setVcardEmail] = useState<string>("alex@example.com");
+  const [vcardFirstName, setVcardFirstName] = usePersistentState<string>("qr_vc_fname", "Alex");
+  const [vcardLastName, setVcardLastName] = usePersistentState<string>("qr_vc_lname", "Morgan");
+  const [vcardOrg, setVcardOrg] = usePersistentState<string>("qr_vc_org", "TabBench Inc.");
+  const [vcardTitle, setVcardTitle] = usePersistentState<string>("qr_vc_title", "Senior Product Designer");
+  const [vcardCell, setVcardCell] = usePersistentState<string>("qr_vc_cell", "+1 (555) 234-5678");
+  const [vcardPhone, setVcardPhone] = usePersistentState<string>("qr_vc_phone", "+1 (555) 876-5432");
+  const [vcardEmail, setVcardEmail] = usePersistentState<string>("qr_vc_email", "alex@example.com");
+  const [vcardUrl, setVcardUrl] = usePersistentState<string>("qr_vc_url", "https://tabbench.com");
+  const [vcardStreet, setVcardStreet] = usePersistentState<string>("qr_vc_street", "100 Pine Street, Suite 500");
+  const [vcardCity, setVcardCity] = usePersistentState<string>("qr_vc_city", "San Francisco");
+  const [vcardState, setVcardState] = usePersistentState<string>("qr_vc_state", "CA");
+  const [vcardZip, setVcardZip] = usePersistentState<string>("qr_vc_zip", "94111");
+  const [vcardCountry, setVcardCountry] = usePersistentState<string>("qr_vc_country", "USA");
+  const [vcardNote, setVcardNote] = usePersistentState<string>("qr_vc_note", "Connect with me for developer tools and workflow inquiries.");
+
+  // Direct Phone Call
+  const [phoneNum, setPhoneNum] = usePersistentState<string>("qr_phone_num", "+15552345678");
+
+  // SMS Text Message
+  const [smsPhone, setSmsPhone] = usePersistentState<string>("qr_sms_phone", "+15552345678");
+  const [smsMessage, setSmsMessage] = usePersistentState<string>("qr_sms_msg", "Hi! I got your contact info via QR code.");
+
+  // Calendar Event
+  const [eventTitle, setEventTitle] = usePersistentState<string>("qr_ev_title", "Product Roadmap Discussion");
+  const [eventLocation, setEventLocation] = usePersistentState<string>("qr_ev_loc", "Main Conference Room & Online");
+  const [eventStart, setEventStart] = usePersistentState<string>("qr_ev_start", "2026-10-15T09:00");
+  const [eventEnd, setEventEnd] = usePersistentState<string>("qr_ev_end", "2026-10-15T10:30");
+  const [eventDesc, setEventDesc] = usePersistentState<string>("qr_ev_desc", "Review quarterly features and key roadmap milestones.");
+
+  // Geo Location
+  const [geoLat, setGeoLat] = usePersistentState<string>("qr_geo_lat", "37.7749");
+  const [geoLng, setGeoLng] = usePersistentState<string>("qr_geo_lng", "-122.4194");
+  const [geoQuery, setGeoQuery] = usePersistentState<string>("qr_geo_query", "Market Street, San Francisco");
+
+  // Payment (UPI, Bitcoin, PayPal)
+  const [payType, setPayType] = usePersistentState<"upi" | "bitcoin" | "paypal">("qr_pay_type", "upi");
+  const [payUpiVpa, setPayUpiVpa] = usePersistentState<string>("qr_pay_upi_vpa", "merchant@bank");
+  const [payUpiName, setPayUpiName] = usePersistentState<string>("qr_pay_upi_name", "TabBench Store");
+  const [payUpiAmount, setPayUpiAmount] = usePersistentState<string>("qr_pay_upi_amt", "150.00");
+  const [payBtcAddress, setPayBtcAddress] = usePersistentState<string>("qr_pay_btc_addr", "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa");
+  const [payBtcAmount, setPayBtcAmount] = usePersistentState<string>("qr_pay_btc_amt", "0.0025");
+  const [payPaypalUser, setPayPaypalUser] = usePersistentState<string>("qr_pay_pp_user", "tabbench");
 
   // Styling & Customization
   const [fgColor, setFgColor] = usePersistentState<string>("qr_fg", "#0f172a");
@@ -142,6 +199,16 @@ export default function QrCodeGenerator() {
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Helper for formatting RFC 5545 iCalendar dates
+  const formatIcalDate = (dtStr: string): string => {
+    if (!dtStr) return "";
+    const clean = dtStr.replace(/[-:]/g, "");
+    if (clean.includes("T")) {
+      return clean.length === 13 ? `${clean}00` : clean;
+    }
+    return clean;
+  };
+
   // Compute standard payload string
   const payload = useMemo((): string => {
     switch (tab) {
@@ -150,20 +217,132 @@ export default function QrCodeGenerator() {
         return url.startsWith("http://") || url.startsWith("https://")
           ? url.trim()
           : `https://${url.trim()}`;
+
       case "wifi":
         return `WIFI:T:${wifiType};S:${wifiSsid};P:${wifiPass};H:${wifiHidden ? "true" : "false"};;`;
+
+      case "phone":
+        return `tel:${phoneNum.trim()}`;
+
+      case "sms":
+        return `SMSTO:${smsPhone.trim()}:${smsMessage}`;
+
       case "email":
         return `mailto:${emailTo.trim()}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
-      case "whatsapp":
+
+      case "whatsapp": {
         const cleanPhone = waPhone.replace(/\D/g, "");
         return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(waMsg)}`;
-      case "vcard":
-        return `BEGIN:VCARD\nVERSION:3.0\nN:${vcardName}\nORG:${vcardOrg}\nTEL:${vcardPhone}\nEMAIL:${vcardEmail}\nEND:VCARD`;
+      }
+
+      case "vcard": {
+        const fullName = `${vcardFirstName} ${vcardLastName}`.trim() || "Alex Morgan";
+        const parts = [
+          "BEGIN:VCARD",
+          "VERSION:3.0",
+          `N:${vcardLastName};${vcardFirstName};;;`,
+          `FN:${fullName}`,
+          vcardOrg ? `ORG:${vcardOrg}` : "",
+          vcardTitle ? `TITLE:${vcardTitle}` : "",
+          vcardCell ? `TEL;TYPE=CELL,VOICE:${vcardCell}` : "",
+          vcardPhone ? `TEL;TYPE=WORK,VOICE:${vcardPhone}` : "",
+          vcardEmail ? `EMAIL;TYPE=PREF,INTERNET:${vcardEmail}` : "",
+          vcardUrl ? `URL:${vcardUrl}` : "",
+          vcardStreet || vcardCity || vcardState || vcardZip || vcardCountry
+            ? `ADR;TYPE=WORK:;;${vcardStreet};${vcardCity};${vcardState};${vcardZip};${vcardCountry}`
+            : "",
+          vcardNote ? `NOTE:${vcardNote}` : "",
+          "END:VCARD",
+        ];
+        return parts.filter(Boolean).join("\n");
+      }
+
+      case "event": {
+        const start = formatIcalDate(eventStart);
+        const end = formatIcalDate(eventEnd);
+        return [
+          "BEGIN:VCALENDAR",
+          "VERSION:2.0",
+          "BEGIN:VEVENT",
+          `SUMMARY:${eventTitle || "Event"}`,
+          eventLocation ? `LOCATION:${eventLocation}` : "",
+          start ? `DTSTART:${start}` : "",
+          end ? `DTEND:${end}` : "",
+          eventDesc ? `DESCRIPTION:${eventDesc}` : "",
+          "END:VEVENT",
+          "END:VCALENDAR",
+        ]
+          .filter(Boolean)
+          .join("\n");
+      }
+
+      case "geo":
+        if (geoLat && geoLng) {
+          return `https://maps.google.com/?q=${encodeURIComponent(geoLat)},${encodeURIComponent(geoLng)}`;
+        }
+        return `https://maps.google.com/?q=${encodeURIComponent(geoQuery)}`;
+
+      case "payment":
+        if (payType === "upi") {
+          let str = `upi://pay?pa=${encodeURIComponent(payUpiVpa)}&pn=${encodeURIComponent(payUpiName)}`;
+          if (payUpiAmount) str += `&am=${encodeURIComponent(payUpiAmount)}&cu=INR`;
+          return str;
+        } else if (payType === "bitcoin") {
+          return `bitcoin:${payBtcAddress}${payBtcAmount ? `?amount=${payBtcAmount}` : ""}`;
+        } else {
+          return `https://paypal.me/${encodeURIComponent(payPaypalUser)}`;
+        }
+
       case "text":
       default:
         return text || "TabBench";
     }
-  }, [tab, url, wifiType, wifiSsid, wifiPass, wifiHidden, emailTo, emailSubject, emailBody, waPhone, waMsg, vcardName, vcardOrg, vcardPhone, vcardEmail, text]);
+  }, [
+    tab,
+    url,
+    wifiType,
+    wifiSsid,
+    wifiPass,
+    wifiHidden,
+    phoneNum,
+    smsPhone,
+    smsMessage,
+    emailTo,
+    emailSubject,
+    emailBody,
+    waPhone,
+    waMsg,
+    vcardFirstName,
+    vcardLastName,
+    vcardOrg,
+    vcardTitle,
+    vcardCell,
+    vcardPhone,
+    vcardEmail,
+    vcardUrl,
+    vcardStreet,
+    vcardCity,
+    vcardState,
+    vcardZip,
+    vcardCountry,
+    vcardNote,
+    eventTitle,
+    eventLocation,
+    eventStart,
+    eventEnd,
+    eventDesc,
+    geoLat,
+    geoLng,
+    geoQuery,
+    payType,
+    payUpiVpa,
+    payUpiName,
+    payUpiAmount,
+    payBtcAddress,
+    payBtcAmount,
+    payPaypalUser,
+    text,
+  ]);
 
   // Contrast check helper
   const contrastInfo = useMemo(() => {
@@ -391,11 +570,16 @@ export default function QrCodeGenerator() {
       <div className="p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-wrap gap-1">
         {[
           { id: "url", label: "Website URL", icon: Globe },
-          { id: "wifi", label: "Wi-Fi Network", icon: Wifi },
-          { id: "text", label: "Plain Text", icon: FileText },
+          { id: "vcard", label: "vCard Contact", icon: User },
+          { id: "wifi", label: "Wi-Fi", icon: Wifi },
+          { id: "phone", label: "Phone Call", icon: Phone },
+          { id: "sms", label: "SMS Message", icon: MessageSquareText },
           { id: "email", label: "Email", icon: Mail },
           { id: "whatsapp", label: "WhatsApp", icon: MessageSquare },
-          { id: "vcard", label: "Contact Card", icon: User },
+          { id: "event", label: "Event / iCal", icon: Calendar },
+          { id: "geo", label: "Map / Geo", icon: MapPin },
+          { id: "payment", label: "Pay / UPI", icon: CreditCard },
+          { id: "text", label: "Plain Text", icon: FileText },
         ].map((item) => {
           const Icon = item.icon;
           const isActive = tab === item.id;
@@ -403,7 +587,7 @@ export default function QrCodeGenerator() {
             <button
               key={item.id}
               onClick={() => setTab(item.id as QrTab)}
-              className={`flex items-center space-x-2 px-3.5 py-2 text-xs font-semibold rounded-xl transition ${
+              className={`flex items-center space-x-1.5 px-3 py-2 text-xs font-semibold rounded-xl transition ${
                 isActive
                   ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
@@ -467,7 +651,179 @@ export default function QrCodeGenerator() {
               </div>
             )}
 
-            {/* Tab 2: Wi-Fi */}
+            {/* Tab 2: Rich vCard 3.0 Contact */}
+            {tab === "vcard" && (
+              <div className="space-y-3.5">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Generates an RFC 2426 compliant vCard 3.0. When scanned with any mobile camera, phones immediately offer to save this contact directly into their address book.
+                </div>
+
+                <div className="grid grid-cols-1 @sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      First Name
+                    </label>
+                    <input
+                      type="text"
+                      value={vcardFirstName}
+                      onChange={(e) => setVcardFirstName(e.target.value)}
+                      placeholder="Alex"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      Last Name
+                    </label>
+                    <input
+                      type="text"
+                      value={vcardLastName}
+                      onChange={(e) => setVcardLastName(e.target.value)}
+                      placeholder="Morgan"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 @sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      Organization / Company
+                    </label>
+                    <input
+                      type="text"
+                      value={vcardOrg}
+                      onChange={(e) => setVcardOrg(e.target.value)}
+                      placeholder="Company Inc."
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      Job Title
+                    </label>
+                    <input
+                      type="text"
+                      value={vcardTitle}
+                      onChange={(e) => setVcardTitle(e.target.value)}
+                      placeholder="Lead Developer / Designer"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 @sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      Mobile / Cell Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={vcardCell}
+                      onChange={(e) => setVcardCell(e.target.value)}
+                      placeholder="+1 (555) 234-5678"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      Work / Office Phone
+                    </label>
+                    <input
+                      type="tel"
+                      value={vcardPhone}
+                      onChange={(e) => setVcardPhone(e.target.value)}
+                      placeholder="+1 (555) 876-5432"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 @sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      value={vcardEmail}
+                      onChange={(e) => setVcardEmail(e.target.value)}
+                      placeholder="alex@company.com"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      Website URL
+                    </label>
+                    <input
+                      type="url"
+                      value={vcardUrl}
+                      onChange={(e) => setVcardUrl(e.target.value)}
+                      placeholder="https://example.com"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                    />
+                  </div>
+                </div>
+
+                {/* Postal Address */}
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-2.5">
+                  <span className="text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block">
+                    Postal Address & Notes
+                  </span>
+                  <div className="grid grid-cols-1 @sm:grid-cols-3 gap-2.5">
+                    <div className="@sm:col-span-3">
+                      <input
+                        type="text"
+                        value={vcardStreet}
+                        onChange={(e) => setVcardStreet(e.target.value)}
+                        placeholder="Street Address (e.g. 100 Pine St, Suite 500)"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        value={vcardCity}
+                        onChange={(e) => setVcardCity(e.target.value)}
+                        placeholder="City (e.g. San Francisco)"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        value={vcardState}
+                        onChange={(e) => setVcardState(e.target.value)}
+                        placeholder="State / Region (e.g. CA)"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="text"
+                        value={vcardZip}
+                        onChange={(e) => setVcardZip(e.target.value)}
+                        placeholder="ZIP / Postal Code"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <input
+                      type="text"
+                      value={vcardNote}
+                      onChange={(e) => setVcardNote(e.target.value)}
+                      placeholder="Note / Bio / Memo (optional)"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 3: Wi-Fi */}
             {tab === "wifi" && (
               <div className="space-y-3.5">
                 <div>
@@ -524,27 +880,67 @@ export default function QrCodeGenerator() {
               </div>
             )}
 
-            {/* Tab 3: Plain Text */}
-            {tab === "text" && (
-              <div>
-                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
-                  Text Content or Code
-                </label>
-                <textarea
-                  rows={4}
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  placeholder="Enter text, serial numbers, cryptographic keys, or notes..."
-                  className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <div className="text-[10px] text-slate-400 mt-1 flex justify-between">
-                  <span>Standard UTF-8 encoded text</span>
-                  <span>{text.length} characters</span>
+            {/* Tab 4: Direct Phone Call */}
+            {tab === "phone" && (
+              <div className="space-y-3">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Scanning this QR code prompts the phone's dialer to instantly place a call to the specified number.
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                    Phone Number (with Country Code)
+                  </label>
+                  <div className="relative flex items-center">
+                    <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                    <input
+                      type="tel"
+                      value={phoneNum}
+                      onChange={(e) => setPhoneNum(e.target.value)}
+                      placeholder="+1 (555) 019-2834"
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-900 dark:text-white"
+                    />
+                  </div>
                 </div>
               </div>
             )}
 
-            {/* Tab 4: Email */}
+            {/* Tab 5: SMS Text Message */}
+            {tab === "sms" && (
+              <div className="space-y-3">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Opens the native SMS/Messages app on the user's phone with the recipient number and text pre-filled.
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                    Recipient Phone Number
+                  </label>
+                  <div className="relative flex items-center">
+                    <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 pointer-events-none" />
+                    <input
+                      type="tel"
+                      value={smsPhone}
+                      onChange={(e) => setSmsPhone(e.target.value)}
+                      placeholder="+1 (555) 234-5678"
+                      className="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-900 dark:text-white"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                    Pre-filled SMS Message
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={smsMessage}
+                    onChange={(e) => setSmsMessage(e.target.value)}
+                    placeholder="Hello! Reaching out regarding your listing..."
+                    className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-900 dark:text-white"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Tab 6: Email */}
             {tab === "email" && (
               <div className="space-y-3">
                 <div>
@@ -586,7 +982,7 @@ export default function QrCodeGenerator() {
               </div>
             )}
 
-            {/* Tab 5: WhatsApp */}
+            {/* Tab 7: WhatsApp */}
             {tab === "whatsapp" && (
               <div className="space-y-3">
                 <div>
@@ -616,56 +1012,257 @@ export default function QrCodeGenerator() {
               </div>
             )}
 
-            {/* Tab 6: vCard */}
-            {tab === "vcard" && (
-              <div className="grid grid-cols-1 @md:grid-cols-2 gap-3">
+            {/* Tab 8: Calendar Event (iCal) */}
+            {tab === "event" && (
+              <div className="space-y-3">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Generates an iCalendar (RFC 5545) event. Scanning adds the meeting, conference, or party directly to Apple Calendar or Google Calendar.
+                </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Full Name
+                    Event Title / Summary
                   </label>
                   <input
                     type="text"
-                    value={vcardName}
-                    onChange={(e) => setVcardName(e.target.value)}
-                    placeholder="Jane Doe"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                    value={eventTitle}
+                    onChange={(e) => setEventTitle(e.target.value)}
+                    placeholder="Product Launch & Keynote"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Company / Organization
+                    Location / Link
                   </label>
                   <input
                     type="text"
-                    value={vcardOrg}
-                    onChange={(e) => setVcardOrg(e.target.value)}
-                    placeholder="Company Inc."
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                    value={eventLocation}
+                    onChange={(e) => setEventLocation(e.target.value)}
+                    placeholder="Grand Ballroom & Online Zoom"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
                   />
+                </div>
+                <div className="grid grid-cols-1 @sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      Start Date & Time
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={eventStart}
+                      onChange={(e) => setEventStart(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      End Date & Time
+                    </label>
+                    <input
+                      type="datetime-local"
+                      value={eventEnd}
+                      onChange={(e) => setEventEnd(e.target.value)}
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Phone
+                    Event Description
                   </label>
-                  <input
-                    type="tel"
-                    value={vcardPhone}
-                    onChange={(e) => setVcardPhone(e.target.value)}
-                    placeholder="+1 555-0100"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                  <textarea
+                    rows={2}
+                    value={eventDesc}
+                    onChange={(e) => setEventDesc(e.target.value)}
+                    placeholder="Event description, agenda, and notes..."
+                    className="w-full p-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
                   />
+                </div>
+              </div>
+            )}
+
+            {/* Tab 9: Geo Location */}
+            {tab === "geo" && (
+              <div className="space-y-3">
+                <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Points phones directly to coordinates or locations in Google Maps / Apple Maps.
+                </div>
+                <div className="grid grid-cols-1 @sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      Latitude
+                    </label>
+                    <input
+                      type="text"
+                      value={geoLat}
+                      onChange={(e) => setGeoLat(e.target.value)}
+                      placeholder="37.7749"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                      Longitude
+                    </label>
+                    <input
+                      type="text"
+                      value={geoLng}
+                      onChange={(e) => setGeoLng(e.target.value)}
+                      placeholder="-122.4194"
+                      className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                    Email
+                    Location Name or Address Query
                   </label>
                   <input
-                    type="email"
-                    value={vcardEmail}
-                    onChange={(e) => setVcardEmail(e.target.value)}
-                    placeholder="jane@company.com"
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                    type="text"
+                    value={geoQuery}
+                    onChange={(e) => setGeoQuery(e.target.value)}
+                    placeholder="Times Square, New York or Eiffel Tower, Paris"
+                    className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
                   />
+                </div>
+              </div>
+            )}
+
+            {/* Tab 10: Payment & Crypto */}
+            {tab === "payment" && (
+              <div className="space-y-3.5">
+                <div className="flex items-center gap-2">
+                  {[
+                    { id: "upi", label: "UPI (India / GPay / PhonePe)" },
+                    { id: "bitcoin", label: "Bitcoin (BTC)" },
+                    { id: "paypal", label: "PayPal.me" },
+                  ].map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => setPayType(p.id as "upi" | "bitcoin" | "paypal")}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold border transition ${
+                        payType === p.id
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  ))}
+                </div>
+
+                {payType === "upi" && (
+                  <div className="space-y-3 pt-1">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        UPI VPA / ID
+                      </label>
+                      <input
+                        type="text"
+                        value={payUpiVpa}
+                        onChange={(e) => setPayUpiVpa(e.target.value)}
+                        placeholder="username@okhdfcbank"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 @sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                          Payee / Merchant Name
+                        </label>
+                        <input
+                          type="text"
+                          value={payUpiName}
+                          onChange={(e) => setPayUpiName(e.target.value)}
+                          placeholder="Acme Store"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                          Amount (INR, Optional)
+                        </label>
+                        <input
+                          type="number"
+                          value={payUpiAmount}
+                          onChange={(e) => setPayUpiAmount(e.target.value)}
+                          placeholder="250.00"
+                          className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {payType === "bitcoin" && (
+                  <div className="space-y-3 pt-1">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        Bitcoin Wallet Address
+                      </label>
+                      <input
+                        type="text"
+                        value={payBtcAddress}
+                        onChange={(e) => setPayBtcAddress(e.target.value)}
+                        placeholder="1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono font-medium"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        Amount (BTC, Optional)
+                      </label>
+                      <input
+                        type="text"
+                        value={payBtcAmount}
+                        onChange={(e) => setPayBtcAmount(e.target.value)}
+                        placeholder="0.005"
+                        className="w-full px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-mono font-medium"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {payType === "paypal" && (
+                  <div className="space-y-3 pt-1">
+                    <div>
+                      <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
+                        PayPal.me Username
+                      </label>
+                      <div className="relative flex items-center">
+                        <span className="text-xs font-semibold text-slate-400 absolute left-3.5 pointer-events-none">
+                          paypal.me/
+                        </span>
+                        <input
+                          type="text"
+                          value={payPaypalUser}
+                          onChange={(e) => setPayPaypalUser(e.target.value)}
+                          placeholder="yourusername"
+                          className="w-full pl-24 pr-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Tab 11: Plain Text */}
+            {tab === "text" && (
+              <div>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1.5">
+                  Text Content or Code
+                </label>
+                <textarea
+                  rows={4}
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="Enter text, serial numbers, cryptographic keys, or notes..."
+                  className="w-full p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <div className="text-[10px] text-slate-400 mt-1 flex justify-between">
+                  <span>Standard UTF-8 encoded text</span>
+                  <span>{text.length} characters</span>
                 </div>
               </div>
             )}
