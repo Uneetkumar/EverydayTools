@@ -38,6 +38,42 @@ export default function ContactForm() {
         </p>
       </div>
 
+      {/* Direct Contact Channels */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-1.5">
+          <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center space-x-1.5">
+            <Mail className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <span>General Support</span>
+          </div>
+          <p className="text-xs text-slate-500">Bug reports & feature requests</p>
+          <a href="mailto:support@tabbench.com" className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline block pt-1">
+            support@tabbench.com
+          </a>
+        </div>
+
+        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-1.5">
+          <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center space-x-1.5">
+            <MessageSquare className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+            <span>Editorial & Math</span>
+          </div>
+          <p className="text-xs text-slate-500">Formula corrections & verifications</p>
+          <a href="mailto:editorial@tabbench.com" className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:underline block pt-1">
+            editorial@tabbench.com
+          </a>
+        </div>
+
+        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-1.5">
+          <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center space-x-1.5">
+            <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>Response SLA</span>
+          </div>
+          <p className="text-xs text-slate-500">Our support commitment</p>
+          <span className="text-xs font-medium text-slate-700 dark:text-slate-300 block pt-1">
+            Within 24–48 hours
+          </span>
+        </div>
+      </div>
+
       <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 sm:p-8 shadow-sm">
         {submitted ? (
           <div className="text-center py-10 space-y-3">

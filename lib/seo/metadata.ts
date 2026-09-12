@@ -13,7 +13,7 @@ export const SITE_CONFIG = {
 /**
  * Stable timestamp for sitemap `lastmod`.
  */
-export const CONTENT_LAST_UPDATED = "2026-08-17T00:00:00.000Z";
+export const CONTENT_LAST_UPDATED = "2026-09-13T00:00:00.000Z";
 
 /**
  * Strict SEO Formatter ensuring 100% compliance with search engine guidelines:

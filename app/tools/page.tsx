@@ -13,6 +13,7 @@ import {
 } from "@/lib/seo/jsonld";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import AdSlot from "@/components/AdSlot";
+import DownloadServicesCsvButton from "@/components/DownloadServicesCsvButton";
 import { ArrowRight, ShieldCheck, Zap, Wallet } from "lucide-react";
 
 export const metadata: Metadata = constructPageMetadata({
@@ -82,20 +83,24 @@ export default function ToolsIndexPage() {
             or jump straight to the one you need.
           </p>
 
-          <div className="flex flex-wrap gap-3 pt-1">
-            {[
-              { icon: ShieldCheck, label: "Nothing is uploaded" },
-              { icon: Zap, label: "Instant, no page reloads" },
-              { icon: Wallet, label: "Free with no account" },
-            ].map(({ icon: Icon, label }) => (
-              <span
-                key={label}
-                className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/70 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300"
-              >
-                <Icon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                {label}
-              </span>
-            ))}
+          <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
+            <div className="flex flex-wrap gap-2.5">
+              {[
+                { icon: ShieldCheck, label: "Nothing is uploaded" },
+                { icon: Zap, label: "Instant, no page reloads" },
+                { icon: Wallet, label: "Free with no account" },
+              ].map(({ icon: Icon, label }) => (
+                <span
+                  key={label}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/70 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300"
+                >
+                  <Icon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  {label}
+                </span>
+              ))}
+            </div>
+
+            <DownloadServicesCsvButton />
           </div>
         </header>
 

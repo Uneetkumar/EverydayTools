@@ -37,8 +37,13 @@ import {
   Building,
   Briefcase,
   Map,
+  FileSpreadsheet,
+  Archive,
+  FolderDown,
+  FileUp,
 } from "lucide-react";
 import confetti from "canvas-confetti";
+import JSZip from "jszip";
 
 type QrTab =
   | "url"
@@ -51,7 +56,8 @@ type QrTab =
   | "event"
   | "geo"
   | "payment"
-  | "text";
+  | "text"
+  | "batch";
 type FrameStyle = "none" | "badge" | "card" | "phone";
 type ErrorLevel = "L" | "M" | "Q" | "H";
 
@@ -198,6 +204,187 @@ export default function QrCodeGenerator() {
   const exportCanvasRef = useRef<HTMLDivElement>(null);
   const svgContainerRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const csvFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Batch CSV State
+  interface BatchCsvItem {
+    id: string;
+    title: string;
+    type: string;
+    value: string;
+  }
+
+  const [batchItems, setBatchItems] = useState<BatchCsvItem[]>([
+    { id: "1", title: "Web Design Service", type: "url", value: "https://tabbench.com/services/web-design" },
+    { id: "2", title: "Mobile App Development", type: "url", value: "https://tabbench.com/services/mobile-apps" },
+    { id: "3", title: "Support Phone Line", type: "phone", value: "+1 (555) 234-5678" },
+    { id: "4", title: "Customer Care Email", type: "email", value: "hello@tabbench.com" },
+    { id: "5", title: "Alex Morgan Contact", type: "vcard", value: "BEGIN:VCARD\nVERSION:3.0\nFN:Alex Morgan\nORG:TabBench\nTEL:+15552345678\nEND:VCARD" },
+    { id: "6", title: "Store Guest Wi-Fi", type: "wifi", value: "WIFI:T:WPA;S:Store_Guest_5G;P:secretPass99;;" },
+  ]);
+  const [batchIsExporting, setBatchIsExporting] = useState<boolean>(false);
+  const [selectedBatchIndex, setSelectedBatchIndex] = useState<number>(0);
+  const [newBatchTitle, setNewBatchTitle] = useState<string>("");
+  const [newBatchType, setNewBatchType] = useState<string>("url");
+  const [newBatchValue, setNewBatchValue] = useState<string>("");
+
+  const handleAddBatchItem = () => {
+    if (!newBatchValue.trim()) return;
+    const newItem: BatchCsvItem = {
+      id: String(Date.now()),
+      title: newBatchTitle.trim() || `Service #${batchItems.length + 1}`,
+      type: newBatchType,
+      value: newBatchValue.trim(),
+    };
+    setBatchItems((prev) => [...prev, newItem]);
+    setNewBatchTitle("");
+    setNewBatchValue("");
+  };
+
+  const handleRemoveBatchItem = (id: string) => {
+    setBatchItems((prev) => {
+      const next = prev.filter((it) => it.id !== id);
+      if (selectedBatchIndex >= next.length) {
+        setSelectedBatchIndex(Math.max(0, next.length - 1));
+      }
+      return next;
+    });
+  };
+
+  const handleCsvUpload = (file: File) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      if (!content) return;
+      const lines = content.split(/\r?\n/).filter((l) => l.trim().length > 0);
+      if (lines.length === 0) return;
+
+      const parsed: BatchCsvItem[] = [];
+      const startIdx = lines[0].toLowerCase().includes("value") || lines[0].toLowerCase().includes("title") || lines[0].toLowerCase().includes("service") ? 1 : 0;
+
+      for (let i = startIdx; i < lines.length; i++) {
+        const line = lines[i];
+        const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map((c) => c.replace(/^"|"$/g, "").trim());
+        if (cols.length === 1 && cols[0]) {
+          parsed.push({
+            id: String(Date.now() + i),
+            title: `Service #${i + 1}`,
+            type: "text",
+            value: cols[0],
+          });
+        } else if (cols.length === 2) {
+          parsed.push({
+            id: String(Date.now() + i),
+            title: cols[0] || `Service #${i + 1}`,
+            type: "url",
+            value: cols[1],
+          });
+        } else if (cols.length >= 3) {
+          parsed.push({
+            id: String(Date.now() + i),
+            title: cols[0] || `Service #${i + 1}`,
+            type: cols[1] || "text",
+            value: cols[2],
+          });
+        }
+      }
+
+      if (parsed.length > 0) {
+        setBatchItems(parsed);
+        confetti({ particleCount: 30, spread: 50, origin: { y: 0.85 } });
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const downloadSampleCsv = () => {
+    const sample = `Title,Type,Value
+Website Design Service,url,https://tabbench.com/services/web-design
+Mobile Development,url,https://tabbench.com/services/mobile-apps
+Customer Support Call,phone,+15552345678
+Inquiries Email,email,hello@tabbench.com
+Staff Contact Card,vcard,"BEGIN:VCARD\\nVERSION:3.0\\nFN:Alex Morgan\\nORG:TabBench Inc\\nTEL:+15552345678\\nEND:VCARD"
+Store Guest Wi-Fi,wifi,"WIFI:T:WPA;S:Store_Guest_5G;P:secretPass99;;"
+Payment Service,upi,upi://pay?pa=merchant@bank&pn=TabBenchStore&am=250.00`;
+
+    const blob = new Blob([sample], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "sample-services-qrcode.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const downloadAllBatchCsv = () => {
+    if (batchItems.length === 0) return;
+    const header = "Title,Type,Value,GeneratedDate\n";
+    const nowIso = new Date().toISOString();
+    const rows = batchItems
+      .map(
+        (item) =>
+          `"${item.title.replace(/"/g, '""')}","${item.type}","${item.value.replace(/"/g, '""')}","${nowIso}"`
+      )
+      .join("\n");
+
+    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `all-services-qrcodes-${Date.now()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    confetti({ particleCount: 30, spread: 50, origin: { y: 0.85 } });
+  };
+
+  const downloadAllBatchZip = async () => {
+    if (batchItems.length === 0) return;
+    setBatchIsExporting(true);
+
+    try {
+      const zip = new JSZip();
+      const folder = zip.folder("qr-codes");
+      const QRCode = (await import("qrcode")).default;
+
+      for (let i = 0; i < batchItems.length; i++) {
+        const item = batchItems[i];
+        const canvas = document.createElement("canvas");
+        await QRCode.toCanvas(canvas, item.value, {
+          width: 1024,
+          margin: 2,
+          color: {
+            dark: fgColor,
+            light: transparentBg ? "#00000000" : bgColor,
+          },
+          errorCorrectionLevel: "H",
+        });
+
+        const dataUrl = canvas.toDataURL("image/png");
+        const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");
+        const safeTitle = item.title.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase().slice(0, 30);
+        const fileName = `${String(i + 1).padStart(2, "0")}-${safeTitle || "qrcode"}.png`;
+        folder?.file(fileName, base64Data, { base64: true });
+      }
+
+      const header = "Index,Title,Type,Value\n";
+      const csvContent = header + batchItems.map((it, idx) => `${idx + 1},"${it.title.replace(/"/g, '""')}","${it.type}","${it.value.replace(/"/g, '""')}"`).join("\n");
+      zip.file("services-manifest.csv", csvContent);
+
+      const content = await zip.generateAsync({ type: "blob" });
+      const url = URL.createObjectURL(content);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `all-services-qrcodes-${Date.now()}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+      confetti({ particleCount: 45, spread: 60, origin: { y: 0.85 } });
+    } catch (err) {
+      console.error("Batch ZIP export error:", err);
+    } finally {
+      setBatchIsExporting(false);
+    }
+  };
 
   // Helper for formatting RFC 5545 iCalendar dates
   const formatIcalDate = (dtStr: string): string => {
@@ -293,12 +480,17 @@ export default function QrCodeGenerator() {
           return `https://paypal.me/${encodeURIComponent(payPaypalUser)}`;
         }
 
+      case "batch":
+        return batchItems[selectedBatchIndex]?.value || "https://tabbench.com";
+
       case "text":
       default:
         return text || "TabBench";
     }
   }, [
     tab,
+    batchItems,
+    selectedBatchIndex,
     url,
     wifiType,
     wifiSsid,
@@ -580,6 +772,7 @@ export default function QrCodeGenerator() {
           { id: "geo", label: "Map / Geo", icon: MapPin },
           { id: "payment", label: "Pay / UPI", icon: CreditCard },
           { id: "text", label: "Plain Text", icon: FileText },
+          { id: "batch", label: "Batch CSV (Bulk)", icon: FileSpreadsheet },
         ].map((item) => {
           const Icon = item.icon;
           const isActive = tab === item.id;
@@ -1263,6 +1456,199 @@ export default function QrCodeGenerator() {
                 <div className="text-[10px] text-slate-400 mt-1 flex justify-between">
                   <span>Standard UTF-8 encoded text</span>
                   <span>{text.length} characters</span>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 12: Batch CSV (Bulk Services Processing) */}
+            {tab === "batch" && (
+              <div className="space-y-4">
+                <input
+                  ref={csvFileInputRef}
+                  type="file"
+                  accept=".csv,text/csv"
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                      handleCsvUpload(e.target.files[0]);
+                      e.target.value = "";
+                    }
+                  }}
+                />
+
+                <div className="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-xs text-blue-800 dark:text-blue-300 flex flex-col gap-1">
+                  <div className="font-bold flex items-center gap-1.5">
+                    <FileSpreadsheet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                    <span>Bulk Services CSV Processing</span>
+                  </div>
+                  <p className="text-[11px] text-blue-700/80 dark:text-blue-300/80 leading-relaxed">
+                    Upload your service list, inventory, or contact roster via CSV (columns: <code>Title, Type, Value</code>). Preview any QR code in real-time, and download all generated codes at once as a CSV manifest or packed ZIP archive.
+                  </p>
+                </div>
+
+                {/* Batch Action Toolbar */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => csvFileInputRef.current?.click()}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition"
+                  >
+                    <FileUp className="w-3.5 h-3.5" />
+                    <span>Upload CSV</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={downloadSampleCsv}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition"
+                  >
+                    <FolderDown className="w-3.5 h-3.5" />
+                    <span>Download Sample CSV</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={downloadAllBatchCsv}
+                    disabled={batchItems.length === 0}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition disabled:opacity-50"
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5" />
+                    <span>Download All as CSV</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={downloadAllBatchZip}
+                    disabled={batchItems.length === 0 || batchIsExporting}
+                    className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition disabled:opacity-50"
+                  >
+                    <Archive className="w-3.5 h-3.5" />
+                    <span>{batchIsExporting ? "Generating ZIP..." : "Download All as ZIP (Images)"}</span>
+                  </button>
+
+                  {batchItems.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setBatchItems([])}
+                      className="ml-auto flex items-center gap-1 px-2.5 py-2 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition"
+                      title="Clear All Items"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Clear All</span>
+                    </button>
+                  )}
+                </div>
+
+                {/* Add New Item Form */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5">
+                  <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    Add Single Service / Row
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
+                    <input
+                      type="text"
+                      value={newBatchTitle}
+                      onChange={(e) => setNewBatchTitle(e.target.value)}
+                      placeholder="Service Title (e.g. VIP Lounge Wi-Fi)"
+                      className="sm:col-span-4 px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                    />
+                    <select
+                      value={newBatchType}
+                      onChange={(e) => setNewBatchType(e.target.value)}
+                      className="sm:col-span-3 px-2 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                    >
+                      <option value="url">Website URL</option>
+                      <option value="vcard">vCard Contact</option>
+                      <option value="wifi">Wi-Fi</option>
+                      <option value="phone">Phone</option>
+                      <option value="email">Email</option>
+                      <option value="text">Plain Text</option>
+                    </select>
+                    <input
+                      type="text"
+                      value={newBatchValue}
+                      onChange={(e) => setNewBatchValue(e.target.value)}
+                      placeholder="Payload or URL..."
+                      className="sm:col-span-3 px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
+                      onKeyDown={(e) => e.key === "Enter" && handleAddBatchItem()}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddBatchItem}
+                      disabled={!newBatchValue.trim()}
+                      className="sm:col-span-2 px-3 py-1.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 transition"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                {/* Items List Table */}
+                <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+                  <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">
+                    <span>Loaded Items ({batchItems.length})</span>
+                    <span className="text-[10px] text-slate-500 font-normal">Click row to preview QR</span>
+                  </div>
+
+                  {batchItems.length === 0 ? (
+                    <div className="p-8 text-center text-xs text-slate-400">
+                      No services loaded. Upload a CSV file or click "Download Sample CSV" to get started.
+                    </div>
+                  ) : (
+                    <div className="max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80">
+                      {batchItems.map((item, idx) => {
+                        const isSelected = selectedBatchIndex === idx;
+                        return (
+                          <div
+                            key={item.id}
+                            onClick={() => setSelectedBatchIndex(idx)}
+                            className={`flex items-center justify-between p-3 cursor-pointer transition text-xs ${
+                              isSelected
+                                ? "bg-blue-50/80 dark:bg-blue-950/40 border-l-4 border-blue-600 pl-2"
+                                : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
+                            }`}
+                          >
+                            <div className="min-w-0 flex-1 pr-3">
+                              <div className="flex items-center gap-2">
+                                <span className="font-semibold text-slate-900 dark:text-white truncate">
+                                  #{idx + 1} {item.title}
+                                </span>
+                                <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-md uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                  {item.type}
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 font-mono">
+                                {item.value}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0">
+                              <span
+                                className={`text-[10px] font-medium px-2 py-1 rounded-lg ${
+                                  isSelected
+                                    ? "bg-blue-600 text-white"
+                                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                                }`}
+                              >
+                                {isSelected ? "Previewing" : "Preview"}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveBatchItem(item.id);
+                                }}
+                                className="p-1 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                                title="Delete row"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               </div>
             )}

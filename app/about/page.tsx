@@ -86,6 +86,38 @@ export default function AboutPage() {
           </li>
         </ul>
       </div>
+
+      {/* Editorial & Technical Accuracy Board */}
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 space-y-6">
+        <div className="space-y-2">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Editorial & Engineering Team</h2>
+          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+            TabBench is developed and maintained by a dedicated team of frontend engineers, financial analysts, and mathematical accuracy reviewers.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <div className="p-5 rounded-xl border border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-950/40 space-y-2.5">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white">Technical & Architecture Team</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              Specializing in client-side WebAssembly, HTML5 Canvas engines, Web Audio API, and high-performance React architectures to ensure all calculations execute strictly on the client device.
+            </p>
+            <span className="inline-block text-[11px] font-semibold text-blue-600 dark:text-blue-400">
+              engineering@tabbench.com
+            </span>
+          </div>
+
+          <div className="p-5 rounded-xl border border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-950/40 space-y-2.5">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white">Mathematical Review & Editorial Board</h3>
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              Verifies formula implementations against IEEE 754 floating-point standards, NIST physical constants, and official regulatory tax and amortization guidelines.
+            </p>
+            <span className="inline-block text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
+              editorial@tabbench.com
+            </span>
+          </div>
+        </div>
+      </div>
       </div>
     </>
   );

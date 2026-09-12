@@ -64,11 +64,25 @@ export default function EditorialPolicyPage() {
             <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
               <ShieldAlert className="w-5 h-5" />
             </div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">3. Correction & Errata Policy</h2>
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white">3. Correction & Verification Protocol</h2>
           </div>
           <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-            If an inaccuracy, edge-case failure, or formula discrepancy is detected or reported by our community, our engineering team immediately audits the calculator logic and issues a revision with regression tests.
+            If an inaccuracy, edge-case failure, or formula discrepancy is detected or reported by our community, our technical accuracy board immediately audits the calculator logic and issues a revision with regression tests.
           </p>
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 space-y-2 text-xs text-slate-600 dark:text-slate-400">
+            <p className="font-semibold text-slate-800 dark:text-slate-200">Official Formula Benchmarks:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li><strong>Financial Calculations:</strong> Standard reducing-balance formulas aligned with Federal Reserve and Reserve Bank of India amortization guidelines.</li>
+              <li><strong>Floating-Point Math:</strong> IEEE 754 precision safeguards preventing binary floating-point rounding errors (e.g. 0.1 + 0.2 = 0.30000000000000004).</li>
+              <li><strong>Unit Conversions:</strong> 1959 International Yard & Pound Agreement and National Institute of Standards and Technology (NIST) constants.</li>
+            </ul>
+            <p className="pt-2">
+              To report a calculation bug or formula correction, email our verification team directly at{" "}
+              <a href="mailto:editorial@tabbench.com" className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
+                editorial@tabbench.com
+              </a>. Corrections are investigated within 48 business hours.
+            </p>
+          </div>
         </div>
       </div>
       </div>

@@ -1090,6 +1090,55 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
     ],
   },
 
+  "png-to-svg": {
+    intro:
+      "Raster PNG images are locked to fixed pixel grids — when enlarged for printing, high-DPI displays, or large banners, edges become blurry and jagged. This converter traces raster images into resolution-independent SVG vector graphics right in your browser. Whether you need color-quantized vector layers, crisp black-and-white silhouettes for vinyl cutting and logos, or retro pixel art preservation, our vectorizer generates clean mathematical SVG path geometry locally with zero file uploads.",
+    howTo: {
+      title: "How to convert PNG to SVG online",
+      steps: [
+        "Upload your PNG, JPG, or WebP image, or paste it directly from your clipboard.",
+        "Choose your vectorization mode: 'Color Layers' for multi-colored graphics, 'Monochrome' for high-contrast stencils and logos, 'Pixel Art' for block graphics, or 'Embed SVG' for lossless container wrapping.",
+        "Adjust color palette depth, threshold cutoff, and speckle noise suppression to fine-tune the resulting vectors.",
+        "Inspect the live vectorized result in the side-by-side preview panel. Use the zoom controls (100% to 400%) to verify razor-sharp scalability.",
+        "Click 'Download Vector SVG' to save the .svg file, or switch to the 'SVG XML Markup' tab to copy the code directly.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Logos & branding assets for responsive web design",
+        body:
+          "Transform raster company logos into lightweight SVG vectors that render perfectly sharp on everything from mobile screens to 8K retina displays.",
+      },
+      {
+        title: "Vinyl cutting, laser engraving & embroidery",
+        body:
+          "Convert silhouettes, graphics, and stencils into vector cut paths compatible with Cricut, laser cutters, CNC machines, and embroidery software.",
+      },
+      {
+        title: "Print media & merchandise scaling",
+        body:
+          "Scale up small PNG graphics for large-format t-shirt printing, signage, and billboards without pixelation or loss of detail.",
+      },
+    ],
+    tips: [
+      "For best results with logos and icons, use images with clean contrast and transparent or plain solid backgrounds.",
+      "In Monochrome mode, adjust the Threshold slider to capture thin line details or reinforce heavier solid fills.",
+      "Use the Noise/Speckle filter to eliminate isolated single-pixel artifacts and create cleaner, smaller SVG files.",
+    ],
+    extraFaqs: [
+      {
+        question: "Will the generated SVG lose quality when resized?",
+        answer:
+          "No. SVG files are vector-based and defined by mathematical paths and curves. You can scale them to any size without any degradation or pixelation.",
+      },
+      {
+        question: "Can I edit the generated SVG in Illustrator or Figma?",
+        answer:
+          "Yes! The downloaded SVG contains standard vector <path> elements with fill attributes that you can import and edit in Adobe Illustrator, Figma, Inkscape, or Canva.",
+      },
+    ],
+  },
+
   "unlock-pdf": {
     intro:
       "PDFs carry two different kinds of password. An owner password restricts what you may do — printing, copying, editing — while still letting anyone open the file. A user password encrypts the document so it cannot be opened at all without it. This tool removes protection from PDFs you are entitled to unlock, working entirely in your browser so the document and its password never reach a server.",
@@ -2695,244 +2744,6 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
     ],
   },
 
-
-  "sample-image-generator": {
-    intro:
-      "Placeholder images are needed constantly and are surprisingly annoying to source: you want one that is exactly 500KB to test an upload cap, or a 16:9 block to fill a layout, and instead you go rummaging through a downloads folder. This draws one to order — randomised artwork, randomised dimensions, and the exact byte size you asked for.",
-    howTo: {
-      title: "How to generate a sample image",
-      steps: [
-        "Choose an output format. JPG for realistic photo-like sizes, PNG when you need a larger file from the same content, WebP to test modern format handling.",
-        "Pick a target size from the presets or type an exact figure in kilobytes.",
-        "Generate. Four images appear, each with different artwork and a different aspect ratio.",
-        "Download the one you want, or copy it as a data URL if it is under 200KB.",
-      ],
-    },
-    useCases: [
-      {
-        title: "Testing an upload size limit",
-        body:
-          "To check that a form really rejects files over 2MB you need one just under and one just over. Generating both takes seconds and proves whether the validation works.",
-      },
-      {
-        title: "Filling a layout before real photography exists",
-        body:
-          "Randomised gradient blocks at the right aspect ratio show how a grid or card design behaves without licensing stock images or shipping grey rectangles.",
-      },
-      {
-        title: "Exercising an image pipeline",
-        body:
-          "Thumbnail generation, EXIF handling, and progress indicators all behave differently on a 20KB file and a 5MB one. Having both on demand makes those paths testable.",
-      },
-    ],
-    tips: [
-      "The size is exact. Artwork is scaled near the target, then the file is padded with bytes after JPEG's end-of-image marker, which every decoder ignores.",
-      "PNG produces much larger files from the same drawing, so a PNG target is reached with a smaller image than a JPG one.",
-      "Each generation is fully random — press it again for four completely different images at the same size.",
-      "Data URLs are offered only under 200KB; beyond that they become unwieldy to paste anywhere.",
-    ],
-    extraFaqs: [
-      {
-        question: "Are these real image files?",
-        answer:
-          "Yes. Each is drawn on an HTML canvas and encoded by the browser's own JPEG, PNG, or WebP encoder, so it opens in any viewer or editor and carries correct dimensions and headers.",
-      },
-      {
-        question: "How is the file size exact?",
-        answer:
-          "The artwork is generated at dimensions estimated to land near your target, then the encoded file is topped up to the precise byte count using padding after the format's end marker. Decoders stop reading at that marker, so the image is unaffected while the size is exact — which matters when the whole point is testing a limit.",
-      },
-      {
-        question: "Can I choose the dimensions?",
-        answer:
-          "Not directly — dimensions are derived from the size target and randomised across common aspect ratios so the four samples differ from one another. If you need specific pixel dimensions, generate one here and run it through the Image Resizer.",
-      },
-      {
-        question: "Is anything uploaded?",
-        answer:
-          "No. Images are drawn and encoded in your browser and written straight to your downloads.",
-      },
-    ],
-  },
-
-  "sample-pdf-generator": {
-    intro:
-      "Testing anything that accepts PDFs means having PDFs of known sizes to hand, and real documents are rarely the size you need. This builds one to order with pdf-lib: a genuine document with pages, headings, and body text, at exactly the byte size you specify.",
-    howTo: {
-      title: "How to generate a sample PDF",
-      steps: [
-        "Pick a target size from the presets, or type an exact figure in kilobytes.",
-        "Generate. Four PDFs appear, each with a randomised page count between one and four.",
-        "Download whichever you need — the filename records the page count and size.",
-        "Press generate again for a completely different set at the same size.",
-      ],
-    },
-    useCases: [
-      {
-        title: "Testing portal upload caps",
-        body:
-          "Government and university portals cap PDFs at 100KB, 2MB, or 5MB. Generating files either side of the line shows whether the check is enforced server-side or only in the browser.",
-      },
-      {
-        title: "Checking a PDF viewer or parser",
-        body:
-          "A viewer that works on a one-page document may behave differently across page boundaries. Randomised page counts give you both cases without hunting for samples.",
-      },
-      {
-        title: "Load-testing document storage",
-        body:
-          "Quota handling, virus scanning, and preview generation all scale with file size. A stack of known-size PDFs makes that measurable.",
-      },
-    ],
-    tips: [
-      "The PDFs are real documents, not renamed junk — they contain a heading, a timestamp, body paragraphs, and a filled rectangle on each page.",
-      "Size is exact: content is generated first, then the file is padded after the %%EOF marker, which every PDF reader ignores.",
-      "Page count is randomised between one and four so the four samples are not identical.",
-      "For a specific page count rather than a random one, generate a larger document and use the Split PDF tool.",
-    ],
-    extraFaqs: [
-      {
-        question: "Do these PDFs actually open?",
-        answer:
-          "Yes. They are constructed with pdf-lib and contain real page objects, embedded Helvetica text, and vector shapes. Acrobat, Preview, and browser viewers all open them normally.",
-      },
-      {
-        question: "Why is most of the file padding at large sizes?",
-        answer:
-          "Because a few pages of text is only a few kilobytes. Asking for 10MB means roughly 10MB of ignored padding after the %%EOF marker. That is exactly right for testing a size limit, but it is not a realistic stand-in for a genuinely image-heavy 10MB scan.",
-      },
-      {
-        question: "Can I control the page count?",
-        answer:
-          "Not directly — it is randomised between one and four so the samples differ. Generating repeatedly will give you the count you want, or you can split a larger file.",
-      },
-      {
-        question: "Is the file uploaded anywhere?",
-        answer:
-          "No. The PDF is built in your browser with pdf-lib and saved directly to your device.",
-      },
-    ],
-  },
-
-  "sample-video-generator": {
-    intro:
-      "Sample video files are the hardest kind to find at short notice — they are large, awkward to source, and most stock clips carry a licence. This records one live in your browser: an animated clip at 640×360, encoded as WebM, at whatever length you choose between one and ten seconds.",
-    howTo: {
-      title: "How to generate a sample video",
-      steps: [
-        "Set the length with the slider. Longer clips produce larger files.",
-        "Generate. Recording happens in real time, so a five-second clip takes five seconds.",
-        "Play it back in the preview to confirm it is a valid video.",
-        "Download the .webm file.",
-      ],
-    },
-    useCases: [
-      {
-        title: "Testing a video upload form",
-        body:
-          "Duration limits, size caps, and format validation all need a real video file to exercise. A generated clip is faster than finding one and carries no licensing question.",
-      },
-      {
-        title: "Checking a player or embed",
-        body:
-          "A short clip with a visible running timer makes it obvious whether seeking, looping, and autoplay behave as expected.",
-      },
-      {
-        title: "Placeholder media in a prototype",
-        body:
-          "A moving placeholder shows how a layout handles video without embedding someone else's footage in a demo.",
-      },
-    ],
-    tips: [
-      "Recording is real time — there is no way to produce a ten-second clip faster than ten seconds.",
-      "The output is WebM with VP9 where the browser supports it. MP4 is not available, because browsers do not expose an MP4 encoder to web pages.",
-      "File size is a consequence of length and content, not something you can set precisely.",
-      "The clip shows a live timer, which makes playback and seeking problems easy to spot.",
-    ],
-    extraFaqs: [
-      {
-        question: "Why can I not set an exact file size?",
-        answer:
-          "Because the browser's MediaRecorder chooses its own bitrate based on the content, and the WebM container does not tolerate trailing padding the way JPEG and PDF do. You choose duration and the size follows. For an exact-size file, use the image, PDF, or data generators instead.",
-      },
-      {
-        question: "Can I get an MP4 rather than WebM?",
-        answer:
-          "Not from a browser. MediaRecorder exposes WebM (VP8/VP9) in essentially all browsers and MP4 in almost none, for patent-licensing reasons. Convert the WebM with a desktop tool such as ffmpeg if you specifically need MP4.",
-      },
-      {
-        question: "Is the video a real, playable file?",
-        answer:
-          "Yes. It is captured from a live canvas animation through the browser's encoder, so it plays in any WebM-capable player, which includes every modern browser and VLC.",
-      },
-      {
-        question: "Does the recording leave my device?",
-        answer:
-          "No. The canvas is captured and encoded locally, and the resulting blob is written straight to your downloads.",
-      },
-    ],
-  },
-
-  "sample-data-generator": {
-    intro:
-      "Testing an importer means having data to import, and hand-writing a thousand rows of CSV is nobody's idea of a good afternoon. This generates plausible records — names, emails, cities, amounts, dates — as CSV, JSON, or plain text, at exactly the file size you need.",
-    howTo: {
-      title: "How to generate sample data files",
-      steps: [
-        "Choose a format: CSV for tabular imports, JSON for API fixtures, plain text for anything else.",
-        "Set a target size. Larger files simply contain more records.",
-        "Generate four samples and inspect the filenames and sizes.",
-        "Download the one you need.",
-      ],
-    },
-    useCases: [
-      {
-        title: "Testing a CSV importer",
-        body:
-          "Importers behave differently on ten rows and ten thousand. Generating both sizes shows whether batching, progress reporting, and timeouts hold up.",
-      },
-      {
-        title: "Seeding fixtures for development",
-        body:
-          "A JSON array of a few hundred records is enough to make a list view, pagination, and search feel realistic before a real API exists.",
-      },
-      {
-        title: "Checking upload and parse limits",
-        body:
-          "A 10MB CSV is a very different proposition from a 10KB one for a browser-side parser. Having both makes the limits measurable rather than guessed.",
-      },
-    ],
-    tips: [
-      "CSV output includes a header row, so it imports cleanly into spreadsheets and most database tools.",
-      "JSON is pretty-printed, which makes it larger than minified output but far easier to read while debugging.",
-      "Records use plausible values — real-looking names, emails, cities, and amounts — rather than repeated filler.",
-      "Sizes are exact, because text formats can be trimmed to the byte.",
-    ],
-    extraFaqs: [
-      {
-        question: "Is the data realistic enough to test with?",
-        answer:
-          "For structure, yes — records have consistent fields, valid-looking emails, real city names, and varied numeric and date values, which is enough to exercise a parser, importer, or table view. It is not statistically realistic, so it is not a substitute for real data when testing analytics.",
-      },
-      {
-        question: "How many rows will I get?",
-        answer:
-          "As many as fit the size you asked for. A CSV row here is roughly 70 bytes, so 1MB is around 15,000 rows. The file is filled with records and then trimmed to the exact byte count.",
-      },
-      {
-        question: "Can I choose the columns or fields?",
-        answer:
-          "Not currently — the schema is fixed at id, name, email, city, amount, and created_at, which covers the common shapes of test data. For a custom schema, generate a file here and edit the header and a row, or script it.",
-      },
-      {
-        question: "Does the data contain anything real?",
-        answer:
-          "No. Every value is generated, the email addresses use the reserved example.com domain, and nothing corresponds to a real person. It is safe to commit to a repository or share.",
-      },
-    ],
-  },
-
-
   "notepad": {
     intro:
       "Most note apps want an account before they will let you write a sentence. This one opens straight into an empty page and saves as you type, to this browser and nowhere else. It is the right tool for the note you need for the next ten minutes — a phone number, a draft reply, something pasted out of a call — rather than the one you need on three devices next year.",
@@ -3114,223 +2925,6 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
       },
     ],
   },
-
-  "video-downloader": {
-    intro:
-      "Inspect technical specifications from direct video URLs and download permitted media files in original, downscaled, or audio-only formats. This tool probes container headers to reveal exact frame dimensions, aspect ratios, durations, audio and video codecs (H.264, VP9, AV1, AAC), and average bitrates with zero server-side storage or tracking.",
-    howTo: {
-      title: "How to inspect and download an authorized video URL",
-      steps: [
-        "Paste the direct HTTPS media URL into the input field above (e.g. https://your-server.com/sample-video.mp4).",
-        "Click 'Analyze Video'. The inspector will probe container headers to extract resolution, aspect ratio, duration, codecs, and bitrate.",
-        "Preview the video in the live player and review the full technical stream specifications.",
-        "Select your preferred resolution or choose 'Audio Track Only' to extract an M4A audio file.",
-        "Click 'Download' to stream the media chunks directly into your browser and save the file to your device.",
-      ],
-    },
-    useCases: [
-      {
-        title: "Retrieving self-hosted media and creative assets",
-        body:
-          "Content creators, video editors, and motion designers who host footage on cloud storage (AWS S3, Google Cloud Storage, Cloudflare R2, or private CDNs) can inspect and download their own master files on any device without installing desktop software.",
-      },
-      {
-        title: "Extracting audio tracks from presentations and podcasts",
-        body:
-          "Easily extract standalone audio streams from recorded webinars, lectures, or interviews to listen offline, transcribe with speech-to-text tools, or archive as lightweight audio files.",
-      },
-      {
-        title: "Validating video bitrate and encoding fidelity",
-        body:
-          "Web developers and QA engineers can test media encoding pipelines by checking exact file sizes, frame rates, and bitrates across different render presets before deploying videos to production.",
-      },
-    ],
-    tips: [
-      "For mobile and web streaming, H.264 (AVC) in an MP4 container offers the highest cross-browser and device compatibility.",
-      "WebM (VP9/AV1) provides smaller file sizes at identical visual quality, making it ideal for modern web optimization.",
-      "Bitrate is the key determinant of visual quality: 1080p video typically looks crisp between 4,000 and 8,000 kbps, while 4K UHD typically requires 15,000 to 25,000 kbps.",
-      "Make sure the source server permits CORS (Cross-Origin Resource Sharing) headers if downloading across different origins.",
-    ],
-    extraFaqs: [
-      {
-        question: "What is the difference between 1080p, 1440p, and 4K UHD?",
-        answer:
-          "1080p (Full HD) has a resolution of 1920×1080 (approx. 2 million pixels). 1440p (2K QHD) is 2560×1440 (approx. 3.7 million pixels). 4K UHD is 3840×2160 (approx. 8.3 million pixels). Higher resolution delivers sharper image detail on large displays but requires significantly more data and bandwidth.",
-      },
-      {
-        question: "Why are YouTube, Instagram, and TikTok URLs not supported?",
-        answer:
-          "Proprietary streaming platforms deliver media through encrypted, tokenized, and DRM-protected segmented streams (DASH/HLS) that disallow third-party downloading under their terms of service. TabBench strictly respects platform terms and copyright laws and does not implement circumvention mechanisms.",
-      },
-      {
-        question: "What video formats can I download?",
-        answer:
-          "You can inspect and download direct MP4 (.mp4, .m4v), WebM (.webm), QuickTime (.mov), and Ogg (.ogv) media files, as well as extract audio-only M4A tracks.",
-      },
-      {
-        question: "Is there a file size limit?",
-        answer:
-          "The default browser safety threshold is 500 MB to ensure smooth in-memory stream decoding and downloading without exhausting device RAM.",
-      },
-      {
-        question: "Does downloading reduce video quality?",
-        answer:
-          "No. When you select the 'Highest Available' source quality, the video stream is retrieved bit-for-bit without re-encoding or generational compression loss.",
-      },
-    ],
-  },
-
-  "youtube-video-downloader": {
-    intro:
-      "Inspect stream resolution, audio sampling, and bitrate for authorized YouTube streams and self-hosted creative assets. This utility validates container codecs, frame dimensions, and downloads permitted direct media streams in full fidelity.",
-    howTo: {
-      title: "How to inspect and download authorized YouTube media",
-      steps: [
-        "Paste the YouTube or permitted direct media stream URL into the input field above.",
-        "Click 'Analyze Video' to probe container headers, video codecs (VP9, AV1, H.264), and audio channels.",
-        "Review the stream resolution (1080p, 720p, 4K) and aspect ratio in the live preview.",
-        "Select your preferred resolution or choose 'Audio Track Only' to extract an audio track.",
-        "Click 'Download' to stream and save the media directly to your device.",
-      ],
-    },
-    useCases: [
-      {
-        title: "Archiving your own uploaded YouTube footage",
-        body: "Creators who need to retrieve original video masters or podcast audio tracks from their own cloud storage or authorized channels.",
-      },
-      {
-        title: "Analyzing video encoding quality",
-        body: "Verify compression bitrates, audio codecs, and frame rates across uploaded media clips.",
-      },
-    ],
-    tips: [
-      "Select 'Audio Track Only' for fast, lightweight MP3/M4A extraction from long webinars or presentations.",
-      "Always verify you have explicit permission or ownership of the content before downloading.",
-    ],
-    extraFaqs: [
-      {
-        question: "Can I download copyrighted videos without permission?",
-        answer: "No. This tool is built strictly for authorized and user-owned media in compliance with copyright laws and platform terms.",
-      },
-    ],
-  },
-
-  "instagram-video-downloader": {
-    intro:
-      "Inspect and download Instagram Reels, Stories, and permitted vertical video assets in original HD resolution. Analyzes 9:16 aspect ratio dimensions, frame rates, and audio bitrates with 100% private in-browser processing.",
-    howTo: {
-      title: "How to inspect and download Instagram Reels and videos",
-      steps: [
-        "Paste the Instagram video, Reel, or direct media URL into the box above.",
-        "Click 'Analyze Video' to detect dimensions, duration, and video stream bitrate.",
-        "Preview the vertical video in the live player.",
-        "Click 'Download' to save the original MP4 video directly to your phone or computer.",
-      ],
-    },
-    useCases: [
-      {
-        title: "Backing up your own Instagram Reels",
-        body: "Download master copies of your recorded Reels and vertical videos for cross-posting to other platforms without watermark degradation.",
-      },
-    ],
-    tips: [
-      "Reels are rendered at 1080×1920 (9:16 vertical widescreen) with stereo AAC audio.",
-    ],
-    extraFaqs: [
-      {
-        question: "Can I download private Instagram posts?",
-        answer: "No. Private accounts and DRM-protected media cannot and should not be accessed without account authorization.",
-      },
-    ],
-  },
-
-  "facebook-video-downloader": {
-    intro:
-      "Analyze stream properties and download public, authorized Facebook video streams in HD or SD quality. Probes container headers to give you full visibility over video codecs, bitrates, and audio tracks.",
-    howTo: {
-      title: "How to download authorized Facebook videos",
-      steps: [
-        "Paste the Facebook video link or direct media URL into the analyzer.",
-        "Click 'Analyze Video' to inspect resolution and audio channels.",
-        "Choose between Full HD 1080p, HD 720p, or Audio Track Only.",
-        "Click 'Download' to save the file to your device.",
-      ],
-    },
-    useCases: [
-      {
-        title: "Saving company webinars and live stream archives",
-        body: "Download public broadcast recordings and company presentations you manage for offline archiving.",
-      },
-    ],
-    tips: [
-      "HD streams offer significantly clearer text in recorded slides and presentations.",
-    ],
-    extraFaqs: [
-      {
-        question: "What format are Facebook videos saved in?",
-        answer: "Videos are saved as universally compatible MP4 files with H.264 video and AAC audio.",
-      },
-    ],
-  },
-
-  "tiktok-video-downloader": {
-    intro:
-      "Inspect resolution, duration, and download permitted TikTok vertical videos in original quality. Fast, client-side media stream inspection with zero watermarks added and zero server storage.",
-    howTo: {
-      title: "How to inspect and download authorized TikTok videos",
-      steps: [
-        "Paste the TikTok video link or direct media stream URL above.",
-        "Click 'Analyze Video' to inspect video height, width, and audio bitrate.",
-        "Preview the video in the player and select your desired format.",
-        "Click 'Download' to save the video file directly.",
-      ],
-    },
-    useCases: [
-      {
-        title: "Creators archiving high-res vertical video assets",
-        body: "Save your own TikTok creations in original master quality for portfolio backups and editing.",
-      },
-    ],
-    tips: [
-      "Vertical 9:16 format looks best on mobile screens and modern vertical displays.",
-    ],
-    extraFaqs: [
-      {
-        question: "Does this downloader compress the video?",
-        answer: "No. When you select Highest Available quality, the stream is saved bit-for-bit in original quality.",
-      },
-    ],
-  },
-
-  "twitter-video-downloader": {
-    intro:
-      "Inspect and download permitted Twitter / X videos and animated GIFs in HD resolution. Checks container bitrate, dimensions, and saves media directly in your browser without tracking.",
-    howTo: {
-      title: "How to download Twitter / X videos",
-      steps: [
-        "Paste the Twitter / X video or GIF link into the search box.",
-        "Click 'Analyze Video' to probe stream resolutions.",
-        "Choose your preferred quality tier (1080p, 720p, or 480p).",
-        "Click 'Download' to save the MP4 video to your device.",
-      ],
-    },
-    useCases: [
-      {
-        title: "Saving informative video clips and charts",
-        body: "Download educational demonstrations, product announcements, and animated charts for offline reference.",
-      },
-    ],
-    tips: [
-      "Twitter animated GIFs are encoded as MP4 videos for bandwidth efficiency.",
-    ],
-    extraFaqs: [
-      {
-        question: "Can I download Twitter videos on mobile?",
-        answer: "Yes. TabBench is fully mobile-responsive and installable as a PWA on iOS and Android.",
-      },
-    ],
-  },
-
   "video-player": {
     intro:
       "Sometimes you just need to watch a file without installing anything — a clip someone sent you, a recording off a camera, a download you want to check before filing. This opens video straight from your device and plays it with proper controls: a real seek bar, adjustable speed, picture-in-picture, and a playlist if you drop several files at once.",
@@ -4609,6 +4203,187 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
         question: "Is my JSON private?",
         answer:
           "Yes. Parsing and explanation happen 100% inside your local browser memory.",
+      },
+    ],
+  },
+
+  "calculator": {
+    intro:
+      "Most online calculators feel like sterile form inputs rather than real mathematical instruments. This calculator was engineered from the ground up to look, sound, and feel like an authentic desktop calculator, combining physical skeuomorphic hardware aesthetics with digital convenience. It features an ambient solar panel strip, recessed high-contrast dual-line LCD readout, 3D tactile contoured buttons with physical click audio, an audit paper tape drawer, and an instant switch between Standard and Scientific modes. Every calculation is performed 100% client-side with zero telemetry or network latency.",
+    howTo: {
+      title: "How to use the online calculator",
+      steps: [
+        "Click the on-screen tactile buttons or type directly with your computer keyboard or numpad.",
+        "Enter your numbers and mathematical operators (+, −, ×, ÷). The active calculation trail displays in the top sub-readout as you type.",
+        "Press Enter or the = button to evaluate the expression. Answers are automatically cleaned to avoid floating-point inaccuracies.",
+        "Toggle the Scientific mode at the top to unlock trigonometry (sin, cos, tan), natural logarithms (ln, log), powers (xʸ), square roots, factorials, and constants (π, e).",
+        "Open the Paper Tape Audit Drawer to review past calculations, copy records, or click any previous answer to reuse it.",
+        "Use memory registers (MC, MR, M+, M-, MS) to store sub-totals across multi-step financial or engineering calculations.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Daily business & office bookkeeping",
+        body:
+          "Tally up invoices, receipts, and expense reports with the confidence of an audit paper tape that tracks every line item you key in.",
+      },
+      {
+        title: "Engineering & scientific homework",
+        body:
+          "Solve complex scientific equations with trigonometric functions in both Degrees and Radians, roots, exponentials, and factorials without needing a physical handheld device.",
+      },
+      {
+        title: "Touch-friendly mobile arithmetic",
+        body:
+          "Enjoy high-precision buttons with haptic vibration feedback on smartphones and tablets, making on-the-go calculations effortless and tactile.",
+      },
+    ],
+    tips: [
+      "Press Esc on your keyboard to instantly clear the display, or Backspace to delete the last entered digit.",
+      "Click 'Copy' in the display header or press Ctrl+C / Cmd+C to copy the current result to your clipboard.",
+      "Toggle the sound icon in the header if you prefer a completely silent working environment.",
+    ],
+    extraFaqs: [
+      {
+        question: "How does the calculator handle order of operations?",
+        answer:
+          "Standard algebraic operator precedence (PEMDAS / BODMAS) is strictly respected. Multiplications and divisions are evaluated before additions and subtractions.",
+      },
+      {
+        question: "Does the paper tape persist when I refresh the page?",
+        answer:
+          "Yes. Your calculation history and memory registers are securely saved in your browser's local storage so you never lose your train of thought.",
+      },
+    ],
+  },
+
+  "unit-converter": {
+    intro:
+      "Converting units across imperial and metric systems is a daily necessity for engineers, travelers, cooks, and students. This universal unit converter eliminates the guesswork by calculating values across 8 core physical dimensions — Length, Weight/Mass, Temperature, Area, Volume, Speed, Digital Storage, and Time. Instead of showing only a single converted number, it provides an interactive real-time comparison grid that shows how your measurement translates into every unit in that category simultaneously, complete with formulas and quick presets.",
+    howTo: {
+      title: "How to convert measurement units online",
+      steps: [
+        "Select your measurement category from the top tabs (e.g., Length, Weight, Temperature, or Digital Storage).",
+        "Type your value into the 'From' input box.",
+        "Choose your starting unit in the 'From' dropdown and target unit in the 'To' dropdown.",
+        "View the converted value instantly in the right box. Click the swap button (⇄) anytime to reverse the conversion.",
+        "Scroll down to inspect the Complete Comparison Grid to see your value translated across all units in the category.",
+        "Click 'Copy Result' to copy the formatted number directly to your clipboard.",
+      ],
+    },
+    useCases: [
+      {
+        title: "International travel & navigation",
+        body:
+          "Quickly convert highway speeds from km/h to mph, distances from kilometers to miles, and ambient weather temperatures from Celsius to Fahrenheit.",
+      },
+      {
+        title: "Cooking & baking recipe scaling",
+        body:
+          "Translate European metric baking measurements (grams, milliliters) into US volume measures (cups, tablespoons, fluid ounces) effortlessly.",
+      },
+      {
+        title: "IT & cloud storage planning",
+        body:
+          "Convert accurately between decimal storage metrics (GB, TB) and binary computing architectures (GiB, TiB) when provisioning cloud servers or purchasing storage.",
+      },
+    ],
+    tips: [
+      "Click any preset button under the converter for instant one-click calculations of popular everyday conversions.",
+      "Click directly on any tile in the comparison grid to set that unit as your current target.",
+    ],
+    extraFaqs: [
+      {
+        question: "Are temperature conversions proportional?",
+        answer:
+          "No, temperature uses interval scaling with different zero-points. The converter uses exact formulas: °F = (°C × 9/5) + 32 and K = °C + 273.15.",
+      },
+    ],
+  },
+
+  "stopwatch-timer": {
+    intro:
+      "Whether you are timing sprints, measuring workout intervals, tracking productivity with Pomodoro sprints, or steeping tea, having a responsive, accurate timer is essential. This browser utility combines a precision millisecond digital stopwatch with a flexible countdown timer. The stopwatch includes lap recording with split times, lap deltas, and automated fastest/slowest lap highlighting. The countdown timer features an intuitive circular progress ring, one-click duration presets, fullscreen mode, and a synthesized melodic chime that alerts you when time expires.",
+    howTo: {
+      title: "How to use the digital stopwatch and countdown timer",
+      steps: [
+        "Switch between 'Digital Stopwatch' and 'Countdown Timer' using the top category selector.",
+        "For the Stopwatch: Click 'Start' to begin timing. Click 'Lap' to record intermediate split times. Fastest laps are badged in green and slowest in amber.",
+        "For the Timer: Select a quick preset (e.g., 5m, 10m, 25m Pomodoro) or enter your custom duration, then click 'Start'.",
+        "When the countdown timer finishes, an audio alarm plays automatically with a visual alert.",
+        "Click the Fullscreen icon to expand the timer for presentations, gym workouts, or kitchen cooking displays.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Athletic training & track split timing",
+        body:
+          "Measure lap times and analyze pacing improvements with centisecond precision and automated lap comparison.",
+      },
+      {
+        title: "Pomodoro study & deep work sessions",
+        body:
+          "Boost productivity by working in uninterrupted 25-minute sprints followed by 5-minute cooldown periods.",
+      },
+      {
+        title: "Presentations & public speaking",
+        body:
+          "Launch fullscreen mode on a podium or second screen to stay strictly within allotted presentation speaking times.",
+      },
+    ],
+    tips: [
+      "Use 'Copy Laps' on the stopwatch to paste a cleanly formatted log of all lap and split times into your notes or spreadsheet.",
+      "The timer continues tracking elapsed time accurately even if you switch browser tabs.",
+    ],
+    extraFaqs: [
+      {
+        question: "Does the timer sound require downloading MP3 files?",
+        answer:
+          "No. The audio chime is synthesized entirely inside your browser via the Web Audio API, ensuring instantaneous playback with zero network dependency.",
+      },
+    ],
+  },
+
+  "text-sorter": {
+    intro:
+      "Organizing raw text, cleaning email lists, deduplicating inventory SKUs, and sorting data alphabetically are some of the most frequent administrative tasks in digital work. This tool processes text in real-time within your browser: alphabetize lines A to Z or reverse Z to A, sort by line length, shuffle randomly, deduplicate items with case sensitivity controls, trim whitespace, and append sequential numbering. All transformations execute locally with zero data transmission.",
+    howTo: {
+      title: "How to sort and clean text lists online",
+      steps: [
+        "Paste your text or list into the left 'Input Raw Text' box.",
+        "Choose your sorting preference: Alphabetical (A → Z), Reverse (Z → A), Shortest First, Longest First, or Shuffle.",
+        "Toggle cleaning options as needed: Deduplicate Lines, Trim Whitespace, Remove Blank Lines, or Line Numbering.",
+        "Inspect the sorted and cleaned result in the right output panel.",
+        "Review the live metrics footer showing original lines, final lines, and duplicates eliminated.",
+        "Click 'Copy' to copy the result, or 'Save' to download a clean .txt file.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Deduplicating customer & subscriber lists",
+        body:
+          "Paste email addresses or user handles to strip identical entries instantly before running marketing campaigns or importing into databases.",
+      },
+      {
+        title: "Alphabetizing bibliographies & indexes",
+        body:
+          "Sort references, authors, or index entries into clean alphabetical order with natural number handling.",
+      },
+      {
+        title: "Developer log & code cleanup",
+        body:
+          "Sort enum lists, import statements, CSS properties, or environment variables while stripping unwanted whitespace and blank lines.",
+      },
+    ],
+    tips: [
+      "If you want to remove duplicates without sorting your lines, choose 'None' as the sort order while keeping 'Deduplicate Lines' checked.",
+      "Natural alphanumeric sorting ensures numbers inside names like item1, item2, item10 are sorted logically.",
+    ],
+    extraFaqs: [
+      {
+        question: "Can I handle lists with thousands of items?",
+        answer:
+          "Yes. The sorting algorithms run in native browser JavaScript and comfortably process lists containing tens of thousands of lines within milliseconds.",
       },
     ],
   },

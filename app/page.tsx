@@ -259,9 +259,9 @@ const POPULAR_TOOLS_SHOWCASE = [
     color: "bg-purple-500/15 text-purple-500 border-purple-500/20",
   },
   {
-    name: "Sample Video Generator",
-    slug: "sample-video-generator",
-    description: "Generate sample videos instantly",
+    name: "Sample File Generator",
+    slug: "sample-file-generator",
+    description: "Generate test files across all formats",
     icon: Film,
     color: "bg-blue-500/15 text-blue-500 border-blue-500/20",
   },

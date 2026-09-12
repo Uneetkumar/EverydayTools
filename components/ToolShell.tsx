@@ -65,16 +65,13 @@ const WIDE_LAYOUT_TOOLS = new Set([
   "audio-remover",
   "video-player",
   "pdf-editor",
-  "video-downloader",
-  "youtube-video-downloader",
-  "instagram-video-downloader",
-  "facebook-video-downloader",
-  "tiktok-video-downloader",
-  "twitter-video-downloader",
   "json-to-csv",
   "regex-tester",
   "json-to-typescript",
   "markdown-table-generator",
+  "unit-converter",
+  "text-sorter",
+  "png-to-svg",
 ]);
 
 /**
@@ -100,12 +97,6 @@ const NETWORK_TOOLS = new Set([
   "image-to-text",
   "currency-converter",
   "speech-to-text",
-  "video-downloader",
-  "youtube-video-downloader",
-  "instagram-video-downloader",
-  "facebook-video-downloader",
-  "tiktok-video-downloader",
-  "twitter-video-downloader",
 ]);
 
 const ICON_MAP: Record<string, React.ElementType> = {

@@ -66,7 +66,6 @@ const PdfEditor = dynamic(() => import("@/components/tools/PdfEditor"), { loadin
 const ImageToText = dynamic(() => import("@/components/tools/ImageToText"), { loading: ToolLoading });
 const VideoCutter = dynamic(() => import("@/components/tools/VideoCutter"), { loading: ToolLoading });
 const AudioRemover = dynamic(() => import("@/components/tools/AudioRemover"), { loading: ToolLoading });
-const VideoDownloader = dynamic(() => import("@/components/tools/VideoDownloader"), { loading: ToolLoading });
 
 // New Tool Suite Imports
 const SipCalculator = dynamic(() => import("@/components/tools/SipCalculator"), { loading: ToolLoading });
@@ -96,6 +95,13 @@ const AiTextRewriter = dynamic(() => import("@/components/tools/AiTextRewriter")
 const AiTextSimplifier = dynamic(() => import("@/components/tools/AiTextSimplifier"), { loading: ToolLoading });
 const AiKeywordExtractor = dynamic(() => import("@/components/tools/AiKeywordExtractor"), { loading: ToolLoading });
 const AiJsonExplainer = dynamic(() => import("@/components/tools/AiJsonExplainer"), { loading: ToolLoading });
+
+// Everyday Essential Tools
+const Calculator = dynamic(() => import("@/components/tools/Calculator"), { loading: ToolLoading });
+const UnitConverter = dynamic(() => import("@/components/tools/UnitConverter"), { loading: ToolLoading });
+const StopwatchTimer = dynamic(() => import("@/components/tools/StopwatchTimer"), { loading: ToolLoading });
+const TextSorter = dynamic(() => import("@/components/tools/TextSorter"), { loading: ToolLoading });
+const PngToSvg = dynamic(() => import("@/components/tools/PngToSvg"), { loading: ToolLoading });
 
 interface ToolPageProps {
   params: Promise<{ slug: string }>;
@@ -193,14 +199,6 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <SpeechToText />;
       case "sample-file-generator":
         return <SampleFileGenerator />;
-      case "sample-image-generator":
-        return <SampleFileGenerator allowedKinds={["image"]} />;
-      case "sample-pdf-generator":
-        return <SampleFileGenerator allowedKinds={["pdf"]} />;
-      case "sample-video-generator":
-        return <SampleFileGenerator allowedKinds={["video"]} />;
-      case "sample-data-generator":
-        return <SampleFileGenerator allowedKinds={["csv", "json", "text"]} />;
       case "percentage-calculator":
         return <PercentageCalculator />;
       case "profit-margin-calculator":
@@ -249,18 +247,6 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <TextDiffChecker />;
       case "ai-explainer":
         return <AiExplainer />;
-      case "video-downloader":
-        return <VideoDownloader />;
-      case "youtube-video-downloader":
-        return <VideoDownloader platform="youtube" />;
-      case "instagram-video-downloader":
-        return <VideoDownloader platform="instagram" />;
-      case "facebook-video-downloader":
-        return <VideoDownloader platform="facebook" />;
-      case "tiktok-video-downloader":
-        return <VideoDownloader platform="tiktok" />;
-      case "twitter-video-downloader":
-        return <VideoDownloader platform="twitter" />;
       case "sip-calculator":
         return <SipCalculator />;
       case "compound-interest-calculator":
@@ -311,6 +297,16 @@ export default async function ToolPage({ params }: ToolPageProps) {
         return <AiKeywordExtractor />;
       case "ai-json-explainer":
         return <AiJsonExplainer />;
+      case "calculator":
+        return <Calculator />;
+      case "unit-converter":
+        return <UnitConverter />;
+      case "stopwatch-timer":
+        return <StopwatchTimer />;
+      case "text-sorter":
+        return <TextSorter />;
+      case "png-to-svg":
+        return <PngToSvg />;
       default:
         return <PercentageCalculator />;
     }

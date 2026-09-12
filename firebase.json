@@ -4,6 +4,58 @@
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "cleanUrls": true,
     "trailingSlash": false,
+    "redirects": [
+      {
+        "source": "/tools/sample-image-generator",
+        "destination": "/tools/sample-file-generator",
+        "type": 301
+      },
+      {
+        "source": "/tools/sample-pdf-generator",
+        "destination": "/tools/sample-file-generator",
+        "type": 301
+      },
+      {
+        "source": "/tools/sample-video-generator",
+        "destination": "/tools/sample-file-generator",
+        "type": 301
+      },
+      {
+        "source": "/tools/sample-data-generator",
+        "destination": "/tools/sample-file-generator",
+        "type": 301
+      },
+      {
+        "source": "/tools/youtube-video-downloader",
+        "destination": "/tools/video-player",
+        "type": 301
+      },
+      {
+        "source": "/tools/instagram-video-downloader",
+        "destination": "/tools/video-player",
+        "type": 301
+      },
+      {
+        "source": "/tools/facebook-video-downloader",
+        "destination": "/tools/video-player",
+        "type": 301
+      },
+      {
+        "source": "/tools/tiktok-video-downloader",
+        "destination": "/tools/video-player",
+        "type": 301
+      },
+      {
+        "source": "/tools/twitter-video-downloader",
+        "destination": "/tools/video-player",
+        "type": 301
+      },
+      {
+        "source": "/tools/video-downloader",
+        "destination": "/tools/video-player",
+        "type": 301
+      }
+    ],
     "headers": [
       {
         "source": "**/opengraph-image",

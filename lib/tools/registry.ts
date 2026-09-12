@@ -833,6 +833,57 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     ],
     "isPopular": true
   },
+  "png-to-svg": {
+    "slug": "png-to-svg",
+    "name": "PNG to SVG Converter",
+    "shortName": "PNG to SVG",
+    "category": "image-media",
+    "categoryName": "Image & Media",
+    "description": "Convert raster PNG images into scalable vector SVG graphics with color quantization, threshold controls, and instant code export.",
+    "longDescription": "Free in-browser PNG to SVG vectorizer. Convert raster PNG, JPG, and WebP graphics into clean, infinitely scalable vector SVG paths with color clustering, monochrome silhouette tracing, and pixel art preservation.",
+    "iconName": "Image",
+    "metaTitle": "Free PNG to SVG Converter - Vectorize Images",
+    "metaDescription": "Convert PNG images to scalable SVG vectors online. Features color layers, monochrome silhouettes, pixel art, and instant code export.",
+    "keywords": [
+      "png to svg",
+      "convert png to svg",
+      "vectorize png online",
+      "image to svg converter",
+      "png to vector",
+      "raster to vector svg",
+      "free svg converter"
+    ],
+    "features": [
+      "Vectorize PNG, JPG, and WebP images into scalable SVG paths",
+      "Color quantization modes with 2 to 32 palette colors",
+      "High-contrast monochrome silhouette and stencil tracing",
+      "Pixel art preservation mode for retro game icons",
+      "Interactive zoom up to 400% with side-by-side inspection",
+      "1-click SVG code copy and direct .svg file download"
+    ],
+    "faqs": [
+      {
+        "question": "How does PNG to SVG conversion work?",
+        "answer": "The converter analyzes raster pixel data directly in your browser, groups neighboring pixels into color clusters or high-contrast luminance masks, and traces boundary contours into mathematical SVG vector paths."
+      },
+      {
+        "question": "Can I scale the output SVG to any resolution?",
+        "answer": "Yes! Unlike raster PNG images that lose quality and pixelate when enlarged, SVG files are defined mathematically and can scale infinitely to 4K, 8K, and billboard sizes with zero quality loss."
+      },
+      {
+        "question": "Are my images uploaded to an external server?",
+        "answer": "No. The entire vectorization engine runs locally inside your browser memory using HTML5 Canvas. Your images are never sent over the network."
+      }
+    ],
+    "relatedToolSlugs": [
+      "png-to-jpg",
+      "jpg-to-png",
+      "image-compressor",
+      "image-resizer",
+      "favicon-generator"
+    ],
+    "isPopular": true
+  },
   "jpg-to-png": {
     "slug": "jpg-to-png",
     "name": "JPG to PNG Converter",
@@ -962,32 +1013,29 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     "shortName": "Unlock PDF",
     "category": "pdf-docs",
     "categoryName": "PDF & Documents",
-    "description": "Remove owner password restrictions, copying, and printing locks from PDF files entirely in your browser.",
-    "longDescription": "Unlock restricted PDF documents so you can copy text, print, and edit pages freely. 100% processed in browser memory with zero security risk.",
+    "description": "Reset owner print and copy restrictions on your authorized PDF files entirely in your browser.",
+    "longDescription": "Reset owner print, copy, and annotation permission flags on PDF documents you own so you can edit and print freely. 100% processed in browser memory with zero server uploads.",
     "iconName": "Lock",
-    "metaTitle": "Unlock PDF | TabBench",
-    "metaDescription": "Unlock password-protected PDF files and remove print, copy, and edit restrictions safely in your browser. Zero server upload.",
+    "metaTitle": "Unlock PDF - Reset Permissions",
+    "metaDescription": "Reset owner print and copy permissions on your authorized PDF documents safely in your browser. Client-side processing with zero server uploads.",
     "keywords": [
       "unlock pdf",
-      "remove pdf password",
-      "unlock protected pdf",
-      "pdf password remover",
+      "reset pdf permissions",
       "remove pdf print restrictions",
-      "decrypt pdf online",
-      "unlock secured pdf",
-      "pdf permission remover",
+      "pdf copy permission reset",
+      "unlock owner pdf online",
       "remove edit lock from pdf"
     ],
     "features": [
-      "Remove restrictions and print locks",
-      "Decrypt with known password",
+      "Reset print and copy restrictions",
+      "Decrypt with authorized password",
       "Zero server upload",
-      "Instant unlocked PDF download"
+      "Instant unrestricted PDF download"
     ],
     "faqs": [
       {
         "question": "Can it unlock password-protected files?",
-        "answer": "Yes. For user-encrypted PDFs, enter the password once to decrypt and save a permanently unrestricted copy."
+        "answer": "Yes. For user-encrypted PDFs you own, enter the password once to decrypt and save a permanently unrestricted copy."
       }
     ],
     "relatedToolSlugs": [
@@ -1952,166 +2000,6 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     ],
     "isPopular": true
   },
-  "sample-image-generator": {
-    "slug": "sample-image-generator",
-    "name": "Sample & Random Image Generator",
-    "shortName": "Sample Image Generator",
-    "category": "image-media",
-    "categoryName": "Image & Media",
-    "description": "Generate random placeholder images at an exact file size in JPG, PNG, or WebP.",
-    "longDescription": "Create dummy images at any file size you specify, with randomised artwork and dimensions every time. Built for testing upload limits, filling layouts, and checking image pipelines.",
-    "iconName": "Image",
-    "metaTitle": "Sample Image Generator | TabBench",
-    "metaDescription": "Generate placeholder and dummy images of any exact dimensions and file size. Perfect for web design, mockups, and upload testing.",
-    "keywords": [
-      "sample image generator",
-      "random image generator",
-      "dummy image generator",
-      "demo image generator",
-      "placeholder image download",
-      "sample jpg test file",
-      "test image generator",
-      "random photo generator",
-      "mock picture",
-      "demo pictures"
-    ],
-    "features": [
-      "Exact target file size",
-      "JPG, PNG or WebP",
-      "Randomised artwork and dimensions",
-      "Copy small images as data URLs"
-    ],
-    "faqs": [
-      {
-        "question": "Are the images real image files?",
-        "answer": "Yes. Each is drawn on a canvas and encoded properly, so it opens in any image viewer or editor."
-      }
-    ],
-    "relatedToolSlugs": [
-      "image-compressor",
-      "image-resizer",
-      "sample-file-generator"
-    ],
-    "isPopular": true
-  },
-  "sample-pdf-generator": {
-    "slug": "sample-pdf-generator",
-    "name": "Sample & Dummy PDF Generator",
-    "shortName": "Sample PDF Generator",
-    "category": "pdf-docs",
-    "categoryName": "PDF & Documents",
-    "description": "Generate dummy PDF files at an exact size, with a random number of pages and real text content.",
-    "longDescription": "Create placeholder PDFs at any file size, each with a randomised page count and genuine text content built with pdf-lib. Useful for testing upload caps, PDF viewers, and document pipelines.",
-    "iconName": "FileText",
-    "metaTitle": "Sample PDF Generator | TabBench",
-    "metaDescription": "Generate synthetic dummy PDF files of any exact file size with real pages and text for upload testing and PDF reader debugging.",
-    "keywords": [
-      "sample pdf generator",
-      "dummy pdf download",
-      "demo pdf generator",
-      "random pdf generator",
-      "sample pdf for testing",
-      "test pdf file 1mb",
-      "placeholder pdf generator",
-      "mock pdf file",
-      "demo document"
-    ],
-    "features": [
-      "Exact target file size",
-      "Random page count and content",
-      "Valid PDF that opens anywhere",
-      "Nothing is uploaded"
-    ],
-    "faqs": [
-      {
-        "question": "Do the PDFs actually open?",
-        "answer": "Yes. They are built with pdf-lib and contain real pages, headings, and body text."
-      }
-    ],
-    "relatedToolSlugs": [
-      "pdf-merge",
-      "split-pdf",
-      "sample-file-generator"
-    ]
-  },
-  "sample-video-generator": {
-    "slug": "sample-video-generator",
-    "name": "Sample & Dummy Video Generator",
-    "shortName": "Sample Video Generator",
-    "category": "image-media",
-    "categoryName": "Image & Media",
-    "description": "Generate a short random WebM video clip in your browser for testing uploads and players.",
-    "longDescription": "Record a short animated WebM clip of any length between one and ten seconds, generated live in your browser. Useful for testing video uploads, players, and duration limits.",
-    "iconName": "Shuffle",
-    "metaTitle": "Sample Video Generator | TabBench",
-    "metaDescription": "Generate synthetic test video files (WebM/MP4) with customizable resolution, framerate, and duration for media player testing.",
-    "keywords": [
-      "sample video generator",
-      "dummy video download",
-      "demo video generator",
-      "random video generator",
-      "test video file",
-      "sample mp4 test clip",
-      "sample webm generator",
-      "mock video clip"
-    ],
-    "features": [
-      "1 to 10 second clips",
-      "640x360 VP9 WebM",
-      "Randomised animation each time",
-      "Recorded locally, never uploaded"
-    ],
-    "faqs": [
-      {
-        "question": "Can I choose the exact file size?",
-        "answer": "No. The browser's recorder picks its own bitrate, so you choose the duration and the size follows."
-      }
-    ],
-    "relatedToolSlugs": [
-      "sample-image-generator",
-      "sample-file-generator",
-      "image-compressor"
-    ]
-  },
-  "sample-data-generator": {
-    "slug": "sample-data-generator",
-    "name": "Sample Data Generator (CSV & JSON)",
-    "shortName": "Sample Data Generator",
-    "category": "developer",
-    "categoryName": "Developer & Data",
-    "description": "Generate dummy CSV, JSON, and plain text files at an exact size with realistic placeholder records.",
-    "longDescription": "Create test data files at any size — CSV with headers and rows, JSON arrays of records, or plain text. Useful for testing importers, parsers, and upload limits.",
-    "iconName": "Code",
-    "metaTitle": "Sample Data Generator | TabBench",
-    "metaDescription": "Generate realistic mock CSV and JSON datasets with names, emails, addresses, and timestamps for testing databases and APIs.",
-    "keywords": [
-      "sample data generator",
-      "dummy csv generator",
-      "mock json generator",
-      "demo data generator",
-      "random data generator",
-      "sample test data",
-      "generate fake csv data",
-      "mock dataset"
-    ],
-    "features": [
-      "CSV, JSON or plain text",
-      "Exact target file size",
-      "Realistic placeholder records",
-      "Runs entirely in your browser"
-    ],
-    "faqs": [
-      {
-        "question": "Is the data realistic?",
-        "answer": "It uses plausible names, emails, cities, and amounts — enough to exercise a parser or importer."
-      }
-    ],
-    "relatedToolSlugs": [
-      "json-formatter",
-      "sample-file-generator",
-      "text-diff-checker"
-    ]
-  },
   "notepad": {
     "slug": "notepad",
     "name": "Online Notepad",
@@ -2237,260 +2125,6 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     ],
     "isPopular": true
   },
-  "video-downloader": {
-    "slug": "video-downloader",
-    "name": "Video Downloader",
-    "shortName": "Video Downloader",
-    "category": "image-media",
-    "categoryName": "Image & Media",
-    "description": "Download and inspect video files from direct, authorized, or self-hosted media streams.",
-    "longDescription": "Inspect technical specifications including resolution, codecs, frame rate, bitrate, and duration from direct video URLs. Download permitted MP4, WebM, and MOV streams in original or extracted audio quality with zero server retention.",
-    "iconName": "Video",
-    "metaTitle": "Video Downloader | TabBench",
-    "metaDescription": "Inspect, analyze, and download accessible online video streams. View stream details, resolutions, and media links.",
-    "keywords": [
-      "video downloader",
-      "download video online",
-      "inspect video stream",
-      "web video downloader",
-      "media stream inspector",
-      "download video from url",
-      "save online video",
-      "mp4 video downloader",
-      "stream video saver"
-    ],
-    "features": [
-      "Direct MP4, WebM & MOV stream inspection",
-      "Resolution, bitrate & codec analysis",
-      "Quality selection with Highest Available badge",
-      "Audio-only track extraction",
-      "SSRF-protected secure retrieval",
-      "100% private in-browser processing"
-    ],
-    "formulas": [
-      {
-        "name": "Video Bitrate & File Size Relationship",
-        "expression": "File Size (MB) = (Bitrate (kbps) × Duration (seconds)) / 8000",
-        "explanation": "The total file size of a video stream is directly determined by the combined video and audio bitrates multiplied by duration.",
-        "example": "A 1080p stream at 5,000 kbps lasting 120 seconds = (5000 × 120) / 8000 = 75 MB."
-      }
-    ],
-    "faqs": [
-      {
-        "question": "Can I download videos from YouTube, TikTok, or Instagram?",
-        "answer": "This tool strictly respects platform terms of service and copyright laws. It does not bypass DRM, paywalls, authentication, or technical platform restrictions. Only direct, authorized, or user-owned media streams are supported."
-      },
-      {
-        "question": "Are my inspected videos stored on TabBench servers?",
-        "answer": "No. Processing is performed client-side in your browser. No files, URLs, or personal data are stored or retained on any server."
-      }
-    ],
-    "relatedToolSlugs": [
-      "youtube-video-downloader",
-      "instagram-video-downloader",
-      "crop-image"
-    ],
-    "isPopular": true
-  },
-  "youtube-video-downloader": {
-    "slug": "youtube-video-downloader",
-    "name": "YouTube Video Downloader",
-    "shortName": "YouTube Downloader",
-    "category": "image-media",
-    "categoryName": "Image & Media",
-    "description": "Inspect video resolution, codecs, and download permitted YouTube streams and creative assets.",
-    "longDescription": "Analyze stream dimensions, frame rate, audio codecs, and download permitted or self-hosted video streams. Adheres to platform copyright policies without DRM circumvention.",
-    "iconName": "Video",
-    "metaTitle": "YouTube Video Downloader | TabBench",
-    "metaDescription": "Analyze YouTube video streams, preview available resolutions, inspect audio/video tracks, and extract public media details.",
-    "keywords": [
-      "youtube video downloader",
-      "youtube downloader",
-      "download youtube video",
-      "inspect youtube stream",
-      "youtube media inspector",
-      "youtube video download online",
-      "save youtube video mp4",
-      "youtube resolution inspector",
-      "download public youtube stream"
-    ],
-    "features": [
-      "YouTube stream analysis",
-      "Resolution & audio track detection",
-      "Highest quality auto-selection",
-      "100% private in-browser"
-    ],
-    "faqs": [
-      {
-        "question": "Can I download copyrighted YouTube content?",
-        "answer": "No. Only permitted, creative commons, or self-owned video streams are supported in compliance with platform terms."
-      }
-    ],
-    "relatedToolSlugs": [
-      "video-downloader",
-      "instagram-video-downloader",
-      "tiktok-video-downloader"
-    ],
-    "isPopular": true
-  },
-  "instagram-video-downloader": {
-    "slug": "instagram-video-downloader",
-    "name": "Instagram Video Downloader",
-    "shortName": "Instagram Downloader",
-    "category": "image-media",
-    "categoryName": "Image & Media",
-    "description": "Download and inspect Instagram Reels, Stories, and permitted video streams.",
-    "longDescription": "Inspect aspect ratio (9:16 vertical / 1:1 square), resolution, and bitrate for Instagram videos and Reels. Download permitted media with zero server storage.",
-    "iconName": "Video",
-    "metaTitle": "Instagram Video Downloader | TabBench",
-    "metaDescription": "Inspect and download Instagram Reels, stories, and video posts. Analyze public media streams directly in your browser.",
-    "keywords": [
-      "instagram video downloader",
-      "download instagram reel",
-      "instagram video download",
-      "insta media inspector",
-      "instagram reels downloader",
-      "save insta video",
-      "download instagram story",
-      "ig video saver online"
-    ],
-    "features": [
-      "Reels & vertical video inspection",
-      "Direct media retrieval",
-      "Resolution & codec analysis",
-      "100% client-side private"
-    ],
-    "faqs": [
-      {
-        "question": "Can I download private Instagram posts?",
-        "answer": "No. Private accounts and DRM-protected streams cannot and should not be accessed without explicit authorization."
-      }
-    ],
-    "relatedToolSlugs": [
-      "video-downloader",
-      "tiktok-video-downloader",
-      "facebook-video-downloader"
-    ],
-    "isPopular": true
-  },
-  "facebook-video-downloader": {
-    "slug": "facebook-video-downloader",
-    "name": "Facebook Video Downloader",
-    "shortName": "Facebook Downloader",
-    "category": "image-media",
-    "categoryName": "Image & Media",
-    "description": "Inspect and download public, authorized Facebook video streams.",
-    "longDescription": "Check video resolution, aspect ratio, audio bitrate, and download authorized Facebook streams directly in your browser.",
-    "iconName": "Video",
-    "metaTitle": "Facebook Video Downloader | TabBench",
-    "metaDescription": "Inspect public Facebook video streams, analyze resolutions, and download accessible media links quickly.",
-    "keywords": [
-      "facebook video downloader",
-      "download facebook video",
-      "fb video download online",
-      "facebook stream inspector",
-      "save facebook video mp4",
-      "fb watch downloader",
-      "facebook reel downloader"
-    ],
-    "features": [
-      "Facebook stream analysis",
-      "HD & SD format selection",
-      "Audio track extraction",
-      "Zero server retention"
-    ],
-    "faqs": [
-      {
-        "question": "Can I download private Facebook group videos?",
-        "answer": "No. Only public, permitted, or self-hosted video streams are supported."
-      }
-    ],
-    "relatedToolSlugs": [
-      "video-downloader",
-      "youtube-video-downloader",
-      "instagram-video-downloader"
-    ],
-    "isPopular": true
-  },
-  "tiktok-video-downloader": {
-    "slug": "tiktok-video-downloader",
-    "name": "TikTok Video Downloader",
-    "shortName": "TikTok Downloader",
-    "category": "image-media",
-    "categoryName": "Image & Media",
-    "description": "Inspect video resolution and download permitted TikTok videos and creative assets.",
-    "longDescription": "Analyze 9:16 vertical video properties, duration, audio codecs, and retrieve permitted TikTok video files without watermarks or quality loss.",
-    "iconName": "Video",
-    "metaTitle": "TikTok Video Downloader | TabBench",
-    "metaDescription": "Inspect and download public TikTok videos. Analyze media streams, audio tracks, and video properties in your browser.",
-    "keywords": [
-      "tiktok video downloader",
-      "download tiktok video",
-      "tiktok downloader no watermark info",
-      "tiktok stream inspector",
-      "save tiktok video mp4",
-      "tiktok clip downloader",
-      "tiktok 9:16 video saver"
-    ],
-    "features": [
-      "Vertical 9:16 video analysis",
-      "HD resolution detection",
-      "Audio track extraction",
-      "No app install required"
-    ],
-    "faqs": [
-      {
-        "question": "Are videos downloaded in original quality?",
-        "answer": "Yes. When you choose the Highest Available quality, media is retrieved without generational re-encoding."
-      }
-    ],
-    "relatedToolSlugs": [
-      "video-downloader",
-      "instagram-video-downloader",
-      "twitter-video-downloader"
-    ],
-    "isPopular": true
-  },
-  "twitter-video-downloader": {
-    "slug": "twitter-video-downloader",
-    "name": "Twitter Video Downloader",
-    "shortName": "Twitter Downloader",
-    "category": "image-media",
-    "categoryName": "Image & Media",
-    "description": "Download and inspect Twitter / X videos, GIFs, and media streams.",
-    "longDescription": "Inspect video bitrates, dimensions, and audio tracks for Twitter (X) video clips and animated GIFs. Save authorized files directly to your device.",
-    "iconName": "Video",
-    "metaTitle": "Twitter Video Downloader | TabBench",
-    "metaDescription": "Inspect and download Twitter / X videos and GIFs. Analyze video bitrate, resolution, and public media streams.",
-    "keywords": [
-      "twitter video downloader",
-      "x video downloader",
-      "download twitter video",
-      "twitter gif download",
-      "x media inspector",
-      "download x video mp4",
-      "save tweet video",
-      "twitter mp4 downloader"
-    ],
-    "features": [
-      "Twitter & X media stream analysis",
-      "Multiple resolution options",
-      "GIF & MP4 support",
-      "100% private in browser"
-    ],
-    "faqs": [
-      {
-        "question": "Can I download Twitter GIFs as MP4?",
-        "answer": "Yes. Twitter delivers animated GIFs as MP4 video streams, which can be downloaded directly."
-      }
-    ],
-    "relatedToolSlugs": [
-      "video-downloader",
-      "tiktok-video-downloader",
-      "youtube-video-downloader"
-    ],
-    "isPopular": true
-  },
   "video-player": {
     "slug": "video-player",
     "name": "Video Player",
@@ -2527,7 +2161,7 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     ],
     "relatedToolSlugs": [
       "audio-player",
-      "video-downloader",
+      "video-cutter",
       "image-compressor"
     ],
     "isPopular": true
@@ -2653,7 +2287,7 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     "relatedToolSlugs": [
       "audio-remover",
       "video-player",
-      "video-downloader"
+      "image-compressor"
     ],
     "isPopular": true
   },
@@ -3701,6 +3335,237 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "json-to-typescript",
       "json-to-csv"
     ]
+  },
+  "calculator": {
+    "slug": "calculator",
+    "name": "Online Calculator",
+    "shortName": "Calculator",
+    "category": "calculators",
+    "categoryName": "Calculators & Finance",
+    "description": "Realistic standard and scientific calculator with physical hardware design, tactile click feedback, paper tape history, and full keyboard shortcuts.",
+    "longDescription": "A free, private online calculator engineered to look and feel like an authentic physical desktop calculator. Featuring dual modes for everyday arithmetic and advanced scientific calculations (trigonometry, logarithms, exponents, roots, factorials), synthesized key click sounds, mobile haptics, and a continuous paper tape audit log.",
+    "iconName": "Calculator",
+    "metaTitle": "Free Online Calculator - Desk & Scientific",
+    "metaDescription": "Free online desktop calculator with realistic hardware UI, tactile click sounds, paper tape history, and dual standard and scientific modes.",
+    "keywords": [
+      "online calculator",
+      "scientific calculator online",
+      "desktop calculator",
+      "calculator with paper tape",
+      "simple calculator",
+      "free math calculator",
+      "calculator with history"
+    ],
+    "features": [
+      "Realistic hardware casing with ambient solar panel and recessed LCD display",
+      "Dual Standard Mode and Scientific Mode with trigonometry and logarithms",
+      "Authentic tactile mechanical key click audio with sound toggle and mobile haptics",
+      "Continuous paper tape calculation history with 1-click answer recall and copy",
+      "Complete physical keyboard and numpad support with visual key glow",
+      "100% client-side computation with zero tracking or external server requests"
+    ],
+    "formulas": [
+      {
+        "name": "Standard Arithmetic",
+        "expression": "Result = Operand1 (±, ×, ÷) Operand2",
+        "explanation": "Calculates basic operations following operator precedence rules.",
+        "example": "250 × 1.18 = 295"
+      },
+      {
+        "name": "Trigonometric Sine",
+        "expression": "sin(θ) or sin⁻¹(x)",
+        "explanation": "Computes the trigonometric sine in either Degrees (DEG) or Radians (RAD).",
+        "example": "sin(30°) = 0.5"
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Can I use my physical computer keyboard with this calculator?",
+        "answer": "Yes! Full keyboard support is active. You can type numbers 0-9, decimal point, standard operators (+, -, *, /), Enter or = for equals, Backspace to delete a digit, and Esc to clear."
+      },
+      {
+        "question": "Does this calculator save my calculations?",
+        "answer": "Yes. Every calculation is continuously logged in the Paper Tape Audit Drawer. You can review past calculations, click any previous answer to reuse it in your current equation, or clear the tape whenever you choose."
+      },
+      {
+        "question": "Is my data private?",
+        "answer": "Completely. All calculations happen 100% client-side inside your web browser. No numbers or equations are ever uploaded or transmitted to any server."
+      },
+      {
+        "question": "How do I switch between Standard and Scientific modes?",
+        "answer": "Use the mode toggle button at the top of the calculator. Standard mode offers a clean 4-operation layout for quick everyday math, while Scientific mode adds trigonometry (sin, cos, tan), natural logarithms (ln), powers (xʸ), square roots, factorials, and constants (π, e)."
+      }
+    ],
+    "relatedToolSlugs": [
+      "percentage-calculator",
+      "unit-converter",
+      "discount-calculator",
+      "emi-calculator"
+    ],
+    "isPopular": true
+  },
+  "unit-converter": {
+    "slug": "unit-converter",
+    "name": "Universal Unit Converter",
+    "shortName": "Unit Converter",
+    "category": "calculators",
+    "categoryName": "Calculators & Finance",
+    "description": "Convert across 8 unit dimensions: length, mass/weight, temperature, area, volume, speed, digital storage, and time with live multi-unit comparison.",
+    "longDescription": "A fast, comprehensive unit converter covering length, weight, temperature, area, volume, speed, digital storage, and time. Features real-time conversion across all units simultaneously in a clean comparison grid, 1-click unit swapping, and formula explanations.",
+    "iconName": "Scale",
+    "metaTitle": "Free Universal Unit Converter - Fast & Private",
+    "metaDescription": "Free universal unit converter for length, mass, temperature, area, volume, speed, data storage, and time. Instant multi-unit comparison grid.",
+    "keywords": [
+      "unit converter",
+      "length converter",
+      "weight converter",
+      "temperature converter",
+      "km to miles converter",
+      "celsius to fahrenheit",
+      "digital storage converter"
+    ],
+    "features": [
+      "8 comprehensive measurement dimensions with over 60 standard units",
+      "Real-time simultaneous comparison grid showing values across all units",
+      "1-click unit swap button for rapid reciprocal conversions",
+      "Instant copy to clipboard with precision formatting",
+      "Common presets for everyday conversions like miles to km and lbs to kg",
+      "100% private in-browser calculation with zero server latency"
+    ],
+    "formulas": [
+      {
+        "name": "Length (Kilometer to Mile)",
+        "expression": "Miles = Kilometers × 0.621371",
+        "explanation": "Converts metric kilometers to international statute miles.",
+        "example": "10 km × 0.621371 = 6.21371 miles"
+      },
+      {
+        "name": "Temperature (Celsius to Fahrenheit)",
+        "expression": "°F = (°C × 9/5) + 32",
+        "explanation": "Linear temperature scale conversion between Celsius and Fahrenheit.",
+        "example": "(100°C × 9/5) + 32 = 212°F"
+      }
+    ],
+    "faqs": [
+      {
+        "question": "Which measurement categories are supported?",
+        "answer": "The converter supports 8 primary categories: Length & Distance, Weight & Mass, Temperature, Area, Volume & Capacity, Speed, Digital Storage, and Time."
+      },
+      {
+        "question": "Does it show decimal vs binary digital storage?",
+        "answer": "Yes. Digital storage covers both standard decimal units (KB, MB, GB, TB) and binary IEEE 1541 units (KiB, MiB, GiB) for accurate hardware and file size conversions."
+      },
+      {
+        "question": "Can I copy the converted result easily?",
+        "answer": "Yes, click the 'Copy Result' button or click on any tile in the live comparison grid to instantly copy the exact formatted value to your clipboard."
+      }
+    ],
+    "relatedToolSlugs": [
+      "calculator",
+      "percentage-calculator",
+      "currency-converter",
+      "aspect-ratio-calculator"
+    ],
+    "isPopular": true
+  },
+  "stopwatch-timer": {
+    "slug": "stopwatch-timer",
+    "name": "Online Stopwatch & Countdown Timer",
+    "shortName": "Stopwatch & Timer",
+    "category": "date-time",
+    "categoryName": "Date & Time",
+    "description": "Digital millisecond stopwatch with split and lap delta tracking, plus countdown timer with presets, synthesized chime alarms, and fullscreen mode.",
+    "longDescription": "A free online precision digital stopwatch and countdown timer. Track split times, lap deltas with fastest/slowest lap highlighting, set custom countdown durations or one-click presets (including 25-minute Pomodoro), and enjoy synthesized audio chime alarms and fullscreen presentation mode.",
+    "iconName": "Clock",
+    "metaTitle": "Free Online Stopwatch & Countdown Timer",
+    "metaDescription": "Free online precision stopwatch with lap tracking and countdown timer with sound alerts, presets, and fullscreen mode. 100% private in your browser.",
+    "keywords": [
+      "online stopwatch",
+      "online timer",
+      "countdown timer online",
+      "stopwatch with laps",
+      "pomodoro timer online",
+      "timer with sound alarm",
+      "millisecond stopwatch"
+    ],
+    "features": [
+      "Centisecond (10ms) precision digital stopwatch with lap and split times",
+      "Automated fastest and slowest lap highlighting with delta comparison",
+      "Countdown timer with circular SVG progress ring and custom duration input",
+      "Quick presets for 1m, 3m, 5m, 10m, 15m, 25m Pomodoro, and 45m Focus",
+      "Synthesized harmonic audio chime alarm using Web Audio API",
+      "Fullscreen presentation mode for meetings, workouts, and classrooms"
+    ],
+    "faqs": [
+      {
+        "question": "How accurate is this online stopwatch?",
+        "answer": "The stopwatch tracks real elapsed wall-clock time using high-resolution browser timestamps, providing reliable 10-millisecond (centisecond) precision even if background tabs experience minor throttling."
+      },
+      {
+        "question": "Does the countdown timer play a sound when it reaches zero?",
+        "answer": "Yes! When the countdown timer completes, a melodic audio chime plays automatically. You can toggle audio on or off anytime using the sound control icon in the header."
+      },
+      {
+        "question": "Can I export or copy my lap times?",
+        "answer": "Yes, click 'Copy Laps' to copy a formatted list of all split and individual lap times directly to your clipboard for spreadsheets or workout logs."
+      }
+    ],
+    "relatedToolSlugs": [
+      "working-days-calculator",
+      "date-difference-calculator",
+      "unix-timestamp-converter"
+    ],
+    "isPopular": true
+  },
+  "text-sorter": {
+    "slug": "text-sorter",
+    "name": "Text Sorter & Duplicate Line Remover",
+    "shortName": "Text Sorter",
+    "category": "text",
+    "categoryName": "Text & Writing",
+    "description": "Sort lists alphabetically (A-Z, Z-A) or by length, remove duplicate lines, trim whitespace, shuffle, and add line numbers instantly.",
+    "longDescription": "A fast, client-side list cleaner and text sorter. Alphabetize lines, sort in reverse, sort by character length, shuffle randomly, deduplicate with case-sensitive or insensitive matching, trim whitespace, and export or copy clean results in seconds.",
+    "iconName": "Type",
+    "metaTitle": "Free Text Sorter & Duplicate Line Remover",
+    "metaDescription": "Sort lists alphabetically A-Z, remove duplicate lines, sort by length, and trim whitespace online. Free, instant, and 100% private in your browser.",
+    "keywords": [
+      "text sorter",
+      "alphabetize list online",
+      "remove duplicate lines",
+      "sort lines alphabetically",
+      "list cleaner online",
+      "line deduplicator",
+      "sort text by length"
+    ],
+    "features": [
+      "Alphabetical sorting (A-Z and Z-A) with natural alphanumeric recognition",
+      "Sort by line length (shortest first or longest first) and random shuffle",
+      "1-click duplicate line removal with case-sensitivity options",
+      "Whitespace trimming and blank line removal filters",
+      "Automatic sequential line numbering option",
+      "Live before-and-after metrics: total lines, duplicates removed, and char counts"
+    ],
+    "faqs": [
+      {
+        "question": "Does this tool keep my list data private?",
+        "answer": "Yes. All sorting and deduplication algorithms execute directly inside your browser memory. No text or lists are ever transmitted to an external server."
+      },
+      {
+        "question": "How does natural alphanumeric sorting work?",
+        "answer": "Natural sorting treats embedded numbers logically rather than strictly alphabetically, meaning 'item2' correctly precedes 'item10'."
+      },
+      {
+        "question": "Can I remove duplicates without altering my original order?",
+        "answer": "Yes! Simply choose 'None' for the sort order while keeping 'Deduplicate Lines' checked. The first occurrence of each unique line will be preserved in its original sequence."
+      }
+    ],
+    "relatedToolSlugs": [
+      "word-counter",
+      "case-converter",
+      "text-diff-checker",
+      "slug-generator"
+    ],
+    "isPopular": true
   }
 };
 

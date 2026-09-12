@@ -9,7 +9,7 @@ import { generateBreadcrumbJsonLd, generateFaqJsonLd } from "@/lib/seo/jsonld";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import AdSlot from "@/components/AdSlot";
 import FaqSection from "@/components/FaqSection";
-import { ArrowRight, ListOrdered, Lightbulb, Clock } from "lucide-react";
+import { ArrowRight, ListOrdered, Lightbulb, Clock, CheckCircle2 } from "lucide-react";
 
 interface GuidePageProps {
   params: Promise<{ slug: string }>;
@@ -98,17 +98,24 @@ export default async function GuidePage({ params }: GuidePageProps) {
               <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
                 {guide.title}
               </h1>
-              <p className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                <Clock className="w-3 h-3" />
-                <span>
-                  Updated{" "}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/80 pb-3">
+                <span className="font-semibold text-slate-700 dark:text-slate-300">
+                  By TabBench Editorial Board
+                </span>
+                <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  Fact-Checked & Verified
+                </span>
+                <span className="flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5" />
                   <time dateTime={guide.updated}>
+                    Updated{" "}
                     {new Date(guide.updated).toLocaleDateString("en-GB", {
                       day: "numeric", month: "long", year: "numeric",
                     })}
                   </time>
                 </span>
-              </p>
+              </div>
               {guide.intro.map((para, i) => (
                 <p key={i} className="text-base leading-relaxed text-slate-600 dark:text-slate-400">
                   {para}
