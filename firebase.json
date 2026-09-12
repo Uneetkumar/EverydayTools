@@ -54,6 +54,16 @@
         "source": "/tools/video-downloader",
         "destination": "/tools/video-player",
         "type": 301
+      },
+      {
+        "source": "/tools/simple-calculator",
+        "destination": "/tools/calculator",
+        "type": 301
+      },
+      {
+        "source": "/tools/basic-calculator",
+        "destination": "/tools/calculator",
+        "type": 301
       }
     ],
     "headers": [

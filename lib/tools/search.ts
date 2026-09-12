@@ -173,6 +173,12 @@ const ALIASES: Record<string, string[]> = {
   metadata: ["exif", "viewer", "image", "camera"],
   table: ["markdown", "generator", "spreadsheet", "grid", "csv"],
   markdown: ["table", "generator", "notepad", "text"],
+
+  // simple / basic calculator shortcuts
+  simple: ["calculator", "basic", "standard", "math"],
+  basic: ["simple", "calculator", "standard", "math"],
+  standard: ["simple", "calculator", "basic", "math"],
+  math: ["calculator", "simple", "basic", "standard"],
 };
 
 /**
@@ -285,6 +291,20 @@ function scoreTool(tool: ToolDefinition, groups: string[][], rawQuery?: string):
       if (name.includes(norm)) score += 60;
       else if (keywords.includes(norm)) score += 35;
       else if (blob.includes(norm)) score += 15;
+    }
+  }
+
+  // Slug exact-match bonus: when a user types "calculator" the basic calculator
+  // (slug="calculator") must always win over "emi-calculator", "gst-calculator",
+  // etc. which also contain the word "calculator" in their names.
+  // We give a large bonus when the normalised query exactly equals the slug.
+  if (rawQuery) {
+    const normQuery = normalize(rawQuery);
+    const normSlug = normalize(tool.slug);
+    if (normSlug === normQuery) {
+      score += 200;
+    } else if (normSlug.startsWith(normQuery + " ") || normSlug.endsWith(" " + normQuery)) {
+      score += 80;
     }
   }
 
