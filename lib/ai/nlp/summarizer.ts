@@ -1,30 +1,15 @@
 /**
- * Zero-Download Client-Side Text Summarizer using Lexical Scoring & TextRank Heuristics.
- * Runs 100% in browser memory with 0ms delay and zero server cost.
+ * On-device extractive summariser.
+ *
+ * It does not write new sentences: it scores the sentences already in the
+ * text and keeps the most informative ones, in their original order. Scores
+ * come from word frequency (stopwords removed, plurals folded together), a
+ * bonus for sentences that open a paragraph, and a penalty for repeating a
+ * sentence already chosen, so the summary covers several points instead of
+ * restating one.
  */
 
-const STOPWORDS = new Set([
-  "a", "about", "above", "after", "again", "against", "all", "am", "an", "and",
-  "any", "are", "aren't", "as", "at", "be", "because", "been", "before", "being",
-  "below", "between", "both", "but", "by", "can't", "cannot", "could", "couldn't",
-  "did", "didn't", "do", "does", "doesn't", "doing", "don't", "down", "during",
-  "each", "few", "for", "from", "further", "had", "hadn't", "has", "hasn't",
-  "have", "haven't", "having", "he", "he'd", "he'll", "he's", "her", "here",
-  "here's", "hers", "herself", "him", "himself", "his", "how", "how's", "i",
-  "i'd", "i'll", "i'm", "i've", "if", "in", "into", "is", "isn't", "it", "it's",
-  "its", "itself", "let's", "me", "more", "most", "mustn't", "my", "myself",
-  "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "ought",
-  "our", "ours", "ourselves", "out", "over", "own", "same", "shan't", "she",
-  "she'd", "she'll", "she's", "should", "shouldn't", "so", "some", "such",
-  "than", "that", "that's", "the", "their", "theirs", "them", "themselves",
-  "then", "there", "there's", "these", "they", "they'd", "they'll", "they're",
-  "they've", "this", "those", "through", "to", "too", "under", "until", "up",
-  "very", "was", "wasn't", "we", "we'd", "we'll", "we're", "we've", "were",
-  "weren't", "what", "what's", "when", "when's", "where", "where's", "which",
-  "while", "who", "who's", "whom", "why", "why's", "with", "won't", "would",
-  "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours",
-  "yourself", "yourselves"
-]);
+import { STOPWORDS, countWords, splitSentences } from "./text";
 
 export interface SummarizerOptions {
   length?: "short" | "medium" | "detailed";
@@ -37,107 +22,106 @@ export interface SummaryResult {
   originalWords: number;
   summaryWords: number;
   reductionPercentage: number;
+  sentencesKept: number;
+  sentencesTotal: number;
 }
 
-export function summarizeTextLocally(
-  text: string,
-  options: SummarizerOptions = {}
-): SummaryResult {
-  const cleanText = text.trim();
-  if (!cleanText) {
-    return {
-      summary: "",
-      keyPoints: [],
-      originalWords: 0,
-      summaryWords: 0,
-      reductionPercentage: 0,
-    };
-  }
+const stem = (w: string) =>
+  w.length > 4 && w.endsWith("ies") ? `${w.slice(0, -3)}y` : w.length > 3 && w.endsWith("s") && !w.endsWith("ss") ? w.slice(0, -1) : w;
 
-  // 1. Split into sentences
-  const sentenceRegex = /[^.!?]+[.!?]+(\s+|$)|[^.!?]+$/g;
-  const rawSentences = cleanText.match(sentenceRegex) || [cleanText];
-  const sentences = rawSentences
-    .map((s) => s.trim())
-    .filter((s) => s.length > 15);
+function terms(sentence: string): string[] {
+  return (sentence.toLowerCase().match(/[\p{L}\p{N}]+(?:['’-][\p{L}\p{N}]+)*/gu) ?? [])
+    .filter((w) => w.length > 2 && !STOPWORDS.has(w) && !/^\d+$/.test(w))
+    .map(stem);
+}
 
-  const wordCount = cleanText.split(/\s+/).filter(Boolean).length;
+function jaccard(a: Set<string>, b: Set<string>): number {
+  if (!a.size || !b.size) return 0;
+  let inter = 0;
+  for (const x of a) if (b.has(x)) inter++;
+  return inter / (a.size + b.size - inter);
+}
 
-  if (sentences.length <= 2) {
-    return {
-      summary: cleanText,
-      keyPoints: [cleanText],
-      originalWords: wordCount,
-      summaryWords: wordCount,
-      reductionPercentage: 0,
-    };
-  }
+export function summarizeTextLocally(text: string, options: SummarizerOptions = {}): SummaryResult {
+  const clean = text.trim();
+  const originalWords = countWords(clean);
+  const empty: SummaryResult = {
+    summary: clean,
+    keyPoints: clean ? [clean] : [],
+    originalWords,
+    summaryWords: originalWords,
+    reductionPercentage: 0,
+    sentencesKept: 0,
+    sentencesTotal: 0,
+  };
+  if (!clean) return { ...empty, keyPoints: [] };
 
-  // 2. Compute Word Frequency
-  const wordFreq: Record<string, number> = {};
-  const words = cleanText.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/);
+  // Remember which sentences open a paragraph.
+  const sentences: { text: string; opensParagraph: boolean; paragraph: number }[] = [];
+  clean.split(/\n\s*\n/).forEach((para, p) => {
+    splitSentences(para).forEach((s, i) => sentences.push({ text: s, opensParagraph: i === 0, paragraph: p }));
+  });
+  const usable = sentences.filter((s) => countWords(s.text) >= 4);
+  if (usable.length <= 2) return { ...empty, sentencesKept: usable.length, sentencesTotal: usable.length };
 
-  for (const word of words) {
-    if (word && !STOPWORDS.has(word) && word.length > 2) {
-      wordFreq[word] = (wordFreq[word] || 0) + 1;
-    }
-  }
+  const freq = new Map<string, number>();
+  const sentenceTerms = usable.map((s) => {
+    const t = terms(s.text);
+    for (const w of t) freq.set(w, (freq.get(w) ?? 0) + 1);
+    return t;
+  });
+  const maxFreq = Math.max(1, ...freq.values());
 
-  // Max frequency for normalization
-  const maxFreq = Math.max(...Object.values(wordFreq), 1);
-  for (const w in wordFreq) {
-    wordFreq[w] = wordFreq[w] / maxFreq;
-  }
-
-  // 3. Score Sentences with Position and Length Bonuses
-  const scoredSentences = sentences.map((sentence, index) => {
-    const sWords = sentence.toLowerCase().replace(/[^a-z0-9\s]/g, "").split(/\s+/);
+  const scored = usable.map((s, i) => {
+    const t = sentenceTerms[i];
+    const unique = new Set(t);
     let score = 0;
-
-    for (const w of sWords) {
-      if (wordFreq[w]) {
-        score += wordFreq[w];
-      }
-    }
-
-    // Normalize by sentence length to avoid bias toward long sentences
-    score = score / Math.max(sWords.length, 1);
-
-    // Position bonus: First sentence and last sentence carry high information value
-    if (index === 0) score *= 1.35;
-    if (index === sentences.length - 1) score *= 1.15;
-    if (index === 1) score *= 1.1;
-
-    return { sentence, score, index };
+    for (const w of unique) score += (freq.get(w) ?? 0) / maxFreq;
+    // Divide by sqrt(length): long sentences carry more terms but should not
+    // win on length alone, and very short ones rarely stand on their own.
+    score /= Math.sqrt(Math.max(t.length, 1));
+    if (i === 0) score *= 1.3;
+    else if (s.opensParagraph) score *= 1.15;
+    if (countWords(s.text) < 7) score *= 0.7;
+    // A question is usually a setup for the sentence after it.
+    if (s.text.trim().endsWith("?")) score *= 0.75;
+    return { index: i, text: s.text, score, set: unique };
   });
 
-  // 4. Determine target sentence count based on length option
-  const mode = options.length || "medium";
-  let targetCount = Math.max(1, Math.round(sentences.length * 0.35));
-  if (mode === "short") {
-    targetCount = Math.max(1, Math.min(3, Math.round(sentences.length * 0.2)));
-  } else if (mode === "detailed") {
-    targetCount = Math.max(2, Math.round(sentences.length * 0.55));
+  const mode = options.length ?? "medium";
+  const ratio = mode === "short" ? 0.2 : mode === "detailed" ? 0.5 : 0.33;
+  const cap = mode === "short" ? 3 : mode === "detailed" ? 12 : 6;
+  const target = Math.max(1, Math.min(cap, Math.round(usable.length * ratio)));
+
+  // Greedy selection with a redundancy penalty (maximal marginal relevance).
+  const chosen: typeof scored = [];
+  const pool = [...scored];
+  while (chosen.length < target && pool.length) {
+    let best = 0;
+    let bestValue = -Infinity;
+    pool.forEach((c, k) => {
+      const overlap = chosen.length ? Math.max(...chosen.map((x) => jaccard(x.set, c.set))) : 0;
+      const value = c.score - 0.7 * overlap * c.score;
+      if (value > bestValue) {
+        bestValue = value;
+        best = k;
+      }
+    });
+    chosen.push(pool.splice(best, 1)[0]);
   }
+  chosen.sort((a, b) => a.index - b.index);
 
-  // Pick top scoring sentences and reorder them by original document index
-  const topSentences = [...scoredSentences]
-    .sort((a, b) => b.score - a.score)
-    .slice(0, targetCount)
-    .sort((a, b) => a.index - b.index);
-
-  const summary = topSentences.map((s) => s.sentence).join(" ");
-  const keyPoints = topSentences.map((s) => s.sentence.replace(/^[•\-\s]+/, "").trim());
-  const summaryWords = summary.split(/\s+/).filter(Boolean).length;
-  const reductionPercentage = Math.round(
-    Math.max(0, ((wordCount - summaryWords) / wordCount) * 100)
-  );
+  const keyPoints = chosen.map((c) => c.text.replace(/^[•\-*\s]+/, "").trim());
+  const summary = keyPoints.join(" ");
+  const summaryWords = countWords(summary);
 
   return {
     summary,
     keyPoints,
-    originalWords: wordCount,
+    originalWords,
     summaryWords,
-    reductionPercentage,
+    reductionPercentage: Math.max(0, Math.round((1 - summaryWords / Math.max(originalWords, 1)) * 100)),
+    sentencesKept: chosen.length,
+    sentencesTotal: usable.length,
   };
 }

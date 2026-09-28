@@ -788,7 +788,7 @@ export const GUIDES: Guide[] = [
     title: "How to calculate GST: inclusive vs exclusive formulas",
     metaTitle: "How to Calculate GST - Inclusive vs Exclusive",
     metaDescription:
-      "Learn the exact mathematical formulas to add GST or remove GST from invoice prices across 5%, 12%, 18%, and 28% tax slabs with clear examples.",
+      "Learn the exact mathematical formulas to add GST or remove GST from invoice prices at the 5%, 18% and 40% slabs (and older 12% and 28% invoices), with clear examples.",
     keywords: [
       "how to calculate gst",
       "gst inclusive formula",
@@ -827,7 +827,7 @@ export const GUIDES: Guide[] = [
       },
     ],
     notes: [
-      "Common GST rate slabs are 0% (essential foods), 5% (transport/basic goods), 12% (processed items), 18% (services/electronics), and 28% (luxury/automobiles).",
+      "Since 22 September 2025, India's GST has two main slabs — 5% (everyday goods) and 18% (most goods and services) — plus 40% for luxury and sin goods, 3% for gold, and 0% for essentials. The old 12% and 28% slabs were merged into these, so they only appear on older invoices.",
       "Never calculate embedded GST by simply multiplying the gross total by the tax percentage.",
       "Businesses registered under GST can claim Input Tax Credit (ITC) for the tax paid on business purchases.",
       "Rounding of tax figures should follow statutory guidelines (usually to the nearest currency unit or cent).",

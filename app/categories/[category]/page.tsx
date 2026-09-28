@@ -5,7 +5,6 @@ import type { Metadata } from "next";
 import {
   getToolsByCategory,
   TOOL_CATEGORIES,
-  getAllTools,
 } from "@/lib/tools/registry";
 import { getCategoryContent } from "@/lib/tools/categoryContent";
 import { constructPageMetadata, SITE_CONFIG } from "@/lib/seo/metadata";
@@ -15,9 +14,10 @@ import {
   generateFaqJsonLd,
 } from "@/lib/seo/jsonld";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import AdSlot from "@/components/AdSlot";
 import FaqSection from "@/components/FaqSection";
-import { ArrowRight, ShieldCheck } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
+import { ToolExplorer, type ExplorerTool } from "@/components/tool/tool-explorer";
+import { CategoryVisual } from "@/components/tool/tool-visual";
 
 interface CategoryPageProps {
   params: Promise<{ category: string }>;
@@ -65,6 +65,21 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     notFound();
   }
 
+  const allLocal = tools.every((t) => t.privacy === "local");
+  const explorerTools: ExplorerTool[] = tools.map((t) => ({
+    slug: t.slug,
+    name: t.name,
+    shortName: t.shortName,
+    tagline: t.tagline,
+    description: t.description,
+    category: t.category,
+    categoryName: t.categoryName,
+    keywords: t.keywords,
+    aliases: t.aliases,
+    iconName: t.iconName,
+    isPopular: t.isPopular,
+  }));
+
   const otherCategories = TOOL_CATEGORIES.filter(
     (c) => c.id !== category && getToolsByCategory(c.id).length > 0
   );
@@ -104,119 +119,78 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         />
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+      <div className="page-container py-6 md:py-10">
         <Breadcrumbs
-          items={[{ name: "All Tools", url: "/tools" }, { name: meta.name }]}
+          items={[{ name: "All tools", url: "/tools" }, { name: meta.name }]}
         />
 
-        <header className="space-y-4 max-w-3xl">
-          <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 text-[11px] font-medium text-emerald-700 dark:text-emerald-400">
-            <ShieldCheck className="h-3 w-3" />
-            {tools.length} tools · nothing leaves your browser
-          </span>
-
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            {content.heading}
-          </h1>
-
-          {content.body.map((paragraph, idx) => (
-            <p
-              key={idx}
-              className="text-base leading-relaxed text-slate-600 dark:text-slate-400"
-            >
-              {paragraph}
+        <header className="mt-5 flex items-start gap-4">
+          <CategoryVisual category={meta.id} iconName={meta.icon} size="lg" className="mt-0.5 hidden sm:flex" />
+          <div className="max-w-3xl">
+            <h1 className="type-h1 text-foreground">{content.heading}</h1>
+            <p className="mt-2 type-body text-muted-foreground md:text-lg">{meta.description}</p>
+            <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+              <ShieldCheck aria-hidden="true" className="size-4 text-success" />
+              {tools.length} tools ·{" "}
+              {allLocal
+                ? "everything runs in your browser"
+                : "most run in your browser; the rest say what they send"}
             </p>
-          ))}
+          </div>
         </header>
 
-        <section aria-labelledby="tools-heading" className="space-y-4">
-          <h2
-            id="tools-heading"
-            className="text-xl font-bold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-3"
-          >
-            {meta.name} tools
-          </h2>
+        <div className="mt-8">
+          <ToolExplorer
+            tools={explorerTools}
+            popular={meta.popular}
+            noun={`${meta.shortName.toLowerCase()} tools`}
+            allHeading={`All ${meta.name} tools`}
+            // A category holding only two or three tools is a thin page:
+            // barely more than a link to the tool itself. Monetising those is
+            // what AdSense calls low-value content, and it is assessed across
+            // the whole site during review. The threshold is on tool count
+            // because that is what actually makes these pages thin.
+            showAd={tools.length >= 4}
+          />
+        </div>
 
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {tools.map((tool) => (
-              <li key={tool.slug}>
+        <section aria-labelledby="about-category" className="mt-16 max-w-3xl">
+          <h2 id="about-category" className="type-h2 text-foreground">
+            About these tools
+          </h2>
+          <div className="mt-4 space-y-4">
+            {content.body.map((paragraph, idx) => (
+              <p key={idx} className="type-body text-muted-foreground">
+                {paragraph}
+              </p>
+            ))}
+          </div>
+        </section>
+
+        {content.faqs.length > 0 && (
+          <div className="mt-14 max-w-3xl">
+            <FaqSection faqs={content.faqs} />
+          </div>
+        )}
+
+        <nav aria-labelledby="other-cats" className="mt-14">
+          <h2 id="other-cats" className="type-h3 text-foreground">
+            Other categories
+          </h2>
+          <ul className="mt-4 flex flex-wrap gap-2">
+            {otherCategories.map((cat) => (
+              <li key={cat.id}>
                 <Link
-                  href={`/tools/${tool.slug}`}
-                  className="group flex h-full flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 transition hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md"
+                  href={`/categories/${cat.id}`}
+                  className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1.5 text-sm shadow-soft transition-colors hover:bg-accent"
                 >
-                  <span className="flex items-start justify-between gap-2">
-                    <h3 className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                      {tool.name}
-                    </h3>
-                    <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-blue-600" />
-                  </span>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                    {tool.description}
-                  </p>
-                  <ul className="mt-3 space-y-1">
-                    {tool.features.slice(0, 2).map((feature) => (
-                      <li
-                        key={feature}
-                        className="flex gap-1.5 text-[11px] text-slate-400 dark:text-slate-500"
-                      >
-                        <span aria-hidden="true">·</span>
-                        <span>{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  <CategoryVisual category={cat.id} iconName={cat.icon} size="2xs" />
+                  {cat.name}
                 </Link>
               </li>
             ))}
           </ul>
-        </section>
-
-        {/* A category holding one or two tools is a thin page: barely more than
-            a link to the tool itself. Monetising those is what AdSense calls
-            low-value content, and it is assessed across the whole site during
-            review — a handful of thin ad pages can hold back the rest. The
-            threshold is on tool count rather than a word count because that is
-            the thing that actually makes these pages thin. */}
-        {tools.length >= 4 && (
-          <div className="py-2">
-            <AdSlot placement="listingFooter" format="leaderboard" />
-          </div>
-        )}
-
-        {content.faqs.length > 0 && <FaqSection faqs={content.faqs} />}
-
-        <section aria-labelledby="other-cats" className="space-y-4">
-          <h2
-            id="other-cats"
-            className="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-3"
-          >
-            Other tool categories
-          </h2>
-          <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {otherCategories.map((cat) => {
-              const count = getAllTools().filter(
-                (t) => t.category === cat.id
-              ).length;
-              return (
-                <li key={cat.id}>
-                  <Link
-                    href={`/categories/${cat.id}`}
-                    className="group flex items-center justify-between rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 transition hover:border-blue-300 dark:hover:border-blue-700"
-                  >
-                    <span>
-                      <span className="block text-sm font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                        {cat.name}
-                      </span>
-                      <span className="mt-0.5 block text-xs text-slate-500 dark:text-slate-400">
-                        {count} tools
-                      </span>
-                    </span>
-                    <ArrowRight className="h-3.5 w-3.5 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-blue-600" />
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
-        </section>
+        </nav>
       </div>
     </>
   );

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Copy, Check, ArrowRightLeft, Trash2 } from "lucide-react";
-import confetti from "canvas-confetti";
+import { markToolCompleted } from "@/lib/analytics";
 
 export default function Base64Converter() {
   const [mode, setMode] = useState<"encode" | "decode">("encode");
@@ -70,7 +70,7 @@ export default function Base64Converter() {
     try {
       await navigator.clipboard.writeText(output);
       setCopied(true);
-      confetti({ particleCount: 30, spread: 50, origin: { y: 0.85 } });
+      markToolCompleted();
       setTimeout(() => setCopied(false), 2000);
     } catch (e) {
       console.error(e);
@@ -80,13 +80,13 @@ export default function Base64Converter() {
   return (
     <div className="space-y-6">
       {/* Mode Buttons */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-1.5 border rounded-lg bg-muted/60">
         <div className="flex space-x-2">
           <button
             onClick={() => setMode("encode")}
             className={`px-4 py-2 text-xs font-semibold rounded-xl transition ${
               mode === "encode"
-                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                ? "bg-background text-foreground shadow-xs dark:bg-input/50"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
             }`}
           >
@@ -96,7 +96,7 @@ export default function Base64Converter() {
             onClick={() => setMode("decode")}
             className={`px-4 py-2 text-xs font-semibold rounded-xl transition ${
               mode === "decode"
-                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                ? "bg-background text-foreground shadow-xs dark:bg-input/50"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
             }`}
           >
@@ -105,7 +105,7 @@ export default function Base64Converter() {
         </div>
 
         {mode === "encode" && (
-          <label className="flex items-center space-x-2 text-xs font-medium text-slate-700 dark:text-slate-300 pr-2 cursor-pointer">
+          <label className="flex items-center space-x-2 text-sm pr-2 cursor-pointer font-medium text-foreground">
             <input
               type="checkbox"
               checked={urlSafe}
@@ -121,7 +121,7 @@ export default function Base64Converter() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Input */}
         <div className="space-y-2">
-          <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <div className="flex justify-between text-sm font-medium text-foreground">
             <span>{mode === "encode" ? "Plain Text (Input)" : "Base64 String (Input)"}</span>
             <button
               onClick={() => setInput("")}
@@ -130,7 +130,7 @@ export default function Base64Converter() {
               <Trash2 className="w-3 h-3" /> Clear
             </button>
           </div>
-          <textarea
+          <textarea aria-label="Text to encode or decode"
             rows={8}
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -139,13 +139,13 @@ export default function Base64Converter() {
                 ? "Type or paste plain text to encode..."
                 : "Paste Base64 encoded string to decode..."
             }
-            className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full p-3.5 font-mono text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           />
         </div>
 
         {/* Output */}
         <div className="space-y-2">
-          <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <div className="flex justify-between text-sm font-medium text-foreground">
             <span>{mode === "encode" ? "Base64 Output" : "Decoded Plain Text"}</span>
             {output && (
               <button
@@ -158,15 +158,15 @@ export default function Base64Converter() {
             )}
           </div>
           <div className="relative">
-            <textarea
+            <textarea aria-label="Result"
               rows={8}
               readOnly
               value={currentError || output}
               placeholder="Result will appear here..."
-              className={`w-full p-3.5 rounded-2xl border bg-slate-50 dark:bg-slate-950 text-xs font-mono focus:outline-none ${
+              className={`w-full p-3.5 font-mono text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${
                 currentError
-                  ? "border-rose-300 text-rose-500 dark:border-rose-800"
-                  : "border-slate-200 dark:border-slate-800 text-slate-900 dark:text-emerald-400"
+                  ? "border-rose-300 text-rose-500 dark:border-rose-800 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                  : "dark:text-emerald-400 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               }`}
             />
           </div>

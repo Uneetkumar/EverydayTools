@@ -1,50 +1,55 @@
 import React from "react";
 import Link from "next/link";
-import { ChevronRight, Home } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
-interface BreadcrumbItem {
+interface BreadcrumbItemData {
   name: string;
   url?: string;
 }
 
 interface BreadcrumbsProps {
-  items: BreadcrumbItem[];
+  items: BreadcrumbItemData[];
+  className?: string;
 }
 
-export default function Breadcrumbs({ items }: BreadcrumbsProps) {
+/**
+ * Visible trail. Always starts at Home and mirrors the BreadcrumbList JSON-LD
+ * each page emits, so what users see matches what search engines are told.
+ */
+export default function Breadcrumbs({ items, className }: BreadcrumbsProps) {
   return (
-    <nav
-      aria-label="Breadcrumb"
-      className="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400 py-2 overflow-x-auto"
-    >
-      <Link
-        href="/"
-        className="flex items-center hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-      >
-        <Home className="w-3.5 h-3.5 mr-1" />
-        <span>Home</span>
-      </Link>
-
-      {items.map((item, index) => {
-        const isLast = index === items.length - 1;
-        return (
-          <React.Fragment key={index}>
-            <ChevronRight className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-            {item.url && !isLast ? (
-              <Link
-                href={item.url}
-                className="hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate max-w-[200px]"
-              >
-                {item.name}
-              </Link>
-            ) : (
-              <span className="font-medium text-slate-800 dark:text-slate-200 truncate max-w-[250px]">
-                {item.name}
-              </span>
-            )}
-          </React.Fragment>
-        );
-      })}
-    </nav>
+    <Breadcrumb className={className}>
+      <BreadcrumbList className="flex-nowrap overflow-x-auto text-xs sm:text-sm [scrollbar-width:none]">
+        <BreadcrumbItem className="shrink-0">
+          <BreadcrumbLink asChild>
+            <Link href="/">Home</Link>
+          </BreadcrumbLink>
+        </BreadcrumbItem>
+        {items.map((item, index) => {
+          const isLast = index === items.length - 1;
+          return (
+            <React.Fragment key={`${item.name}-${index}`}>
+              <BreadcrumbSeparator className="shrink-0" />
+              <BreadcrumbItem className={isLast ? "min-w-0" : "shrink-0"}>
+                {item.url && !isLast ? (
+                  <BreadcrumbLink asChild>
+                    <Link href={item.url}>{item.name}</Link>
+                  </BreadcrumbLink>
+                ) : (
+                  <BreadcrumbPage className="truncate">{item.name}</BreadcrumbPage>
+                )}
+              </BreadcrumbItem>
+            </React.Fragment>
+          );
+        })}
+      </BreadcrumbList>
+    </Breadcrumb>
   );
 }

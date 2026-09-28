@@ -1,42 +1,36 @@
 import React from "react";
 import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import {
   ToolDefinition,
+  getNextTools,
   getRelatedTools,
-  getAllTools,
-  TOOL_CATEGORIES,
+  getToolsByCategory,
 } from "@/lib/tools/registry";
 import { getToolContent } from "@/lib/tools/content";
+import { CURRENCY_PAIRS } from "@/lib/currency/pairs";
+import { getGuidesForTool } from "@/lib/guides/content";
 import Breadcrumbs from "./Breadcrumbs";
 import FormulaBox from "./FormulaBox";
 import FaqSection from "./FaqSection";
 import RelatedTools from "./RelatedTools";
 import AdSlot from "./AdSlot";
 import {
+  ContentSection,
   ToolIntro,
   HowToSection,
   UseCasesSection,
   TipsSection,
 } from "./ToolContentSections";
-import ShareToolWidget from "./ShareToolWidget";
-import RecentTools from "./RecentTools";
 import RecentResults from "./RecentResults";
 import TrackToolVisit from "./TrackToolVisit";
-import { CURRENCY_PAIRS } from "@/lib/currency/pairs";
-import { getGuidesForTool } from "@/lib/guides/content";
-import {
-  ShieldCheck,
-  Wifi,
-  ArrowRight,
-  Calculator,
-  TrendingUp,
-  Type,
-  Code,
-  Clock,
-  Film,
-  FileText,
-  Image as ImageIcon,
-} from "lucide-react";
+import { FavoriteButton } from "./tool/favorite-button";
+import { ShareButton } from "./tool/share-button";
+import { PrivacyNote } from "./tool/privacy-note";
+import { NextSteps } from "./tool/next-steps";
+import { ToolWorkspace } from "./tool/tool-workspace";
+import { cn } from "@/lib/utils";
+import { ToolVisual } from "./tool/tool-visual";
 
 interface ToolShellProps {
   tool: ToolDefinition;
@@ -45,10 +39,10 @@ interface ToolShellProps {
 
 /**
  * Tools that render a full workspace (two panes, or a canvas editor) rather
- * than a simple form. These break out of the 8-column content well and use the
- * full page width, because squeezing a nested two-column layout into ~700px
- * leaves each inner pane too narrow for its own controls. The article content
- * and sidebar still render underneath in the normal layout.
+ * than a simple form. These use the full page width for the workspace,
+ * because squeezing a nested two-column layout into ~700px leaves each inner
+ * pane too narrow for its own controls. The article content and sidebar still
+ * render underneath in the normal layout.
  */
 const WIDE_LAYOUT_TOOLS = new Set([
   "qr-code-generator",
@@ -72,349 +66,215 @@ const WIDE_LAYOUT_TOOLS = new Set([
   "unit-converter",
   "text-sorter",
   "png-to-svg",
+  "calculator",
+  "sample-file-generator",
 ]);
 
 /**
- * Tools that must contact an external service to work. They cannot carry the
- * "Client-Side Private" badge the rest of the site uses, because that claim
- * would be false — and a privacy claim that is not true everywhere is worth
- * less than no claim at all.
+ * Every tool page, in the order a visitor needs it:
+ *
+ *   breadcrumb → title + one-line description → THE TOOL → next steps
+ *   → what it does / how to use / how it works → [ad] → use cases / tips
+ *   → guides → FAQ → related tools
+ *
+ * The tool sits directly under the H1: no ad and no article text comes
+ * between the heading and the controls, both because it is what people came
+ * for and because AdSense treats ads crowding primary controls as an
+ * accidental-click risk.
  */
-const NETWORK_TOOLS = new Set([
-  // Each of these defaults to the on-device engine and works offline, but all
-  // of them offer an "Advanced Cloud" mode that sends the user's text to
-  // Gemini. A page cannot advertise an unconditional privacy guarantee when a
-  // visible control on it uploads the input.
-  "ai-text-summarizer",
-  "ai-text-rewriter",
-  "ai-text-simplifier",
-  "ai-keyword-extractor",
-  "ai-json-explainer",
-  // Free-form questions go to Gemini; the curated answers do not.
-  "ai-explainer",
-  // Default mode is on-device, but the optional AI mode uploads the image,
-  // so this page must not advertise an unconditional privacy guarantee.
-  "image-to-text",
-  "currency-converter",
-  "speech-to-text",
-]);
-
-const ICON_MAP: Record<string, React.ElementType> = {
-  calculators: Calculator,
-  business: TrendingUp,
-  text: Type,
-  "data-dev": Code,
-  developer: Code,
-  "time-units": Clock,
-  "date-time": Clock,
-  "image-media": Film,
-  "pdf-docs": FileText,
-  security: ShieldCheck,
-};
-
 export default function ToolShell({ tool, children }: ToolShellProps) {
-  const relatedTools = getRelatedTools(tool);
-  const allTools = getAllTools();
   const content = getToolContent(tool.slug);
-  const sameCategoryTools = allTools.filter(
-    (t) => t.category === tool.category && t.slug !== tool.slug
-  );
+  const isWide = WIDE_LAYOUT_TOOLS.has(tool.slug);
 
   // Registry FAQ first, then the long-form ones. Must stay in sync with the
   // FAQPage JSON-LD built in lib/seo/jsonld.ts.
   const allFaqs = [...tool.faqs, ...(content?.extraFaqs ?? [])];
-  const isWide = WIDE_LAYOUT_TOOLS.has(tool.slug);
-  const needsNetwork = NETWORK_TOOLS.has(tool.slug);
   const relatedGuides = getGuidesForTool(tool.slug);
 
+  const nextTools = getNextTools(tool, 4);
+  const shown = new Set([tool.slug, ...nextTools.map((t) => t.slug)]);
+  const sameCategory = getToolsByCategory(tool.category).filter((t) => t.slug !== tool.slug);
+  // Related tools at the foot of the page must add something the next-steps
+  // row did not already offer; top up from the same category.
+  const related = [...getRelatedTools(tool), ...sameCategory]
+    .filter((t, i, arr) => !shown.has(t.slug) && arr.findIndex((x) => x.slug === t.slug) === i)
+    .slice(0, 4);
+
+  const workspace = <ToolWorkspace name={tool.name}>{children}</ToolWorkspace>;
+
   return (
-    <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-4 sm:space-y-6">
-      <TrackToolVisit slug={tool.slug} name={tool.name} />
+    <div className="page-container py-5 md:py-8">
+      <TrackToolVisit slug={tool.slug} name={tool.name} category={tool.category} />
 
       <Breadcrumbs
         items={[
-          { name: "All Tools", url: "/tools" },
+          { name: "All tools", url: "/tools" },
           { name: tool.categoryName, url: `/categories/${tool.category}` },
           { name: tool.name },
         ]}
       />
 
-      {isWide && (
-        <>
-          <header className="space-y-2.5 sm:space-y-3 pb-1 max-w-3xl">
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href={`/categories/${tool.category}`}
-                className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
-              >
-                {tool.categoryName}
-              </Link>
-              {needsNetwork ? (
-                <span className="flex items-center text-[11px] font-medium text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/40 px-2 py-0.5 rounded-md">
-                  <Wifi className="w-3 h-3 mr-1" />
-                  Live data · needs internet
-                </span>
-              ) : (
-                <span className="flex items-center text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md">
-                  <ShieldCheck className="w-3 h-3 mr-1" />
-                  Client-Side Private
-                </span>
-              )}
+      <header className="mt-4 flex items-start gap-4 md:mt-5">
+        <ToolVisual
+          slug={tool.slug}
+          iconName={tool.iconName}
+          category={tool.category}
+          size="lg"
+          className="mt-0.5 hidden sm:inline-flex"
+        />
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="type-h1 text-foreground">{tool.name}</h1>
+            <div className="flex shrink-0 gap-1.5 md:gap-2">
+              <FavoriteButton slug={tool.slug} name={tool.name} withLabel />
+              <ShareButton title={tool.name} path={`/tools/${tool.slug}`} />
             </div>
-            <h1 className="text-xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              {tool.name}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              {tool.longDescription}
-            </p>
-          </header>
-
-          {/* Full-bleed workspace. @container lets the tool lay itself out
-              against its own width instead of the viewport. */}
-          <div className="@container rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 sm:p-6 shadow-xs">
-            {children}
           </div>
-        </>
+          <p className="mt-2 max-w-2xl type-body text-muted-foreground">{tool.description}</p>
+          <PrivacyNote tool={tool} className="mt-2.5" />
+        </div>
+      </header>
+
+      {isWide && (
+        <div className="mt-6">
+          {workspace}
+          <NextSteps from={tool.slug} tools={nextTools} />
+        </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Primary column */}
-        <div className="lg:col-span-8 space-y-6">
-          {!isWide && (
-          <header className="space-y-3 pb-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href={`/categories/${tool.category}`}
-                className="text-xs font-semibold px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 hover:bg-blue-100 dark:hover:bg-blue-900/60 transition-colors"
-              >
-                {tool.categoryName}
-              </Link>
-              <span className="flex items-center text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded-md border border-amber-200/50 dark:border-amber-900/30">
-                100% Free for All
-              </span>
-              {needsNetwork ? (
-                <span className="flex items-center text-[11px] font-medium text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/40 px-2 py-0.5 rounded-md">
-                  <Wifi className="w-3 h-3 mr-1" />
-                  Live data · needs internet
-                </span>
-              ) : (
-                <>
-                  <span className="flex items-center text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md">
-                    <ShieldCheck className="w-3 h-3 mr-1" />
-                    Client-Side Private
-                  </span>
-                  <span className="flex items-center text-[11px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50/80 dark:bg-blue-950/40 px-2 py-0.5 rounded-md">
-                    Auto-saved (3 days)
-                  </span>
-                </>
-              )}
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-              {tool.name}
-            </h1>
-
-            <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-              {tool.longDescription}
-            </p>
-          </header>
-          )}
-
-          {/* The interactive tool sits directly below the H1 — no ad is placed
-              between the heading and the tool, both because it is what users
-              came for and because AdSense treats ads that crowd primary
-              controls as an accidental-click risk. */}
-          {!isWide && (
-            <div className="@container rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 shadow-xs">
-              {children}
-            </div>
-          )}
-
-          {content && (
-            <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-sm">
-              <ToolIntro intro={content.intro} />
-            </div>
-          )}
-
-          {tool.formulas && tool.formulas.length > 0 && (
-            <FormulaBox formulas={tool.formulas} />
-          )}
-
-          {content && (
-            <HowToSection
-              howTo={content.howTo}
-              toolName={tool.name}
-              needsNetwork={needsNetwork}
-            />
-          )}
-
-          {/* In-article ad sits between content sections with generous margin
-              on both sides, well clear of any interactive element. */}
-          <div className="py-4">
-            <AdSlot placement="toolInArticle" format="in-article" />
+      {/*
+        Desktop grid. Row 1 is the tool (left) beside the recent-files and
+        same-category lists (right); row 2 is the article beside the sidebar
+        ad. The ad therefore starts below the tool and, being sticky only
+        within its own cell, can never sit beside a tool's buttons or
+        downloads. On mobile everything stacks in source order: tool,
+        article, lists, ad.
+      */}
+      <div
+        className={cn(
+          "grid grid-cols-[minmax(0,1fr)] items-start gap-x-12 gap-y-10 lg:grid-cols-[minmax(0,1fr)_300px]",
+          isWide ? "mt-12" : "mt-6"
+        )}
+      >
+        {!isWide && (
+          <div className="min-w-0 lg:col-start-1 lg:row-start-1">
+            {workspace}
+            <NextSteps from={tool.slug} tools={nextTools} />
           </div>
+        )}
 
-          {content && <UseCasesSection useCases={content.useCases} />}
+        <div className={cn("min-w-0 lg:col-start-1", isWide ? "lg:row-span-2 lg:row-start-1" : "mt-4 lg:row-start-2")}>
+          <div className="space-y-12">
+            {content && <ToolIntro intro={content.intro} toolName={tool.name} />}
 
-          {content && <TipsSection tips={content.tips} />}
+            {content && (
+              <HowToSection
+                howTo={content.howTo}
+                toolName={tool.name}
+                privacy={tool.privacy}
+                privacyNote={tool.privacyNote}
+              />
+            )}
 
-          {relatedGuides.length > 0 && (
-            <section
-              aria-labelledby="guides-heading"
-              className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-sm"
-            >
-              <h2
-                id="guides-heading"
-                className="text-lg font-semibold text-slate-900 dark:text-white mb-1"
-              >
-                Guides that use this tool
-              </h2>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                Step-by-step walkthroughs for the situations this tool is
-                usually reached for.
-              </p>
-              <ul className="space-y-2">
-                {relatedGuides.map((g) => (
-                  <li key={g.slug}>
-                    <Link
-                      href={`/guides/${g.slug}`}
-                      className="flex items-center justify-between gap-2 p-3 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 text-sm font-medium text-slate-700 dark:text-slate-200 transition group"
-                    >
-                      <span className="group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                        {g.title}
-                      </span>
-                      <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+            {tool.formulas && tool.formulas.length > 0 && <FormulaBox formulas={tool.formulas} />}
 
-          {allFaqs.length > 0 && <FaqSection faqs={allFaqs} />}
+            {/* The one main-column ad: after the how-to, well clear of any
+                control and never between the heading and the tool. */}
+            <AdSlot placement="tool-in-content" />
 
-          {tool.slug === "currency-converter" && (
-            <section
-              aria-labelledby="pairs-heading"
-              className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-sm"
-            >
-              <h2
-                id="pairs-heading"
-                className="text-lg font-semibold text-slate-900 dark:text-white mb-1"
-              >
-                Popular currency conversions
-              </h2>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                Each pair has its own page with the live rate and context on
-                that corridor.
-              </p>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {CURRENCY_PAIRS.map((p) => (
-                  <li key={p.slug}>
-                    <Link
-                      href={`/convert/${p.slug}`}
-                      className="flex items-center justify-between gap-2 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 text-xs font-medium text-slate-700 dark:text-slate-200 transition group"
-                    >
-                      <span className="group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
-                        {p.common}
-                        <span className="text-slate-400 font-normal">
-                          {" "}· {p.from} → {p.to}
+            {content && <UseCasesSection useCases={content.useCases} />}
+
+            {content && <TipsSection tips={content.tips} />}
+
+            {relatedGuides.length > 0 && (
+              <ContentSection id="guides-heading" title="Guides that use this tool">
+                <ul className="divide-y rounded-xl border bg-card shadow-soft">
+                  {relatedGuides.map((g) => (
+                    <li key={g.slug}>
+                      <Link
+                        href={`/guides/${g.slug}`}
+                        className="group flex items-center justify-between gap-3 px-4 py-3 text-sm font-medium transition-colors hover:bg-accent/50"
+                      >
+                        <span>{g.title}</span>
+                        <ArrowRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </ContentSection>
+            )}
+
+            {allFaqs.length > 0 && <FaqSection faqs={allFaqs} />}
+
+            {tool.slug === "currency-converter" && (
+              <ContentSection id="pairs-heading" title="Popular currency conversions">
+                <p className="mb-4 type-body-sm text-muted-foreground">
+                  Each pair has its own page with the live rate and context on that corridor.
+                </p>
+                <ul className="grid gap-2 sm:grid-cols-2">
+                  {CURRENCY_PAIRS.map((p) => (
+                    <li key={p.slug}>
+                      <Link
+                        href={`/convert/${p.slug}`}
+                        className="flex items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2.5 text-sm transition-colors hover:bg-accent/50"
+                      >
+                        <span className="truncate">
+                          {p.common}
+                          <span className="text-muted-foreground"> · {p.from} → {p.to}</span>
                         </span>
-                      </span>
-                      <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
+                        <ArrowRight aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground" />
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </ContentSection>
+            )}
 
-          {relatedTools.length > 0 && <RelatedTools tools={relatedTools} />}
+            <RelatedTools tools={related} from={tool.slug} />
+          </div>
         </div>
 
-        {/* Sidebar rail */}
-        <aside className="lg:col-span-4 space-y-6">
+        <aside
+          aria-label="More from TabBench"
+          className="flex flex-col gap-8 lg:col-start-2 lg:row-start-1"
+        >
           <RecentResults toolSlug={tool.slug} />
-
-          <RecentTools />
-
-          <ShareToolWidget toolName={tool.name} toolSlug={tool.slug} category={tool.categoryName} />
-
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center justify-between">
-              <span>More in {tool.categoryName}</span>
-              <Link
-                href={`/categories/${tool.category}`}
-                className="text-[11px] font-normal text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                View all
-              </Link>
-            </h2>
-
-            <div className="space-y-1.5 pt-1">
-              {sameCategoryTools.length > 0 ? (
-                sameCategoryTools.map((otherTool) => (
-                  <Link
-                    key={otherTool.slug}
-                    href={`/tools/${otherTool.slug}`}
-                    className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200 transition group"
-                  >
-                    <span className="group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
-                      {otherTool.name}
-                    </span>
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition shrink-0 ml-2" />
-                  </Link>
-                ))
-              ) : (
-                <div className="text-xs text-slate-400 py-1">
-                  You are viewing the flagship tool in this category.
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Sticky sidebar ad. `top-20` clears the sticky header; the sidebar
-              scrolls with the article rather than overlaying content. */}
-          <div className="lg:sticky lg:top-20 space-y-6">
-            <AdSlot placement="toolSidebar" format="sidebar" />
-
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
-                Browse All Categories
-              </h2>
-
-              <div className="space-y-1 pt-1">
-                {TOOL_CATEGORIES.map((cat) => {
-                  const CatIcon = ICON_MAP[cat.id] || Calculator;
-                  const count = allTools.filter(
-                    (t) => t.category === cat.id
-                  ).length;
-                  const isCurrent = cat.id === tool.category;
-
-                  return (
-                    <Link
-                      key={cat.id}
-                      href={`/categories/${cat.id}`}
-                      className={`flex items-center justify-between p-2.5 rounded-xl text-xs font-medium transition ${
-                        isCurrent
-                          ? "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 font-semibold"
-                          : "text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white"
-                      }`}
-                    >
-                      <div className="flex items-center space-x-2.5">
-                        <CatIcon className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                        <span>{cat.name}</span>
-                      </div>
-                      <span className="text-[11px] text-slate-400">
-                        {count}
-                      </span>
-                    </Link>
-                  );
-                })}
+          {sameCategory.length > 0 && (
+            <nav aria-labelledby="more-in-category">
+              <div className="flex items-baseline justify-between gap-2">
+                <h2 id="more-in-category" className="type-h4 text-foreground">
+                  More in {tool.categoryName}
+                </h2>
+                <Link href={`/categories/${tool.category}`} className="text-sm text-link hover:underline">
+                  View all
+                </Link>
               </div>
-            </div>
-          </div>
+              <ul className="mt-3 space-y-0.5">
+                {sameCategory.slice(0, 8).map((t) => (
+                  <li key={t.slug}>
+                    <Link
+                      href={`/tools/${t.slug}`}
+                      data-track-related="sidebar"
+                      data-from={tool.slug}
+                      data-to={t.slug}
+                      className="flex items-center gap-2.5 rounded-md px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    >
+                      <ToolVisual slug={t.slug} iconName={t.iconName} category={t.category} size="2xs" />
+                      <span className="truncate">{t.name}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
+          )}
         </aside>
+
+        {/* self-stretch lets the sticky unit travel the article's height. */}
+        <div className="self-stretch lg:col-start-2 lg:row-start-2">
+          <div className="lg:sticky lg:top-24">
+            <AdSlot placement="tool-sidebar" />
+          </div>
+        </div>
       </div>
     </div>
   );

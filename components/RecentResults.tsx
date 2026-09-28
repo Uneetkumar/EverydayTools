@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { Clock, Download, Trash2, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   listResults,
   deleteResult,
@@ -60,83 +61,75 @@ export default function RecentResults({ toolSlug }: { toolSlug: string }) {
   if (items.length === 0) return null;
 
   return (
-    <section
-      aria-labelledby="recent-results-heading"
-      className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3"
-    >
+    <section aria-labelledby="recent-results-heading" className="rounded-xl border bg-card p-4 shadow-soft">
       <div className="flex items-center justify-between gap-2">
-        <h2
-          id="recent-results-heading"
-          className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white"
-        >
-          <Clock className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+        <h2 id="recent-results-heading" className="flex items-center gap-2 type-h4 text-foreground">
+          <Clock className="size-4 text-muted-foreground" aria-hidden="true" />
           Your recent files
         </h2>
-        <button
+        <Button
+          type="button"
+          variant="ghost"
+          size="xs"
           onClick={async () => {
             await clearResults(toolSlug);
             refresh();
           }}
-          className="flex items-center gap-1 text-[11px] font-medium text-slate-400 hover:text-red-500 transition"
+          className="text-muted-foreground"
         >
-          <X className="w-3 h-3" />
+          <X aria-hidden="true" />
           Clear
-        </button>
+        </Button>
       </div>
 
-      <ul className="space-y-2">
+      <ul className="mt-3 space-y-1.5">
         {items.map((item) => (
-          <li
-            key={item.id}
-            className="flex items-center gap-3 p-2 rounded-xl border border-slate-200/70 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-700 transition"
-          >
+          <li key={item.id} className="flex items-center gap-3 rounded-lg border p-2 transition-colors hover:bg-accent/50">
             {IMAGE_TYPES.test(item.type) && urls[item.id] ? (
               /* eslint-disable-next-line @next/next/no-img-element */
               <img
                 src={urls[item.id]}
-                alt={item.filename}
-                className="h-10 w-10 rounded-lg object-cover shrink-0 border border-slate-200 dark:border-slate-700"
+                alt=""
+                className="size-10 shrink-0 rounded-md border object-cover"
               />
             ) : (
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 dark:bg-slate-800 text-[9px] font-bold uppercase text-slate-500">
+              <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-muted text-[10px] font-semibold uppercase text-muted-foreground">
                 {(item.filename.split(".").pop() || "file").slice(0, 4)}
               </span>
             )}
 
             <span className="min-w-0 flex-1">
-              <span className="block truncate text-xs font-medium text-slate-800 dark:text-slate-200">
-                {item.filename}
-              </span>
-              <span className="block text-[10px] text-slate-400">
+              <span className="block truncate text-sm font-medium text-foreground">{item.filename}</span>
+              <span className="block text-xs text-muted-foreground">
                 {formatSize(item.size)} · {formatAge(item.createdAt)}
               </span>
             </span>
 
-            <a
-              href={urls[item.id]}
-              download={item.filename}
-              aria-label={`Download ${item.filename} again`}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition"
-            >
-              <Download className="w-3.5 h-3.5" />
-            </a>
-            <button
+            <Button asChild variant="ghost" size="icon-sm">
+              <a href={urls[item.id]} download={item.filename} aria-label={`Download ${item.filename} again`}>
+                <Download aria-hidden="true" />
+              </a>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
               onClick={async () => {
                 await deleteResult(item.id);
                 refresh();
               }}
               aria-label={`Delete ${item.filename}`}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+              className="text-muted-foreground hover:text-destructive"
             >
-              <Trash2 className="w-3.5 h-3.5" />
-            </button>
+              <Trash2 aria-hidden="true" />
+            </Button>
           </li>
         ))}
       </ul>
 
-      <p className="text-[10px] leading-relaxed text-slate-400 dark:text-slate-500">
-        Your last {RESULTS_PER_TOOL} files from this tool, kept in this browser
-        for 7 days then deleted automatically. They are never uploaded.
+      <p className="mt-3 type-caption text-muted-foreground">
+        Your last {RESULTS_PER_TOOL} files from this tool, kept in this browser for 7 days and then
+        deleted automatically. They are never uploaded.
       </p>
     </section>
   );

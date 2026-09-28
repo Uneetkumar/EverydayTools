@@ -5,15 +5,16 @@ import {
   Download, RefreshCw, Copy, Check, Shuffle, AlertTriangle, Trash2,
   Loader2, XCircle, Film, Volume2, VolumeX, Sliders, HardDrive,
   Video, Play, FileCheck, FileText, Image as ImageIcon,
-  FileSpreadsheet, Database, Code, FileCode, CheckCircle2,
+  FileSpreadsheet, Database, Code, FileCode, CheckCircle2, FileJson, FileType,
 } from "lucide-react";
-import confetti from "canvas-confetti";
+import { markToolCompleted } from "@/lib/analytics";
 import { downloadBlob } from "@/lib/utils/download";
 import {
   SampleKind, SampleFile, generateImage, generatePdf, generateDocx,
   generateText, generateVideo, formatBytesShort, VideoProgressInfo, VideoFormatId,
   ImageFormatId, DataSchemaId,
 } from "@/lib/samples/generate";
+import { copyText } from "@/lib/utils/clipboard";
 
 const SIZE_PRESETS = [
   { label: "10 KB", bytes: 10 * 1024 },
@@ -26,14 +27,14 @@ const SIZE_PRESETS = [
   { label: "25 MB", bytes: 25 * 1024 * 1024 },
 ];
 
-const KINDS: { id: SampleKind; label: string; icon: string }[] = [
-  { id: "image", label: "Image", icon: "🖼️" },
-  { id: "pdf", label: "PDF", icon: "📄" },
-  { id: "docx", label: "Word", icon: "📝" },
-  { id: "csv", label: "CSV", icon: "📊" },
-  { id: "json", label: "JSON", icon: "⚙️" },
-  { id: "text", label: "Text", icon: "📃" },
-  { id: "video", label: "Video", icon: "🎬" },
+const KINDS: { id: SampleKind; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
+  { id: "image", label: "Image", icon: ImageIcon },
+  { id: "pdf", label: "PDF", icon: FileText },
+  { id: "docx", label: "Word", icon: FileType },
+  { id: "csv", label: "CSV", icon: FileSpreadsheet },
+  { id: "json", label: "JSON", icon: FileJson },
+  { id: "text", label: "Text", icon: FileCode },
+  { id: "video", label: "Video", icon: Film },
 ];
 
 const IMAGE_FORMATS: { id: ImageFormatId; label: string; desc: string; ext: string; popular?: boolean }[] = [
@@ -391,7 +392,7 @@ export default function SampleFileGenerator({
         })
       );
       setStatus(null);
-      confetti({ particleCount: 35, spread: 55, origin: { y: 0.85 } });
+      markToolCompleted();
     } catch (e: unknown) {
       const err = e as { name?: string; message?: string };
       if (err?.name === "AbortError" || err?.message?.includes("aborted")) {
@@ -417,7 +418,7 @@ export default function SampleFileGenerator({
   const copyDataUrl = async (item: SampleFile & { url: string; id: string }) => {
     const reader = new FileReader();
     reader.onload = async () => {
-      await navigator.clipboard.writeText(String(reader.result));
+      await copyText(String(reader.result));
       setCopiedId(item.id);
       setTimeout(() => setCopiedId(null), 2000);
     };
@@ -434,8 +435,8 @@ export default function SampleFileGenerator({
     <div className="space-y-4 sm:space-y-6">
       {/* 1. File Type Selector */}
       {kinds.length > 1 && (
-        <div className="space-y-1.5 p-3 sm:p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
-          <span className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        <div className="space-y-1.5 p-3 sm:p-4 rounded-xl border bg-muted/30">
+          <span className="block text-xs text-slate-500 dark:text-slate-400 font-medium">
             Select File Type
           </span>
           <div className="grid grid-cols-3 sm:grid-cols-7 gap-1.5 sm:gap-2">
@@ -445,11 +446,11 @@ export default function SampleFileGenerator({
                 onClick={() => setKind(k.id)}
                 className={`px-3 py-2 sm:py-2.5 rounded-xl text-xs font-semibold transition text-center active:scale-95 flex flex-col items-center justify-center gap-0.5 cursor-pointer ${
                   kind === k.id
-                    ? "bg-blue-600 text-white shadow-sm ring-2 ring-blue-600/30"
+                    ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                     : "bg-slate-50 dark:bg-slate-950/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800/80"
                 }`}
               >
-                <span className="text-sm">{k.icon}</span>
+                <k.icon className="size-4 opacity-80" aria-hidden="true" />
                 <span className="truncate">{k.label}</span>
               </button>
             ))}
@@ -459,29 +460,29 @@ export default function SampleFileGenerator({
 
       {/* 2. Image Module Controls */}
       {kind === "image" && (
-        <div className="space-y-4 p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="space-y-4 p-4 sm:p-5 rounded-xl border bg-muted/30">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
                 <ImageIcon className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                <h3 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">
                   Image Generator Settings
                 </h3>
-                <p className="text-[10px] text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Configure format, resolution, art style &amp; target bytes
                 </p>
               </div>
             </div>
-            <span className="text-[11px] font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900/60">
+            <span className="text-xs font-mono font-semibold text-blue-600 dark:text-blue-400 px-2.5 py-1 rounded-lg border bg-muted/30">
               {IMAGE_FORMATS.find((f) => f.id === imageFormat)?.label} • {activeImageDimensions.label}
             </span>
           </div>
 
           {/* Formats */}
           <div className="space-y-1.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+            <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">
               1. Image Format
             </span>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -491,19 +492,19 @@ export default function SampleFileGenerator({
                   onClick={() => setImageFormat(f.id)}
                   className={`p-2.5 rounded-xl text-xs font-semibold transition text-left active:scale-95 cursor-pointer flex flex-col justify-between min-h-[48px] ${
                     imageFormat === f.id
-                      ? "bg-blue-600 text-white shadow-sm ring-2 ring-blue-600/30"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700"
                   }`}
                 >
                   <div className="flex items-center justify-between w-full">
-                    <span className="font-bold text-xs">{f.label}</span>
+                    <span className="font-semibold text-xs">{f.label}</span>
                     {f.popular && (
-                      <span className={`text-[8px] font-bold px-1 rounded ${imageFormat === f.id ? "bg-blue-700 text-blue-100" : "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400"}`}>
+                      <span className={`text-[10px] font-semibold px-1 rounded ${imageFormat === f.id ? "bg-primary/15 text-brand-subtle-foreground" : "bg-muted text-muted-foreground"}`}>
                         POP
                       </span>
                     )}
                   </div>
-                  <span className={`text-[9px] ${imageFormat === f.id ? "text-blue-100" : "text-slate-400"}`}>
+                  <span className={`text-xs ${imageFormat === f.id ? "text-brand-subtle-foreground/80" : "text-muted-foreground"}`}>
                     {f.desc}
                   </span>
                 </button>
@@ -514,10 +515,10 @@ export default function SampleFileGenerator({
           {/* Resolution & Dimensions */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">
                 2. Resolution &amp; Dimensions
               </span>
-              <span className="text-[10px] font-mono text-slate-400">
+              <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
                 {activeImageDimensions.w} × {activeImageDimensions.h} px
               </span>
             </div>
@@ -526,9 +527,9 @@ export default function SampleFileGenerator({
                 <button
                   key={res.id}
                   onClick={() => setImageResolution(res)}
-                  className={`px-2.5 py-2 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold transition text-center truncate active:scale-95 cursor-pointer ${
+                  className={`px-2.5 py-2 sm:py-1.5 rounded-xl text-xs sm:text-xs font-semibold transition text-center truncate active:scale-95 cursor-pointer ${
                     imageResolution.id === res.id
-                      ? "bg-blue-600 text-white shadow-xs"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                 >
@@ -539,9 +540,9 @@ export default function SampleFileGenerator({
 
             {imageResolution.id === "custom" && (
               <div className="flex items-center gap-2 pt-1 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 animate-in fade-in duration-200">
-                <span className="text-xs text-slate-500 font-semibold">Custom:</span>
+                <span className="text-xs text-slate-500 font-semibold">Custom</span>
                 <div className="flex items-center gap-1">
-                  <label htmlFor="custom-img-w" className="text-[11px] text-slate-400">W:</label>
+                  <label htmlFor="custom-img-w" className="text-xs text-slate-500 dark:text-slate-400">W:</label>
                   <input
                     id="custom-img-w"
                     type="number"
@@ -549,13 +550,13 @@ export default function SampleFileGenerator({
                     max={4096}
                     value={customImgWidth}
                     onChange={(e) => setCustomImgWidth(e.target.value)}
-                    className="w-20 text-xs font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-1 rounded-lg text-slate-900 dark:text-white"
+                    className="w-20 font-mono px-2 py-1 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   />
-                  <span className="text-[10px] text-slate-400">px</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">px</span>
                 </div>
-                <span className="text-slate-400">×</span>
+                <span className="text-slate-500 dark:text-slate-400">×</span>
                 <div className="flex items-center gap-1">
-                  <label htmlFor="custom-img-h" className="text-[11px] text-slate-400">H:</label>
+                  <label htmlFor="custom-img-h" className="text-xs text-slate-500 dark:text-slate-400">H:</label>
                   <input
                     id="custom-img-h"
                     type="number"
@@ -563,9 +564,9 @@ export default function SampleFileGenerator({
                     max={4096}
                     value={customImgHeight}
                     onChange={(e) => setCustomImgHeight(e.target.value)}
-                    className="w-20 text-xs font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-1 rounded-lg text-slate-900 dark:text-white"
+                    className="w-20 font-mono px-2 py-1 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   />
-                  <span className="text-[10px] text-slate-400">px</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">px</span>
                 </div>
               </div>
             )}
@@ -573,7 +574,7 @@ export default function SampleFileGenerator({
 
           {/* Pattern Style */}
           <div className="space-y-1.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+            <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">
               3. Visual Art Pattern
             </span>
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 sm:gap-2">
@@ -583,7 +584,7 @@ export default function SampleFileGenerator({
                   onClick={() => setImagePattern(p.id)}
                   className={`px-2.5 py-2 sm:py-1.5 rounded-xl text-xs font-semibold transition text-center active:scale-95 cursor-pointer truncate ${
                     imagePattern === p.id
-                      ? "bg-blue-600 text-white shadow-xs"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                 >
@@ -596,10 +597,10 @@ export default function SampleFileGenerator({
           {/* Target File Size */}
           <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">
                 4. Exact Target File Size
               </span>
-              <span className="text-[11px] font-mono font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="text-xs font-mono font-medium text-foreground">
                 {formatBytesShort(bytes)} ({bytes.toLocaleString()} bytes)
               </span>
             </div>
@@ -610,7 +611,7 @@ export default function SampleFileGenerator({
                   onClick={() => { setBytes(p.bytes); setCustomKb(String(Math.round(p.bytes / 1024))); }}
                   className={`px-3 py-2 sm:py-1.5 rounded-xl text-xs font-semibold transition text-center active:scale-95 cursor-pointer ${
                     bytes === p.bytes
-                      ? "bg-blue-600 text-white shadow-xs"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-50 dark:bg-slate-950/60 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800"
                   }`}
                 >
@@ -619,35 +620,35 @@ export default function SampleFileGenerator({
               ))}
             </div>
             <div className="flex items-center gap-2 pt-1">
-              <label htmlFor="custom-img-kb" className="text-xs text-slate-500 font-medium">Custom Size:</label>
+              <label htmlFor="custom-img-kb" className="text-xs text-slate-500 font-medium">Custom size</label>
               <input
                 id="custom-img-kb"
                 type="number"
                 min={1}
                 value={customKb}
                 onChange={(e) => applyCustom(e.target.value)}
-                className="w-24 text-sm font-mono bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl text-slate-900 dark:text-white"
+                className="w-24 font-mono px-3 py-1.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               />
               <span className="text-xs text-slate-500">KB</span>
             </div>
           </div>
 
           {/* Live Specs & File Size Preview Card */}
-          <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 via-blue-500/5 to-indigo-500/10 border border-emerald-500/20 dark:border-emerald-500/30 space-y-2.5">
+          <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 via-blue-500/5 to-blue-500/10 border border-emerald-500/20 dark:border-emerald-500/30 space-y-2.5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">
                 <div className="p-2.5 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shrink-0">
                   <HardDrive className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div>
-                  <span className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <span className="block text-xs sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                     Exact Image Target Size
                   </span>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-lg sm:text-xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
+                    <span className="text-lg sm:text-xl font-semibold font-mono text-foreground">
                       {formatBytesShort(bytes)}
                     </span>
-                    <span className="text-[11px] font-mono text-slate-400">
+                    <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
                       ({bytes.toLocaleString()} bytes)
                     </span>
                   </div>
@@ -655,10 +656,10 @@ export default function SampleFileGenerator({
               </div>
 
               <div className="flex flex-wrap items-center gap-1.5 self-start sm:self-auto">
-                <span className="px-2 py-0.5 rounded-md bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-[11px] font-mono text-slate-700 dark:text-slate-300">
+                <span className="px-2 py-0.5 rounded-md bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-700 dark:text-slate-300">
                   {IMAGE_FORMATS.find((f) => f.id === imageFormat)?.label}
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-[11px] font-mono text-slate-700 dark:text-slate-300">
+                <span className="px-2 py-0.5 rounded-md bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-700 dark:text-slate-300">
                   {activeImageDimensions.w}×{activeImageDimensions.h}
                 </span>
               </div>
@@ -669,22 +670,22 @@ export default function SampleFileGenerator({
 
       {/* 3. PDF Module Controls */}
       {kind === "pdf" && (
-        <div className="space-y-4 p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="space-y-4 p-4 sm:p-5 rounded-xl border bg-muted/30">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-red-50 dark:bg-red-950/50 text-red-600 dark:text-red-400">
                 <FileText className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                <h3 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">
                   PDF Generator Settings
                 </h3>
-                <p className="text-[10px] text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Configure page count, layout template &amp; exact file size
                 </p>
               </div>
             </div>
-            <span className="text-[11px] font-mono font-bold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/60 px-2.5 py-1 rounded-lg border border-red-200 dark:border-red-900/60">
+            <span className="text-xs font-mono font-semibold text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/60 px-2.5 py-1 rounded-lg border border-red-200 dark:border-red-900/60">
               {pdfPages} Pages • {formatBytesShort(bytes)}
             </span>
           </div>
@@ -692,10 +693,10 @@ export default function SampleFileGenerator({
           {/* Page Count */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">
                 1. Page Count
               </span>
-              <span className="text-xs font-bold font-mono text-blue-600 dark:text-blue-400">
+              <span className="text-xs font-semibold font-mono text-muted-foreground">
                 {pdfPages} {pdfPages === 1 ? "Page" : "Pages"}
               </span>
             </div>
@@ -706,7 +707,7 @@ export default function SampleFileGenerator({
                   onClick={() => { setPdfPages(p); setCustomPdfPagesInput(String(p)); }}
                   className={`px-3 py-2 sm:py-1.5 rounded-xl text-xs font-semibold font-mono transition text-center active:scale-95 cursor-pointer ${
                     pdfPages === p
-                      ? "bg-blue-600 text-white shadow-xs"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                 >
@@ -718,7 +719,7 @@ export default function SampleFileGenerator({
 
           {/* Template */}
           <div className="space-y-1.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+            <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">
               2. Document Layout Style
             </span>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -728,12 +729,12 @@ export default function SampleFileGenerator({
                   onClick={() => setPdfTemplate(t.id)}
                   className={`p-2.5 rounded-xl text-xs font-semibold transition text-left active:scale-95 cursor-pointer flex flex-col justify-between min-h-[48px] ${
                     pdfTemplate === t.id
-                      ? "bg-blue-600 text-white shadow-sm ring-2 ring-blue-600/30"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700"
                   }`}
                 >
-                  <span className="font-bold text-xs truncate">{t.label}</span>
-                  <span className={`text-[9px] truncate ${pdfTemplate === t.id ? "text-blue-100" : "text-slate-400"}`}>
+                  <span className="font-semibold text-xs truncate">{t.label}</span>
+                  <span className={`text-xs truncate ${pdfTemplate === t.id ? "text-brand-subtle-foreground/80" : "text-muted-foreground"}`}>
                     {t.desc}
                   </span>
                 </button>
@@ -744,10 +745,10 @@ export default function SampleFileGenerator({
           {/* Target File Size */}
           <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">
                 3. Exact Target File Size
               </span>
-              <span className="text-[11px] font-mono font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="text-xs font-mono font-medium text-foreground">
                 {formatBytesShort(bytes)}
               </span>
             </div>
@@ -758,7 +759,7 @@ export default function SampleFileGenerator({
                   onClick={() => { setBytes(p.bytes); setCustomKb(String(Math.round(p.bytes / 1024))); }}
                   className={`px-3 py-2 sm:py-1.5 rounded-xl text-xs font-semibold transition text-center active:scale-95 cursor-pointer ${
                     bytes === p.bytes
-                      ? "bg-blue-600 text-white shadow-xs"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-50 dark:bg-slate-950/60 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800"
                   }`}
                 >
@@ -767,14 +768,14 @@ export default function SampleFileGenerator({
               ))}
             </div>
             <div className="flex items-center gap-2 pt-1">
-              <label htmlFor="custom-pdf-kb" className="text-xs text-slate-500 font-medium">Custom Size:</label>
+              <label htmlFor="custom-pdf-kb" className="text-xs text-slate-500 font-medium">Custom size</label>
               <input
                 id="custom-pdf-kb"
                 type="number"
                 min={1}
                 value={customKb}
                 onChange={(e) => applyCustom(e.target.value)}
-                className="w-24 text-sm font-mono bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl text-slate-900 dark:text-white"
+                className="w-24 font-mono px-3 py-1.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               />
               <span className="text-xs text-slate-500">KB</span>
             </div>
@@ -784,28 +785,28 @@ export default function SampleFileGenerator({
 
       {/* 4. Word (DOCX) Module Controls */}
       {kind === "docx" && (
-        <div className="space-y-4 p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="space-y-4 p-4 sm:p-5 rounded-xl border bg-muted/30">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
                 <FileText className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                <h3 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">
                   Word DOCX Settings
                 </h3>
-                <p className="text-[10px] text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Configure paragraphs, OpenXML structure &amp; file size
                 </p>
               </div>
             </div>
-            <span className="text-[11px] font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900/60">
+            <span className="text-xs font-mono font-semibold text-blue-600 dark:text-blue-400 px-2.5 py-1 rounded-lg border bg-muted/30">
               {docxParas} Paras • {formatBytesShort(bytes)}
             </span>
           </div>
 
           <div className="space-y-1.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+            <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">
               1. Paragraph Count
             </span>
             <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-1.5 sm:gap-2">
@@ -815,7 +816,7 @@ export default function SampleFileGenerator({
                   onClick={() => setDocxParas(p)}
                   className={`px-3 py-2 sm:py-1.5 rounded-xl text-xs font-semibold font-mono transition text-center active:scale-95 cursor-pointer ${
                     docxParas === p
-                      ? "bg-blue-600 text-white shadow-xs"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                 >
@@ -826,7 +827,7 @@ export default function SampleFileGenerator({
           </div>
 
           <div className="space-y-1.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+            <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">
               2. Document Structure
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -836,12 +837,12 @@ export default function SampleFileGenerator({
                   onClick={() => setDocxTemplate(t.id)}
                   className={`p-2.5 rounded-xl text-xs font-semibold transition text-left active:scale-95 cursor-pointer flex flex-col justify-between min-h-[48px] ${
                     docxTemplate === t.id
-                      ? "bg-blue-600 text-white shadow-sm ring-2 ring-blue-600/30"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700"
                   }`}
                 >
-                  <span className="font-bold text-xs truncate">{t.label}</span>
-                  <span className={`text-[9px] truncate ${docxTemplate === t.id ? "text-blue-100" : "text-slate-400"}`}>
+                  <span className="font-semibold text-xs truncate">{t.label}</span>
+                  <span className={`text-xs truncate ${docxTemplate === t.id ? "text-brand-subtle-foreground/80" : "text-muted-foreground"}`}>
                     {t.desc}
                   </span>
                 </button>
@@ -851,10 +852,10 @@ export default function SampleFileGenerator({
 
           <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">
                 3. Exact Target File Size
               </span>
-              <span className="text-[11px] font-mono font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="text-xs font-mono font-medium text-foreground">
                 {formatBytesShort(bytes)}
               </span>
             </div>
@@ -865,7 +866,7 @@ export default function SampleFileGenerator({
                   onClick={() => { setBytes(p.bytes); setCustomKb(String(Math.round(p.bytes / 1024))); }}
                   className={`px-3 py-2 sm:py-1.5 rounded-xl text-xs font-semibold transition text-center active:scale-95 cursor-pointer ${
                     bytes === p.bytes
-                      ? "bg-blue-600 text-white shadow-xs"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-50 dark:bg-slate-950/60 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800"
                   }`}
                 >
@@ -879,29 +880,29 @@ export default function SampleFileGenerator({
 
       {/* 5. Data (CSV / JSON / Text) Module Controls */}
       {(kind === "csv" || kind === "json" || kind === "text") && (
-        <div className="space-y-4 p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="space-y-4 p-4 sm:p-5 rounded-xl border bg-muted/30">
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400">
                 {kind === "csv" ? <FileSpreadsheet className="w-4 h-4" /> : <Database className="w-4 h-4" />}
               </div>
               <div>
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                <h3 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">
                   {kind.toUpperCase()} Data Generator Settings
                 </h3>
-                <p className="text-[10px] text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Configure data schema, realistic fields &amp; exact record size
                 </p>
               </div>
             </div>
-            <span className="text-[11px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-900/60">
+            <span className="text-xs font-mono font-semibold bg-emerald-50 dark:bg-emerald-950/60 px-2.5 py-1 rounded-lg border border-emerald-200 dark:border-emerald-900/60 text-foreground">
               {dataSchema.toUpperCase()} • {formatBytesShort(bytes)}
             </span>
           </div>
 
           {/* Schema Selector */}
           <div className="space-y-1.5">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+            <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">
               1. Dataset Schema
             </span>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -911,17 +912,17 @@ export default function SampleFileGenerator({
                   onClick={() => setDataSchema(s.id)}
                   className={`p-2.5 rounded-xl text-xs font-semibold transition text-left active:scale-95 cursor-pointer flex flex-col justify-between min-h-[50px] ${
                     dataSchema === s.id
-                      ? "bg-blue-600 text-white shadow-sm ring-2 ring-blue-600/30"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs truncate">{s.label}</span>
-                    <span className={`text-[9px] font-mono ${dataSchema === s.id ? "text-blue-100" : "text-slate-400"}`}>
+                    <span className="font-semibold text-xs truncate">{s.label}</span>
+                    <span className={`text-xs font-mono ${dataSchema === s.id ? "text-brand-subtle-foreground/80" : "text-muted-foreground"}`}>
                       {s.cols}
                     </span>
                   </div>
-                  <span className={`text-[9px] truncate mt-1 ${dataSchema === s.id ? "text-blue-100" : "text-slate-400"}`}>
+                  <span className={`text-xs truncate mt-1 ${dataSchema === s.id ? "text-brand-subtle-foreground/80" : "text-muted-foreground"}`}>
                     {s.desc}
                   </span>
                 </button>
@@ -932,10 +933,10 @@ export default function SampleFileGenerator({
           {/* Target File Size */}
           <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">
                 2. Target Dataset File Size
               </span>
-              <span className="text-[11px] font-mono font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="text-xs font-mono font-medium text-foreground">
                 {formatBytesShort(bytes)}
               </span>
             </div>
@@ -946,7 +947,7 @@ export default function SampleFileGenerator({
                   onClick={() => { setBytes(p.bytes); setCustomKb(String(Math.round(p.bytes / 1024))); }}
                   className={`px-3 py-2 sm:py-1.5 rounded-xl text-xs font-semibold transition text-center active:scale-95 cursor-pointer ${
                     bytes === p.bytes
-                      ? "bg-blue-600 text-white shadow-xs"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-50 dark:bg-slate-950/60 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-800"
                   }`}
                 >
@@ -955,14 +956,14 @@ export default function SampleFileGenerator({
               ))}
             </div>
             <div className="flex items-center gap-2 pt-1">
-              <label htmlFor="custom-data-kb" className="text-xs text-slate-500 font-medium">Custom Size:</label>
+              <label htmlFor="custom-data-kb" className="text-xs text-slate-500 font-medium">Custom size</label>
               <input
                 id="custom-data-kb"
                 type="number"
                 min={1}
                 value={customKb}
                 onChange={(e) => applyCustom(e.target.value)}
-                className="w-24 text-sm font-mono bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-1.5 rounded-xl text-slate-900 dark:text-white"
+                className="w-24 font-mono px-3 py-1.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               />
               <span className="text-xs text-slate-500">KB</span>
             </div>
@@ -972,7 +973,7 @@ export default function SampleFileGenerator({
 
       {/* 6. Video Generator Controls */}
       {kind === "video" && (
-        <div className="space-y-4 p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm">
+        <div className="space-y-4 p-4 sm:p-5 rounded-xl border bg-muted/30">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-3">
             <div className="flex items-center gap-2">
@@ -980,16 +981,16 @@ export default function SampleFileGenerator({
                 <Video className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                <h3 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">
                   Video Generator Settings
                 </h3>
-                <p className="text-[10px] text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   Configure format, resolution, duration &amp; bitrates
                 </p>
               </div>
             </div>
 
-            <span className="text-[11px] font-mono font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 px-2.5 py-1 rounded-lg border border-blue-200 dark:border-blue-900/60">
+            <span className="text-xs font-mono font-semibold text-blue-600 dark:text-blue-400 px-2.5 py-1 rounded-lg border bg-muted/30">
               {VIDEO_FORMATS.find((f) => f.id === videoFormat)?.label} • {activeVideoResolution.label}
             </span>
           </div>
@@ -997,10 +998,10 @@ export default function SampleFileGenerator({
           {/* Video Format Selection */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">
                 1. Container &amp; Format
               </span>
-              <span className="text-[10px] font-mono text-slate-400">
+              <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
                 {VIDEO_FORMATS.find((f) => f.id === videoFormat)?.tag}
               </span>
             </div>
@@ -1011,19 +1012,19 @@ export default function SampleFileGenerator({
                   onClick={() => setVideoFormat(f.id)}
                   className={`p-2 sm:p-2.5 rounded-xl text-xs font-semibold transition text-left active:scale-95 flex flex-col justify-between min-h-[50px] cursor-pointer ${
                     videoFormat === f.id
-                      ? "bg-blue-600 text-white shadow-sm ring-2 ring-blue-600/30"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-300 dark:hover:border-slate-700"
                   }`}
                 >
                   <div className="flex items-center justify-between w-full">
-                    <span className="font-bold text-xs truncate">{f.label}</span>
+                    <span className="font-semibold text-xs truncate">{f.label}</span>
                     {f.popular && (
-                      <span className={`text-[8px] font-bold px-1 rounded ${videoFormat === f.id ? "bg-blue-700 text-blue-100" : "bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400"}`}>
+                      <span className={`text-[10px] font-semibold px-1 rounded ${videoFormat === f.id ? "bg-primary/15 text-brand-subtle-foreground" : "bg-muted text-muted-foreground"}`}>
                         POP
                       </span>
                     )}
                   </div>
-                  <span className={`text-[9px] truncate ${videoFormat === f.id ? "text-blue-100" : "text-slate-400"}`}>
+                  <span className={`text-xs truncate ${videoFormat === f.id ? "text-brand-subtle-foreground/80" : "text-muted-foreground"}`}>
                     {f.tag}
                   </span>
                 </button>
@@ -1034,10 +1035,10 @@ export default function SampleFileGenerator({
           {/* Video Resolution / Aspect Ratio */}
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">
                 2. Resolution &amp; Ratio
               </span>
-              <span className="text-[10px] font-mono text-slate-400">
+              <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
                 {activeVideoResolution.w} × {activeVideoResolution.h} ({activeVideoResolution.aspect})
               </span>
             </div>
@@ -1046,9 +1047,9 @@ export default function SampleFileGenerator({
                 <button
                   key={res.id}
                   onClick={() => setVideoResolution(res)}
-                  className={`px-2.5 py-2 sm:py-1.5 rounded-xl text-[11px] sm:text-xs font-semibold transition text-center truncate active:scale-95 cursor-pointer ${
+                  className={`px-2.5 py-2 sm:py-1.5 rounded-xl text-xs sm:text-xs font-semibold transition text-center truncate active:scale-95 cursor-pointer ${
                     videoResolution.id === res.id
-                      ? "bg-blue-600 text-white shadow-xs"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                 >
@@ -1059,9 +1060,9 @@ export default function SampleFileGenerator({
 
             {videoResolution.id === "custom" && (
               <div className="flex items-center gap-2 pt-1 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 animate-in fade-in duration-200">
-                <span className="text-xs text-slate-500 font-semibold">Custom:</span>
+                <span className="text-xs text-slate-500 font-semibold">Custom</span>
                 <div className="flex items-center gap-1">
-                  <label htmlFor="custom-w" className="text-[11px] text-slate-400">W:</label>
+                  <label htmlFor="custom-w" className="text-xs text-slate-500 dark:text-slate-400">W:</label>
                   <input
                     id="custom-w"
                     type="number"
@@ -1069,13 +1070,13 @@ export default function SampleFileGenerator({
                     max={3840}
                     value={customWidth}
                     onChange={(e) => setCustomWidth(e.target.value)}
-                    className="w-20 text-xs font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-1 rounded-lg text-slate-900 dark:text-white"
+                    className="w-20 font-mono px-2 py-1 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   />
-                  <span className="text-[10px] text-slate-400">px</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">px</span>
                 </div>
-                <span className="text-slate-400">×</span>
+                <span className="text-slate-500 dark:text-slate-400">×</span>
                 <div className="flex items-center gap-1">
-                  <label htmlFor="custom-h" className="text-[11px] text-slate-400">H:</label>
+                  <label htmlFor="custom-h" className="text-xs text-slate-500 dark:text-slate-400">H:</label>
                   <input
                     id="custom-h"
                     type="number"
@@ -1083,9 +1084,9 @@ export default function SampleFileGenerator({
                     max={2160}
                     value={customHeight}
                     onChange={(e) => setCustomHeight(e.target.value)}
-                    className="w-20 text-xs font-mono bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-1 rounded-lg text-slate-900 dark:text-white"
+                    className="w-20 font-mono px-2 py-1 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   />
-                  <span className="text-[10px] text-slate-400">px</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">px</span>
                 </div>
               </div>
             )}
@@ -1094,10 +1095,10 @@ export default function SampleFileGenerator({
           {/* Video Duration / Time Selection */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label htmlFor="vid-secs" className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              <label htmlFor="vid-secs" className="text-sm text-slate-600 dark:text-slate-300 font-semibold">
                 3. Duration &amp; Time
               </label>
-              <span className="text-xs font-bold text-blue-600 dark:text-blue-400 font-mono">
+              <span className="text-xs font-semibold font-mono text-muted-foreground">
                 {videoSeconds}s ({videoSeconds < 60 ? `${videoSeconds} sec` : `${(videoSeconds / 60).toFixed(1)} min`})
               </span>
             </div>
@@ -1112,7 +1113,7 @@ export default function SampleFileGenerator({
                   }}
                   className={`py-1.5 px-2.5 sm:px-3 rounded-xl text-xs font-mono font-semibold transition text-center active:scale-95 cursor-pointer ${
                     videoSeconds === sec
-                      ? "bg-blue-600 text-white"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                 >
@@ -1136,7 +1137,7 @@ export default function SampleFileGenerator({
                 className="w-full accent-blue-600 cursor-pointer h-2 bg-slate-200 dark:bg-slate-800 rounded-lg"
               />
               <div className="flex items-center gap-1 shrink-0">
-                <input
+                <input aria-label="Video length in seconds"
                   type="number"
                   min={1}
                   max={300}
@@ -1146,9 +1147,9 @@ export default function SampleFileGenerator({
                     const sec = parseInt(e.target.value, 10);
                     if (!Number.isNaN(sec) && sec >= 1 && sec <= 300) setVideoSeconds(sec);
                   }}
-                  className="w-16 text-xs font-mono bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-2 py-1 rounded-lg text-slate-900 dark:text-white"
+                  className="w-16 font-mono px-2 py-1 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 />
-                <span className="text-xs text-slate-400">sec</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">sec</span>
               </div>
             </div>
           </div>
@@ -1156,10 +1157,10 @@ export default function SampleFileGenerator({
           {/* Target Bitrate & Quality */}
           <div className="space-y-1.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+              <span className="text-sm text-slate-600 dark:text-slate-300 font-semibold">
                 4. Quality &amp; Bitrate
               </span>
-              <span className="text-[11px] font-mono font-medium text-emerald-600 dark:text-emerald-400">
+              <span className="text-xs font-mono font-medium text-foreground">
                 Est. ~{formatBytesShort(estimatedVideoBytes)}
               </span>
             </div>
@@ -1170,12 +1171,12 @@ export default function SampleFileGenerator({
                   onClick={() => setVideoBitrate(b.bps)}
                   className={`px-2.5 py-2 sm:py-1.5 rounded-xl text-xs font-semibold transition text-left active:scale-95 flex items-center justify-between cursor-pointer ${
                     videoBitrate === b.bps
-                      ? "bg-blue-600 text-white shadow-xs"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`}
                 >
                   <span className="truncate">{b.label}</span>
-                  <span className={`text-[10px] font-mono ml-1 ${videoBitrate === b.bps ? "text-blue-100" : "text-slate-400"}`}>
+                  <span className={`text-xs font-mono ml-1 ${videoBitrate === b.bps ? "text-brand-subtle-foreground/80" : "text-muted-foreground"}`}>
                     {b.desc}
                   </span>
                 </button>
@@ -1198,10 +1199,10 @@ export default function SampleFileGenerator({
               <div className="mt-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-3 animate-in fade-in duration-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <span className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    <span className="block text-sm font-medium text-foreground">
                       Frame Rate (FPS)
                     </span>
-                    <span className="text-[10px] text-slate-400">
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
                       Higher FPS gives smoother motion
                     </span>
                   </div>
@@ -1212,7 +1213,7 @@ export default function SampleFileGenerator({
                         onClick={() => setVideoFps(fps)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition cursor-pointer ${
                           videoFps === fps
-                            ? "bg-blue-600 text-white shadow-xs"
+                            ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                             : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800"
                         }`}
                       >
@@ -1224,10 +1225,10 @@ export default function SampleFileGenerator({
 
                 <div className="flex items-center justify-between pt-2 border-t border-slate-200/80 dark:border-slate-800/80">
                   <div>
-                    <span className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    <span className="block text-sm font-medium text-foreground">
                       Audio Track
                     </span>
-                    <span className="block text-[10px] text-slate-400">
+                    <span className="block text-xs text-slate-500 dark:text-slate-400">
                       Embeds 440Hz test audio tone with video
                     </span>
                   </div>
@@ -1249,21 +1250,21 @@ export default function SampleFileGenerator({
           </div>
 
           {/* Live Estimated Video File Size & Specs Preview Card */}
-          <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 via-blue-500/5 to-indigo-500/10 border border-emerald-500/20 dark:border-emerald-500/30 space-y-2.5">
+          <div className="p-3.5 sm:p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 via-blue-500/5 to-blue-500/10 border border-emerald-500/20 dark:border-emerald-500/30 space-y-2.5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">
                 <div className="p-2.5 rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shrink-0">
                   <HardDrive className="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div>
-                  <span className="block text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  <span className="block text-xs sm:text-[11px] text-slate-500 dark:text-slate-400 font-medium">
                     Estimated Output File Size
                   </span>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-lg sm:text-xl font-extrabold font-mono text-emerald-600 dark:text-emerald-400">
+                    <span className="text-lg sm:text-xl font-semibold font-mono text-foreground">
                       ~{formatBytesShort(estimatedVideoBytes)}
                     </span>
-                    <span className="text-[11px] font-mono text-slate-400">
+                    <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
                       ({formatBytesShort(minEstimatedBytes)} – {formatBytesShort(maxEstimatedBytes)})
                     </span>
                   </div>
@@ -1271,39 +1272,39 @@ export default function SampleFileGenerator({
               </div>
 
               <div className="flex flex-wrap items-center gap-1.5 self-start sm:self-auto">
-                <span className="px-2 py-0.5 rounded-md bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-[11px] font-mono text-slate-700 dark:text-slate-300">
+                <span className="px-2 py-0.5 rounded-md bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-700 dark:text-slate-300">
                   {activeVideoResolution.label}
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-[11px] font-mono text-slate-700 dark:text-slate-300">
+                <span className="px-2 py-0.5 rounded-md bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-700 dark:text-slate-300">
                   {videoSeconds}s @ {videoFps}fps
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-[11px] font-mono text-slate-700 dark:text-slate-300">
+                <span className="px-2 py-0.5 rounded-md bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 text-xs font-mono text-slate-700 dark:text-slate-300">
                   {(videoBitrate / 1_000_000).toFixed(1)} Mbps
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 text-[11px] border-t border-emerald-500/15">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 text-xs border-t border-emerald-500/15">
               <div>
-                <span className="text-slate-400 block text-[10px]">Container &amp; Ext</span>
+                <span className="text-slate-500 dark:text-slate-400 block text-xs">Container &amp; Ext</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 truncate block">
                   {VIDEO_FORMATS.find((f) => f.id === videoFormat)?.label} ({VIDEO_FORMATS.find((f) => f.id === videoFormat)?.ext})
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">Total Frames</span>
+                <span className="text-slate-500 dark:text-slate-400 block text-xs">Total Frames</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 block font-mono">
                   {totalFramesCount} frames
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">Audio Track</span>
+                <span className="text-slate-500 dark:text-slate-400 block text-xs">Audio Track</span>
                 <span className="font-semibold text-slate-800 dark:text-slate-200 block">
                   {includeAudio ? "440Hz Tone (128k)" : "None (Silent)"}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px]">Profile</span>
+                <span className="text-slate-500 dark:text-slate-400 block text-xs">Profile</span>
                 <span className="font-semibold text-emerald-600 dark:text-emerald-400 block truncate">
                   {estimatedVideoBytes < 2 * 1024 * 1024
                     ? "Compact (< 2 MB)"
@@ -1319,12 +1320,12 @@ export default function SampleFileGenerator({
 
       {/* 7. Quantity Selector (For Non-Video Types) */}
       {kind !== "video" && (
-        <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl border bg-muted/30">
           <div>
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block">
+            <span className="text-sm block font-medium text-foreground">
               Generate Multiple Files in Batch
             </span>
-            <span className="text-[10px] text-slate-400 block">
+            <span className="text-xs text-slate-500 dark:text-slate-400 block">
               Select how many unique sample files to produce at once
             </span>
           </div>
@@ -1336,7 +1337,7 @@ export default function SampleFileGenerator({
                 onClick={() => setFileCount(c)}
                 className={`px-2.5 py-1 rounded-lg text-xs font-mono font-semibold transition cursor-pointer ${
                   fileCount === c
-                    ? "bg-blue-600 text-white shadow-xs"
+                    ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                     : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
                 }`}
               >
@@ -1349,7 +1350,7 @@ export default function SampleFileGenerator({
 
       {/* 8. Live Generation Progress Card */}
       {busy && progress && (
-        <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-slate-900 border border-blue-200 dark:border-blue-900/60 shadow-lg shadow-blue-500/5 space-y-3.5 animate-in fade-in slide-in-from-top-2 duration-300">
+        <div className="p-4 sm:p-5 rounded-xl border border-blue-200 dark:border-blue-900/60 space-y-3.5 animate-in fade-in slide-in-from-top-2 duration-300 bg-muted/30">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center space-x-2 min-w-0">
               <div className="relative flex items-center justify-center shrink-0">
@@ -1362,7 +1363,7 @@ export default function SampleFileGenerator({
                 ) : (
                   <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400 animate-spin shrink-0" />
                 )}
-                <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 truncate">
+                <span className="text-sm sm:text-xs text-slate-800 dark:text-slate-200 truncate font-semibold">
                   {kind === "video" ? "Recording & Encoding Video" : `Generating ${kind.toUpperCase()} Files`}
                 </span>
               </div>
@@ -1405,12 +1406,12 @@ export default function SampleFileGenerator({
                     }`}
                   />
                   <span
-                    className={`block text-[9px] sm:text-[10px] font-semibold truncate ${
+                    className={`block text-xs sm:text-[10px] font-semibold truncate ${
                       isDone
                         ? "text-emerald-600 dark:text-emerald-400"
                         : isCurrent
-                        ? "text-blue-600 dark:text-blue-400 font-bold"
-                        : "text-slate-400"
+                        ? "text-blue-600 dark:text-blue-400 font-semibold"
+                        : "text-slate-500 dark:text-slate-400"
                     }`}
                   >
                     <span className="sm:hidden">{s.label}</span>
@@ -1424,22 +1425,22 @@ export default function SampleFileGenerator({
           {/* Progress Bar & Percentage */}
           <div className="space-y-1.5 sm:space-y-2">
             <div className="flex items-center justify-between text-xs font-mono gap-2">
-              <span className="font-semibold text-slate-700 dark:text-slate-300 truncate text-[11px] sm:text-xs">
+              <span className="font-semibold text-slate-700 dark:text-slate-300 truncate text-xs sm:text-xs">
                 {progress.message}
               </span>
-              <span className="font-bold text-blue-600 dark:text-blue-400 text-xs sm:text-sm shrink-0">
+              <span className="font-semibold text-xs sm:text-sm shrink-0 text-muted-foreground">
                 {progress.percent}%
               </span>
             </div>
 
-            <div className="h-2.5 sm:h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative shadow-inner">
+            <div className="h-2.5 sm:h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden relative">
               <div
-                className="h-full bg-gradient-to-r from-blue-600 via-indigo-500 to-cyan-400 transition-all duration-150 rounded-full"
+                className="h-full bg-gradient-to-r from-blue-600 via-blue-500 to-cyan-400 transition-all duration-150 rounded-full"
                 style={{ width: `${progress.percent}%` }}
               />
             </div>
 
-            <div className="flex items-center justify-between text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 font-mono pt-0.5 gap-1">
+            <div className="flex items-center justify-between text-xs sm:text-[11px] text-slate-500 dark:text-slate-400 font-mono pt-0.5 gap-1">
               <div className="truncate">
                 {progress.currentSecond !== undefined && progress.totalSeconds !== undefined ? (
                   <span>
@@ -1463,7 +1464,7 @@ export default function SampleFileGenerator({
       <button
         onClick={generate}
         disabled={busy}
-        className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 sm:py-3 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-98 disabled:opacity-50 text-white text-sm font-semibold transition shadow-md shadow-blue-500/20 cursor-pointer disabled:cursor-not-allowed"
+        className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 sm:py-3 rounded-lg disabled:opacity-50 text-sm transition cursor-pointer disabled:cursor-not-allowed bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
       >
         {busy ? <RefreshCw className="w-4 h-4 animate-spin shrink-0" /> : <Shuffle className="w-4 h-4 shrink-0" />}
         <span className="truncate">
@@ -1483,9 +1484,9 @@ export default function SampleFileGenerator({
 
       {/* Status or Error Banner */}
       {status && !busy && (
-        <div className="flex gap-2.5 p-3.5 sm:p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 animate-in fade-in duration-200">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-          <p className="text-xs text-amber-800 dark:text-amber-200">{status}</p>
+        <div className="flex gap-2.5 p-3.5 sm:p-4 rounded-xl border animate-in fade-in duration-200 bg-muted/30">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-muted-foreground" />
+          <p className="text-xs text-muted-foreground">{status}</p>
         </div>
       )}
 
@@ -1495,13 +1496,13 @@ export default function SampleFileGenerator({
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <FileCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-              <h3 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+              <h3 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">
                 Generated {kind === "video" ? "Video Sample" : "Sample Files"} ({items.length})
               </h3>
             </div>
             <button
               onClick={() => { items.forEach((i) => URL.revokeObjectURL(i.url)); setItems([]); }}
-              className="flex items-center gap-1 text-xs font-medium text-slate-400 hover:text-red-500 transition py-1 px-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+              className="flex items-center gap-1 text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-red-500 transition py-1 px-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
             >
               <Trash2 className="w-3.5 h-3.5" />
               <span>Clear</span>
@@ -1512,7 +1513,7 @@ export default function SampleFileGenerator({
             {items.map((item) => (
               <li
                 key={item.id}
-                className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden flex flex-col shadow-xs hover:shadow-md transition duration-200"
+                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden flex flex-col shadow-xs hover:shadow-md transition duration-200"
               >
                 <div className="aspect-video bg-slate-100 dark:bg-slate-950 flex items-center justify-center overflow-hidden relative group">
                   {item.kind === "image" ? (
@@ -1521,33 +1522,33 @@ export default function SampleFileGenerator({
                   ) : item.kind === "video" ? (
                     <video src={item.url} controls playsInline className="w-full h-full object-cover" />
                   ) : (
-                    <span className="text-2xl font-bold uppercase text-slate-300 dark:text-slate-700">
+                    <span className="text-2xl font-semibold uppercase text-slate-300 dark:text-slate-700">
                       {item.filename.split(".").pop()}
                     </span>
                   )}
-                  <span className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-[10px] font-mono font-bold text-white uppercase">
+                  <span className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-xs font-mono font-medium text-white uppercase">
                     {item.filename.split(".").pop()}
                   </span>
                 </div>
                 <div className="p-3.5 space-y-2 flex-1 flex flex-col justify-between">
                   <div className="min-w-0">
-                    <p className="truncate text-xs font-bold text-slate-800 dark:text-slate-200" title={item.filename}>
+                    <p className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200" title={item.filename}>
                       {item.filename}
                     </p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                       {formatBytesShort(item.blob.size)} · {item.label}
                     </p>
                   </div>
                   <div className="flex gap-1.5 pt-1 mt-auto">
                     <button
                       onClick={() => downloadBlob(item.blob, item.filename)}
-                      className="flex flex-1 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-xs font-semibold transition shadow-xs cursor-pointer"
+                      className="flex flex-1 items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs transition cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
                     >
                       <Download className="w-3.5 h-3.5 shrink-0" />
                       <span>Download</span>
                     </button>
                     {item.blob.size <= 200 * 1024 && (
-                      <button
+                      <button aria-label="Copy Data URL"
                         onClick={() => copyDataUrl(item)}
                         title="Copy Data URL"
                         className="flex items-center justify-center px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition cursor-pointer"

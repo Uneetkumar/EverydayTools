@@ -24,7 +24,8 @@ import {
   CheckCircle2,
   Package,
 } from "lucide-react";
-import confetti from "canvas-confetti";
+import { markToolCompleted } from "@/lib/analytics";
+import { copyText } from "@/lib/utils/clipboard";
 
 interface ScannedBarcode {
   id: string;
@@ -103,7 +104,7 @@ export default function BarcodeScanner() {
       setHistory((prev = []) => [newScan, ...prev.filter((p) => p.text !== newScan.text)].slice(0, 15));
 
       playBeep();
-      confetti({ particleCount: 25, spread: 45, origin: { y: 0.85 } });
+      markToolCompleted();
     },
     [playBeep, setHistory]
   );
@@ -243,7 +244,7 @@ export default function BarcodeScanner() {
 
   // Copy value helper
   const copyValue = (val: string) => {
-    navigator.clipboard.writeText(val);
+    copyText(val);
     setCopiedValue(true);
     setTimeout(() => setCopiedValue(false), 2000);
   };
@@ -289,13 +290,13 @@ export default function BarcodeScanner() {
   return (
     <div className="space-y-6">
       {/* Top Header: Mode & Batch Switcher */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-1.5 border rounded-lg bg-muted/60">
         <div className="flex items-center gap-1">
           <button
             onClick={() => setActiveMode("upload")}
             className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2 text-xs font-semibold rounded-xl transition ${
               activeMode === "upload"
-                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                ? "bg-background text-foreground shadow-xs dark:bg-input/50"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
@@ -310,7 +311,7 @@ export default function BarcodeScanner() {
             }}
             className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2 text-xs font-semibold rounded-xl transition ${
               activeMode === "camera"
-                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                ? "bg-background text-foreground shadow-xs dark:bg-input/50"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
@@ -320,7 +321,7 @@ export default function BarcodeScanner() {
         </div>
 
         <div className="flex items-center justify-end px-2 space-x-3">
-          <label className="flex items-center space-x-1.5 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
+          <label className="flex items-center space-x-1.5 text-sm cursor-pointer font-medium text-foreground">
             <input
               type="checkbox"
               checked={batchMode}
@@ -331,11 +332,14 @@ export default function BarcodeScanner() {
           </label>
 
           <button
+            type="button"
+            aria-pressed={soundEnabled}
+            aria-label={soundEnabled ? "Turn off scan beep" : "Turn on scan beep"}
             onClick={() => setSoundEnabled(!soundEnabled)}
             className={`p-1.5 rounded-xl border text-xs font-medium flex items-center space-x-1 transition ${
               soundEnabled
                 ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border-slate-200 dark:border-slate-700"
-                : "text-slate-400 border-transparent hover:bg-slate-200 dark:hover:bg-slate-800"
+                : "text-slate-500 dark:text-slate-400 border-transparent hover:bg-slate-200 dark:hover:bg-slate-800"
             }`}
           >
             {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
@@ -349,13 +353,13 @@ export default function BarcodeScanner() {
         <div className="@container @4xl:col-span-6 space-y-4">
           {/* Mode 1: File Upload */}
           {activeMode === "upload" && (
-            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+            <div className="p-6 rounded-xl border space-y-4 bg-muted/30">
               <div className="flex items-center justify-between">
-                <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-                  <Upload className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                <div className="text-sm text-slate-900 dark:text-white flex items-center space-x-2 font-semibold">
+                  <Upload className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>Upload Barcode Photo</span>
                 </div>
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full text-blue-600 dark:text-blue-400 border bg-muted/30">
                   Ctrl + V to Paste
                 </span>
               </div>
@@ -369,7 +373,7 @@ export default function BarcodeScanner() {
                   if (file) processImageFile(file);
                 }}
                 onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 rounded-3xl p-8 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[220px] bg-slate-50/50 dark:bg-slate-950/40 hover:bg-blue-50/30"
+                className="border-dashed rounded-xl p-8 text-center cursor-pointer flex flex-col items-center justify-center min-h-[220px] border-2 border-input bg-muted/30 transition-colors hover:border-primary/50 hover:bg-muted/60"
               >
                 <input
                   ref={fileInputRef}
@@ -382,46 +386,46 @@ export default function BarcodeScanner() {
                   className="hidden"
                 />
 
-                <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3 shadow-xs">
+                <div className="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3 shadow-xs">
                   <Barcode className="w-8 h-8" />
                 </div>
 
-                <div className="text-xs font-bold text-slate-900 dark:text-white mb-1">
+                <div className="text-xs font-semibold text-slate-900 dark:text-white mb-1">
                   Drop a barcode image here or click to browse
                 </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xs mb-3">
+                <div className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mb-3">
                   Reads EAN-13, UPC-A, Code 128, Code 39, ITF, Codabar, and 2D codes.
                 </div>
 
-                <div className="px-3 py-1 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-xs">
+                <div className="px-3 py-1 rounded-xl border text-xs font-semibold text-slate-700 dark:text-slate-300 bg-muted/30">
                   {isProcessing ? "Processing Barcode..." : "Select Image File"}
                 </div>
               </div>
 
               {/* Sample Barcodes Bar */}
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
-                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-                  <span>Test Sample Barcodes:</span>
-                  <Sparkles className="w-3 h-3 text-amber-500" />
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-2 flex items-center justify-between font-medium">
+                  <span>Test sample barcodes</span>
+                  <Sparkles className="w-3 h-3 text-muted-foreground" />
                 </div>
                 <div className="grid grid-cols-3 gap-2">
                   <button
                     onClick={() => loadSample("9780201379624", "EAN13")}
-                    className="py-1.5 px-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-[11px] font-semibold transition text-center truncate"
+                    className="py-1.5 px-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-xs font-semibold transition text-center truncate"
                   >
-                    📦 EAN-13 Book
+                    EAN-13 book
                   </button>
                   <button
                     onClick={() => loadSample("012345678905", "UPC")}
-                    className="py-1.5 px-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-[11px] font-semibold transition text-center truncate"
+                    className="py-1.5 px-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-xs font-semibold transition text-center truncate"
                   >
-                    🏷️ UPC-A Retail
+                    UPC-A retail
                   </button>
                   <button
                     onClick={() => loadSample("TB-SHIP-84920", "CODE128")}
-                    className="py-1.5 px-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-[11px] font-semibold transition text-center truncate"
+                    className="py-1.5 px-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-xs font-semibold transition text-center truncate"
                   >
-                    🚚 Code 128 SKU
+                    Code 128 SKU
                   </button>
                 </div>
               </div>
@@ -430,14 +434,14 @@ export default function BarcodeScanner() {
 
           {/* Mode 2: Camera Viewfinder */}
           {activeMode === "camera" && (
-            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+            <div className="p-6 rounded-xl border space-y-4 bg-muted/30">
               <div className="flex items-center justify-between">
-                <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+                <div className="text-sm text-slate-900 dark:text-white flex items-center space-x-2 font-semibold">
                   <Camera className="w-3.5 h-3.5 text-rose-500" />
                   <span>Real-Time Barcode Scanner</span>
                 </div>
                 {cameraActive && (
-                  <span className="flex items-center space-x-1.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full">
+                  <span className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span>Live</span>
                   </span>
@@ -445,13 +449,13 @@ export default function BarcodeScanner() {
               </div>
 
               {cameraError && (
-                <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-start space-x-2">
+                <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-start space-x-2">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <div>{cameraError}</div>
                 </div>
               )}
 
-              <div className="relative w-full aspect-video max-h-[340px] mx-auto rounded-3xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center">
+              <div className="relative w-full aspect-video max-h-[340px] mx-auto rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center">
                 <video
                   ref={videoRef}
                   playsInline
@@ -461,7 +465,7 @@ export default function BarcodeScanner() {
 
                 {!cameraActive && (
                   <div className="flex flex-col items-center justify-center p-6 text-center space-y-3">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-800 text-slate-400 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-xl bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center">
                       <Camera className="w-6 h-6" />
                     </div>
                     <div className="text-xs font-semibold text-slate-300">
@@ -469,7 +473,7 @@ export default function BarcodeScanner() {
                     </div>
                     <button
                       onClick={startCamera}
-                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition"
+                      className="px-4 py-2 rounded-lg text-xs transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
                     >
                       Start Camera Scanner
                     </button>
@@ -479,7 +483,7 @@ export default function BarcodeScanner() {
                 {/* Laser Overlay & Target Box */}
                 {cameraActive && (
                   <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    <div className="w-4/5 h-1/2 border-2 border-dashed border-rose-400/80 rounded-2xl relative">
+                    <div className="w-4/5 h-1/2 border-dashed border-rose-400/80 rounded-xl relative border-2 border-input bg-muted/30 transition-colors hover:border-primary/50 hover:bg-muted/60">
                       <div className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-rose-500 to-transparent shadow-[0_0_8px_#f43f5e] animate-[bounce_1.5s_infinite]" />
                     </div>
                   </div>
@@ -488,13 +492,13 @@ export default function BarcodeScanner() {
 
               <div className="flex items-center justify-between pt-2">
                 {devices.length > 1 && (
-                  <select
+                  <select aria-label="Camera"
                     value={selectedDeviceId}
                     onChange={(e) => {
                       setSelectedDeviceId(e.target.value);
                       if (cameraActive) startCamera();
                     }}
-                    className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-700 dark:text-slate-300"
+                    className="px-3 py-1.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   >
                     {devices.map((d, i) => (
                       <option key={d.deviceId || i} value={d.deviceId}>
@@ -515,7 +519,7 @@ export default function BarcodeScanner() {
                   ) : (
                     <button
                       onClick={startCamera}
-                      className="px-3 py-1.5 rounded-xl bg-blue-600 text-white text-xs font-semibold"
+                      className="px-3 py-1.5 rounded-lg text-xs bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
                     >
                       Resume
                     </button>
@@ -528,14 +532,14 @@ export default function BarcodeScanner() {
 
         {/* Right Column: Scan Result Card & Batch List */}
         <div className="@container @4xl:col-span-6 space-y-4">
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <div className="p-6 rounded-xl border space-y-4 bg-muted/30">
             <div className="flex items-center justify-between">
-              <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+              <div className="text-sm text-slate-900 dark:text-white flex items-center space-x-2 font-semibold">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>Decoded Barcode Result</span>
               </div>
               {latestScan && (
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 font-bold">
+                <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/50 font-semibold text-foreground">
                   {latestScan.format}
                 </span>
               )}
@@ -543,14 +547,14 @@ export default function BarcodeScanner() {
 
             {/* Empty State */}
             {!latestScan && (
-              <div className="p-10 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center space-y-3 min-h-[220px]">
-                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+              <div className="p-10 rounded-xl border-dashed text-center flex flex-col items-center justify-center space-y-3 min-h-[220px] border-2 border-input bg-muted/30 transition-colors hover:border-primary/50 hover:bg-muted/60">
+                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400">
                   <Barcode className="w-6 h-6" />
                 </div>
                 <div className="text-xs font-semibold text-slate-900 dark:text-white">
                   No Barcode scanned yet
                 </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xs">
+                <div className="text-xs text-slate-500 dark:text-slate-400 max-w-xs">
                   Upload an image file, hold a barcode up to your camera, or click one of the test samples on the left.
                 </div>
               </div>
@@ -558,26 +562,26 @@ export default function BarcodeScanner() {
 
             {/* Result Card */}
             {latestScan && (
-              <div className="p-5 rounded-2xl bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 space-y-4 animate-in fade-in duration-200">
+              <div className="p-5 rounded-xl border space-y-4 animate-in fade-in duration-200 bg-muted/30">
                 <div className="flex items-start justify-between">
                   <div>
-                    <div className="text-[10px] uppercase font-bold text-blue-600 dark:text-blue-400 tracking-wider">
+                    <div className="text-sm text-blue-600 dark:text-blue-400 font-semibold">
                       Detected Format
                     </div>
-                    <div className="text-sm font-bold text-slate-900 dark:text-white">
+                    <div className="text-sm font-semibold text-slate-900 dark:text-white">
                       {latestScan.format}
                     </div>
                   </div>
-                  <div className="text-[10px] font-mono text-slate-400">
+                  <div className="text-xs font-mono text-slate-500 dark:text-slate-400">
                     {new Date(latestScan.timestamp).toLocaleTimeString()}
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-                  <div className="text-[10px] text-slate-400 uppercase font-semibold mb-1">
+                <div className="p-4 rounded-xl border bg-muted/30">
+                  <div className="text-xs text-slate-500 dark:text-slate-400 uppercase font-semibold mb-1">
                     Barcode Data / Serial Number
                   </div>
-                  <div className="font-mono text-lg font-extrabold text-slate-900 dark:text-white tracking-wider break-all">
+                  <div className="font-mono text-lg font-semibold text-slate-900 dark:text-white tracking-wider break-all">
                     {latestScan.text}
                   </div>
                 </div>
@@ -586,7 +590,7 @@ export default function BarcodeScanner() {
                 <div className="grid grid-cols-1 @sm:grid-cols-2 gap-2">
                   <button
                     onClick={() => copyValue(latestScan.text)}
-                    className="py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center justify-center space-x-1.5 transition shadow-xs"
+                    className="py-2.5 px-3 rounded-lg text-xs flex items-center justify-center space-x-1.5 transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
                   >
                     {copiedValue ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                     <span>{copiedValue ? "Copied Barcode!" : "Copy Barcode Value"}</span>
@@ -596,11 +600,11 @@ export default function BarcodeScanner() {
                     href={`https://www.google.com/search?q=${encodeURIComponent(latestScan.text)}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="py-2.5 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center space-x-1.5 transition"
+                    className="py-2.5 px-3 rounded-xl border text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center justify-center space-x-1.5 transition bg-muted/30"
                   >
-                    <Search className="w-3.5 h-3.5 text-blue-500" />
+                    <Search className="w-3.5 h-3.5 text-muted-foreground" />
                     <span>Search Product Info</span>
-                    <ExternalLink className="w-3 h-3 text-slate-400" />
+                    <ExternalLink className="w-3 h-3 text-slate-500 dark:text-slate-400" />
                   </a>
                 </div>
               </div>
@@ -610,21 +614,21 @@ export default function BarcodeScanner() {
             {batchList.length > 0 && (
               <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
-                    <Layers className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  <span className="text-sm text-slate-700 dark:text-slate-300 flex items-center space-x-1.5 font-semibold">
+                    <Layers className="w-3.5 h-3.5 text-muted-foreground" />
                     <span>Current Session Batch ({batchList.length})</span>
                   </span>
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={exportBatchCsv}
-                      className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center space-x-1"
+                      className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center space-x-1"
                     >
                       <Download className="w-3 h-3" />
                       <span>Export CSV</span>
                     </button>
                     <button
                       onClick={() => setBatchList([])}
-                      className="text-[11px] font-semibold text-rose-500 hover:underline flex items-center space-x-1"
+                      className="text-xs font-semibold text-rose-500 hover:underline flex items-center space-x-1"
                     >
                       <Trash2 className="w-3 h-3" />
                       <span>Clear</span>
@@ -639,14 +643,14 @@ export default function BarcodeScanner() {
                       className="p-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs"
                     >
                       <div className="flex items-center space-x-2 truncate">
-                        <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-300">
+                        <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-semibold text-slate-700 dark:text-slate-300">
                           {item.format}
                         </span>
-                        <span className="font-mono font-bold text-slate-900 dark:text-white truncate">
+                        <span className="font-mono font-semibold text-slate-900 dark:text-white truncate">
                           {item.text}
                         </span>
                       </div>
-                      <span className="text-[10px] font-mono text-slate-400 shrink-0">
+                      <span className="text-xs font-mono text-slate-500 dark:text-slate-400 shrink-0">
                         {new Date(item.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                       </span>
                     </div>
@@ -660,19 +664,19 @@ export default function BarcodeScanner() {
 
       {/* Persistent Scan History */}
       {history && history.length > 0 && (
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-xs">
+        <div className="p-6 rounded-xl border space-y-4 bg-muted/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+              <span className="text-sm text-slate-900 dark:text-white font-semibold">
                 Recent Scanned Barcodes ({history.length}/15)
               </span>
-              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
                 Saved in your browser
               </span>
             </div>
             <button
               onClick={() => setHistory([])}
-              className="text-[11px] font-semibold text-rose-500 hover:text-rose-700 transition flex items-center space-x-1"
+              className="text-xs font-semibold text-rose-500 hover:text-rose-700 transition flex items-center space-x-1"
             >
               <Trash2 className="w-3 h-3" />
               <span>Clear History</span>
@@ -687,17 +691,17 @@ export default function BarcodeScanner() {
                   setLatestScan(item);
                   window.scrollTo({ top: 120, behavior: "smooth" });
                 }}
-                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 hover:border-blue-500/50 cursor-pointer transition flex items-center justify-between group"
+                className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 hover:border-blue-500/50 cursor-pointer transition flex items-center justify-between group"
               >
                 <div>
-                  <div className="text-[10px] font-mono text-slate-400 mb-0.5">
+                  <div className="text-xs font-mono text-slate-500 dark:text-slate-400 mb-0.5">
                     {item.format} •{" "}
                     {new Date(item.timestamp).toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
                   </div>
-                  <div className="text-xs font-mono font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition truncate max-w-[200px]">
+                  <div className="text-xs font-mono font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 transition truncate max-w-[200px]">
                     {item.text}
                   </div>
                 </div>

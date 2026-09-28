@@ -33,60 +33,78 @@ export default function BmiCalculator() {
 
   const bmi = hMeters > 0 && wKg > 0 ? wKg / (hMeters * hMeters) : 0;
 
-  // WHO BMI Classification
-  let category = "Normal weight";
-  let categoryColor = "text-emerald-600 dark:text-emerald-400";
-  let categoryBg = "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800";
-  let advice = "You are in a healthy weight range.";
+  // WHO adult classification.
+  const hasResult = bmi > 0 && Number.isFinite(bmi);
+  let category = "";
+  let categoryColor = "text-muted-foreground";
+  let categoryBg = "bg-muted border-border";
+  let advice = "Enter your height and weight to see your BMI.";
 
-  if (bmi < 18.5) {
+  if (!hasResult) {
+    // empty state: keep the defaults above
+  } else if (bmi < 18.5) {
     category = "Underweight";
-    categoryColor = "text-amber-600 dark:text-amber-400";
+    categoryColor = "text-amber-700 dark:text-amber-400";
     categoryBg = "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800";
-    advice = "Your BMI suggests you may be underweight. Consult a healthcare provider regarding nutrition.";
+    advice = "Your BMI is below the healthy range. A doctor or dietitian can check whether that matters for you.";
   } else if (bmi < 25) {
-    category = "Normal Weight";
-    categoryColor = "text-emerald-600 dark:text-emerald-400";
+    category = "Healthy weight";
+    categoryColor = "text-emerald-700 dark:text-emerald-400";
     categoryBg = "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800";
-    advice = "You have a healthy body weight for your height. Maintain a balanced diet and regular exercise.";
+    advice = "Your BMI is in the healthy range for your height.";
   } else if (bmi < 30) {
     category = "Overweight";
-    categoryColor = "text-orange-600 dark:text-orange-400";
+    categoryColor = "text-orange-700 dark:text-orange-400";
     categoryBg = "bg-orange-50 dark:bg-orange-950/40 border-orange-200 dark:border-orange-800";
-    advice = "Your BMI indicates you are slightly overweight. Moderate lifestyle and dietary changes can help.";
+    advice = "Your BMI is above the healthy range. BMI does not distinguish muscle from fat, so very muscular people can score high.";
   } else if (bmi < 35) {
-    category = "Obesity (Class I)";
-    categoryColor = "text-rose-600 dark:text-rose-400";
+    category = "Obesity (class I)";
+    categoryColor = "text-rose-700 dark:text-rose-400";
     categoryBg = "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800";
-    advice = "Your BMI falls in the Class I obesity category. Consider consulting a medical professional.";
-  } else {
-    category = "Severe Obesity (Class II+)";
+    advice = "Your BMI is in the obesity range. A healthcare professional can help you interpret it alongside other measures.";
+  } else if (bmi < 40) {
+    category = "Obesity (class II)";
     categoryColor = "text-red-700 dark:text-red-400";
     categoryBg = "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800";
-    advice = "Your BMI indicates severe obesity. Medical guidance is recommended for a safe health plan.";
+    advice = "Your BMI is in the obesity range. A healthcare professional can help you interpret it alongside other measures.";
+  } else {
+    category = "Obesity (class III)";
+    categoryColor = "text-red-700 dark:text-red-400";
+    categoryBg = "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800";
+    advice = "Your BMI is in the highest obesity range. Speak to a healthcare professional about what it means for you.";
   }
+
+  // Adult cut-offs do not apply to children and teenagers, who are assessed
+  // against age- and sex-specific percentiles — which is why age and sex are
+  // asked for.
+  const ageNum = parseFloat(age);
+  const isChild = Number.isFinite(ageNum) && ageNum > 0 && ageNum < 20;
+
+  // Marker position on a 15–40 scale.
+  const markerPct = hasResult ? Math.min(100, Math.max(0, ((bmi - 15) / 25) * 100)) : null;
 
   // Ideal weight range for height (BMI 18.5 - 24.9)
   const minIdealKg = hMeters > 0 ? 18.5 * (hMeters * hMeters) : 0;
   const maxIdealKg = hMeters > 0 ? 24.9 * (hMeters * hMeters) : 0;
 
-  const idealWeightText =
-    unitSystem === "metric"
+  const idealWeightText = !(hMeters > 0)
+    ? "—"
+    : unitSystem === "metric"
       ? `${minIdealKg.toFixed(1)} kg - ${maxIdealKg.toFixed(1)} kg`
       : `${(minIdealKg * 2.20462).toFixed(1)} lbs - ${(maxIdealKg * 2.20462).toFixed(1)} lbs`;
 
   // BMI Prime (ratio of actual BMI to upper limit of normal BMI 25)
-  const bmiPrime = bmi > 0 ? (bmi / 25).toFixed(2) : "0.00";
+  const bmiPrime = hasResult ? (bmi / 25).toFixed(2) : "—";
 
   return (
     <div className="space-y-6">
       {/* Unit Selector */}
-      <div className="flex gap-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 max-w-sm">
+      <div className="flex gap-2 p-1.5 border max-w-sm rounded-lg bg-muted/60">
         <button
           onClick={() => setUnitSystem("metric")}
           className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all ${
             unitSystem === "metric"
-              ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+              ? "bg-background text-foreground shadow-xs dark:bg-input/50"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
           }`}
         >
@@ -96,7 +114,7 @@ export default function BmiCalculator() {
           onClick={() => setUnitSystem("imperial")}
           className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all ${
             unitSystem === "imperial"
-              ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+              ? "bg-background text-foreground shadow-xs dark:bg-input/50"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
           }`}
         >
@@ -106,16 +124,16 @@ export default function BmiCalculator() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Form Inputs */}
-        <div className="lg:col-span-6 space-y-4 p-5 sm:p-6 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80">
-          <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Scale className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+        <div className="lg:col-span-6 space-y-4 p-5 sm:p-6 rounded-xl border bg-muted/30">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+            <Scale className="w-4 h-4 text-muted-foreground" />
             Body Measurements
           </h2>
 
           <div className="grid grid-cols-2 gap-3">
             {/* Gender */}
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label className="text-sm font-medium text-foreground">
                 Gender
               </label>
               <div className="grid grid-cols-2 gap-1.5 bg-slate-200/70 dark:bg-slate-800 p-1 rounded-xl">
@@ -146,7 +164,7 @@ export default function BmiCalculator() {
 
             {/* Age */}
             <div className="space-y-1.5">
-              <label htmlFor="bmi-age-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label htmlFor="bmi-age-input" className="text-sm font-medium text-foreground">
                 Age
               </label>
               <input
@@ -156,7 +174,7 @@ export default function BmiCalculator() {
                 max="120"
                 value={age}
                 onChange={(e) => setAge(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full px-3 py-2 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 placeholder="25"
               />
             </div>
@@ -165,7 +183,7 @@ export default function BmiCalculator() {
           {/* Height Input */}
           {unitSystem === "metric" ? (
             <div className="space-y-1.5">
-              <label htmlFor="bmi-height-cm" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label htmlFor="bmi-height-cm" className="text-sm font-medium text-foreground">
                 Height
               </label>
               <div className="relative">
@@ -177,45 +195,45 @@ export default function BmiCalculator() {
                   step="0.5"
                   value={heightCm}
                   onChange={(e) => setHeightCm(e.target.value)}
-                  className="w-full pl-4 pr-12 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full pl-4 pr-12 py-2.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   placeholder="175"
                 />
-                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                   cm
                 </span>
               </div>
             </div>
           ) : (
             <div className="space-y-1.5">
-              <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label className="text-sm font-medium text-foreground">
                 Height (Feet & Inches)
               </label>
               <div className="grid grid-cols-2 gap-2">
                 <div className="relative">
-                  <input
+                  <input aria-label="Height in feet"
                     type="number"
                     min="1"
                     max="8"
                     value={heightFt}
                     onChange={(e) => setHeightFt(e.target.value)}
-                    className="w-full pl-3 pr-8 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full pl-3 pr-8 py-2.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                     placeholder="5"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                     ft
                   </span>
                 </div>
                 <div className="relative">
-                  <input
+                  <input aria-label="Height in inches"
                     type="number"
                     min="0"
                     max="11"
                     value={heightIn}
                     onChange={(e) => setHeightIn(e.target.value)}
-                    className="w-full pl-3 pr-8 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                    className="w-full pl-3 pr-8 py-2.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                     placeholder="9"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                     in
                   </span>
                 </div>
@@ -225,7 +243,7 @@ export default function BmiCalculator() {
 
           {/* Weight Input */}
           <div className="space-y-1.5">
-            <label htmlFor="bmi-weight-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <label htmlFor="bmi-weight-input" className="text-sm font-medium text-foreground">
               Weight
             </label>
             <div className="relative">
@@ -241,10 +259,10 @@ export default function BmiCalculator() {
                     ? setWeightKg(e.target.value)
                     : setWeightLbs(e.target.value)
                 }
-                className="w-full pl-4 pr-12 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full pl-4 pr-12 py-2.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 placeholder={unitSystem === "metric" ? "70" : "154"}
               />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                 {unitSystem === "metric" ? "kg" : "lbs"}
               </span>
             </div>
@@ -253,61 +271,83 @@ export default function BmiCalculator() {
 
         {/* Results Panel */}
         <div className="lg:col-span-6 space-y-4">
-          <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-4">
+          <div className="p-6 rounded-xl border space-y-4 bg-muted/30">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 Body Mass Index (BMI)
               </span>
-              <span className={`px-3 py-1 rounded-full text-xs font-bold border ${categoryBg} ${categoryColor}`}>
-                {category}
-              </span>
+              {category && (
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${categoryBg} ${categoryColor}`}>
+                  {category}
+                </span>
+              )}
             </div>
 
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white font-mono">
-                {bmi > 0 ? bmi.toFixed(1) : "--"}
+            <div className="flex items-baseline gap-2" aria-live="polite">
+              <span className="text-4xl sm:text-5xl font-semibold tracking-tight text-slate-900 dark:text-white font-mono">
+                {hasResult ? bmi.toFixed(1) : "—"}
               </span>
               <span className="text-sm font-medium text-slate-500 dark:text-slate-400">kg/m²</span>
             </div>
 
-            {/* Visual BMI Scale Bar */}
-            <div className="space-y-1.5">
-              <div className="w-full h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden flex">
-                <div className="w-[18.5%] bg-amber-400" title="Underweight (< 18.5)" />
-                <div className="w-[24.9%] bg-emerald-500" title="Normal (18.5 - 24.9)" />
-                <div className="w-[20%] bg-orange-400" title="Overweight (25 - 29.9)" />
-                <div className="w-[36.6%] bg-rose-500" title="Obese (30+)" />
+            {/* BMI scale, 15–40, with a marker at the result. */}
+            <div className="space-y-1.5" aria-hidden="true">
+              <div className="relative">
+                <div className="flex h-3 w-full overflow-hidden rounded-full bg-muted">
+                  <div className="w-[14%] bg-amber-400" />
+                  <div className="w-[26%] bg-emerald-500" />
+                  <div className="w-[20%] bg-orange-400" />
+                  <div className="w-[40%] bg-rose-500" />
+                </div>
+                {markerPct !== null && (
+                  <span
+                    className="absolute top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-background bg-foreground shadow"
+                    style={{ left: `${markerPct}%` }}
+                  />
+                )}
               </div>
-              <div className="flex justify-between text-[10px] text-slate-400 font-mono">
-                <span>16</span>
-                <span>18.5</span>
-                <span>25</span>
-                <span>30</span>
-                <span>40</span>
+              <div className="relative h-3 font-mono text-xs text-muted-foreground">
+                {[
+                  [15, 0],
+                  [18.5, 14],
+                  [25, 40],
+                  [30, 60],
+                  [40, 100],
+                ].map(([v, pos]) => (
+                  <span key={v} className="absolute -translate-x-1/2" style={{ left: `${pos}%` }}>
+                    {v}
+                  </span>
+                ))}
               </div>
             </div>
 
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               {advice}
             </p>
+            {isChild && (
+              <p className="rounded-lg border border-warning/30 bg-warning/5 px-3 py-2 text-xs text-foreground">
+                Under 20, BMI is judged against growth charts for age and sex, not these adult categories. Use a
+                BMI-for-age percentile calculator or ask a doctor for a child or teenager.
+              </p>
+            )}
           </div>
 
           {/* Secondary Stats */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80">
+            <div className="p-4 rounded-xl border bg-muted/30">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Ideal Healthy Weight</span>
-              <p className="text-base font-bold text-slate-900 dark:text-white mt-1">
+              <p className="text-base font-semibold text-slate-900 dark:text-white mt-1">
                 {idealWeightText}
               </p>
-              <span className="text-[11px] text-slate-400">Based on normal BMI 18.5 - 24.9</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Based on normal BMI 18.5 - 24.9</span>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80">
+            <div className="p-4 rounded-xl border bg-muted/30">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">BMI Prime Index</span>
-              <p className="text-base font-bold text-blue-600 dark:text-blue-400 mt-1 font-mono">
+              <p className="text-base font-semibold text-blue-600 dark:text-blue-400 mt-1 font-mono">
                 {bmiPrime}
               </p>
-              <span className="text-[11px] text-slate-400">Ratio to upper normal limit (25.0)</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">Ratio to upper normal limit (25.0)</span>
             </div>
           </div>
         </div>

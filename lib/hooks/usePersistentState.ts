@@ -68,20 +68,29 @@ export function usePersistentState<T>(
   const [hasRestored, setHasRestored] = useState<boolean>(false);
   const isInitialMount = useRef(true);
 
-  // Restore saved state on initial client mount
+  // Restore saved state on initial client mount. Deferred a tick so the
+  // restore is not a synchronous setState inside the effect.
   useEffect(() => {
-    const saved = getSavedToolState<T>(key, initialValue);
-    setState(saved);
-    setHasRestored(true);
-    isInitialMount.current = false;
+    const id = setTimeout(() => {
+      setState(getSavedToolState<T>(key, initialValue));
+      setHasRestored(true);
+      isInitialMount.current = false;
+    }, 0);
+    return () => clearTimeout(id);
+    // initialValue is a default, deliberately read once per key.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
-  // Persist state whenever it changes (after initial mount)
+  // Persist state whenever it changes (after restoring). A value equal to the
+  // default is removed rather than stored, so defaults are never written for
+  // every tool someone merely opens, and improved defaults reach returning
+  // visitors.
+  const initialJson = JSON.stringify(initialValue);
   useEffect(() => {
-    if (!isInitialMount.current && hasRestored) {
-      saveToolState<T>(key, state);
-    }
-  }, [key, state, hasRestored]);
+    if (isInitialMount.current || !hasRestored) return;
+    if (JSON.stringify(state) === initialJson) clearSavedToolState(key);
+    else saveToolState<T>(key, state);
+  }, [key, state, hasRestored, initialJson]);
 
   const resetState = useCallback(() => {
     clearSavedToolState(key);

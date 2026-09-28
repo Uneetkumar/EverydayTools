@@ -107,7 +107,7 @@ export default function CurrencyPicker({
         aria-haspopup="listbox"
         aria-expanded={open}
         onClick={() => (open ? close() : setOpen(true))}
-        className="w-full flex items-center justify-between gap-2 text-sm bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-xl text-slate-900 dark:text-white hover:border-blue-400 transition"
+        className="w-full flex items-center justify-between gap-2 text-sm border px-3 py-2 rounded-xl text-slate-900 dark:text-white hover:border-blue-400 transition bg-muted/30"
       >
         <span className="truncate text-left">
           <span className="font-semibold">{value}</span>
@@ -123,7 +123,7 @@ export default function CurrencyPicker({
       {open && (
         <div className="absolute z-50 mt-1 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xl overflow-hidden">
           <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-800">
-            <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <Search className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
             <input
               ref={inputRef}
               type="text"
@@ -134,9 +134,10 @@ export default function CurrencyPicker({
               }}
               onKeyDown={onKeyDown}
               placeholder="Search: rupee, USD, ₹…"
+              aria-label={`Search currencies${label ? ` for ${label.toLowerCase()}` : ""}`}
               aria-controls={listId}
               aria-autocomplete="list"
-              className="w-full bg-transparent text-sm text-slate-900 dark:text-white placeholder:text-slate-400 outline-none"
+              className="w-full bg-transparent placeholder:text-slate-400 outline-none text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
           </div>
 
@@ -166,16 +167,16 @@ export default function CurrencyPicker({
                 } ${code === value ? "font-semibold" : ""}`}
               >
                 <span className="truncate text-slate-900 dark:text-white">
-                  <span className="font-mono text-xs mr-2 text-blue-600 dark:text-blue-400">
+                  <span className="font-mono text-xs mr-2 text-muted-foreground">
                     {code}
                   </span>
                   {CURRENCY_NAMES[code] ?? code}
                 </span>
                 <span className="flex items-center gap-2 shrink-0">
                   {CURRENCY_SYMBOLS[code] && (
-                    <span className="text-slate-400">{CURRENCY_SYMBOLS[code]}</span>
+                    <span className="text-slate-500 dark:text-slate-400">{CURRENCY_SYMBOLS[code]}</span>
                   )}
-                  {code === value && <Check className="w-3.5 h-3.5 text-blue-600" />}
+                  {code === value && <Check className="w-3.5 h-3.5 text-muted-foreground" />}
                 </span>
               </li>
             ))}

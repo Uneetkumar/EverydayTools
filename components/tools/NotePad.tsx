@@ -107,7 +107,7 @@ export default function NotePad() {
         <div className="flex gap-2">
           <button
             onClick={addNote}
-            className="flex flex-1 items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition cursor-pointer"
+            className="flex flex-1 items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs transition cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
           >
             <Plus className="w-3.5 h-3.5" />
             New note
@@ -115,21 +115,21 @@ export default function NotePad() {
         </div>
 
         {notes.length > 3 && (
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-            <SearchIcon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border bg-muted/30">
+            <SearchIcon className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
             <input
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               placeholder="Filter notes"
               aria-label="Filter notes"
-              className="w-full bg-transparent text-xs outline-none text-slate-900 dark:text-white placeholder-slate-400"
+              className="w-full bg-transparent outline-none placeholder-slate-400 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
           </div>
         )}
 
         <ul className="space-y-1 max-h-[22rem] overflow-y-auto">
           {visible.length === 0 && (
-            <li className="px-3 py-6 text-center text-xs text-slate-400">
+            <li className="px-3 py-6 text-center text-xs text-slate-500 dark:text-slate-400">
               {notes.length === 0 ? "No notes yet." : "No matches."}
             </li>
           )}
@@ -143,12 +143,12 @@ export default function NotePad() {
                 }`}
                 onClick={() => setActiveId(note.id)}
               >
-                <FileText className="w-3.5 h-3.5 shrink-0 text-slate-400" />
+                <FileText className="w-3.5 h-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-xs font-medium text-slate-800 dark:text-slate-200">
                     {note.title || "Untitled note"}
                   </span>
-                  <span className="block text-[10px] text-slate-400">
+                  <span className="block text-xs text-slate-500 dark:text-slate-400">
                     {new Date(note.updatedAt).toLocaleDateString()}
                   </span>
                 </span>
@@ -158,7 +158,7 @@ export default function NotePad() {
                     removeNote(note.id);
                   }}
                   aria-label={`Delete ${note.title || "note"}`}
-                  className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1 rounded-lg text-slate-400 hover:text-red-500 transition cursor-pointer"
+                  className="opacity-0 group-hover:opacity-100 focus:opacity-100 p-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-red-500 transition cursor-pointer"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -168,17 +168,17 @@ export default function NotePad() {
         </ul>
       </div>
 
-      <div className="flex flex-col rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
+      <div className="flex flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
         {active ? (
           <>
-            <textarea
+            <textarea aria-label="Note text"
               value={active.body}
               onChange={(e) => updateBody(e.target.value)}
               placeholder="Start typing. Your note saves automatically to this browser."
-              className="flex-1 min-h-[20rem] w-full resize-none bg-transparent p-4 text-sm leading-relaxed text-slate-900 dark:text-slate-100 outline-none placeholder-slate-400"
+              className="flex-1 min-h-[20rem] w-full resize-none bg-transparent p-4 leading-relaxed outline-none placeholder-slate-400 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
             <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-800 px-4 py-2">
-              <span className="text-[11px] text-slate-400 tabular-nums">
+              <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
                 {words} word{words === 1 ? "" : "s"} · {active.body.length} characters
                 {saved && (
                   <span className="ml-2 inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
@@ -191,7 +191,7 @@ export default function NotePad() {
                 onClick={() =>
                   downloadText(active.body, `${(active.title || "note").replace(/[^\w -]/g, "").slice(0, 40) || "note"}.txt`)
                 }
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer"
               >
                 <Download className="w-3 h-3" />
                 Download .txt
@@ -206,7 +206,7 @@ export default function NotePad() {
             </p>
             <button
               onClick={addNote}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition cursor-pointer"
+              className="px-4 py-2 rounded-lg text-xs transition cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
             >
               New note
             </button>

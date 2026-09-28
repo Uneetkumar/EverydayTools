@@ -4,12 +4,13 @@ import type { Metadata } from "next";
 import {
   TOOL_CATEGORIES,
   getToolsByCategory,
+  getToolsBySlugs,
   getAllTools,
 } from "@/lib/tools/registry";
 import { constructPageMetadata, SITE_CONFIG } from "@/lib/seo/metadata";
 import { generateBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import { ArrowRight } from "lucide-react";
+import { CategoryCard } from "@/components/tool/category-card";
 
 const TOOL_COUNT = getAllTools().length;
 
@@ -76,66 +77,37 @@ export default function CategoriesIndexPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(listSchema) }}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+      <div className="page-container py-6 md:py-10">
         <Breadcrumbs items={[{ name: "Categories" }]} />
 
-        <header className="space-y-4 max-w-3xl">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Tool Categories
-          </h1>
-          <p className="text-base leading-relaxed text-slate-600 dark:text-slate-400">
+        <header className="mt-5 max-w-3xl">
+          <h1 className="type-h1 text-foreground">Tool categories</h1>
+          <p className="mt-3 type-body text-muted-foreground">
             All {TOOL_COUNT} tools, grouped by the kind of job they do. Most run
             entirely in your browser, so the file you are working on never
             leaves your machine — the few that need the network say so on the
             tool itself. Pick a category to see everything in it, or go straight
             to the{" "}
-            <Link
-              href="/tools"
-              className="font-semibold text-blue-600 underline-offset-2 hover:underline dark:text-blue-400"
-            >
+            <Link href="/tools" className="font-medium text-link underline-offset-4 hover:underline">
               full tool directory
             </Link>
             .
           </p>
         </header>
 
-        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {categories.map((cat) => {
-            const tools = getToolsByCategory(cat.id);
-            return (
-              <li key={cat.id}>
-                <Link
-                  href={`/categories/${cat.id}`}
-                  className="group flex h-full flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 transition hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md"
-                >
-                  <span className="flex items-start justify-between gap-2">
-                    <h2 className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                      {cat.name}
-                    </h2>
-                    <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-blue-600" />
-                  </span>
-                  <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                    {cat.description}
-                  </p>
-                  <span className="mt-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                    {tools.length} tool{tools.length === 1 ? "" : "s"}
-                  </span>
-                  {/* Deep links give crawlers a path to individual tools from
-                      the hub instead of forcing another hop. */}
-                  <span className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                    {tools.slice(0, 4).map((t, i) => (
-                      <React.Fragment key={t.slug}>
-                        {i > 0 && " · "}
-                        <span className="group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                          {t.shortName || t.name}
-                        </span>
-                      </React.Fragment>
-                    ))}
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
+        {/* Each card deep-links three tools, giving crawlers a path to
+            individual tools from the hub instead of forcing another hop. */}
+        <ul className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {categories.map((cat) => (
+            <li key={cat.id}>
+              <CategoryCard
+                category={cat}
+                toolCount={getToolsByCategory(cat.id).length}
+                starters={getToolsBySlugs(cat.popular).slice(0, 4)}
+                headingLevel="h2"
+              />
+            </li>
+          ))}
         </ul>
       </div>
     </>

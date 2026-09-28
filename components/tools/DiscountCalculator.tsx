@@ -11,9 +11,13 @@ export default function DiscountCalculator() {
   const [discountPercent, setDiscountPercent] = usePersistentState<string>("discount_pct", "25");
   const [extraCoupon, setExtraCoupon] = usePersistentState<string>("discount_coupon", "0");
 
-  const orig = parseFloat(originalPrice) || 0;
-  const disc = parseFloat(discountPercent) || 0;
-  const extra = parseFloat(extraCoupon) || 0;
+  const orig = Math.max(0, parseFloat(originalPrice) || 0);
+  const rawDisc = parseFloat(discountPercent) || 0;
+  const rawExtra = parseFloat(extraCoupon) || 0;
+  // A discount above 100% would mean the shop pays you; clamp and say so.
+  const outOfRange = rawDisc < 0 || rawDisc > 100 || rawExtra < 0 || rawExtra > 100;
+  const disc = Math.min(100, Math.max(0, rawDisc));
+  const extra = Math.min(100, Math.max(0, rawExtra));
 
   const firstDiscounted = orig * (1 - disc / 100);
   const finalPrice = firstDiscounted * (1 - extra / 100);
@@ -24,38 +28,38 @@ export default function DiscountCalculator() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {/* Controls */}
-        <div className="space-y-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+        <div className="space-y-4 p-5 rounded-xl border bg-muted/30">
+          <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
             Pricing & Discount Info
           </h3>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm mb-1.5 font-medium text-foreground">
               Original Price (MSRP)
             </label>
             <div className="relative">
-              <span className="absolute left-3.5 top-2.5 text-xs text-slate-400 font-bold">$</span>
-              <input
+              <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">$</span>
+              <input aria-label="Original price"
                 type="number"
                 value={originalPrice}
                 onChange={(e) => setOriginalPrice(e.target.value)}
-                className="w-full pl-8 pr-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm font-bold text-slate-900 dark:text-white"
+                className="w-full pl-8 pr-3.5 py-2.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm mb-1.5 font-medium text-foreground">
               Discount (%)
             </label>
             <div className="relative">
-              <input
+              <input aria-label="Discount percentage"
                 type="number"
                 value={discountPercent}
                 onChange={(e) => setDiscountPercent(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm font-bold text-slate-900 dark:text-white pr-8"
+                className="w-full px-3.5 py-2.5 pr-8 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               />
-              <span className="absolute right-3.5 top-2.5 text-xs text-slate-400 font-bold">%</span>
+              <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
             </div>
 
             <div className="flex flex-wrap gap-1.5 pt-2">
@@ -63,7 +67,7 @@ export default function DiscountCalculator() {
                 <button
                   key={d}
                   onClick={() => setDiscountPercent(d)}
-                  className="px-2 py-1 text-[11px] font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-950"
+                  className="px-2 py-1 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-950"
                 >
                   {d}% Off
                 </button>
@@ -72,18 +76,18 @@ export default function DiscountCalculator() {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            <label className="block text-sm mb-1.5 font-medium text-foreground">
               Extra Stackable Coupon (%) (Optional)
             </label>
             <div className="relative">
-              <input
+              <input aria-label="Extra coupon percentage (optional)"
                 type="number"
                 value={extraCoupon}
                 onChange={(e) => setExtraCoupon(e.target.value)}
                 placeholder="0"
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm font-bold text-slate-900 dark:text-white pr-8"
+                className="w-full px-3.5 py-2.5 pr-8 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               />
-              <span className="absolute right-3.5 top-2.5 text-xs text-slate-400 font-bold">%</span>
+              <span className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">%</span>
             </div>
           </div>
         </div>
@@ -93,14 +97,17 @@ export default function DiscountCalculator() {
           <ResultCard
             title="Final Sale Price"
             value={formatCurrency(finalPrice)}
-            subtitle={`You save ${formatCurrency(totalSavings)} (${totalEffectiveDiscountPct.toFixed(1)}% total discount)`}
+            subtitle={
+              outOfRange
+                ? "Discounts must be between 0% and 100%; the values have been limited to that range."
+                : `You save ${formatCurrency(totalSavings)} (${totalEffectiveDiscountPct.toFixed(1)}% total discount)`
+            }
             details={[
               { label: "Original Price", value: formatCurrency(orig) },
               { label: "Total Saved", value: formatCurrency(totalSavings) },
               { label: "Effective Discount", value: `${totalEffectiveDiscountPct.toFixed(1)}%` },
             ]}
             highlightColor="emerald"
-            showConfetti={true}
           />
         </div>
       </div>

@@ -1,58 +1,21 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import {
   ADSENSE_CLIENT,
-  AD_SLOTS,
+  AD_PLACEMENTS,
+  AD_UNITS,
   AdPlacement,
   isValidSlotId,
 } from "@/lib/ads/config";
-
-type AdFormat = "in-article" | "rectangle" | "sidebar" | "leaderboard";
+import { cn } from "@/lib/utils";
 
 interface AdSlotProps {
-  /** Named placement from lib/ads/config.ts */
+  /** Named placement from lib/ads/config.ts — decides unit, format and size. */
   placement: AdPlacement;
-  format?: AdFormat;
   className?: string;
 }
-
-/**
- * Reserved heights match the IAB unit each format requests, so the space is
- * held from first paint and the ad does not shift content when it fills.
- * Cumulative Layout Shift is a Core Web Vital and a ranking signal — an ad
- * that pushes the page down on load is one of the most common causes of a
- * failing CLS score.
- */
-const FORMAT_STYLES: Record<
-  AdFormat,
-  { wrapper: string; minHeight: number; responsive: boolean }
-> = {
-  "in-article": {
-    wrapper: "w-full max-w-[728px]",
-    minHeight: 280,
-    responsive: true,
-  },
-  rectangle: {
-    wrapper: "w-full max-w-[336px]",
-    minHeight: 280,
-    responsive: false,
-  },
-  sidebar: {
-    wrapper: "w-full max-w-[300px]",
-    minHeight: 600,
-    // Matches the unit AdSense generated, which sets
-    // data-full-width-responsive="true". The wrapper still caps the unit at
-    // 300px, so this only lets the ad choose a better fit within that box
-    // rather than actually going full-bleed.
-    responsive: true,
-  },
-  leaderboard: {
-    wrapper: "w-full max-w-[728px]",
-    minHeight: 90,
-    responsive: true,
-  },
-};
 
 declare global {
   interface Window {
@@ -60,68 +23,75 @@ declare global {
   }
 }
 
-export default function AdSlot({
-  placement,
-  format = "in-article",
-  className = "",
-}: AdSlotProps) {
-  const slotId = AD_SLOTS[placement];
-  const insRef = useRef<HTMLModElement | null>(null);
+/**
+ * The only way an ad reaches a page.
+ *
+ * - Space is reserved from first paint (min-height per breakpoint), so an ad
+ *   that fills does not push the page while someone is using a tool. CLS is a
+ *   Core Web Vital.
+ * - An unfilled unit collapses (CSS keyed on AdSense's own
+ *   data-ad-status="unfilled"), instead of leaving an empty labelled box —
+ *   which is what every visitor, and every AdSense reviewer, saw while the
+ *   site awaited approval.
+ * - Visually distinct from content: a small "Advertisement" caption, no card
+ *   styling, no icons, never styled like a tool or a search result.
+ * - Placements that only make sense on wide screens are not mounted at all on
+ *   narrow ones (a hidden unit still requests an ad and logs an error).
+ */
+export default function AdSlot({ placement, className }: AdSlotProps) {
+  const config = AD_PLACEMENTS[placement];
+  const slotId = AD_UNITS[config.unit];
   const pushed = useRef(false);
+  const minViewport = "minViewport" in config ? config.minViewport : undefined;
+  const wideEnough = useMediaQuery(`(min-width: ${minViewport ?? 0}px)`);
+  const allowed = minViewport === undefined || wideEnough;
 
   useEffect(() => {
-    if (!isValidSlotId(slotId) || pushed.current) return;
-
-    // The adsbygoogle array is a queue: pushing before the script loads is the
-    // documented pattern, and the script drains it on arrival. The previous
-    // implementation skipped the push whenever window.adsbygoogle was still
-    // undefined, which is the normal state on first paint — so the unit never
-    // filled.
+    if (!allowed || !isValidSlotId(slotId) || pushed.current) return;
+    // The adsbygoogle array is a queue: pushing before the script loads is
+    // the documented pattern, and the script drains it on arrival.
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
       pushed.current = true;
     } catch {
       // A failed push must never break the page around it.
     }
-  }, [slotId]);
+  }, [allowed, slotId]);
 
-  // No real slot ID configured: render nothing. An empty bordered box labelled
-  // "Advertisement" is worse than no box — it wastes layout, and AdSense
-  // prohibits placeholders that imply an ad where none is served.
-  if (!isValidSlotId(slotId)) return null;
+  // No real slot ID configured: render nothing. AdSense prohibits
+  // placeholders that imply an ad where none is served.
+  if (!isValidSlotId(slotId) || !allowed) return null;
 
-  const style = FORMAT_STYLES[format];
+  const fluid = config.format === "fluid";
 
   return (
-    <div
-      className={`mx-auto flex flex-col items-center ${style.wrapper} ${className}`}
+    <aside
+      aria-label="Advertisement"
+      data-ad-placement={placement}
+      className={cn(
+        "ad-slot mx-auto flex w-full flex-col items-center [contain:layout]",
+        "has-[ins[data-ad-status=unfilled]]:hidden",
+        className
+      )}
+      style={{ maxWidth: config.maxWidth }}
     >
-      <span className="mb-1 text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-600">
+      <span className="mb-1.5 text-[11px] tracking-wide text-muted-foreground/80 uppercase">
         Advertisement
       </span>
       <ins
-        ref={insRef}
-        className="adsbygoogle block w-full"
+        className={cn("adsbygoogle block w-full", config.heightClass)}
         style={{
           display: "block",
-          // AdSense's own in-article snippet centres the unit; fluid ads size
-          // themselves and look wrong left-aligned in a text column.
-          ...(format === "in-article" ? { textAlign: "center" as const } : {}),
-          // Not in AdSense's snippet, kept deliberately: reserving the height
-          // stops the ad shifting content when it fills. CLS is a ranking
-          // signal and a late-loading ad is a classic cause of failing it.
-          minHeight: style.minHeight,
+          ...(fluid ? { textAlign: "center" as const } : {}),
         }}
         data-ad-client={ADSENSE_CLIENT}
         data-ad-slot={slotId}
-        data-ad-format={format === "in-article" ? "fluid" : "auto"}
-        {...(format === "in-article"
+        data-ad-format={config.format}
+        {...(fluid
           ? // A fluid in-article unit takes its layout from data-ad-layout.
-            // data-full-width-responsive is a *display* attribute and has no
-            // meaning here, so it is omitted to match AdSense's snippet exactly.
             { "data-ad-layout": "in-article" }
-          : { "data-full-width-responsive": style.responsive ? "true" : "false" })}
+          : { "data-full-width-responsive": "true" })}
       />
-    </div>
+    </aside>
   );
 }

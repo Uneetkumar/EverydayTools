@@ -45,10 +45,10 @@ export default function EmiCalculator() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {/* Loan Controls */}
-        <div className="space-y-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        <div className="space-y-4 p-5 rounded-xl border bg-muted/30">
           <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Landmark className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <h3 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <Landmark className="w-4 h-4 text-muted-foreground" />
               <span>Loan Parameters</span>
             </h3>
             <div className="flex items-center gap-1 text-xs">
@@ -57,9 +57,9 @@ export default function EmiCalculator() {
                   key={cur}
                   type="button"
                   onClick={() => setCurrencySymbol(cur)}
-                  className={`px-2 py-0.5 rounded-md font-bold text-[11px] transition ${
+                  className={`px-2 py-0.5 rounded-md font-semibold text-xs transition ${
                     currencySymbol === cur
-                      ? "bg-blue-600 text-white"
+                      ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
                   }`}
                 >
@@ -95,13 +95,13 @@ export default function EmiCalculator() {
           />
 
           <div className="space-y-2 pt-1">
-            <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <div className="flex justify-between text-sm font-medium text-foreground">
               <span>Loan Tenure</span>
-              <span className="text-blue-600 dark:text-blue-400 font-bold">
+              <span className="text-blue-600 dark:text-blue-400 font-semibold">
                 {years} {years === 1 ? "Year" : "Years"} ({N} Months)
               </span>
             </div>
-            <input
+            <input aria-label="Loan tenure slider"
               type="range"
               min={1}
               max={30}
@@ -110,7 +110,7 @@ export default function EmiCalculator() {
               onChange={(e) => setTenureYears(e.target.value)}
               className="w-full accent-blue-600 cursor-pointer"
             />
-            <div className="flex justify-between text-[10px] text-slate-400 font-mono">
+            <div className="flex justify-between text-xs text-slate-500 dark:text-slate-400 font-mono">
               <span>1 yr</span>
               <span>10 yrs</span>
               <span>20 yrs</span>
@@ -135,7 +135,7 @@ export default function EmiCalculator() {
           />
 
           {/* Visual Distribution Bar */}
-          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2.5">
+          <div className="p-4 rounded-xl border space-y-2.5 bg-muted/30">
             <div className="flex justify-between text-xs font-semibold">
               <span className="text-blue-600 dark:text-blue-400 flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block" />

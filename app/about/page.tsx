@@ -1,12 +1,15 @@
 import React from "react";
+import Link from "next/link";
 import { constructPageMetadata } from "@/lib/seo/metadata";
 import { generateBreadcrumbJsonLd } from "@/lib/seo/jsonld";
-import Breadcrumbs from "@/components/Breadcrumbs";
-import { ShieldCheck, Zap, Award, CheckCircle2 } from "lucide-react";
+import { ProsePage } from "@/components/layout/prose-page";
+import { TOOL_CATEGORIES, getAllTools, getToolsByCategory } from "@/lib/tools/registry";
+import { GUIDES } from "@/lib/guides/content";
 
 export const metadata = constructPageMetadata({
-  title: "About Us - Our Mission & Accuracy Standards",
-  description: "Learn about TabBench: our commitment to zero-latency, client-side privacy, mathematically verified formulas, and helpful free utilities.",
+  title: "About TabBench – Free Tools That Run in Your Browser",
+  description:
+    "What TabBench is, how its tools handle your files and text, how calculations are checked, how the site is funded, and how to reach us.",
   path: "/about",
 });
 
@@ -16,109 +19,111 @@ export default function AboutPage() {
     { name: "About Us", path: "/about" },
   ]);
 
+  const tools = getAllTools();
+  const cloud = tools.filter((t) => t.privacy === "cloud-optional");
+  const network = tools.filter((t) => t.privacy === "network");
+  const localCount = tools.length - cloud.length - network.length;
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      <Breadcrumbs items={[{ name: "About Us" }]} />
-
-      <div className="space-y-4 max-w-3xl">
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-          About TabBench
-        </h1>
-        <p className="text-base text-slate-600 dark:text-slate-400 leading-relaxed">
-          TabBench was built to provide fast, reliable, zero-latency browser utilities that solve everyday mathematical, textual, and technical problems without clutter, forced logins, or intrusive data tracking.
+      <ProsePage
+        breadcrumb="About Us"
+        title="About TabBench"
+        lead={`TabBench is a collection of ${tools.length} free tools for everyday tasks — working out a percentage, shrinking a photo, merging PDFs, formatting JSON — that open instantly in your browser with no account and, for almost all of them, no upload.`}
+      >
+        <h2 id="what">What you can do here</h2>
+        <p>
+          The tools are grouped by the job they help with. Each one has its own page explaining what it does,
+          how to use it, and — for calculators — the exact formula it applies.
         </p>
-      </div>
-
-      <h2 className="text-xl font-bold text-slate-900 dark:text-white mt-8">
-        What makes TabBench different
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4 mb-8">
-        <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-            <Zap className="w-5 h-5" />
-          </div>
-          <h3 className="font-bold text-base text-slate-900 dark:text-white">Zero-Latency Speed</h3>
-          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-            All calculations run directly in your browser without server round-trip delays, providing instant real-time feedback.
-          </p>
-        </div>
-
-        <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-3">
-          <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <h3 className="font-bold text-base text-slate-900 dark:text-white">Privacy First</h3>
-          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-            Your numbers, text documents, and code payloads never leave your computer. We do not store or transmit your private inputs.
-          </p>
-        </div>
-
-        <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-3">
-          <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/60 text-sky-600 dark:text-sky-400 flex items-center justify-center">
-            <Award className="w-5 h-5" />
-          </div>
-          <h3 className="font-bold text-base text-slate-900 dark:text-white">Formulas & Clarity</h3>
-          <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-            Every tool is accompanied by explicit mathematical formulas, definitions, and real-world examples to explain how the math works.
-          </p>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 space-y-4">
-        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Our Engineering Principles</h2>
-        <ul className="grid grid-cols-1 md:grid-cols-3 gap-6 text-xs text-slate-600 dark:text-slate-400">
-          <li className="flex items-start space-x-2.5">
-            <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
-            <span><strong>No barrier to utility:</strong> Instant access to every calculator and formatter without requiring user registration.</span>
-          </li>
-          <li className="flex items-start space-x-2.5">
-            <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
-            <span><strong>Accessible & Responsive:</strong> Optimized for all devices, screen sizes, and keyboard navigation.</span>
-          </li>
-          <li className="flex items-start space-x-2.5">
-            <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 shrink-0" />
-            <span><strong>Continuous Verification:</strong> Regular testing for edge-case accuracy and mathematical precision.</span>
-          </li>
+        <ul>
+          {TOOL_CATEGORIES.map((c) => (
+            <li key={c.id}>
+              <Link href={`/categories/${c.id}`}>{c.name}</Link> ({getToolsByCategory(c.id).length} tools) —{" "}
+              {c.description}
+            </li>
+          ))}
         </ul>
-      </div>
+        <p>
+          Alongside the tools there are {GUIDES.length} <Link href="/guides">step-by-step guides</Link> for
+          common tasks, such as getting a photo under a size limit or filling in a PDF form.
+        </p>
 
-      {/* Editorial & Technical Accuracy Board */}
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 space-y-6">
-        <div className="space-y-2">
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white">Editorial & Engineering Team</h2>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-            TabBench is developed and maintained by a dedicated team of frontend engineers, financial analysts, and mathematical accuracy reviewers.
-          </p>
-        </div>
+        <h2 id="how">How the tools handle your data</h2>
+        <p>
+          {localCount} of the {tools.length} tools run entirely in your browser: the file you choose or the text
+          you type is processed on your own device and is never sent to us. It also means a large file never
+          has to wait for an upload before the work starts.
+        </p>
+        <p>The exceptions are stated on each tool&apos;s page, and are:</p>
+        <ul>
+          {cloud.length > 0 && (
+            <li>
+              <strong>Optional cloud AI.</strong> {cloud.map((t, i) => (
+                <React.Fragment key={t.slug}>
+                  {i > 0 && (i === cloud.length - 1 ? " and " : ", ")}
+                  <Link href={`/tools/${t.slug}`}>{t.name}</Link>
+                </React.Fragment>
+              ))}{" "}
+              run on your device by default. If you switch one to its cloud mode, the text or image you submit is
+              sent to Google Gemini to produce the result.
+            </li>
+          )}
+          {network.map((t) => (
+            <li key={t.slug}>
+              <strong>
+                <Link href={`/tools/${t.slug}`}>{t.name}</Link>.
+              </strong>{" "}
+              {t.privacyNote}
+            </li>
+          ))}
+        </ul>
+        <p>
+          Your favorites, recently used tools and recent searches are remembered in this browser only. The{" "}
+          <Link href="/privacy">privacy policy</Link> lists everything the site stores and has a button that
+          erases all of it.
+        </p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-          <div className="p-5 rounded-xl border border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-950/40 space-y-2.5">
-            <h3 className="font-bold text-sm text-slate-900 dark:text-white">Technical & Architecture Team</h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Specializing in client-side WebAssembly, HTML5 Canvas engines, Web Audio API, and high-performance React architectures to ensure all calculations execute strictly on the client device.
-            </p>
-            <span className="inline-block text-[11px] font-semibold text-blue-600 dark:text-blue-400">
-              engineering@tabbench.com
-            </span>
-          </div>
+        <h2 id="accuracy">How calculations are checked</h2>
+        <p>
+          Every calculator page shows the formula it uses, with a worked example you can reproduce by hand — see
+          the <Link href="/tools/emi-calculator">EMI calculator</Link> or the{" "}
+          <Link href="/tools/gst-calculator">GST calculator</Link>. Where a tool has a real limitation, its page
+          says so: the <Link href="/tools/video-cutter">video cutter</Link> cuts on keyframes, and the{" "}
+          <Link href="/tools/pdf-compressor">PDF inspector</Link> reports what makes a PDF large rather than
+          pretending to compress it.
+        </p>
+        <p>
+          If a result looks wrong, <Link href="/contact">tell us</Link> with the inputs you used and we will check
+          it and correct the tool. The <Link href="/editorial-policy">editorial policy</Link> describes how
+          corrections are handled.
+        </p>
 
-          <div className="p-5 rounded-xl border border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-950/40 space-y-2.5">
-            <h3 className="font-bold text-sm text-slate-900 dark:text-white">Mathematical Review & Editorial Board</h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-              Verifies formula implementations against IEEE 754 floating-point standards, NIST physical constants, and official regulatory tax and amortization guidelines.
-            </p>
-            <span className="inline-block text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
-              editorial@tabbench.com
-            </span>
-          </div>
-        </div>
-      </div>
-      </div>
+        <h2 id="funding">How TabBench is paid for</h2>
+        <p>
+          The tools are free and there is no paid tier. The site is supported by advertising from Google AdSense.
+          Ads are kept away from the tools themselves: never between a tool&apos;s title and its controls, never
+          beside a download button, and never styled to look like a tool or a search result.
+        </p>
+
+        <h2 id="principles">What we won&apos;t do</h2>
+        <ul>
+          <li>Ask you to sign up, or put a tool behind an email address.</li>
+          <li>Upload a file for a job your browser can do itself.</li>
+          <li>Sell or share what you type or upload — for local tools, we never receive it in the first place.</li>
+          <li>Add a fake &ldquo;processing&rdquo; delay or a countdown before a download.</li>
+        </ul>
+
+        <h2 id="contact">Get in touch</h2>
+        <p>
+          Bug reports, wrong results, and ideas for new tools all go through the{" "}
+          <Link href="/contact">contact page</Link>. Requests from visitors decide much of what gets built next.
+        </p>
+      </ProsePage>
     </>
   );
 }

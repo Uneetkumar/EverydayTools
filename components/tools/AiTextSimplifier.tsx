@@ -1,92 +1,98 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import AIWorkspace from "@/components/ai/AIWorkspace";
 import AIInput from "@/components/ai/AIInput";
 import AIOutput from "@/components/ai/AIOutput";
-import { LocalAIProvider } from "@/lib/ai/providers/local-provider";
-import { GeminiProvider } from "@/lib/ai/providers/gemini-provider";
-import { AIProviderType, AIOutput as AIOutputType } from "@/lib/ai/types";
-import { CheckCircle2, FileText, Zap } from "lucide-react";
-import { runAI } from "@/lib/ai/run";
+import { useAiTask } from "@/components/ai/useAiTask";
+import { Stat, StatGrid } from "@/components/tool/kit";
+import { countWords, easeLabel, readability } from "@/lib/ai/nlp/text";
 
-const SAMPLE_TEXT = `Notwithstanding the aforementioned stipulations, the contractor shall endeavor to expeditiously facilitate the dissemination of all relevant documentation subsequent to the verification of compliance. In the event that extraneous impediments transpire, the party shall implement remedial measures to mitigate deleterious repercussions.`;
-
-const localProvider = new LocalAIProvider();
-const geminiProvider = new GeminiProvider();
+const SAMPLE_TEXT = `Notwithstanding the aforementioned stipulations, the contractor shall endeavor to expeditiously facilitate the dissemination of all relevant documentation subsequent to the verification of compliance. In the event that extraneous impediments transpire, the party shall implement remedial measures to mitigate deleterious repercussions; failure to do so may result in termination of the agreement.`;
 
 export default function AiTextSimplifier() {
-  const [provider, setProvider] = useState<AIProviderType>("local");
   const [input, setInput] = useState(SAMPLE_TEXT);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [output, setOutput] = useState<AIOutputType | null>(null);
-  // Text as it streams in, before the final AIOutput lands.
-  const [partial, setPartial] = useState("");
+  const ai = useAiTask("simplify");
 
-  const handleRun = async () => {
-    if (!input.trim()) {
-      setError("Please enter text to simplify.");
-      return;
-    }
+  const handleRun = () => ai.run(input, undefined, "Paste some text to simplify.");
 
-    setBusy(true);
-    setError(null);
-    setPartial("");
+  const out = ai.output;
+  // Measured for whichever engine produced the result, the same way.
+  const before = useMemo(() => (out ? readability(out.input) : null), [out]);
+  const after = useMemo(() => (out ? readability(out.result) : null), [out]);
+  const live = useMemo(() => readability(input), [input]);
 
-    try {
-      const activeProvider = provider === "local" ? localProvider : geminiProvider;
-      const res = await runAI(activeProvider, {
-        text: input,
-        task: "simplify",
-      }, setPartial);
-      setOutput(res);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(false);
-    }
-  };
+  const trend = (a: number, b: number, higherIsBetter: boolean) =>
+    b === a ? undefined : (b > a) === higherIsBetter ? ("success" as const) : ("warning" as const);
 
   return (
     <div className="space-y-6">
       <AIWorkspace
-        provider={provider}
-        onProviderChange={setProvider}
-        streamingText={partial}
-        busy={busy}
+        provider={ai.provider}
+        onProviderChange={ai.setProvider}
+        localHint="Swaps jargon and wordy phrases for plain words. Private and instant."
+        cloudHint="Rewrites in plain English with Google Gemini. Text is sent to Google."
+        streamingText={ai.partial}
+        busy={ai.busy}
         onRun={handleRun}
-        runLabel="Simplify to Plain English"
-        error={error}
-        onClearError={() => setError(null)}
+        runLabel="Simplify"
+        error={ai.error}
         disabled={!input.trim()}
       >
         <AIInput
           value={input}
           onChange={setInput}
-          placeholder="Paste complex or legalistic text to simplify..."
+          placeholder="Paste legal, technical or official text…"
           sampleText={SAMPLE_TEXT}
-          sampleLabel="Load Legal Jargon Sample"
-          disabled={busy}
+          disabled={ai.busy}
         />
-
-        <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400 pt-1">
-          <Zap className="w-3.5 h-3.5 text-amber-500" />
-          <span>Translates complex jargon, passive phrasing, and convoluted sentences into clear 8th-grade reading level.</span>
-        </div>
+        {input.trim() && (
+          <p className="text-xs text-muted-foreground">
+            Reading ease now: <span className="font-medium text-foreground tabular-nums">{live.ease}</span> ({easeLabel(live.ease).toLowerCase()}),
+            grade {live.grade}. Plain English is 60 or higher.
+          </p>
+        )}
       </AIWorkspace>
 
-      {/* Output Panel */}
-      {output && (
+      {out && before && after && (
         <AIOutput
-          title="Simplified Plain-English Result"
-          result={output.result}
-          provider={output.provider}
-          modelUsed={output.modelUsed}
-          elapsedMs={output.elapsedMs}
+          title="Plain-English version"
+          result={out.result}
+          provider={out.provider}
+          modelUsed={out.modelUsed}
+          elapsedMs={out.elapsedMs}
           filename="simplified.txt"
           toolName="ai-text-simplifier"
           onRegenerate={handleRun}
+          format="text"
+          compareWith={out.input}
+          stats={
+            <div className="space-y-3">
+              <StatGrid>
+                <Stat
+                  label="Reading ease"
+                  value={`${before.ease} → ${after.ease}`}
+                  hint={easeLabel(after.ease)}
+                  tone={trend(before.ease, after.ease, true)}
+                />
+                <Stat label="School grade" value={`${before.grade} → ${after.grade}`} tone={trend(before.grade, after.grade, false)} />
+                <Stat label="Words" value={`${countWords(out.input)} → ${after.words}`} />
+                <Stat label="Long sentences" value={after.longSentences.length} hint="Over 25 words" />
+              </StatGrid>
+              {after.longSentences.length > 0 && (
+                <div className="rounded-lg border bg-muted/30 px-3.5 py-3 text-sm">
+                  <p className="font-medium text-foreground">Still long: consider splitting</p>
+                  <ul className="mt-1.5 list-disc space-y-1 pl-5 text-muted-foreground">
+                    {after.longSentences.slice(0, 4).map((s, i) => (
+                      <li key={i}>
+                        {s.length > 160 ? `${s.slice(0, 157)}…` : s} <span className="tabular-nums">({countWords(s)} words)</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          }
         />
       )}
     </div>

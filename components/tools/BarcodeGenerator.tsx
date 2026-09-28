@@ -1,32 +1,28 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useMemo } from "react";
+import React, { useState, useRef, useMemo } from "react";
 import JsBarcode from "jsbarcode";
-import { usePersistentState } from "@/lib/hooks/usePersistentState";
-import { downloadDataUrl } from "@/lib/utils/download";
-import {
-  Barcode,
-  Download,
-  Copy,
-  Check,
-  Sparkles,
-  Sliders,
-  Palette,
-  Settings,
-  Printer,
-  Trash2,
-  RefreshCw,
-  AlertCircle,
-  ShieldCheck,
-  ArrowRightLeft,
-  FileSpreadsheet,
-  FileUp,
-  FolderDown,
-  Archive,
-  X,
-} from "lucide-react";
-import confetti from "canvas-confetti";
 import JSZip from "jszip";
+import { toast } from "sonner";
+import { Archive, ArrowRightLeft, Barcode, Check, Copy, Download, FileSpreadsheet, FileUp, FolderDown, Plus, Printer, RefreshCw, Trash2, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Chips,
+  Field,
+  Notice,
+  Segmented,
+  SelectInput,
+  TextInput,
+  ToggleRow,
+  ToolDivider,
+  ToolSection,
+} from "@/components/tool/kit";
+import { usePersistentState } from "@/lib/hooks/usePersistentState";
+import { useIsClient } from "@/lib/hooks/useIsClient";
+import { downloadBlob, downloadDataUrl } from "@/lib/utils/download";
+import { copyText } from "@/lib/utils/clipboard";
+import { markToolCompleted } from "@/lib/analytics";
+import { cn } from "@/lib/utils";
 
 export type BarcodeFormat =
   | "CODE128"
@@ -40,57 +36,27 @@ export type BarcodeFormat =
   | "pharmacode"
   | "codabar";
 
-interface BarcodePreset {
-  id: string;
-  name: string;
-  desc: string;
-  format: BarcodeFormat;
-  defaultVal: string;
-}
+const FORMATS: { value: BarcodeFormat; label: string; use: string; rule: string }[] = [
+  { value: "CODE128", label: "Code 128", use: "Shipping labels, inventory and SKUs.", rule: "Letters, numbers and symbols (standard ASCII)." },
+  { value: "EAN13", label: "EAN-13", use: "Retail products worldwide, and books (ISBN).", rule: "12 digits (the check digit is added for you) or all 13." },
+  { value: "UPC", label: "UPC-A", use: "Retail products in North America.", rule: "11 digits (the check digit is added for you) or all 12." },
+  { value: "EAN8", label: "EAN-8", use: "Small retail items with little space.", rule: "7 digits (the check digit is added for you) or all 8." },
+  { value: "UPCE", label: "UPC-E", use: "Small packages in North America.", rule: "6, 7 or 8 digits." },
+  { value: "CODE39", label: "Code 39", use: "Asset tags, automotive and defence.", rule: "A–Z, 0–9, space and - . $ / + %." },
+  { value: "ITF14", label: "ITF-14", use: "Outer cartons and shipping cases.", rule: "13 digits (the check digit is added for you) or all 14." },
+  { value: "MSI", label: "MSI Plessey", use: "Warehouse shelves and inventory.", rule: "Digits only." },
+  { value: "pharmacode", label: "Pharmacode", use: "Pharmaceutical packaging.", rule: "A whole number from 3 to 131070." },
+  { value: "codabar", label: "Codabar", use: "Libraries, blood banks, courier forms.", rule: "Digits and - $ : / . + (may start and end with A, B, C or D)." },
+];
+const FORMAT_BY_VALUE = Object.fromEntries(FORMATS.map((f) => [f.value, f])) as Record<BarcodeFormat, (typeof FORMATS)[number]>;
 
-const BARCODE_PRESETS: BarcodePreset[] = [
-  {
-    id: "retail-ean13",
-    name: "Retail Product (EAN-13)",
-    desc: "Global 13-digit standard for retail products",
-    format: "EAN13",
-    defaultVal: "978020137962",
-  },
-  {
-    id: "retail-upca",
-    name: "US Supermarket (UPC-A)",
-    desc: "North American 12-digit standard",
-    format: "UPC",
-    defaultVal: "01234567890",
-  },
-  {
-    id: "logistics-code128",
-    name: "Shipping & Logistics (Code 128)",
-    desc: "High-density alphanumeric for packages & inventory",
-    format: "CODE128",
-    defaultVal: "TB-SHIP-2026-X9",
-  },
-  {
-    id: "carton-itf14",
-    name: "Master Carton (ITF-14)",
-    desc: "14-digit standard for outer corrugated boxes",
-    format: "ITF14",
-    defaultVal: "1001234567890",
-  },
-  {
-    id: "asset-code39",
-    name: "Asset Tracking (Code 39)",
-    desc: "Industrial & defense alphanumeric standard",
-    format: "CODE39",
-    defaultVal: "ASSET-84920",
-  },
-  {
-    id: "compact-ean8",
-    name: "Small Item (EAN-8)",
-    desc: "8-digit compact code for small retail items",
-    format: "EAN8",
-    defaultVal: "9638507",
-  },
+const PRESETS: { id: string; label: string; format: BarcodeFormat; value: string }[] = [
+  { id: "code128", label: "Shipping (Code 128)", format: "CODE128", value: "TB-SHIP-2026-X9" },
+  { id: "ean13", label: "Retail (EAN-13)", format: "EAN13", value: "978020137962" },
+  { id: "upca", label: "Retail US (UPC-A)", format: "UPC", value: "01234567890" },
+  { id: "itf14", label: "Carton (ITF-14)", format: "ITF14", value: "1001234567890" },
+  { id: "code39", label: "Asset tag (Code 39)", format: "CODE39", value: "ASSET-84920" },
+  { id: "ean8", label: "Small item (EAN-8)", format: "EAN8", value: "9638507" },
 ];
 
 interface BarcodeHistoryItem {
@@ -102,11 +68,38 @@ interface BarcodeHistoryItem {
   timestamp: number;
 }
 
+interface BarcodeBatchItem {
+  id: string;
+  label: string;
+  format: BarcodeFormat;
+  value: string;
+}
+
+const checkDigit = (digits: string, firstWeight: 1 | 3) => {
+  let sum = 0;
+  for (let i = 0; i < digits.length; i++) {
+    const n = Number(digits[i]);
+    sum += i % 2 === 0 ? n * firstWeight : n * (firstWeight === 1 ? 3 : 1);
+  }
+  return String((10 - (sum % 10)) % 10);
+};
+
+const luminance = (hex: string) => {
+  const c = hex.replace("#", "");
+  const rgb = c.length === 3 ? [0, 1, 2].map((i) => parseInt(c[i] + c[i], 16)) : [0, 2, 4].map((i) => parseInt(c.slice(i, i + 2), 16));
+  const [r, g, b] = rgb.map((v) => {
+    const s = (Number.isFinite(v) ? v : 0) / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+};
+
+const escapeHtml = (s: string) => s.replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]!);
+
 export default function BarcodeGenerator() {
   const [format, setFormat] = usePersistentState<BarcodeFormat>("bc_format", "CODE128");
   const [val, setVal] = usePersistentState<string>("bc_val", "TB-LOGISTICS-9842");
 
-  // Customization
   const [barWidth, setBarWidth] = usePersistentState<number>("bc_width", 2);
   const [barHeight, setBarHeight] = usePersistentState<number>("bc_height", 90);
   const [margin, setMargin] = usePersistentState<number>("bc_margin", 12);
@@ -114,35 +107,17 @@ export default function BarcodeGenerator() {
   const [font, setFont] = usePersistentState<string>("bc_font", "monospace");
   const [fontSize, setFontSize] = usePersistentState<number>("bc_font_size", 16);
   const [textPosition, setTextPosition] = usePersistentState<"bottom" | "top">("bc_text_pos", "bottom");
-  const [textAlign, setTextAlign] = usePersistentState<"center" | "left" | "right">("bc_text_align", "center");
 
-  // Colors
   const [fgColor, setFgColor] = usePersistentState<string>("bc_fg", "#0f172a");
   const [bgColor, setBgColor] = usePersistentState<string>("bc_bg", "#ffffff");
   const [transparentBg, setTransparentBg] = useState<boolean>(false);
 
-  // States
-  const [renderError, setRenderError] = useState<string | null>(null);
   const [copiedPng, setCopiedPng] = useState(false);
   const [copiedSvg, setCopiedSvg] = useState(false);
-  const [exportScale, setExportScale] = useState<number>(2); // 1x, 2x, 4x
-
-  // History
+  const [exportScale, setExportScale] = useState<number>(2);
   const [history, setHistory] = usePersistentState<BarcodeHistoryItem[]>("bc_history", []);
 
-  // Refs
-  const svgRef = useRef<SVGSVGElement>(null);
-  const canvasExportRef = useRef<HTMLCanvasElement>(null);
   const csvBatchInputRef = useRef<HTMLInputElement>(null);
-
-  // Batch CSV Mode State
-  interface BarcodeBatchItem {
-    id: string;
-    label: string;
-    format: BarcodeFormat;
-    value: string;
-  }
-
   const [mode, setMode] = useState<"single" | "batch">("single");
   const [batchItems, setBatchItems] = useState<BarcodeBatchItem[]>([
     { id: "1", label: "Inventory Item Alpha", format: "CODE128", value: "INV-ITEM-001" },
@@ -158,54 +133,182 @@ export default function BarcodeGenerator() {
   const [newBatchFormat, setNewBatchFormat] = useState<BarcodeFormat>("CODE128");
   const [newBatchValue, setNewBatchValue] = useState<string>("");
 
+  const isClient = useIsClient();
+
+  const jsOptions = (fmt: BarcodeFormat) => ({
+    format: fmt,
+    width: barWidth,
+    height: barHeight,
+    displayValue,
+    font,
+    fontSize,
+    textPosition,
+    textMargin: 4,
+    margin,
+    background: transparentBg ? "transparent" : bgColor,
+    lineColor: fgColor,
+  });
+
+  /**
+   * Draw the barcode into a detached SVG and keep its markup. The preview,
+   * downloads and copy all use this markup, so what you see is exactly what
+   * you get, and an invalid value can't leave a stale barcode (or a stuck
+   * error) on screen.
+   */
+  const rendered = useMemo((): { svg: string | null; error: string | null } => {
+    if (!isClient) return { svg: null, error: null };
+    const value = val.trim();
+    if (!value) return { svg: null, error: "empty" };
+    const el = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    let valid = true;
+    try {
+      JsBarcode(el, value, { ...jsOptions(format), valid: (v: boolean) => (valid = v) });
+    } catch {
+      valid = false;
+    }
+    if (!valid) return { svg: null, error: "invalid" };
+    el.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    return { svg: new XMLSerializer().serializeToString(el), error: null };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isClient, val, format, barWidth, barHeight, margin, displayValue, font, fontSize, textPosition, bgColor, fgColor, transparentBg]);
+
+  const checksumNote = useMemo(() => {
+    const raw = val.trim();
+    if (format === "EAN13" && /^\d{12}$/.test(raw)) return raw + checkDigit(raw, 1);
+    if (format === "UPC" && /^\d{11}$/.test(raw)) return raw + checkDigit(raw, 3);
+    if (format === "EAN8" && /^\d{7}$/.test(raw)) return raw + checkDigit(raw, 3);
+    return null;
+  }, [val, format]);
+
+  const lowContrast = !transparentBg && Math.abs(luminance(fgColor) - luminance(bgColor)) < 0.35;
+  const inverted = !transparentBg && luminance(fgColor) > luminance(bgColor);
+
+  const recordHistory = () => {
+    const item: BarcodeHistoryItem = { id: String(Date.now()), val, format, fg: fgColor, bg: bgColor, timestamp: Date.now() };
+    setHistory((prev = []) => [item, ...prev.filter((p) => p.val !== item.val || p.format !== item.format)].slice(0, 6));
+  };
+
+  const svgToCanvas = (svg: string, scale: number, fill: string | null): Promise<HTMLCanvasElement> =>
+    new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }));
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return reject(new Error("canvas"));
+        if (fill) {
+          ctx.fillStyle = fill;
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        // Barcodes must stay sharp: no smoothing when scaling up.
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve(canvas);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("image"));
+      };
+      img.src = url;
+    });
+
+  const fileBase = `barcode-${format.toLowerCase()}-${val.trim().replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 30)}`;
+
+  const handleDownloadPng = async () => {
+    if (!rendered.svg) return;
+    try {
+      const canvas = await svgToCanvas(rendered.svg, exportScale, transparentBg ? null : bgColor);
+      downloadDataUrl(canvas.toDataURL("image/png"), `${fileBase}.png`);
+      recordHistory();
+      markToolCompleted();
+    } catch {
+      toast.error("Couldn't create the PNG");
+    }
+  };
+
+  const handleDownloadSvg = () => {
+    if (!rendered.svg) return;
+    downloadBlob(new Blob([rendered.svg], { type: "image/svg+xml;charset=utf-8" }), `${fileBase}.svg`, "barcode-generator");
+    recordHistory();
+    markToolCompleted();
+  };
+
+  const handleCopyPng = async () => {
+    if (!rendered.svg) return;
+    try {
+      if (typeof ClipboardItem === "undefined") throw new Error("unsupported");
+      const canvas = await svgToCanvas(rendered.svg, 2, transparentBg ? null : bgColor);
+      const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/png"));
+      if (!blob) throw new Error("blob");
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      setCopiedPng(true);
+      setTimeout(() => setCopiedPng(false), 2000);
+      recordHistory();
+      markToolCompleted();
+    } catch {
+      toast.error("Couldn't copy the image", { description: "Your browser doesn't allow copying images. Download the PNG instead." });
+    }
+  };
+
+  const handleCopySvg = async () => {
+    if (!rendered.svg) return;
+    if (await copyText(rendered.svg)) {
+      setCopiedSvg(true);
+      setTimeout(() => setCopiedSvg(false), 2000);
+      recordHistory();
+    }
+  };
+
+  const handlePrint = () => {
+    if (!rendered.svg) return;
+    const printWindow = window.open("", "_blank");
+    if (!printWindow) {
+      toast.error("Couldn't open the print window", { description: "Allow pop-ups for this site, or download the PNG and print that." });
+      return;
+    }
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>Barcode ${escapeHtml(val)}</title>
+<style>body{display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}svg{max-width:100%;height:auto}@media print{body{min-height:0;padding:20px}}</style>
+</head><body>${rendered.svg}<script>window.onload=function(){window.print();setTimeout(function(){window.close()},500)}<\/script></body></html>`);
+    printWindow.document.close();
+  };
+
+  // ---- Bulk (CSV) ----
+  const validFormats = FORMATS.map((f) => f.value);
+
   const handleCsvUpload = (file: File) => {
-    if (!file) return;
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target?.result as string;
       if (!content) return;
       const lines = content.split(/\r?\n/).filter((l) => l.trim().length > 0);
       if (lines.length === 0) return;
-
+      const first = lines[0].toLowerCase();
+      const startIdx = first.includes("value") || first.includes("format") || first.includes("label") ? 1 : 0;
       const parsed: BarcodeBatchItem[] = [];
-      const startIdx = lines[0].toLowerCase().includes("value") || lines[0].toLowerCase().includes("format") || lines[0].toLowerCase().includes("label") ? 1 : 0;
-
       for (let i = startIdx; i < lines.length; i++) {
-        const line = lines[i];
-        const cols = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map((c) => c.replace(/^"|"$/g, "").trim());
+        const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map((c) => c.replace(/^"|"$/g, "").trim());
         if (cols.length === 1 && cols[0]) {
-          parsed.push({
-            id: String(Date.now() + i),
-            label: `Item #${i + 1}`,
-            format: "CODE128",
-            value: cols[0],
-          });
+          parsed.push({ id: String(Date.now() + i), label: `Item ${i + 1}`, format: "CODE128", value: cols[0] });
         } else if (cols.length === 2) {
-          parsed.push({
-            id: String(Date.now() + i),
-            label: cols[0] || `Item #${i + 1}`,
-            format: "CODE128",
-            value: cols[1],
-          });
+          parsed.push({ id: String(Date.now() + i), label: cols[0] || `Item ${i + 1}`, format: "CODE128", value: cols[1] });
         } else if (cols.length >= 3) {
-          const rawFormat = cols[1].toUpperCase() as BarcodeFormat;
-          const validFormats: BarcodeFormat[] = ["CODE128", "EAN13", "EAN8", "UPC", "UPCE", "CODE39", "ITF14", "MSI", "pharmacode", "codabar"];
-          const resolvedFormat = validFormats.includes(rawFormat) ? rawFormat : "CODE128";
-          parsed.push({
-            id: String(Date.now() + i),
-            label: cols[0] || `Item #${i + 1}`,
-            format: resolvedFormat,
-            value: cols[2],
-          });
+          const raw = cols[1].toUpperCase();
+          const fmt = (validFormats.find((f) => f.toUpperCase() === raw) ?? "CODE128") as BarcodeFormat;
+          parsed.push({ id: String(Date.now() + i), label: cols[0] || `Item ${i + 1}`, format: fmt, value: cols[2] });
         }
       }
-
       if (parsed.length > 0) {
         setBatchItems(parsed);
         setBatchSelectedIdx(0);
         setVal(parsed[0].value);
         setFormat(parsed[0].format);
-        confetti({ particleCount: 30, spread: 50, origin: { y: 0.85 } });
+        markToolCompleted();
+        toast.success(`Loaded ${parsed.length} ${parsed.length === 1 ? "row" : "rows"}`);
+      } else {
+        toast.error("No rows found", { description: "Use the columns Label, Format, Value — the sample CSV shows the format." });
       }
     };
     reader.readAsText(file);
@@ -219,84 +322,58 @@ Supermarket Can,UPC,012345678905
 Warehouse Carton,ITF14,1001234567890
 Asset Equipment,CODE39,ASSET-8492
 Compact Item,EAN8,96385074`;
-
-    const blob = new Blob([sample], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "sample-services-barcodes.csv";
-    a.click();
-    URL.revokeObjectURL(url);
+    // A template, not a result, so it isn't added to the recent-files list.
+    downloadDataUrl(URL.createObjectURL(new Blob([sample], { type: "text/csv;charset=utf-8" })), "sample-barcodes.csv", true);
   };
 
   const downloadAllBatchCsv = () => {
     if (batchItems.length === 0) return;
-    const header = "Label,Format,Value,ExportDate\n";
     const nowIso = new Date().toISOString();
-    const rows = batchItems
-      .map((item) => `"${item.label.replace(/"/g, '""')}","${item.format}","${item.value.replace(/"/g, '""')}","${nowIso}"`)
-      .join("\n");
-
-    const blob = new Blob([header + rows], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `all-services-barcodes-${Date.now()}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    confetti({ particleCount: 30, spread: 50, origin: { y: 0.85 } });
+    const rows = batchItems.map((it) => `"${it.label.replace(/"/g, '""')}","${it.format}","${it.value.replace(/"/g, '""')}","${nowIso}"`).join("\n");
+    downloadBlob(new Blob(["Label,Format,Value,ExportDate\n" + rows], { type: "text/csv;charset=utf-8" }), `barcodes-${Date.now()}.csv`, "barcode-generator");
+    markToolCompleted();
   };
 
   const downloadAllBatchZip = async () => {
     if (batchItems.length === 0) return;
     setBatchIsExporting(true);
-
+    const skipped: string[] = [];
     try {
       const zip = new JSZip();
       const folder = zip.folder("barcodes");
-
       for (let i = 0; i < batchItems.length; i++) {
         const item = batchItems[i];
         const canvas = document.createElement("canvas");
+        let valid = true;
         try {
           JsBarcode(canvas, item.value, {
-            format: item.format,
-            width: barWidth,
-            height: barHeight,
-            displayValue: displayValue,
-            font: font,
-            fontSize: fontSize,
-            textAlign: textAlign,
-            textPosition: textPosition,
-            lineColor: fgColor,
+            ...jsOptions(item.format),
             background: transparentBg ? "rgba(0,0,0,0)" : bgColor,
-            margin: margin,
+            valid: (v: boolean) => (valid = v),
           });
-
-          const dataUrl = canvas.toDataURL("image/png");
-          const base64Data = dataUrl.replace(/^data:image\/png;base64,/, "");
-          const safeLabel = item.label.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase().slice(0, 30);
-          const fileName = `${String(i + 1).padStart(2, "0")}-${safeLabel || "barcode"}.png`;
-          folder?.file(fileName, base64Data, { base64: true });
-        } catch (err) {
-          console.warn(`Could not render barcode for item #${i + 1} (${item.value}):`, err);
+        } catch {
+          valid = false;
         }
+        if (!valid) {
+          skipped.push(item.label);
+          continue;
+        }
+        const safeLabel = item.label.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase().slice(0, 30);
+        folder?.file(`${String(i + 1).padStart(2, "0")}-${safeLabel || "barcode"}.png`, canvas.toDataURL("image/png").split(",")[1], { base64: true });
       }
-
-      const header = "Index,Label,Format,Value\n";
-      const csvContent = header + batchItems.map((it, idx) => `${idx + 1},"${it.label.replace(/"/g, '""')}","${it.format}","${it.value.replace(/"/g, '""')}"`).join("\n");
-      zip.file("services-barcodes-manifest.csv", csvContent);
-
-      const content = await zip.generateAsync({ type: "blob" });
-      const url = URL.createObjectURL(content);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `all-services-barcodes-${Date.now()}.zip`;
-      a.click();
-      URL.revokeObjectURL(url);
-      confetti({ particleCount: 45, spread: 60, origin: { y: 0.85 } });
+      const manifest = "Index,Label,Format,Value\n" + batchItems.map((it, idx) => `${idx + 1},"${it.label.replace(/"/g, '""')}","${it.format}","${it.value.replace(/"/g, '""')}"`).join("\n");
+      zip.file("manifest.csv", manifest);
+      const blob = await zip.generateAsync({ type: "blob" });
+      downloadBlob(blob, `barcodes-${Date.now()}.zip`, "barcode-generator");
+      markToolCompleted();
+      if (skipped.length > 0) {
+        toast.warning(`${skipped.length} ${skipped.length === 1 ? "row was" : "rows were"} skipped`, {
+          description: `Not valid for their barcode type: ${skipped.slice(0, 3).join(", ")}${skipped.length > 3 ? "…" : ""}`,
+        });
+      }
     } catch (err) {
       console.error("Batch ZIP export error:", err);
+      toast.error("Couldn't create the ZIP");
     } finally {
       setBatchIsExporting(false);
     }
@@ -304,13 +381,10 @@ Compact Item,EAN8,96385074`;
 
   const handleAddBatchItem = () => {
     if (!newBatchValue.trim()) return;
-    const newItem: BarcodeBatchItem = {
-      id: String(Date.now()),
-      label: newBatchLabel.trim() || `Item #${batchItems.length + 1}`,
-      format: newBatchFormat,
-      value: newBatchValue.trim(),
-    };
-    setBatchItems((prev) => [...prev, newItem]);
+    setBatchItems((prev) => [
+      ...prev,
+      { id: String(Date.now()), label: newBatchLabel.trim() || `Item ${prev.length + 1}`, format: newBatchFormat, value: newBatchValue.trim() },
+    ]);
     setNewBatchLabel("");
     setNewBatchValue("");
   };
@@ -318,9 +392,7 @@ Compact Item,EAN8,96385074`;
   const handleRemoveBatchItem = (id: string) => {
     setBatchItems((prev) => {
       const next = prev.filter((it) => it.id !== id);
-      if (batchSelectedIdx >= next.length) {
-        setBatchSelectedIdx(Math.max(0, next.length - 1));
-      }
+      if (batchSelectedIdx >= next.length) setBatchSelectedIdx(Math.max(0, next.length - 1));
       return next;
     });
   };
@@ -334,393 +406,77 @@ Compact Item,EAN8,96385074`;
     }
   };
 
-  // Compute checksum for EAN-13 if 12 digits provided
-  const calculateEan13Checksum = (digits12: string): string => {
-    let sum = 0;
-    for (let i = 0; i < 12; i++) {
-      const n = parseInt(digits12[i], 10);
-      sum += i % 2 === 0 ? n : n * 3;
-    }
-    const check = (10 - (sum % 10)) % 10;
-    return check.toString();
-  };
-
-  // Compute checksum for UPC-A if 11 digits provided
-  const calculateUpcaChecksum = (digits11: string): string => {
-    let sum = 0;
-    for (let i = 0; i < 11; i++) {
-      const n = parseInt(digits11[i], 10);
-      sum += i % 2 === 0 ? n * 3 : n;
-    }
-    const check = (10 - (sum % 10)) % 10;
-    return check.toString();
-  };
-
-  // Compute checksum for EAN-8 if 7 digits provided
-  const calculateEan8Checksum = (digits7: string): string => {
-    let sum = 0;
-    for (let i = 0; i < 7; i++) {
-      const n = parseInt(digits7[i], 10);
-      sum += i % 2 === 0 ? n * 3 : n;
-    }
-    const check = (10 - (sum % 10)) % 10;
-    return check.toString();
-  };
-
-  // Auto-fill Checksum helper button
-  const autoChecksumSuggestion = useMemo(() => {
-    const raw = val.trim();
-    if (format === "EAN13") {
-      if (/^\d{12}$/.test(raw)) {
-        return raw + calculateEan13Checksum(raw);
-      }
-    } else if (format === "UPC") {
-      if (/^\d{11}$/.test(raw)) {
-        return raw + calculateUpcaChecksum(raw);
-      }
-    } else if (format === "EAN8") {
-      if (/^\d{7}$/.test(raw)) {
-        return raw + calculateEan8Checksum(raw);
-      }
-    }
-    return null;
-  }, [val, format]);
-
-  // Render Barcode
-  useEffect(() => {
-    if (!svgRef.current) return;
-    setRenderError(null);
-
-    const targetVal = val.trim();
-    if (!targetVal) {
-      setRenderError("Please enter a value to generate barcode.");
-      return;
-    }
-
-    try {
-      JsBarcode(svgRef.current, targetVal, {
-        format,
-        width: barWidth,
-        height: barHeight,
-        displayValue,
-        font,
-        fontSize,
-        textPosition,
-        textAlign,
-        textMargin: 4,
-        margin,
-        background: transparentBg ? "transparent" : bgColor,
-        lineColor: fgColor,
-        valid: (valid: boolean) => {
-          if (!valid) {
-            setRenderError(`The value "${targetVal}" is not valid for ${format} barcode standard.`);
-          }
-        },
-      });
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setRenderError(msg);
-    }
-  }, [
-    val,
-    format,
-    barWidth,
-    barHeight,
-    margin,
-    displayValue,
-    font,
-    fontSize,
-    textPosition,
-    textAlign,
-    bgColor,
-    fgColor,
-    transparentBg,
-  ]);
-
-  // Save to history helper
-  const recordHistory = () => {
-    const item: BarcodeHistoryItem = {
-      id: String(Date.now()),
-      val,
-      format,
-      fg: fgColor,
-      bg: bgColor,
-      timestamp: Date.now(),
-    };
-    setHistory((prev = []) => [item, ...prev.filter((p) => p.val !== item.val)].slice(0, 6));
-  };
-
-  // Render high-res Canvas from SVG for PNG exports
-  const getExportDataUrl = (scaleMultiplier = 2): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      if (!svgRef.current) return reject(new Error("SVG ref not found"));
-
-      const svgData = new XMLSerializer().serializeToString(svgRef.current);
-      const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-      const url = URL.createObjectURL(svgBlob);
-
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width * scaleMultiplier;
-        canvas.height = img.height * scaleMultiplier;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return reject(new Error("Canvas context failed"));
-
-        if (!transparentBg) {
-          ctx.fillStyle = bgColor;
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-        }
-
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        URL.revokeObjectURL(url);
-        resolve(canvas.toDataURL("image/png"));
-      };
-      img.onerror = reject;
-      img.src = url;
-    });
-  };
-
-  // Export PNG
-  const handleDownloadPng = async () => {
-    if (renderError) return;
-    try {
-      const dataUrl = await getExportDataUrl(exportScale);
-      downloadDataUrl(dataUrl, `barcode-${format.toLowerCase()}-${Date.now()}.png`);
-      recordHistory();
-      confetti({ particleCount: 30, spread: 50, origin: { y: 0.85 } });
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  // Export SVG
-  const handleDownloadSvg = () => {
-    if (!svgRef.current || renderError) return;
-    const svgData = new XMLSerializer().serializeToString(svgRef.current);
-    const svgBlob = new Blob([svgData], { type: "image/svg+xml;charset=utf-8" });
-    const url = URL.createObjectURL(svgBlob);
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `barcode-${format.toLowerCase()}-${Date.now()}.svg`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    recordHistory();
-    confetti({ particleCount: 30, spread: 50, origin: { y: 0.85 } });
-  };
-
-  // Copy PNG to Clipboard
-  const handleCopyPng = async () => {
-    if (renderError) return;
-    try {
-      const dataUrl = await getExportDataUrl(2);
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
-      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-      setCopiedPng(true);
-      setTimeout(() => setCopiedPng(false), 2000);
-      recordHistory();
-      confetti({ particleCount: 25, spread: 45, origin: { y: 0.85 } });
-    } catch (err) {
-      console.error("Clipboard copy error:", err);
-    }
-  };
-
-  // Copy SVG Markup
-  const handleCopySvg = async () => {
-    if (!svgRef.current || renderError) return;
-    try {
-      const svgData = new XMLSerializer().serializeToString(svgRef.current);
-      await navigator.clipboard.writeText(svgData);
-      setCopiedSvg(true);
-      setTimeout(() => setCopiedSvg(false), 2000);
-      recordHistory();
-    } catch (err) {
-      console.error("SVG copy error:", err);
-    }
-  };
-
-  // Print Barcode Label
-  const handlePrint = () => {
-    if (!svgRef.current || renderError) return;
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) return;
-
-    const svgData = new XMLSerializer().serializeToString(svgRef.current);
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Print Barcode - ${val}</title>
-          <style>
-            @media print {
-              body { margin: 0; padding: 20px; text-align: center; }
-              svg { max-width: 100%; height: auto; }
-            }
-            body { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: sans-serif; margin: 0; }
-          </style>
-        </head>
-        <body>
-          <div>${svgData}</div>
-          <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(function() { window.close(); }, 500);
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  };
-
-  const applyPreset = (preset: BarcodePreset) => {
-    setFormat(preset.format);
-    setVal(preset.defaultVal);
-  };
+  const info = FORMAT_BY_VALUE[format] ?? FORMATS[0];
+  const activePreset = PRESETS.find((p) => p.format === format && p.value === val)?.id ?? null;
+  const canExport = !!rendered.svg;
 
   return (
     <div className="space-y-6">
-      {/* Mode Switcher Tabs */}
-      <div className="p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => setMode("single")}
-            className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition ${
-              mode === "single"
-                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            <Barcode className="w-3.5 h-3.5" />
-            <span>Single Generator Studio</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("batch")}
-            className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition ${
-              mode === "batch"
-                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5" />
-            <span>Batch CSV (Bulk Processing)</span>
-          </button>
-        </div>
+      <Segmented
+        value={mode}
+        onChange={setMode}
+        ariaLabel="Mode"
+        options={[
+          { value: "single", label: "Single barcode" },
+          { value: "batch", label: "Bulk (CSV)" },
+        ]}
+      />
 
-        {mode === "batch" && (
-          <span className="text-[11px] text-slate-500 dark:text-slate-400 px-3 font-medium">
-            {batchItems.length} services / items loaded
-          </span>
-        )}
-      </div>
-
-      {/* Preset Templates Header (Single mode only) */}
-      {mode === "single" && (
-        <div className="p-4 rounded-3xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
-              <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-              <span>Popular Standard Templates</span>
-            </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400">
-              Click to load template & format
-            </span>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-            {BARCODE_PRESETS.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => applyPreset(p)}
-                className={`p-2 rounded-2xl border text-left transition ${
-                  format === p.format && val === p.defaultVal
-                    ? "bg-white dark:bg-slate-800 border-blue-600 shadow-xs"
-                    : "bg-white/60 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-800"
-                }`}
-              >
-                <div className="text-[11px] font-bold text-slate-900 dark:text-white truncate">
-                  {p.name}
-                </div>
-                <div className="text-[9px] text-slate-400 truncate">{p.format}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Main Studio Columns */}
-      <div className="grid grid-cols-1 @4xl:grid-cols-12 gap-6 @4xl:gap-8 items-start">
-        {/* Left Column: Barcode Inputs & Customization */}
-        <div className="@container @4xl:col-span-7 space-y-5">
-          {/* Section 1: Single Mode or Batch Mode */}
+      <div className="grid grid-cols-1 items-start gap-8 @4xl:grid-cols-12">
+        <div className="@container space-y-6 @4xl:col-span-7">
           {mode === "single" ? (
-            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-              <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-                <Barcode className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span>Barcode Data & Standard</span>
-              </div>
-
-              {/* Symbology / Format Selector */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Barcode Symbology Standard
-                </label>
-                <select
-                  value={format}
-                  onChange={(e) => setFormat(e.target.value as BarcodeFormat)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-900 dark:text-white focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="CODE128">Code 128 (Universal Alphanumeric - Shipping & Logistics)</option>
-                  <option value="EAN13">EAN-13 (International Retail 13-digit code)</option>
-                  <option value="UPC">UPC-A (North American Retail 12-digit code)</option>
-                  <option value="EAN8">EAN-8 (Compact Retail 8-digit code)</option>
-                  <option value="CODE39">Code 39 (Alphanumeric - Automotive & Defense)</option>
-                  <option value="ITF14">ITF-14 (Outer Carton Shipping 14-digit code)</option>
-                  <option value="MSI">MSI / Plessey (Warehouse & Inventory numeric)</option>
-                  <option value="pharmacode">Pharmacode (Pharmaceutical Packaging)</option>
-                  <option value="codabar">Codabar (Libraries & Blood Banks)</option>
-                </select>
-              </div>
-
-              {/* Value Input */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                  Barcode Content / Value
-                </label>
-                <input
-                  type="text"
+            <ToolSection title="Barcode">
+              <Field label="Type" htmlFor="bc-format" hint={info.use}>
+                <SelectInput id="bc-format" value={format} onChange={(e) => setFormat(e.target.value as BarcodeFormat)}>
+                  {FORMATS.map((f) => (
+                    <option key={f.value} value={f.value}>
+                      {f.label}
+                    </option>
+                  ))}
+                </SelectInput>
+              </Field>
+              <Field
+                label="Value"
+                htmlFor="bc-value"
+                error={rendered.error === "invalid" ? `Not valid for ${info.label}. ${info.rule}` : undefined}
+                hint={info.rule}
+              >
+                <TextInput
+                  id="bc-value"
                   value={val}
                   onChange={(e) => setVal(e.target.value)}
-                  placeholder="Enter value or SKU..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 font-mono text-xs font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter a number or SKU"
+                  className="font-mono"
+                  aria-invalid={rendered.error === "invalid" || undefined}
+                  autoComplete="off"
+                  spellCheck={false}
                 />
-
-                {/* Auto Checksum suggestion button */}
-                {autoChecksumSuggestion && (
-                  <div className="mt-2 p-2.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 flex items-center justify-between text-xs">
-                    <span className="text-[11px] text-blue-700 dark:text-blue-300">
-                      Auto-calculated {format} with check digit:{" "}
-                      <strong className="font-mono font-bold">{autoChecksumSuggestion}</strong>
-                    </span>
-                    <button
-                      onClick={() => setVal(autoChecksumSuggestion)}
-                      className="px-2.5 py-1 rounded-lg bg-blue-600 text-white text-[10px] font-semibold hover:bg-blue-700 transition"
-                    >
-                      Apply Check Digit
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
+              </Field>
+              {checksumNote && (
+                <p className="text-xs text-muted-foreground">
+                  Encoded as <span className="font-mono text-foreground">{checksumNote}</span> — the last digit is the check digit.{" "}
+                  <button type="button" className="text-link hover:underline" onClick={() => setVal(checksumNote)}>
+                    Use full number
+                  </button>
+                </p>
+              )}
+              <Field label="Examples">
+                <Chips
+                  value={activePreset}
+                  onChange={(id) => {
+                    const p = PRESETS.find((x) => x.id === id);
+                    if (p) {
+                      setFormat(p.format);
+                      setVal(p.value);
+                    }
+                  }}
+                  ariaLabel="Example barcodes"
+                  options={PRESETS.map((p) => ({ value: p.id, label: p.label }))}
+                />
+              </Field>
+            </ToolSection>
           ) : (
-            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+            <ToolSection title="Bulk (CSV)">
               <input
                 ref={csvBatchInputRef}
                 type="file"
@@ -733,563 +489,310 @@ Compact Item,EAN8,96385074`;
                   }
                 }}
               />
-
-              <div className="p-3.5 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 text-xs text-blue-800 dark:text-blue-300 flex flex-col gap-1">
-                <div className="font-bold flex items-center gap-1.5">
-                  <FileSpreadsheet className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                  <span>Bulk Barcode CSV Processing</span>
-                </div>
-                <p className="text-[11px] text-blue-700/80 dark:text-blue-300/80 leading-relaxed">
-                  Process entire inventory, SKUs, and service catalogs at once. Upload a CSV (columns: <code>Label, Format, Value</code>), preview each barcode live in the preview studio, and export all as a CSV manifest or packed ZIP archive.
-                </p>
+              <p className="text-sm text-muted-foreground">
+                Make many barcodes at once from a CSV with the columns{" "}
+                <code className="rounded bg-muted px-1 py-0.5 text-xs">Label, Format, Value</code>. Select a row to preview it; the size, text and colour settings apply to all.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" onClick={() => csvBatchInputRef.current?.click()}>
+                  <FileUp aria-hidden="true" />
+                  Upload CSV
+                </Button>
+                <Button type="button" variant="outline" onClick={downloadSampleCsv}>
+                  <FolderDown aria-hidden="true" />
+                  Sample CSV
+                </Button>
               </div>
 
-              {/* Batch Actions Toolbar */}
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => csvBatchInputRef.current?.click()}
-                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-xs transition"
-                >
-                  <FileUp className="w-3.5 h-3.5" />
-                  <span>Upload CSV</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={downloadSampleCsv}
-                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition"
-                >
-                  <FolderDown className="w-3.5 h-3.5" />
-                  <span>Download Sample CSV</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={downloadAllBatchCsv}
-                  disabled={batchItems.length === 0}
-                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 transition disabled:opacity-50"
-                >
-                  <FileSpreadsheet className="w-3.5 h-3.5" />
-                  <span>Download All as CSV</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={downloadAllBatchZip}
-                  disabled={batchItems.length === 0 || batchIsExporting}
-                  className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition disabled:opacity-50"
-                >
-                  <Archive className="w-3.5 h-3.5" />
-                  <span>{batchIsExporting ? "Generating ZIP..." : "Download All as ZIP (Images)"}</span>
-                </button>
-
-                {batchItems.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setBatchItems([])}
-                    className="ml-auto flex items-center gap-1 px-2.5 py-2 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition"
-                    title="Clear All Items"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Clear All</span>
-                  </button>
-                )}
+              <div className="grid grid-cols-1 gap-2 @md:grid-cols-12">
+                <TextInput aria-label="Label for the new row" value={newBatchLabel} onChange={(e) => setNewBatchLabel(e.target.value)} placeholder="Label" className="@md:col-span-4" />
+                <SelectInput aria-label="Barcode type for the new row" value={newBatchFormat} onChange={(e) => setNewBatchFormat(e.target.value as BarcodeFormat)} className="@md:col-span-3">
+                  {FORMATS.map((f) => (
+                    <option key={f.value} value={f.value}>
+                      {f.label}
+                    </option>
+                  ))}
+                </SelectInput>
+                <TextInput
+                  aria-label="Value for the new row"
+                  value={newBatchValue}
+                  onChange={(e) => setNewBatchValue(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddBatchItem()}
+                  placeholder="Value"
+                  className="font-mono @md:col-span-3"
+                />
+                <Button type="button" variant="outline" onClick={handleAddBatchItem} disabled={!newBatchValue.trim()} className="h-10 @md:col-span-2">
+                  <Plus aria-hidden="true" />
+                  Add
+                </Button>
               </div>
 
-              {/* Add Single Barcode Row */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-2.5">
-                <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                  Add Single Barcode / Item
+              <div className="overflow-hidden rounded-lg border">
+                <div className="flex items-center justify-between border-b bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                  <span>
+                    {batchItems.length} {batchItems.length === 1 ? "row" : "rows"}
+                  </span>
+                  {batchItems.length > 0 && (
+                    <button type="button" onClick={() => setBatchItems([])} className="hover:text-foreground">
+                      Clear all
+                    </button>
+                  )}
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-12 gap-2">
-                  <input
-                    type="text"
-                    value={newBatchLabel}
-                    onChange={(e) => setNewBatchLabel(e.target.value)}
-                    placeholder="Label / Product Title"
-                    className="sm:col-span-4 px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
-                  />
-                  <select
-                    value={newBatchFormat}
-                    onChange={(e) => setNewBatchFormat(e.target.value as BarcodeFormat)}
-                    className="sm:col-span-3 px-2 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
-                  >
-                    <option value="CODE128">Code 128</option>
-                    <option value="EAN13">EAN-13</option>
-                    <option value="UPC">UPC-A</option>
-                    <option value="EAN8">EAN-8</option>
-                    <option value="CODE39">Code 39</option>
-                    <option value="ITF14">ITF-14</option>
-                  </select>
-                  <input
-                    type="text"
-                    value={newBatchValue}
-                    onChange={(e) => setNewBatchValue(e.target.value)}
-                    placeholder="Barcode Value / SKU..."
-                    className="sm:col-span-3 px-3 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 font-mono"
-                    onKeyDown={(e) => e.key === "Enter" && handleAddBatchItem()}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleAddBatchItem}
-                    disabled={!newBatchValue.trim()}
-                    className="sm:col-span-2 px-3 py-1.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 transition"
-                  >
-                    Add
-                  </button>
-                </div>
-              </div>
-
-              {/* Items List Table */}
-              <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
-                <div className="flex items-center justify-between px-4 py-2.5 bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-300">
-                  <span>Loaded Barcodes ({batchItems.length})</span>
-                  <span className="text-[10px] text-slate-500 font-normal">Click row to preview barcode</span>
-                </div>
-
                 {batchItems.length === 0 ? (
-                  <div className="p-8 text-center text-xs text-slate-400">
-                    No barcodes loaded. Upload a CSV file or click "Download Sample CSV" to get started.
-                  </div>
+                  <p className="p-6 text-center text-sm text-muted-foreground">No rows yet. Upload a CSV or add one above.</p>
                 ) : (
-                  <div className="max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/80">
+                  <ul className="max-h-72 divide-y overflow-y-auto">
                     {batchItems.map((item, idx) => {
-                      const isSelected = batchSelectedIdx === idx;
+                      const selected = batchSelectedIdx === idx;
                       return (
-                        <div
-                          key={item.id}
-                          onClick={() => selectBatchItem(idx)}
-                          className={`flex items-center justify-between p-3 cursor-pointer transition text-xs ${
-                            isSelected
-                              ? "bg-blue-50/80 dark:bg-blue-950/40 border-l-4 border-blue-600 pl-2"
-                              : "hover:bg-slate-50 dark:hover:bg-slate-800/40"
-                          }`}
-                        >
-                          <div className="min-w-0 flex-1 pr-3">
-                            <div className="flex items-center gap-2">
-                              <span className="font-semibold text-slate-900 dark:text-white truncate">
-                                #{idx + 1} {item.label}
-                              </span>
-                              <span className="px-1.5 py-0.5 text-[9px] font-bold rounded-md uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                                {item.format}
-                              </span>
-                            </div>
-                            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5 font-mono">
-                              {item.value}
-                            </p>
-                          </div>
-
-                          <div className="flex items-center gap-1 shrink-0">
-                            <span
-                              className={`text-[10px] font-medium px-2 py-1 rounded-lg ${
-                                isSelected
-                                  ? "bg-blue-600 text-white"
-                                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-                              }`}
-                            >
-                              {isSelected ? "Previewing" : "Preview"}
+                        <li key={item.id} className={cn("flex items-center gap-2 pr-2", selected && "bg-brand-subtle/60")}>
+                          <button
+                            type="button"
+                            onClick={() => selectBatchItem(idx)}
+                            aria-pressed={selected}
+                            className="min-w-0 flex-1 px-3 py-2.5 text-left outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+                          >
+                            <span className="flex items-center gap-2">
+                              <span className="truncate text-sm font-medium text-foreground">{item.label}</span>
+                              <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{FORMAT_BY_VALUE[item.format]?.label ?? item.format}</span>
                             </span>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveBatchItem(item.id);
-                              }}
-                              className="p-1 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                              title="Delete row"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
+                            <span className="mt-0.5 block truncate font-mono text-xs text-muted-foreground">{item.value}</span>
+                          </button>
+                          <Button type="button" variant="ghost" size="icon-sm" onClick={() => handleRemoveBatchItem(item.id)} aria-label={`Remove ${item.label}`}>
+                            <X aria-hidden="true" />
+                          </Button>
+                        </li>
                       );
                     })}
-                  </div>
+                  </ul>
                 )}
               </div>
-            </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" onClick={downloadAllBatchZip} disabled={batchItems.length === 0 || batchIsExporting}>
+                  <Archive aria-hidden="true" />
+                  {batchIsExporting ? "Creating ZIP…" : "Download all as PNG (ZIP)"}
+                </Button>
+                <Button type="button" variant="outline" onClick={downloadAllBatchCsv} disabled={batchItems.length === 0}>
+                  <FileSpreadsheet aria-hidden="true" />
+                  Download list (CSV)
+                </Button>
+              </div>
+            </ToolSection>
           )}
 
-          {/* Section 2: Bar Dimensions & Quiet Zone */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-            <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-              <Sliders className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-              <span>Dimensions & Layout</span>
+          <ToolDivider />
+
+          <ToolSection title="Size">
+            <div className="grid grid-cols-1 gap-5 @sm:grid-cols-3">
+              <Field label={`Bar width · ${barWidth} px`} htmlFor="bc-width" hint="Wider bars scan from further away.">
+                <input id="bc-width" type="range" min="1" max="4" step="1" value={barWidth} onChange={(e) => setBarWidth(Number(e.target.value))} className="w-full cursor-pointer accent-primary" />
+              </Field>
+              <Field label={`Height · ${barHeight} px`} htmlFor="bc-height">
+                <input id="bc-height" type="range" min="30" max="160" step="5" value={barHeight} onChange={(e) => setBarHeight(Number(e.target.value))} className="w-full cursor-pointer accent-primary" />
+              </Field>
+              <Field label={`Quiet zone · ${margin} px`} htmlFor="bc-margin" hint="Blank space scanners need at each side.">
+                <input id="bc-margin" type="range" min="0" max="30" step="2" value={margin} onChange={(e) => setMargin(Number(e.target.value))} className="w-full cursor-pointer accent-primary" />
+              </Field>
             </div>
+          </ToolSection>
 
-            <div className="grid grid-cols-1 @sm:grid-cols-3 gap-4">
-              <div>
-                <div className="flex items-center justify-between text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  <span>Bar Width:</span>
-                  <span className="font-mono font-bold">{barWidth}px</span>
-                </div>
-                <input
-                  type="range"
-                  min="1"
-                  max="4"
-                  step="1"
-                  value={barWidth}
-                  onChange={(e) => setBarWidth(Number(e.target.value))}
-                  className="w-full cursor-pointer accent-blue-600"
-                />
-              </div>
+          <ToolDivider />
 
-              <div>
-                <div className="flex items-center justify-between text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  <span>Bar Height:</span>
-                  <span className="font-mono font-bold">{barHeight}px</span>
-                </div>
-                <input
-                  type="range"
-                  min="30"
-                  max="160"
-                  step="5"
-                  value={barHeight}
-                  onChange={(e) => setBarHeight(Number(e.target.value))}
-                  className="w-full cursor-pointer accent-blue-600"
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center justify-between text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
-                  <span>Margin / Quiet Zone:</span>
-                  <span className="font-mono font-bold">{margin}px</span>
-                </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="30"
-                  step="2"
-                  value={margin}
-                  onChange={(e) => setMargin(Number(e.target.value))}
-                  className="w-full cursor-pointer accent-blue-600"
-                />
-              </div>
-            </div>
-
-            {/* Label / Human-readable Text Controls */}
-            <div className="pt-3 border-t border-slate-100 dark:border-slate-800 space-y-3">
-              <div className="flex items-center justify-between">
-                <label className="flex items-center space-x-2 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={displayValue}
-                    onChange={(e) => setDisplayValue(e.target.checked)}
-                    className="rounded text-blue-600 focus:ring-blue-500 w-4 h-4"
+          <ToolSection title="Text">
+            <ToggleRow id="bc-show-text" label="Show the value as text" description="The human-readable number printed with the bars." checked={displayValue} onCheckedChange={setDisplayValue} />
+            {displayValue && (
+              <div className="grid grid-cols-1 gap-4 @sm:grid-cols-3">
+                <Field label="Font" htmlFor="bc-font">
+                  <SelectInput id="bc-font" value={font} onChange={(e) => setFont(e.target.value)}>
+                    <option value="monospace">Monospace</option>
+                    <option value="sans-serif">Sans-serif</option>
+                    <option value="serif">Serif</option>
+                  </SelectInput>
+                </Field>
+                <Field label={`Size · ${fontSize} px`} htmlFor="bc-font-size">
+                  <input id="bc-font-size" type="range" min="10" max="24" value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))} className="mt-3 w-full cursor-pointer accent-primary" />
+                </Field>
+                <Field label="Position">
+                  <Segmented
+                    value={textPosition}
+                    onChange={setTextPosition}
+                    ariaLabel="Text position"
+                    fill
+                    options={[
+                      { value: "bottom", label: "Below" },
+                      { value: "top", label: "Above" },
+                    ]}
                   />
-                  <span>Show Human-Readable Text Underneath</span>
-                </label>
+                </Field>
               </div>
+            )}
+          </ToolSection>
 
-              {displayValue && (
-                <div className="grid grid-cols-1 @sm:grid-cols-3 gap-3 pt-1">
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                      Font Family
-                    </label>
-                    <select
-                      value={font}
-                      onChange={(e) => setFont(e.target.value)}
-                      className="w-full px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs"
-                    >
-                      <option value="monospace">Monospace</option>
-                      <option value="sans-serif">Sans-serif</option>
-                      <option value="serif">Serif</option>
-                    </select>
-                  </div>
+          <ToolDivider />
 
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                      Font Size ({fontSize}px)
-                    </label>
-                    <input
-                      type="range"
-                      min="10"
-                      max="24"
-                      value={fontSize}
-                      onChange={(e) => setFontSize(Number(e.target.value))}
-                      className="w-full accent-blue-600"
-                    />
-                  </div>
+          <ToolSection
+            title="Colours"
+            actions={
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                disabled={transparentBg}
+                onClick={() => {
+                  setFgColor(bgColor);
+                  setBgColor(fgColor);
+                }}
+              >
+                <ArrowRightLeft aria-hidden="true" />
+                Swap
+              </Button>
+            }
+          >
+            <div className="grid grid-cols-1 gap-4 @sm:grid-cols-2">
+              <Field label="Bars and text" htmlFor="bc-fg-hex">
+                <div className="flex items-center gap-2">
+                  <input type="color" aria-label="Pick bar colour" value={fgColor} onChange={(e) => setFgColor(e.target.value)} className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border bg-background p-1" />
+                  <TextInput id="bc-fg-hex" value={fgColor} onChange={(e) => setFgColor(e.target.value)} className="font-mono" spellCheck={false} />
+                </div>
+              </Field>
+              <Field label="Background" htmlFor="bc-bg-hex">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    aria-label="Pick background colour"
+                    value={bgColor}
+                    disabled={transparentBg}
+                    onChange={(e) => setBgColor(e.target.value)}
+                    className="h-10 w-12 shrink-0 cursor-pointer rounded-lg border bg-background p-1 disabled:cursor-not-allowed disabled:opacity-40"
+                  />
+                  <TextInput id="bc-bg-hex" value={transparentBg ? "Transparent" : bgColor} disabled={transparentBg} onChange={(e) => setBgColor(e.target.value)} className="font-mono" spellCheck={false} />
+                </div>
+              </Field>
+            </div>
+            <ToggleRow id="bc-transparent" label="Transparent background" description="For placing the barcode on your own label design." checked={transparentBg} onCheckedChange={setTransparentBg} />
+            {(lowContrast || inverted) && (
+              <Notice tone="warning">Most scanners need dark bars on a light background with strong contrast. These colours may not scan.</Notice>
+            )}
+          </ToolSection>
+        </div>
 
-                  <div>
-                    <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                      Text Position
-                    </label>
-                    <div className="flex items-center gap-1">
-                      <button
-                        onClick={() => setTextPosition("bottom")}
-                        className={`flex-1 py-1 rounded-lg text-xs font-semibold border transition ${
-                          textPosition === "bottom"
-                            ? "bg-blue-600 text-white border-blue-600"
-                            : "bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800"
-                        }`}
-                      >
-                        Bottom
-                      </button>
-                      <button
-                        onClick={() => setTextPosition("top")}
-                        className={`flex-1 py-1 rounded-lg text-xs font-semibold border transition ${
-                          textPosition === "top"
-                            ? "bg-blue-600 text-white border-blue-600"
-                            : "bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800"
-                        }`}
-                      >
-                        Top
-                      </button>
-                    </div>
-                  </div>
+        {/* Preview & download */}
+        <div className="space-y-4 @4xl:sticky @4xl:top-24 @4xl:col-span-5">
+          <div className="space-y-5 rounded-xl border bg-muted/30 p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-foreground">Preview</span>
+              <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">{info.label}</span>
+            </div>
+            <div className="flex min-h-48 items-center justify-center">
+              {rendered.svg ? (
+                <div
+                  className={cn(
+                    "flex w-full items-center justify-center overflow-hidden rounded-lg border p-4",
+                    transparentBg &&
+                      "bg-[length:16px_16px] bg-[position:0_0,0_8px,8px_-8px,-8px_0] bg-[linear-gradient(45deg,#cbd5e1_25%,transparent_25%),linear-gradient(-45deg,#cbd5e1_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#cbd5e1_75%),linear-gradient(-45deg,transparent_75%,#cbd5e1_75%)]"
+                  )}
+                  style={{ backgroundColor: transparentBg ? undefined : bgColor }}
+                >
+                  <div
+                    role="img"
+                    aria-label={`${info.label} barcode for ${val}`}
+                    className="max-w-full [&>svg]:h-auto [&>svg]:max-w-full"
+                    dangerouslySetInnerHTML={{ __html: rendered.svg }}
+                  />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-center">
+                  <Barcode className="size-10 text-muted-foreground/50" aria-hidden="true" />
+                  <p className="max-w-60 text-sm text-muted-foreground">
+                    {rendered.error === "invalid" ? "Fix the value to see the barcode." : "Enter a value to see the barcode."}
+                  </p>
                 </div>
               )}
             </div>
-          </div>
 
-          {/* Section 3: Color Customization */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-                <Palette className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-                <span>Colors & Palette</span>
-              </div>
-              <button
-                onClick={() => {
-                  const temp = fgColor;
-                  setFgColor(bgColor);
-                  setBgColor(temp);
-                }}
-                className="text-[11px] font-semibold text-slate-500 hover:text-blue-600 flex items-center space-x-1"
-              >
-                <ArrowRightLeft className="w-3 h-3" />
-                <span>Invert</span>
-              </button>
-            </div>
+            <Field label="PNG size">
+              <Segmented
+                value={String(exportScale)}
+                onChange={(v) => setExportScale(Number(v))}
+                ariaLabel="PNG size"
+                size="sm"
+                fill
+                options={[
+                  { value: "1", label: "1× screen" },
+                  { value: "2", label: "2× print" },
+                  { value: "4", label: "4× large" },
+                ]}
+              />
+            </Field>
 
-            <div className="grid grid-cols-1 @sm:grid-cols-3 gap-3">
-              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  Bars & Text Color
-                </label>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="color"
-                    value={fgColor}
-                    onChange={(e) => setFgColor(e.target.value)}
-                    className="w-7 h-7 rounded-lg cursor-pointer border-0 bg-transparent shrink-0"
-                  />
-                  <input
-                    type="text"
-                    value={fgColor}
-                    onChange={(e) => setFgColor(e.target.value)}
-                    className="w-full font-mono text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-1 rounded-lg"
-                  />
-                </div>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  Background Color
-                </label>
-                <div className="flex items-center space-x-2">
-                  <input
-                    type="color"
-                    disabled={transparentBg}
-                    value={bgColor}
-                    onChange={(e) => setBgColor(e.target.value)}
-                    className="w-7 h-7 rounded-lg cursor-pointer border-0 bg-transparent shrink-0 disabled:opacity-40"
-                  />
-                  <input
-                    type="text"
-                    disabled={transparentBg}
-                    value={transparentBg ? "Transparent" : bgColor}
-                    onChange={(e) => setBgColor(e.target.value)}
-                    className="w-full font-mono text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-1 rounded-lg disabled:opacity-40"
-                  />
-                </div>
-              </div>
-
-              <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-col justify-center">
-                <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
-                  Transparent BG
-                </label>
-                <button
-                  onClick={() => setTransparentBg(!transparentBg)}
-                  className={`w-full py-1.5 px-3 rounded-xl text-xs font-semibold border transition ${
-                    transparentBg
-                      ? "bg-blue-600 text-white border-blue-600"
-                      : "bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800"
-                  }`}
-                >
-                  {transparentBg ? "Alpha (ON)" : "Solid Fill"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column: Live Barcode Preview & High-Res Export */}
-        <div className="@container @4xl:col-span-5 space-y-5 @4xl:sticky @4xl:top-24">
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md flex flex-col items-center justify-center space-y-6">
-            <div className="w-full flex items-center justify-between">
-              <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5">
-                <Barcode className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span>Live Barcode Card</span>
-              </div>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
-                {format}
-              </span>
-            </div>
-
-            {/* Error Message if barcode is invalid */}
-            {renderError ? (
-              <div className="w-full p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-start space-x-2.5">
-                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                <div>{renderError}</div>
-              </div>
-            ) : (
-              /* Visual Barcode Display Box */
-              <div
-                className={`w-full p-6 rounded-3xl border border-slate-200 dark:border-slate-800 flex items-center justify-center shadow-xs overflow-hidden ${
-                  transparentBg
-                    ? "bg-[length:16px_16px] bg-[position:0_0,0_8px,8px_-8px,-8px_0] bg-[linear-gradient(45deg,#cbd5e1_25%,transparent_25%),linear-gradient(-45deg,#cbd5e1_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#cbd5e1_75%),linear-gradient(-45deg,transparent_75%,#cbd5e1_75%)]"
-                    : ""
-                }`}
-                style={{ backgroundColor: transparentBg ? undefined : bgColor }}
-              >
-                <svg ref={svgRef} className="max-w-full h-auto" />
-              </div>
-            )}
-
-            {/* Scale Selector */}
-            <div className="w-full flex items-center justify-between text-xs px-1">
-              <span className="font-semibold text-slate-600 dark:text-slate-400">
-                Export Scaling:
-              </span>
-              <div className="flex items-center space-x-1">
-                {[1, 2, 4].map((scale) => (
-                  <button
-                    key={scale}
-                    onClick={() => setExportScale(scale)}
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-semibold transition ${
-                      exportScale === scale
-                        ? "bg-blue-600 text-white"
-                        : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-blue-600"
-                    }`}
-                  >
-                    {scale}x {scale === 2 ? "(Print)" : scale === 4 ? "(Ultra)" : ""}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Export Buttons */}
-            <div className="w-full space-y-2.5">
-              <button
-                disabled={!!renderError}
-                onClick={handleDownloadPng}
-                className="w-full flex items-center justify-center space-x-2 px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-semibold shadow-md hover:shadow-blue-500/20 transition-all cursor-pointer"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download High-Res PNG ({exportScale}x Scale)</span>
-              </button>
-
+            <div className="space-y-2">
+              <Button type="button" size="lg" className="h-10 w-full" onClick={handleDownloadPng} disabled={!canExport}>
+                <Download aria-hidden="true" />
+                Download PNG
+              </Button>
               <div className="grid grid-cols-2 gap-2">
-                <button
-                  disabled={!!renderError}
-                  onClick={handleDownloadSvg}
-                  className="flex items-center justify-center space-x-1.5 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 text-xs font-semibold transition"
-                >
-                  <Download className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                  <span>Download SVG</span>
-                </button>
-
-                <button
-                  disabled={!!renderError}
-                  onClick={handleCopyPng}
-                  className="flex items-center justify-center space-x-1.5 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 text-slate-700 dark:text-slate-200 text-xs font-semibold transition"
-                >
-                  {copiedPng ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedPng ? "Copied PNG!" : "Copy PNG"}</span>
-                </button>
+                <Button type="button" variant="outline" onClick={handleDownloadSvg} disabled={!canExport}>
+                  <Download aria-hidden="true" />
+                  SVG
+                </Button>
+                <Button type="button" variant="outline" onClick={handleCopyPng} disabled={!canExport}>
+                  {copiedPng ? <Check aria-hidden="true" className="text-success" /> : <Copy aria-hidden="true" />}
+                  {copiedPng ? "Copied" : "Copy image"}
+                </Button>
               </div>
-
               <div className="grid grid-cols-2 gap-2">
-                <button
-                  disabled={!!renderError}
-                  onClick={handlePrint}
-                  className="flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 disabled:opacity-40 text-slate-700 dark:text-slate-300 text-xs font-medium transition"
-                >
-                  <Printer className="w-3.5 h-3.5 text-slate-500" />
-                  <span>Print Label</span>
-                </button>
-
-                <button
-                  disabled={!!renderError}
-                  onClick={handleCopySvg}
-                  className="flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 disabled:opacity-40 text-slate-700 dark:text-slate-300 text-xs font-medium transition"
-                >
-                  {copiedSvg ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{copiedSvg ? "SVG Copied!" : "Copy SVG"}</span>
-                </button>
+                <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={handlePrint} disabled={!canExport}>
+                  <Printer aria-hidden="true" />
+                  Print
+                </Button>
+                <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={handleCopySvg} disabled={!canExport}>
+                  {copiedSvg ? <Check aria-hidden="true" className="text-success" /> : <Copy aria-hidden="true" />}
+                  {copiedSvg ? "SVG code copied" : "Copy SVG code"}
+                </Button>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* History of generated barcodes */}
       {history && history.length > 0 && (
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-xs">
+        <section aria-labelledby="bc-recent" className="space-y-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                Recent Generated Barcodes ({history.length}/6)
-              </span>
-              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
-                Saved in your browser
-              </span>
-            </div>
-            <button
-              onClick={() => setHistory([])}
-              className="text-[11px] font-semibold text-rose-500 hover:text-rose-700 transition flex items-center space-x-1"
-            >
-              <Trash2 className="w-3 h-3" />
-              <span>Clear History</span>
-            </button>
+            <h3 id="bc-recent" className="text-sm font-semibold text-foreground">
+              Recent barcodes
+            </h3>
+            <Button type="button" variant="ghost" size="sm" onClick={() => setHistory([])} className="text-muted-foreground">
+              <Trash2 aria-hidden="true" />
+              Clear
+            </Button>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <ul className="grid grid-cols-1 gap-2 @md:grid-cols-2 @3xl:grid-cols-3">
             {history.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => {
-                  setVal(item.val);
-                  setFormat(item.format);
-                  setFgColor(item.fg);
-                  setBgColor(item.bg);
-                  window.scrollTo({ top: 120, behavior: "smooth" });
-                }}
-                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 hover:border-blue-500/50 cursor-pointer transition flex items-center justify-between group"
-              >
-                <div>
-                  <div className="text-[10px] font-mono text-slate-400 mb-0.5">
-                    {item.format} •{" "}
-                    {new Date(item.timestamp).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </div>
-                  <div className="text-xs font-mono font-bold text-slate-900 dark:text-white group-hover:text-blue-600 transition truncate max-w-[200px]">
-                    {item.val}
-                  </div>
-                </div>
-                <div className="p-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 group-hover:text-blue-600 transition">
-                  <RefreshCw className="w-3.5 h-3.5" />
-                </div>
-              </div>
+              <li key={item.id}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode("single");
+                    setVal(item.val);
+                    setFormat(item.format);
+                    setFgColor(item.fg);
+                    setBgColor(item.bg);
+                  }}
+                  className="flex w-full items-center justify-between gap-3 rounded-lg border bg-background px-3 py-2.5 text-left transition-colors outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/20"
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate font-mono text-sm text-foreground">{item.val}</span>
+                    <span className="block text-xs text-muted-foreground">
+                      {FORMAT_BY_VALUE[item.format]?.label ?? item.format} · {new Date(item.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </span>
+                  </span>
+                  <RefreshCw className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                </button>
+              </li>
             ))}
-          </div>
-        </div>
+          </ul>
+        </section>
       )}
     </div>
   );

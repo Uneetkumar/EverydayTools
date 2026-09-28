@@ -18,7 +18,8 @@ import {
   Info,
   Sliders,
 } from "lucide-react";
-import confetti from "canvas-confetti";
+import { markToolCompleted } from "@/lib/analytics";
+import { copyText } from "@/lib/utils/clipboard";
 
 type UnitCategory =
   | "length"
@@ -290,9 +291,9 @@ export default function UnitConverter() {
 
   // Copy result
   const handleCopy = () => {
-    navigator.clipboard.writeText(String(convertedResult));
+    copyText(String(convertedResult));
     setCopied(true);
-    confetti({ particleCount: 25, spread: 50, origin: { y: 0.85 } });
+    markToolCompleted();
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -302,7 +303,7 @@ export default function UnitConverter() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       {/* Category Pills Header */}
-      <div className="p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-wrap gap-1">
+      <div className="p-1.5 border flex flex-wrap gap-1 rounded-lg bg-muted/60">
         {CATEGORIES.map((cat) => {
           const Icon = cat.icon;
           const isActive = activeCategory === cat.id;
@@ -312,7 +313,7 @@ export default function UnitConverter() {
               onClick={() => handleSelectCategory(cat.id)}
               className={`flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition ${
                 isActive
-                  ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                  ? "bg-background text-foreground shadow-xs dark:bg-input/50"
                   : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               }`}
             >
@@ -324,25 +325,25 @@ export default function UnitConverter() {
       </div>
 
       {/* Main Interactive Converter Box */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-6">
+      <div className="p-6 sm:p-8 rounded-xl border space-y-6 bg-muted/30">
         <div className="grid grid-cols-1 md:grid-cols-11 gap-4 items-center">
           {/* FROM Input & Unit */}
           <div className="md:col-span-5 space-y-2">
-            <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+            <label className="block text-sm text-slate-700 dark:text-slate-300 font-semibold">
               From ({fromUnit.name})
             </label>
-            <div className="flex rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
-              <input
+            <div className="flex rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
+              <input aria-label="Value to convert"
                 type="number"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 placeholder="Enter value..."
-                className="w-full px-4 py-3 bg-transparent text-lg font-bold text-slate-900 dark:text-white focus:outline-none"
+                className="w-full px-4 py-3 bg-transparent text-lg rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               />
-              <select
+              <select aria-label="From unit"
                 value={fromUnitId}
                 onChange={(e) => setFromUnitId(e.target.value)}
-                className="px-3 bg-slate-200/60 dark:bg-slate-800/80 text-xs font-bold text-slate-800 dark:text-slate-200 border-l border-slate-200 dark:border-slate-700 focus:outline-none"
+                className="px-3 border-l text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 {category.units.map((u) => (
                   <option key={u.id} value={u.id}>
@@ -355,39 +356,39 @@ export default function UnitConverter() {
 
           {/* SWAP Button */}
           <div className="md:col-span-1 flex justify-center pt-5 md:pt-0">
-            <button
+            <button aria-label="Swap From and To units"
               type="button"
               onClick={handleSwap}
-              className="p-3 rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-slate-600 dark:text-slate-300 shadow-xs hover:scale-105 active:scale-95 transition"
+              className="p-3 rounded-xl border text-slate-600 dark:text-slate-300 hover:scale-105 active:scale-95 transition bg-muted/30"
               title="Swap From and To units"
             >
-              <ArrowRightLeft className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <ArrowRightLeft className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
 
           {/* TO Converted Output & Unit */}
           <div className="md:col-span-5 space-y-2">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              <label className="block text-sm text-slate-700 dark:text-slate-300 font-semibold">
                 To ({toUnit.name})
               </label>
               <button
                 type="button"
                 onClick={handleCopy}
-                className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
               >
                 {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
                 <span>{copied ? "Copied!" : "Copy Result"}</span>
               </button>
             </div>
-            <div className="flex rounded-2xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/40 dark:bg-blue-950/20 overflow-hidden">
-              <div className="w-full px-4 py-3 text-lg font-bold text-blue-700 dark:text-blue-300 truncate">
+            <div className="flex rounded-xl border border-blue-200 dark:border-blue-900/60 bg-blue-50/40 dark:bg-blue-950/20 overflow-hidden">
+              <div className="w-full px-4 py-3 text-lg font-semibold truncate text-foreground">
                 {formatResultNumber(convertedResult)}
               </div>
-              <select
+              <select aria-label="To unit"
                 value={toUnitId}
                 onChange={(e) => setToUnitId(e.target.value)}
-                className="px-3 bg-blue-100/60 dark:bg-blue-900/40 text-xs font-bold text-blue-900 dark:text-blue-200 border-l border-blue-200 dark:border-blue-800 focus:outline-none"
+                className="px-3 bg-blue-100/60 dark:bg-blue-900/40 text-blue-900 dark:text-blue-200 border-l border-blue-200 dark:border-blue-800 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 {category.units.map((u) => (
                   <option key={u.id} value={u.id}>
@@ -400,22 +401,19 @@ export default function UnitConverter() {
         </div>
 
         {/* Quick Calculation Summary Banner */}
-        <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div className="p-4 rounded-xl border flex flex-wrap items-center justify-between gap-3 text-xs bg-muted/30">
           <div className="flex items-center gap-2">
-            <span className="font-semibold text-slate-500">Formula Ratio:</span>
-            <span className="font-mono font-bold text-slate-900 dark:text-white">
+            <span className="font-semibold text-slate-500">Formula ratio</span>
+            <span className="font-mono font-semibold text-slate-900 dark:text-white">
               1 {fromUnit.symbol} = {formatResultNumber(convertUnits(1, fromUnitId, toUnitId, activeCategory))} {toUnit.symbol}
             </span>
-          </div>
-          <div className="text-slate-400">
-            Instant 100% private browser calculation
           </div>
         </div>
 
         {/* Presets Row */}
         {category.presets.length > 0 && (
           <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               Popular Presets
             </span>
             <div className="flex flex-wrap gap-2">
@@ -428,7 +426,7 @@ export default function UnitConverter() {
                     setFromUnitId(preset.from);
                     setToUnitId(preset.to);
                   }}
-                  className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-white dark:hover:bg-slate-850 text-xs font-medium text-slate-700 dark:text-slate-300 transition"
+                  className="px-3 py-1.5 rounded-xl border text-xs font-medium text-slate-700 dark:text-slate-300 transition bg-muted/30"
                 >
                   {preset.label}
                 </button>
@@ -439,15 +437,15 @@ export default function UnitConverter() {
       </div>
 
       {/* Multi-Unit Live Comparison Grid */}
-      <div className="p-6 sm:p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+      <div className="p-6 sm:p-8 rounded-xl border space-y-4 bg-muted/30">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+            <Sparkles className="w-4 h-4 text-muted-foreground" />
+            <h2 className="text-sm text-slate-900 dark:text-white font-semibold">
               Complete {category.name} Comparison
             </h2>
           </div>
-          <span className="text-xs text-slate-400">
+          <span className="text-xs text-slate-500 dark:text-slate-400">
             {inputValue || 0} {fromUnit.symbol} equals:
           </span>
         </div>
@@ -460,7 +458,7 @@ export default function UnitConverter() {
               <div
                 key={unit.id}
                 onClick={() => setToUnitId(unit.id)}
-                className={`p-3.5 rounded-2xl border cursor-pointer transition ${
+                className={`p-3.5 rounded-xl border cursor-pointer transition ${
                   unit.id === toUnitId
                     ? "bg-blue-50 dark:bg-blue-950/40 border-blue-500 shadow-xs"
                     : isSelf
@@ -470,11 +468,11 @@ export default function UnitConverter() {
               >
                 <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-1">
                   <span className="font-semibold">{unit.name}</span>
-                  <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                  <span className="font-mono text-xs font-semibold px-1.5 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
                     {unit.symbol}
                   </span>
                 </div>
-                <div className="text-base font-bold text-slate-900 dark:text-white font-mono truncate">
+                <div className="text-base font-semibold text-slate-900 dark:text-white font-mono truncate">
                   {formatResultNumber(res)}
                 </div>
               </div>

@@ -2,8 +2,11 @@
 
 import React, { useState } from "react";
 import { Trash2, Check } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { clearResults } from "@/lib/history/results";
 import { clearRecent } from "@/lib/history/recent";
+import { favoritesStore } from "@/lib/history/favorites";
+import { searchesStore } from "@/lib/history/searches";
 
 /**
  * One control that removes everything this site has written to the device.
@@ -21,15 +24,26 @@ export default function ClearLocalData() {
     try {
       await clearResults();
       clearRecent();
-      // Tool preferences and per-tool histories all use the same prefix.
+      // Every key this site writes uses one of these prefixes:
+      //   et_           notes, exchange-rate cache, recently used tools
+      //   edt_persist_  saved tool inputs (usePersistentState, 3-day TTL)
+      //   qr_           QR generator preferences
+      //   tb_           favorites and recent searches
+      //   tabbench_     install-banner dismissal
+      // edt_persist_ was previously missed, so the button left every saved
+      // tool input behind while saying it had cleared everything.
       try {
-        const keys = Object.keys(localStorage).filter(
-          (k) => k.startsWith("et_") || k.startsWith("qr_")
+        const prefixes = ["et_", "edt_", "qr_", "tb_", "tabbench_"];
+        const keys = Object.keys(localStorage).filter((k) =>
+          prefixes.some((p) => k.startsWith(p))
         );
         keys.forEach((k) => localStorage.removeItem(k));
       } catch {
         /* storage may be unavailable */
       }
+      // Stores keep an in-memory snapshot; tell them the data is gone.
+      favoritesStore.clear();
+      searchesStore.clear();
       setDone(true);
       setTimeout(() => setDone(false), 4000);
     } finally {
@@ -38,19 +52,18 @@ export default function ClearLocalData() {
   };
 
   return (
-    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3 not-prose">
-      <p className="text-sm text-slate-600 dark:text-slate-400">
-        This removes every saved file, your recently-used list, and all tool
-        preferences from this browser immediately.
+    <div className="rounded-xl border bg-card p-5 shadow-soft">
+      <p className="text-sm text-muted-foreground">
+        This removes every saved file, your recently used tools, favorites, recent searches, notes and all saved
+        tool inputs from this browser immediately. It cannot be undone.
       </p>
-      <button
-        onClick={clearEverything}
-        disabled={working}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-xs font-semibold transition"
-      >
-        {done ? <Check className="w-4 h-4" /> : <Trash2 className="w-4 h-4" />}
-        <span>{done ? "Everything cleared" : "Clear all local data"}</span>
-      </button>
+      <Button type="button" variant="destructive" onClick={clearEverything} disabled={working} className="mt-3">
+        {done ? <Check aria-hidden="true" /> : <Trash2 aria-hidden="true" />}
+        {done ? "Everything cleared" : "Clear all local data"}
+      </Button>
+      <p role="status" className="sr-only">
+        {done ? "All local data cleared" : ""}
+      </p>
     </div>
   );
 }

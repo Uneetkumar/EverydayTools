@@ -1,241 +1,191 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import ResultCard from "@/components/ResultCard";
+import ToolInput from "@/components/ui/ToolInput";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { formatNumber } from "@/lib/utils";
 import { usePersistentState } from "@/lib/hooks/usePersistentState";
-import { Calculator, Wallet, TrendingDown, Percent, ShieldCheck, DollarSign } from "lucide-react";
+import { salaryBreakdown, type TaxRegime } from "@/lib/finance/india-salary";
+import { Info } from "lucide-react";
+
+// Indian digit grouping: ₹1,20,000 rather than ₹120,000.
+const inr = (v: number) => `₹${Math.round(v).toLocaleString("en-IN")}`;
 
 export default function SalaryCalculator() {
   const [ctc, setCtc] = usePersistentState<string>("sal_ctc", "1200000");
   const [bonusPercentage, setBonusPercentage] = usePersistentState<string>("sal_bonus", "10");
-  const [optPf, setOptPf] = usePersistentState<boolean>("sal_pf", true);
-  const [taxRegime, setTaxRegime] = usePersistentState<"new" | "old">("sal_regime", "new");
-  const [currencySymbol, setCurrencySymbol] = useState<string>("₹");
+  // Older saved state stored PF as a boolean; both shapes are accepted.
+  const [pfSetting, setPfSetting] = usePersistentState<boolean | "full" | "capped" | "none">("sal_pf", "full");
+  const [taxRegime, setTaxRegime] = usePersistentState<TaxRegime>("sal_regime", "new");
+  const [pt, setPt] = usePersistentState<string>("sal_pt", "2400");
 
-  const grossAnnual = Math.max(0, parseFloat(ctc) || 0);
-  const bonusPct = Math.max(0, parseFloat(bonusPercentage) || 0) / 100;
+  const pf = pfSetting === true ? "full" : pfSetting === false ? "none" : pfSetting;
 
-  // Variable / Bonus component
-  const annualBonus = grossAnnual * bonusPct;
-  const fixedAnnualCTC = Math.max(0, grossAnnual - annualBonus);
+  const ctcNum = parseFloat(ctc);
+  const bonusNum = parseFloat(bonusPercentage);
+  const ptNum = parseFloat(pt);
+  const ctcError = ctc.trim() !== "" && (!Number.isFinite(ctcNum) || ctcNum < 0) ? "Enter your annual CTC in rupees." : undefined;
+  const bonusError =
+    bonusPercentage.trim() !== "" && (!Number.isFinite(bonusNum) || bonusNum < 0 || bonusNum > 100)
+      ? "Enter a percentage between 0 and 100."
+      : undefined;
 
-  // Standard salary breakdown (Indian / Global generic model)
-  // Basic is typically 50% of Fixed CTC
-  const basicSalary = fixedAnnualCTC * 0.5;
-  const hra = basicSalary * 0.4;
-  const specialAllowance = Math.max(0, fixedAnnualCTC - (basicSalary + hra));
+  const hasInput = ctc.trim() !== "" && !ctcError && ctcNum > 0;
+  const b = salaryBreakdown({
+    ctc: hasInput ? ctcNum : 0,
+    variablePct: bonusError ? 0 : bonusNum || 0,
+    regime: taxRegime,
+    pf,
+    professionalTax: Number.isFinite(ptNum) ? ptNum : 0,
+  });
 
-  // Employee PF (12% of basic, capped or full)
-  const employeePf = optPf ? basicSalary * 0.12 : 0;
-  const employerPf = optPf ? basicSalary * 0.12 : 0;
-
-  // Standard Deduction (Indian tax law standard: ₹75,000 for new regime)
-  const standardDeduction = Math.min(75000, fixedAnnualCTC);
-  const taxableIncome = Math.max(0, fixedAnnualCTC - standardDeduction - (taxRegime === "old" ? employeePf : 0));
-
-  // Simplified Tax Slab (New Tax Regime FY 2025-26 / 2026)
-  // Up to 3L: 0% | 3L-7L: 5% | 7L-10L: 10% | 10L-12L: 15% | 12L-15L: 20% | Above 15L: 30%
-  // Section 87A rebate for taxable income <= 7L (0 tax)
-  let estimatedAnnualTax = 0;
-  if (taxableIncome > 700000) {
-    let rem = taxableIncome;
-    if (rem > 1500000) {
-      estimatedAnnualTax += (rem - 1500000) * 0.3;
-      rem = 1500000;
-    }
-    if (rem > 1200000) {
-      estimatedAnnualTax += (rem - 1200000) * 0.2;
-      rem = 1200000;
-    }
-    if (rem > 1000000) {
-      estimatedAnnualTax += (rem - 1000000) * 0.15;
-      rem = 1000000;
-    }
-    if (rem > 700000) {
-      estimatedAnnualTax += (rem - 700000) * 0.1;
-      rem = 700000;
-    }
-    if (rem > 300000) {
-      estimatedAnnualTax += (rem - 300000) * 0.05;
-      rem = 300000;
-    }
-    // 4% health & education cess
-    estimatedAnnualTax *= 1.04;
-  }
-
-  // Professional Tax (approx 2400/year)
-  const professionalTax = 2400;
-
-  // Total Annual Deductions
-  const totalAnnualDeductions = employeePf + estimatedAnnualTax + professionalTax;
-  const netInHandAnnual = Math.max(0, fixedAnnualCTC - totalAnnualDeductions);
-  const monthlyInHand = netInHandAnnual / 12;
+  const rows: { label: string; value: number; minus?: boolean; strong?: boolean }[] = [
+    { label: "Basic salary (50% of fixed pay)", value: b.basic },
+    { label: "House rent allowance (40% of basic)", value: b.hra },
+    { label: "Special allowance", value: b.special },
+    { label: "Fixed gross salary", value: b.fixedGross, strong: true },
+    { label: "Variable pay / bonus", value: b.variable },
+    { label: "Employee PF", value: b.employeePf, minus: true },
+    { label: "Professional tax", value: b.professionalTax, minus: true },
+    { label: `Income tax incl. cess (${taxRegime} regime)`, value: b.tax, minus: true },
+    { label: "Annual take-home", value: b.annualTakeHome, strong: true },
+  ];
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Input Settings */}
-        <div className="lg:col-span-6 space-y-4 p-5 sm:p-6 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Calculator className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              Annual Compensation (CTC)
-            </h2>
-            <div className="flex items-center gap-1 bg-slate-200/80 dark:bg-slate-800 p-0.5 rounded-lg text-xs font-semibold">
-              {["₹", "$", "€", "£"].map((sym) => (
-                <button
-                  key={sym}
-                  onClick={() => setCurrencySymbol(sym)}
-                  className={`px-2 py-0.5 rounded-md transition-all ${
-                    currencySymbol === sym
-                      ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  {sym}
-                </button>
+    <div className="grid grid-cols-1 items-start gap-6 @3xl:grid-cols-2">
+      <div className="space-y-5">
+        <ToolInput
+          label="Annual CTC"
+          id="sal-ctc-input"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          step={10000}
+          value={ctc}
+          prefixText="₹"
+          showClear
+          onClear={() => setCtc("")}
+          onChange={(e) => setCtc(e.target.value)}
+          placeholder="e.g. 1200000"
+          helperText={hasInput ? `${formatNumber(ctcNum / 100000, 2)} lakh` : undefined}
+          error={ctcError}
+        />
+        <ToolInput
+          label="Variable pay / bonus (% of CTC)"
+          id="sal-bonus-input"
+          type="number"
+          inputMode="decimal"
+          min={0}
+          max={100}
+          step={1}
+          value={bonusPercentage}
+          suffixText="%"
+          onChange={(e) => setBonusPercentage(e.target.value)}
+          placeholder="e.g. 10"
+          error={bonusError}
+        />
+
+        <fieldset className="space-y-2">
+          <legend className="type-label text-foreground">Tax regime</legend>
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            value={taxRegime}
+            onValueChange={(v) => v && setTaxRegime(v as TaxRegime)}
+            aria-label="Tax regime"
+            className="w-full"
+          >
+            <ToggleGroupItem value="new" className="flex-1">New regime</ToggleGroupItem>
+            <ToggleGroupItem value="old" className="flex-1">Old regime</ToggleGroupItem>
+          </ToggleGroup>
+        </fieldset>
+
+        <fieldset className="space-y-2">
+          <legend className="type-label text-foreground">Provident Fund</legend>
+          <ToggleGroup
+            type="single"
+            variant="outline"
+            value={pf}
+            onValueChange={(v) => v && setPfSetting(v as "full" | "capped" | "none")}
+            aria-label="Provident Fund"
+            className="w-full"
+          >
+            <ToggleGroupItem value="full" className="flex-1">12% of basic</ToggleGroupItem>
+            <ToggleGroupItem value="capped" className="flex-1">₹1,800 / month</ToggleGroupItem>
+            <ToggleGroupItem value="none" className="flex-1">No PF</ToggleGroupItem>
+          </ToggleGroup>
+        </fieldset>
+
+        <ToolInput
+          label="Professional tax per year"
+          id="sal-pt-input"
+          type="number"
+          inputMode="numeric"
+          min={0}
+          step={100}
+          value={pt}
+          prefixText="₹"
+          onChange={(e) => setPt(e.target.value)}
+          helperText="₹0 in states without it"
+        />
+
+        <p className="flex gap-1.5 text-xs text-muted-foreground">
+          <Info className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+          <span>
+            FY 2025-26 rates. New regime: no tax up to ₹12 lakh of taxable income, ₹75,000 standard deduction.
+            Old regime: ₹50,000 standard deduction, and PF counted under 80C; HRA exemption and other deductions
+            are not included. An estimate, not tax advice.
+          </span>
+        </p>
+      </div>
+
+      <div className="space-y-4">
+        <ResultCard
+          title="Monthly in-hand salary"
+          value={hasInput ? inr(b.monthlyInHand) : "—"}
+          subtitle={
+            hasInput
+              ? `Fixed pay after PF, professional tax and TDS. Variable pay adds about ${inr(b.variableTakeHome)} a year after tax.`
+              : "Enter your annual CTC to see your take-home pay."
+          }
+          details={
+            hasInput
+              ? [
+                  { label: "Annual take-home", value: inr(b.annualTakeHome) },
+                  { label: "Income tax (year)", value: inr(b.tax) },
+                  { label: "Taxable income", value: inr(b.taxableIncome) },
+                ]
+              : []
+          }
+          highlightColor="emerald"
+        />
+
+        {hasInput && (
+          <div className="rounded-xl border bg-card">
+            <h3 className="border-b px-4 py-3 type-h4 text-foreground">Annual breakdown</h3>
+            <dl className="divide-y text-sm">
+              {rows.map((r) => (
+                <div key={r.label} className="flex items-center justify-between gap-3 px-4 py-2.5">
+                  <dt className={r.strong ? "font-medium text-foreground" : "text-muted-foreground"}>{r.label}</dt>
+                  <dd
+                    className={
+                      "shrink-0 tabular-nums " +
+                      (r.minus ? "text-destructive" : r.strong ? "font-semibold text-foreground" : "text-foreground")
+                    }
+                  >
+                    {r.minus ? "−" : ""}
+                    {inr(r.value)}
+                  </dd>
+                </div>
               ))}
-            </div>
+            </dl>
+            <p className="border-t px-4 py-3 text-xs text-muted-foreground">
+              CTC also includes employer PF of {inr(b.employerPf)} a year, which goes to your PF account rather than
+              your bank.
+            </p>
           </div>
-
-          {/* Annual CTC */}
-          <div className="space-y-1.5">
-            <label htmlFor="sal-ctc-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-              Total Cost to Company (Annual CTC)
-            </label>
-            <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400">
-                {currencySymbol}
-              </span>
-              <input
-                id="sal-ctc-input"
-                type="number"
-                min="100000"
-                step="50000"
-                value={ctc}
-                onChange={(e) => setCtc(e.target.value)}
-                className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                placeholder="1200000"
-              />
-            </div>
-          </div>
-
-          {/* Variable / Bonus Percentage */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between items-center text-xs">
-              <label htmlFor="sal-bonus-input" className="font-semibold text-slate-700 dark:text-slate-300">
-                Performance Bonus / Variable Pay
-              </label>
-              <span className="font-mono font-semibold text-blue-600 dark:text-blue-400">
-                {bonusPercentage}% ({currencySymbol}{formatNumber(Math.round(annualBonus))})
-              </span>
-            </div>
-            <div className="relative">
-              <input
-                id="sal-bonus-input"
-                type="number"
-                min="0"
-                max="50"
-                step="1"
-                value={bonusPercentage}
-                onChange={(e) => setBonusPercentage(e.target.value)}
-                className="w-full pl-3 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-                placeholder="10"
-              />
-              <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
-                %
-              </span>
-            </div>
-          </div>
-
-          {/* Tax Regime & PF Toggles */}
-          <div className="grid grid-cols-2 gap-3 pt-2">
-            <div className="space-y-1.5">
-              <label htmlFor="sal-regime-select" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                Tax Regime
-              </label>
-              <select
-                id="sal-regime-select"
-                value={taxRegime}
-                onChange={(e) => setTaxRegime(e.target.value as "new" | "old")}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-900 dark:text-white"
-              >
-                <option value="new">New Tax Regime</option>
-                <option value="old">Old Tax Regime</option>
-              </select>
-            </div>
-
-            <div className="space-y-1.5 flex flex-col justify-end">
-              <label className="flex items-center gap-2 p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={optPf}
-                  onChange={(e) => setOptPf(e.target.checked)}
-                  className="rounded text-blue-600 focus:ring-blue-500 w-3.5 h-3.5"
-                />
-                Deduct Employee PF (12%)
-              </label>
-            </div>
-          </div>
-        </div>
-
-        {/* Results Card & Breakdown */}
-        <div className="lg:col-span-6 space-y-4">
-          <ResultCard
-            title="Estimated Monthly In-Hand (Take-Home) Salary"
-            value={`${currencySymbol} ${formatNumber(Math.round(monthlyInHand))}`}
-            subtitle={`Net Annual Take-Home: ${currencySymbol}${formatNumber(Math.round(netInHandAnnual))} / 12 months`}
-            highlightColor="emerald"
-          />
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Monthly Gross Fixed</span>
-              <p className="text-lg font-bold text-slate-900 dark:text-white mt-1">
-                {currencySymbol} {formatNumber(Math.round(fixedAnnualCTC / 12))}
-              </p>
-              <span className="text-[11px] text-slate-400">Excludes variable bonus</span>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Monthly Total Deductions</span>
-              <p className="text-lg font-bold text-rose-600 dark:text-rose-400 mt-1">
-                -{currencySymbol} {formatNumber(Math.round(totalAnnualDeductions / 12))}
-              </p>
-              <span className="text-[11px] text-slate-400">TDS + PF + Professional Tax</span>
-            </div>
-          </div>
-
-          {/* Breakdown Table */}
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
-            <span className="font-bold text-slate-900 dark:text-white uppercase text-[11px] tracking-wider">
-              Annual Salary Structure Breakdown
-            </span>
-            <div className="space-y-1.5 divide-y divide-slate-100 dark:divide-slate-800 pt-1">
-              <div className="flex justify-between py-1 text-slate-600 dark:text-slate-400">
-                <span>Basic Salary (50%)</span>
-                <span className="font-mono font-medium text-slate-900 dark:text-white">{currencySymbol}{formatNumber(Math.round(basicSalary))}</span>
-              </div>
-              <div className="flex justify-between py-1 text-slate-600 dark:text-slate-400">
-                <span>House Rent Allowance (HRA)</span>
-                <span className="font-mono font-medium text-slate-900 dark:text-white">{currencySymbol}{formatNumber(Math.round(hra))}</span>
-              </div>
-              <div className="flex justify-between py-1 text-slate-600 dark:text-slate-400">
-                <span>Special Allowance</span>
-                <span className="font-mono font-medium text-slate-900 dark:text-white">{currencySymbol}{formatNumber(Math.round(specialAllowance))}</span>
-              </div>
-              <div className="flex justify-between py-1 text-rose-600 dark:text-rose-400">
-                <span>Annual Employee PF</span>
-                <span className="font-mono font-medium">-{currencySymbol}{formatNumber(Math.round(employeePf))}</span>
-              </div>
-              <div className="flex justify-between py-1 text-rose-600 dark:text-rose-400">
-                <span>Annual Estimated Income Tax (TDS)</span>
-                <span className="font-mono font-medium">-{currencySymbol}{formatNumber(Math.round(estimatedAnnualTax))}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );

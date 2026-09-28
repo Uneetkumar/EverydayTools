@@ -21,6 +21,7 @@ import { recognizeLocally, disposeOcr, type OcrProgress } from "@/lib/ocr/engine
 import { recognizeWithGemini, describeGeminiError } from "@/lib/ocr/gemini";
 import { downloadBlob } from "@/lib/utils/download";
 import { warmCloudAI } from "@/lib/ai/warm";
+import { copyText } from "@/lib/utils/clipboard";
 
 type Engine = "local" | "ai";
 
@@ -166,7 +167,7 @@ export default function ImageToText() {
 
   const copy = async () => {
     if (!output?.text) return;
-    await navigator.clipboard.writeText(output.text);
+    await copyText(output.text);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -204,33 +205,33 @@ export default function ImageToText() {
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
-          className={`relative flex flex-col items-center justify-center p-8 sm:p-12 text-center rounded-3xl border-2 border-dashed transition-all duration-200 cursor-pointer ${
+          className={`relative flex flex-col items-center justify-center p-8 sm:p-12 text-center rounded-xl border-dashed duration-200 cursor-pointer border-2 border-input bg-muted/30 transition-colors hover:border-primary/50 hover:bg-muted/60 ${
             dragActive
               ? "border-blue-500 bg-blue-50/70 dark:bg-blue-950/40 scale-[0.99]"
               : "border-slate-300 dark:border-slate-700/80 bg-slate-50/60 dark:bg-slate-900/40 hover:border-blue-400 hover:bg-blue-50/30 dark:hover:bg-blue-950/20"
           }`}
         >
-          <div className="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs mb-3">
+          <div className="w-14 h-14 rounded-xl bg-blue-100 dark:bg-blue-950/70 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-xs mb-3">
             <Upload className="w-7 h-7" />
           </div>
 
-          <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+          <h3 className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white">
             Upload an image to extract text
           </h3>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-md">
             Drag & drop, browse files, or press{" "}
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[10px] font-mono text-slate-700 dark:text-slate-300">
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-xs font-mono text-slate-700 dark:text-slate-300">
               Ctrl+V
             </kbd>{" "}
             /{" "}
-            <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-[10px] font-mono text-slate-700 dark:text-slate-300">
+            <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-xs font-mono text-slate-700 dark:text-slate-300">
               ⌘V
             </kbd>{" "}
             to paste screenshots directly.
           </p>
 
           <div className="mt-5">
-            <span className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-md shadow-blue-500/20 transition">
+            <span className="px-4 py-2 rounded-lg text-xs transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium">
               Select Image File
             </span>
           </div>
@@ -246,11 +247,11 @@ export default function ImageToText() {
         </div>
       ) : (
         /* Image Loaded View */
-        <div className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/80 dark:bg-slate-900/70 backdrop-blur-sm p-5 sm:p-6 shadow-sm space-y-5">
+        <div className="rounded-xl border p-5 sm:p-6 space-y-5 bg-muted/30">
           <div className="flex flex-col lg:flex-row gap-6 items-start">
             {/* Left Preview Card */}
             <div className="w-full lg:w-72 shrink-0 space-y-2">
-              <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 flex items-center justify-center min-h-[200px] max-h-[260px] p-2">
+              <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 flex items-center justify-center min-h-[200px] max-h-[260px] p-2">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={preview!}
@@ -263,7 +264,7 @@ export default function ImageToText() {
                 <span className="font-medium truncate max-w-[180px]">
                   {file.name}
                 </span>
-                <span className="text-[11px] font-mono">
+                <span className="text-xs font-mono">
                   {(file.size / 1024).toFixed(0)} KB
                 </span>
               </div>
@@ -277,12 +278,12 @@ export default function ImageToText() {
                   <span className="font-semibold text-slate-700 dark:text-slate-300">
                     Engine
                   </span>
-                  <span className="text-[11px] text-slate-400">
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
                     {engine === "local" ? "Runs locally in browser" : "Google Gemini Cloud AI"}
                   </span>
                 </div>
 
-                <div className="p-1 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 flex gap-1">
+                <div className="p-1 border flex gap-1 rounded-lg bg-muted/60">
                   <button
                     type="button"
                     onClick={() => setEngine("local")}
@@ -292,9 +293,9 @@ export default function ImageToText() {
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
-                    <Cpu className={`w-3.5 h-3.5 ${engine === "local" ? "text-emerald-500" : "text-slate-400"}`} />
+                    <Cpu className={`w-3.5 h-3.5 ${engine === "local" ? "text-emerald-500" : "text-slate-500 dark:text-slate-400"}`} />
                     <span>On-Device</span>
-                    <span className="text-[10px] font-normal px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
+                    <span className="text-xs font-normal px-1.5 py-0.2 rounded bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
                       Private
                     </span>
                   </button>
@@ -308,20 +309,20 @@ export default function ImageToText() {
                         : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
                     }`}
                   >
-                    <Sparkles className={`w-3.5 h-3.5 ${engine === "ai" ? "text-purple-500" : "text-slate-400"}`} />
+                    <Sparkles className={`w-3.5 h-3.5 ${engine === "ai" ? "text-muted-foreground" : "text-slate-500 dark:text-slate-400"}`} />
                     <span>Gemini AI</span>
-                    <span className="text-[10px] font-normal px-1.5 py-0.2 rounded bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-500/20">
+                    <span className="text-xs font-normal px-1.5 py-0.2 rounded bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 border border-purple-500/20">
                       Smart
                     </span>
                   </button>
                 </div>
 
                 {/* Subtitle Information */}
-                <p className="text-[11px] text-slate-500 dark:text-slate-400 px-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 px-1">
                   {engine === "local" ? (
                     <span className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400">
                       <ShieldCheck className="w-3.5 h-3.5 shrink-0" />
-                      Zero server upload. Image remains 100% in local memory.
+                      Nothing is uploaded. The image stays on your device.
                     </span>
                   ) : (
                     <span className="flex items-center gap-1.5 text-purple-700 dark:text-purple-300">
@@ -338,7 +339,7 @@ export default function ImageToText() {
                   type="button"
                   onClick={run}
                   disabled={busy}
-                  className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-bold shadow-md shadow-blue-600/20 transition disabled:opacity-60 disabled:cursor-wait cursor-pointer"
+                  className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-xs transition disabled:opacity-60 disabled:cursor-wait cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
                 >
                   {busy ? (
                     <>
@@ -359,7 +360,7 @@ export default function ImageToText() {
                   disabled={busy}
                   className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium transition cursor-pointer"
                 >
-                  <Trash2 className="w-3.5 h-3.5 text-slate-400" />
+                  <Trash2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
                   <span>Change Image</span>
                 </button>
               </div>
@@ -367,7 +368,7 @@ export default function ImageToText() {
               {/* Progress Bar */}
               {busy && (
                 <div className="space-y-1.5 pt-1">
-                  <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 font-medium">
+                  <div className="flex items-center justify-between text-sm font-medium text-foreground">
                     <span>
                       {engine === "local"
                         ? progress?.status ?? "Initializing local recognizer..."
@@ -390,7 +391,7 @@ export default function ImageToText() {
 
       {/* Error Banner */}
       {error && (
-        <div className="flex items-start gap-3 rounded-2xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/30 p-4 text-rose-800 dark:text-rose-200">
+        <div className="flex items-start gap-3 rounded-xl border border-rose-200 dark:border-rose-900/60 bg-rose-50 dark:bg-rose-950/30 p-4 text-rose-800 dark:text-rose-200">
           <AlertTriangle className="w-5 h-5 shrink-0 text-rose-600 mt-0.5" />
           {/* Same containment as AIError: min-w-0 lets the flex child shrink,
               break-words wraps long URLs, and the cap stops a JSON error dump
@@ -405,7 +406,7 @@ export default function ImageToText() {
       {output && (
         <div
           ref={resultRef}
-          className="rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-300"
+          className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-3 duration-300"
         >
           {/* Top Result Toolbar */}
           <div className="px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/50 flex flex-wrap items-center justify-between gap-3">
@@ -414,16 +415,16 @@ export default function ImageToText() {
                 <CheckCircle2 className="w-4 h-4" />
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <span className="font-bold text-slate-900 dark:text-white">
+                <span className="font-semibold text-slate-900 dark:text-white">
                   Extracted Text
                 </span>
-                <span className="text-slate-400">&bull;</span>
+                <span className="text-slate-500 dark:text-slate-400">&bull;</span>
                 <span className="text-slate-500 dark:text-slate-400">
                   {wordCount} words, {charCount} chars
                 </span>
                 {output.confidence != null && (
                   <>
-                    <span className="text-slate-400">&bull;</span>
+                    <span className="text-slate-500 dark:text-slate-400">&bull;</span>
                     <span className="text-slate-500 dark:text-slate-400">
                       {output.confidence}% confidence
                     </span>
@@ -437,10 +438,10 @@ export default function ImageToText() {
               <button
                 type="button"
                 onClick={copy}
-                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition shadow-xs cursor-pointer ${
                   copied
-                    ? "bg-emerald-600 text-white shadow-emerald-500/20"
-                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-blue-500/20"
+                    ? "bg-emerald-600 text-white"
+                    : "bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
                 }`}
               >
                 {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -450,7 +451,7 @@ export default function ImageToText() {
               <button
                 type="button"
                 onClick={save}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition cursor-pointer"
+                className="flex items-center gap-1 px-3 py-1.5 rounded-xl border text-slate-700 dark:text-slate-200 text-xs font-semibold transition cursor-pointer bg-muted/30"
                 title="Download as .txt file"
               >
                 <Download className="w-3.5 h-3.5" />
@@ -467,7 +468,7 @@ export default function ImageToText() {
               rows={12}
               spellCheck={false}
               aria-label="Extracted editable text"
-              className="w-full p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950 font-mono text-xs sm:text-sm leading-relaxed text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"
+              className="w-full p-4 font-mono sm:text-sm leading-relaxed resize-y text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               placeholder="Extracted text will appear here..."
             />
           </div>

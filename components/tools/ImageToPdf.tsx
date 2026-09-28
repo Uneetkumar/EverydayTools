@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { PDFDocument } from "pdf-lib";
 import { Upload, Download, FileText, Image as ImageIcon, Trash2, CheckCircle2, ArrowRight } from "lucide-react";
-import confetti from "canvas-confetti";
+import { markToolCompleted, markToolError } from "@/lib/analytics";
 import { downloadDataUrl } from "@/lib/utils/download";
 
 export default function ImageToPdf() {
@@ -19,6 +19,7 @@ export default function ImageToPdf() {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [extractedPages, setExtractedPages] = useState<{ pageNum: number; dataUrl: string }[]>([]);
   const [isExtracting, setIsExtracting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleImageFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -34,6 +35,7 @@ export default function ImageToPdf() {
   const convertImagesToPdf = async () => {
     if (images.length === 0) return;
     setIsGeneratingPdf(true);
+    setError(null);
     try {
       const pdfDoc = await PDFDocument.create();
       for (const item of images) {
@@ -72,9 +74,11 @@ export default function ImageToPdf() {
       const blob = new Blob([new Uint8Array(pdfBytes)], { type: "application/pdf" });
       const url = URL.createObjectURL(blob);
       setPdfUrl(url);
-      confetti({ particleCount: 35, spread: 50, origin: { y: 0.85 } });
+      markToolCompleted();
     } catch (err) {
       console.error(err);
+      markToolError("pdf_build_failed");
+      setError("The PDF couldn't be created. One of the images may be damaged or in an unsupported format — use JPG or PNG.");
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -83,6 +87,7 @@ export default function ImageToPdf() {
   const extractPdfPages = async () => {
     if (!pdfFile) return;
     setIsExtracting(true);
+    setError(null);
     try {
       const bytes = await pdfFile.arrayBuffer();
       const pdfDoc = await PDFDocument.load(bytes, { ignoreEncryption: true });
@@ -128,9 +133,11 @@ export default function ImageToPdf() {
       }
 
       setExtractedPages(pages);
-      confetti({ particleCount: 35, spread: 50, origin: { y: 0.85 } });
+      markToolCompleted();
     } catch (err) {
       console.error("PDF Extraction error:", err);
+      markToolError("invalid_pdf");
+      setError("This PDF couldn't be read. It may be password-protected (unlock it first) or damaged.");
     } finally {
       setIsExtracting(false);
     }
@@ -146,22 +153,22 @@ export default function ImageToPdf() {
   return (
     <div className="space-y-6">
       {/* Mode Switches */}
-      <div className="flex space-x-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+      <div className="flex space-x-2 p-1.5 border rounded-lg bg-muted/60">
         <button
-          onClick={() => setTab("img_to_pdf")}
+          onClick={() => { setTab("img_to_pdf"); setError(null); }}
           className={`flex-1 py-2 text-xs font-semibold rounded-xl transition ${
             tab === "img_to_pdf"
-              ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+              ? "bg-background text-foreground shadow-xs dark:bg-input/50"
               : "text-slate-600 dark:text-slate-400"
           }`}
         >
           Images to PDF
         </button>
         <button
-          onClick={() => setTab("pdf_to_img")}
+          onClick={() => { setTab("pdf_to_img"); setError(null); }}
           className={`flex-1 py-2 text-xs font-semibold rounded-xl transition ${
             tab === "pdf_to_img"
-              ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+              ? "bg-background text-foreground shadow-xs dark:bg-input/50"
               : "text-slate-600 dark:text-slate-400"
           }`}
         >
@@ -169,18 +176,24 @@ export default function ImageToPdf() {
         </button>
       </div>
 
+      {error && (
+        <p role="alert" className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          {error}
+        </p>
+      )}
+
       {tab === "img_to_pdf" ? (
         <div className="space-y-6">
           {/* Upload Images */}
-          <div className="p-8 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/40 hover:bg-blue-50/30 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-2 relative">
-            <ImageIcon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-            <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+          <div className="p-8 rounded-xl border-dashed text-center cursor-pointer flex flex-col items-center justify-center space-y-2 relative border-2 border-input bg-muted/30 transition-colors hover:border-primary/50 hover:bg-muted/60">
+            <ImageIcon className="w-8 h-8 text-muted-foreground" />
+            <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
               Upload Images (JPG, PNG) to convert to PDF
             </div>
             <p className="text-xs text-slate-500">
               Select multiple photos to create a multi-page PDF document.
             </p>
-            <input
+            <input aria-label="Choose images"
               type="file"
               multiple
               accept="image/jpeg,image/png"
@@ -191,7 +204,7 @@ export default function ImageToPdf() {
 
           {images.length > 0 && (
             <div className="space-y-4">
-              <div className="flex justify-between items-center text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <div className="flex justify-between items-center text-sm font-medium text-foreground">
                 <span>Selected Images ({images.length})</span>
                 <button onClick={() => setImages([])} className="text-rose-500 hover:underline">
                   Clear All
@@ -210,7 +223,7 @@ export default function ImageToPdf() {
                       alt={`Upload ${idx + 1}`}
                       className="w-full h-24 object-cover rounded-lg"
                     />
-                    <div className="flex justify-between items-center mt-1 text-[11px] text-slate-500">
+                    <div className="flex justify-between items-center mt-1 text-xs text-slate-500">
                       <span>Page {idx + 1}</span>
                       <button
                         onClick={() => setImages(images.filter((_, i) => i !== idx))}
@@ -227,7 +240,7 @@ export default function ImageToPdf() {
                 <button
                   onClick={convertImagesToPdf}
                   disabled={isGeneratingPdf}
-                  className="w-full sm:w-auto px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition"
+                  className="w-full sm:w-auto px-6 py-3 rounded-lg text-xs transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
                 >
                   {isGeneratingPdf ? "Generating PDF..." : `Convert ${images.length} Images to PDF`}
                 </button>
@@ -249,15 +262,15 @@ export default function ImageToPdf() {
       ) : (
         /* PDF to Image */
         <div className="space-y-6">
-          <div className="p-8 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/40 hover:bg-blue-50/30 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-2 relative">
-            <FileText className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-            <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+          <div className="p-8 rounded-xl border-dashed text-center cursor-pointer flex flex-col items-center justify-center space-y-2 relative border-2 border-input bg-muted/30 transition-colors hover:border-primary/50 hover:bg-muted/60">
+            <FileText className="w-8 h-8 text-muted-foreground" />
+            <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
               Upload PDF document to extract images
             </div>
             <p className="text-xs text-slate-500">
               Converts each PDF page into high-resolution JPG images.
             </p>
-            <input
+            <input aria-label="Choose a PDF file"
               type="file"
               accept="application/pdf"
               onChange={(e) => {
@@ -269,30 +282,30 @@ export default function ImageToPdf() {
           </div>
 
           {pdfFile && (
-            <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-5">
+            <div className="p-6 rounded-xl border space-y-5 bg-muted/30">
               <div className="flex items-center justify-between text-xs">
-                <span className="font-bold text-slate-900 dark:text-white">Selected PDF:</span>
+                <span className="font-semibold text-slate-900 dark:text-white">Selected PDF</span>
                 <span className="text-slate-500 font-mono">{pdfFile.name} ({(pdfFile.size / 1024).toFixed(1)} KB)</span>
               </div>
 
               <button
                 onClick={extractPdfPages}
                 disabled={isExtracting}
-                className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition"
+                className="w-full sm:w-auto px-6 py-2.5 rounded-lg text-xs transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
               >
                 {isExtracting ? "Extracting Pages..." : "Extract All Pages as High-Res Images"}
               </button>
 
               {extractedPages.length > 0 && (
                 <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
-                  <div className="text-xs font-bold text-slate-900 dark:text-white">
+                  <div className="text-xs font-semibold text-slate-900 dark:text-white">
                     Extracted Pages ({extractedPages.length})
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {extractedPages.map((p) => (
                       <div
                         key={p.pageNum}
-                        className="p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 space-y-2"
+                        className="p-3 rounded-xl border space-y-2 bg-muted/30"
                       >
                         <img
                           src={p.dataUrl}
@@ -300,12 +313,12 @@ export default function ImageToPdf() {
                           className="w-full h-36 object-contain rounded-lg bg-white border border-slate-200 dark:border-slate-800"
                         />
                         <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                          <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                             Page {p.pageNum}
                           </span>
                           <button
                             onClick={() => downloadExtractedPage(p)}
-                            className="flex items-center space-x-1 px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-semibold transition"
+                            className="flex items-center space-x-1 px-3 py-1 rounded-lg text-xs transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
                           >
                             <Download className="w-3 h-3" />
                             <span>Download JPG</span>

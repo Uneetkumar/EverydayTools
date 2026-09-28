@@ -1,8 +1,12 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { Upload, Download, CheckCircle2, AlertCircle, RefreshCw, Sparkles, Image as ImageIcon } from "lucide-react";
-import confetti from "canvas-confetti";
+import { Download, RotateCcw } from "lucide-react";
+import DropZone from "@/components/ui/DropZone";
+import { Button } from "@/components/ui/button";
+import { ToolLoadingState } from "@/components/tool/tool-states";
+import { ActionBar, Chips, Field, Notice, Segmented, Stat, StatGrid, ToolSection, UnitInput } from "@/components/tool/kit";
+import { markToolCompleted } from "@/lib/analytics";
 import { downloadBlob } from "@/lib/utils/download";
 
 export default function ImageCompressor() {
@@ -15,91 +19,158 @@ export default function ImageCompressor() {
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "warning" | "info"; text: string } | null>(null);
   const [isCompressing, setIsCompressing] = useState<boolean>(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [dims, setDims] = useState<{ w: number; h: number; ow: number; oh: number } | null>(null);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setOrigFile(file);
-      setOrigSize(file.size);
-      compressToTargetKb(file, parseFloat(targetKb) || 50, format);
-    }
+  const handleFile = (file: File) => {
+    setOrigFile(file);
+    setOrigSize(file.size);
+    compressToTargetKb(file, parseFloat(targetKb) || 50, format);
   };
 
+  const reset = () => {
+    runRef.current++;
+    setOrigFile(null);
+    setOrigSize(0);
+    setCompressedBlob(null);
+    setCompressedSize(0);
+    setPreviewUrl(null);
+    setDims(null);
+    setStatusMessage(null);
+    setIsCompressing(false);
+  };
+
+  // Each run gets a number; a slower earlier run (the user changed the target
+  // mid-way) must not overwrite the result of a newer one.
+  const runRef = useRef(0);
+
+  // Object URLs pin the image data in memory until revoked.
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
   const compressToTargetKb = async (file: File, targetSizeKb: number, outFmt: string) => {
+    const run = ++runRef.current;
     setIsCompressing(true);
     setStatusMessage(null);
-
+    const targetSizeBytes = targetSizeKb * 1024;
     const img = new Image();
-    img.src = URL.createObjectURL(file);
-    img.onload = async () => {
-      const targetSizeBytes = targetSizeKb * 1024;
-      let minQuality = 0.05;
-      let maxQuality = 0.98;
-      let bestBlob: Blob | null = null;
-      let scale = 1.0;
 
-      // Helper function to render blob at given scale and quality
-      const getBlob = (s: number, q: number): Promise<Blob | null> => {
-        return new Promise((resolve) => {
-          const canvas = document.createElement("canvas");
-          canvas.width = Math.max(30, Math.floor(img.width * s));
-          canvas.height = Math.max(30, Math.floor(img.height * s));
-          const ctx = canvas.getContext("2d");
-          if (!ctx) return resolve(null);
-          ctx.fillStyle = "#ffffff";
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          canvas.toBlob((b) => resolve(b), outFmt, q);
-        });
-      };
-
-      // 1. Binary search on quality
-      for (let i = 0; i < 6; i++) {
-        const midQ = (minQuality + maxQuality) / 2;
-        const b = await getBlob(scale, midQ);
-        if (!b) break;
-        bestBlob = b;
-        if (b.size > targetSizeBytes) {
-          maxQuality = midQ;
-        } else {
-          minQuality = midQ;
-        }
-      }
-
-      // 2. If still larger than target, iteratively reduce scale
-      if (bestBlob && bestBlob.size > targetSizeBytes) {
-        for (let j = 0; j < 5; j++) {
-          scale *= 0.8;
-          const b = await getBlob(scale, 0.65);
-          if (!b) break;
-          bestBlob = b;
-          if (b.size <= targetSizeBytes) break;
-        }
-      }
-
-      if (bestBlob) {
-        setCompressedBlob(bestBlob);
-        setCompressedSize(bestBlob.size);
-        const url = URL.createObjectURL(bestBlob);
-        setPreviewUrl(url);
-
-        const actualKb = (bestBlob.size / 1024).toFixed(1);
-        if (bestBlob.size <= targetSizeBytes * 1.05) {
-          setStatusMessage({
-            type: "success",
-            text: `Success! Compressed to ${actualKb} KB (within your ${targetSizeKb} KB limit).`,
-          });
-        } else {
-          setStatusMessage({
-            type: "warning",
-            text: `Compressed to ${actualKb} KB (minimum resolution reached for this image).`,
-          });
-        }
-      }
+    const finish = (blob: Blob, text: string, type: "success" | "warning" | "info", scale = 1) => {
+      if (run !== runRef.current) return;
+      setDims({
+        w: Math.max(16, Math.round(img.naturalWidth * scale)),
+        h: Math.max(16, Math.round(img.naturalHeight * scale)),
+        ow: img.naturalWidth,
+        oh: img.naturalHeight,
+      });
+      setCompressedBlob(blob);
+      setCompressedSize(blob.size);
+      setPreviewUrl(URL.createObjectURL(blob));
+      setStatusMessage({ type, text });
       setIsCompressing(false);
     };
+
+    const srcUrl = URL.createObjectURL(file);
+    try {
+      await new Promise<void>((resolve, reject) => {
+        img.onload = () => resolve();
+        img.onerror = () => reject(new Error("decode"));
+        img.src = srcUrl;
+      });
+    } catch {
+      URL.revokeObjectURL(srcUrl);
+      if (run !== runRef.current) return;
+      setIsCompressing(false);
+      // Don't leave the previous file's result on screen next to the error.
+      setCompressedBlob(null);
+      setCompressedSize(0);
+      setPreviewUrl(null);
+      setStatusMessage({
+        type: "warning",
+        text: "This image couldn't be opened. Use a JPG, PNG or WebP file — HEIC photos from iPhones need converting first.",
+      });
+      return;
+    }
+
+    // Already small enough and already in the requested format: re-encoding
+    // could only lose quality (and sometimes makes the file bigger). Checked
+    // only after the image decoded, so a damaged file is never passed through.
+    if (file.size <= targetSizeBytes && file.type === outFmt) {
+      URL.revokeObjectURL(srcUrl);
+      finish(file, `This image is already ${(file.size / 1024).toFixed(1)} KB — under your ${targetSizeKb} KB limit, so it was left untouched.`, "info");
+      return;
+    }
+
+    const encode = (scale: number, quality: number): Promise<Blob | null> =>
+      new Promise((resolve) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(16, Math.round(img.naturalWidth * scale));
+        canvas.height = Math.max(16, Math.round(img.naturalHeight * scale));
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return resolve(null);
+        // JPEG has no transparency, so transparent areas become white rather
+        // than black. WebP keeps its transparency.
+        if (outFmt === "image/jpeg") {
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((b) => resolve(b), outFmt, quality);
+      });
+
+    // Keep full resolution if any reasonable quality fits; only then step the
+    // resolution down. At each size, binary-search the highest quality that
+    // is still under the limit — the best-looking file that fits.
+    let best: Blob | null = null;
+    let bestScale = 1;
+    let smallest: Blob | null = null;
+    let smallestScale = 1;
+    for (const scale of [1, 0.85, 0.7, 0.55, 0.42, 0.32, 0.24, 0.18]) {
+      let lo = 0.3;
+      let hi = 0.95;
+      let fit: Blob | null = null;
+      for (let i = 0; i < 7; i++) {
+        const q = (lo + hi) / 2;
+        const blob = await encode(scale, q);
+        if (run !== runRef.current) {
+          URL.revokeObjectURL(srcUrl);
+          return;
+        }
+        if (!blob) break;
+        if (!smallest || blob.size < smallest.size) {
+          smallest = blob;
+          smallestScale = scale;
+        }
+        if (blob.size <= targetSizeBytes) {
+          fit = blob;
+          lo = q;
+        } else {
+          hi = q;
+        }
+      }
+      if (fit) {
+        best = fit;
+        bestScale = scale;
+        break;
+      }
+    }
+    URL.revokeObjectURL(srcUrl);
+
+    if (best) {
+      finish(best, `Done: ${(best.size / 1024).toFixed(1)} KB, within your ${targetSizeKb} KB limit.`, "success", bestScale);
+    } else if (smallest) {
+      finish(
+        smallest,
+        `The smallest this image goes is ${(smallest.size / 1024).toFixed(1)} KB, still above ${targetSizeKb} KB. Crop it or choose a larger limit.`,
+        "warning",
+        smallestScale
+      );
+    } else if (run === runRef.current) {
+      setIsCompressing(false);
+      setStatusMessage({ type: "warning", text: "Your browser couldn't encode this image. Try another format." });
+    }
   };
 
   const handleTargetKbChange = (kb: string) => {
@@ -113,8 +184,10 @@ export default function ImageCompressor() {
   const handleDownload = () => {
     if (!compressedBlob) return;
     const ext = format === "image/jpeg" ? "jpg" : "webp";
-    downloadBlob(compressedBlob, `compressed-${targetKb}kb.${ext}`);
-    confetti({ particleCount: 35, spread: 50, origin: { y: 0.85 } });
+    const base = (origFile?.name ?? "image").replace(/\.[^.]+$/, "");
+    const sameFile = compressedBlob === origFile;
+    downloadBlob(compressedBlob, sameFile && origFile ? origFile.name : `${base}-${targetKb}kb.${ext}`);
+    markToolCompleted();
   };
 
   const savingsPct =
@@ -122,143 +195,98 @@ export default function ImageCompressor() {
       ? Math.max(0, Math.round(((origSize - compressedSize) / origSize) * 100))
       : 0;
 
+  const kb = (bytes: number) =>
+    bytes >= 1024 * 1024 ? `${(bytes / 1024 / 1024).toFixed(2)} MB` : `${(bytes / 1024).toFixed(1)} KB`;
+  const presets = ["20", "50", "100", "200", "500"];
+
   return (
     <div className="space-y-6">
-      {/* Upload Box */}
-      <div
-        onClick={() => fileInputRef.current?.click()}
-        className="p-8 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/40 hover:bg-blue-50/30 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-2 relative"
-      >
-        <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-          <Upload className="w-6 h-6" />
-        </div>
-        <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
-          Upload image to compress (JPG, PNG, WebP)
-        </div>
-        <p className="text-xs text-slate-500">
-          Compress to exact size limit for government forms, job portals, or email.
-        </p>
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFile}
-          accept="image/*"
-          className="hidden"
-        />
-      </div>
+      <DropZone
+        accept="image/jpeg,image/png,image/webp"
+        maxSizeMB={50}
+        title="Drop an image here or choose one"
+        subtitle="Compressed in your browser to the size you set. Nothing is uploaded."
+        supportedFormatsText="JPG, PNG or WebP"
+        selectedFile={origFile}
+        onFileSelect={handleFile}
+        onClear={reset}
+      />
 
-      {/* Target KB Settings Bar */}
-      <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-900 dark:text-white block">
-              Set Exact Target Size (in KB):
-            </label>
-            <span className="text-xs text-slate-500">
-              The engine will adapt quality and resolution to meet your limit.
-            </span>
-          </div>
-
-          <div className="flex items-center space-x-2">
-            <div className="relative w-32">
-              <input
-                type="number"
-                min="5"
-                max="5000"
-                value={targetKb}
-                onChange={(e) => handleTargetKbChange(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-sm font-bold text-slate-900 dark:text-white pr-8"
-              />
-              <span className="absolute right-3 top-2 text-xs text-slate-400 font-bold">KB</span>
-            </div>
-
-            <select
+      <ToolSection title="Target size" description="Quality is lowered first; resolution only if the limit needs it.">
+        <div className="grid items-start gap-4 @lg:grid-cols-[12rem_auto]">
+          <Field label="Maximum file size" htmlFor="ic-target">
+            <UnitInput
+              id="ic-target"
+              unit="KB"
+              type="number"
+              inputMode="numeric"
+              min={5}
+              max={5000}
+              value={targetKb}
+              onChange={(e) => handleTargetKbChange(e.target.value)}
+            />
+          </Field>
+          <Field label="Output format">
+            <Segmented
+              ariaLabel="Output format"
               value={format}
-              onChange={(e) => {
-                const f = e.target.value as "image/jpeg" | "image/webp";
+              onChange={(f) => {
                 setFormat(f);
                 if (origFile) compressToTargetKb(origFile, parseFloat(targetKb) || 50, f);
               }}
-              className="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-900 dark:text-white"
-            >
-              <option value="image/jpeg">JPG</option>
-              <option value="image/webp">WebP</option>
-            </select>
-          </div>
+              options={[
+                { value: "image/jpeg", label: "JPG" },
+                { value: "image/webp", label: "WebP" },
+              ]}
+            />
+          </Field>
         </div>
+        <Chips
+          ariaLabel="Common size limits"
+          value={presets.includes(targetKb) ? targetKb : null}
+          onChange={handleTargetKbChange}
+          options={presets.map((p) => ({ value: p, label: `Under ${p} KB` }))}
+        />
+      </ToolSection>
 
-        {/* Quick KB Presets */}
-        <div className="flex flex-wrap gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
-          <span className="text-[11px] font-semibold text-slate-400 self-center mr-1">
-            Standard Limits:
-          </span>
-          {["20", "50", "100", "200", "500"].map((kb) => (
-            <button
-              key={kb}
-              onClick={() => handleTargetKbChange(kb)}
-              className={`px-3 py-1 text-xs font-semibold rounded-xl border transition ${
-                targetKb === kb
-                  ? "bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border-blue-300 dark:border-blue-800"
-                  : "bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800"
-              }`}
-            >
-              Under {kb} KB
-            </button>
-          ))}
-        </div>
-      </div>
+      {isCompressing && <ToolLoadingState label="Compressing…" />}
 
-      {/* Live Compression Status & Alerts */}
-      {statusMessage && (
-        <div
-          className={`p-4 rounded-xl border flex items-center space-x-3 text-xs font-medium ${
-            statusMessage.type === "success"
-              ? "bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-900 text-emerald-800 dark:text-emerald-200"
-              : "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900 text-amber-800 dark:text-amber-200"
-          }`}
-        >
-          {statusMessage.type === "success" ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          ) : (
-            <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
-          )}
-          <span>{statusMessage.text}</span>
-        </div>
+      {!isCompressing && statusMessage && (
+        <Notice tone={statusMessage.type === "success" ? "success" : statusMessage.type === "warning" ? "warning" : "info"}>
+          {statusMessage.text}
+        </Notice>
       )}
 
-      {/* Before / After Result Card */}
-      {origFile && compressedBlob && (
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 space-y-1">
-              <span className="text-xs text-slate-400 font-medium">Original File</span>
-              <div className="text-lg font-black text-slate-900 dark:text-white">
-                {(origSize / 1024).toFixed(1)} KB
-              </div>
-            </div>
-
-            <div className="p-4 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900 space-y-1">
-              <span className="text-xs text-emerald-700 dark:text-emerald-300 font-medium">
-                Compressed Output ({savingsPct}% smaller)
-              </span>
-              <div className="text-lg font-black text-emerald-600 dark:text-emerald-400">
-                {(compressedSize / 1024).toFixed(1)} KB
-              </div>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-slate-800">
-            <div className="text-xs text-slate-500">
-              Format: <strong className="text-slate-800 dark:text-slate-200 uppercase">{format.split("/")[1]}</strong> • Target: <strong>{targetKb} KB</strong>
-            </div>
-
-            <button
-              onClick={handleDownload}
-              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition"
-            >
-              <Download className="w-4 h-4" />
-              <span>Download ({ (compressedSize / 1024).toFixed(1) } KB)</span>
-            </button>
+      {origFile && compressedBlob && !isCompressing && (
+        <div className="grid gap-5 @2xl:grid-cols-2">
+          {previewUrl && (
+            <figure className="flex items-center justify-center overflow-hidden rounded-lg border bg-muted/40 p-2">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={previewUrl} alt="Preview of the compressed image" className="max-h-72 w-auto rounded object-contain" />
+            </figure>
+          )}
+          <div className="space-y-4">
+            <StatGrid className="@xl:grid-cols-2">
+              <Stat label="Original" value={kb(origSize)} hint={dims ? `${dims.ow} × ${dims.oh} px` : undefined} />
+              <Stat
+                label="Compressed"
+                value={kb(compressedSize)}
+                hint={dims ? `${dims.w} × ${dims.h} px` : undefined}
+                tone={compressedSize <= (parseFloat(targetKb) || 0) * 1024 ? "success" : "warning"}
+              />
+              <Stat label="Saved" value={`${savingsPct}%`} />
+              <Stat label="Format" value={compressedBlob === origFile ? "Unchanged" : format === "image/jpeg" ? "JPG" : "WebP"} />
+            </StatGrid>
+            <ActionBar className="justify-start">
+              <Button size="lg" onClick={handleDownload} className="px-4">
+                <Download aria-hidden="true" />
+                Download {kb(compressedSize)}
+              </Button>
+              <Button size="lg" variant="outline" onClick={reset}>
+                <RotateCcw aria-hidden="true" />
+                Compress another
+              </Button>
+            </ActionBar>
           </div>
         </div>
       )}

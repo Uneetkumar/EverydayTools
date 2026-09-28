@@ -4,7 +4,20 @@ import React, { useState, useEffect, useCallback } from "react";
 import ResultCard from "@/components/ResultCard";
 import { usePersistentState } from "@/lib/hooks/usePersistentState";
 import { RefreshCw, Copy, Check, ShieldCheck, ShieldAlert, Sparkles } from "lucide-react";
-import confetti from "canvas-confetti";
+import { markToolCompleted } from "@/lib/analytics";
+import { toast } from "sonner";
+
+/** Uniform random integer in [0, max) from the platform CSPRNG, without modulo bias. */
+function secureRandomInt(max: number): number {
+  const limit = Math.floor(0x100000000 / max) * max;
+  const buf = new Uint32Array(1);
+  let x: number;
+  do {
+    crypto.getRandomValues(buf);
+    x = buf[0];
+  } while (x >= limit);
+  return x % max;
+}
 
 export default function PasswordGenerator() {
   const [length, setLength] = usePersistentState<number>("pwd_length", 16);
@@ -16,50 +29,49 @@ export default function PasswordGenerator() {
   const [password, setPassword] = useState<string>("");
   const [copied, setCopied] = useState<boolean>(false);
 
-  const generatePassword = useCallback(() => {
-    let chars = "";
-    if (useUppercase) chars += excludeSimilar ? "ABCDEFGHJKLMNPQRSTUVWXYZ" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    if (useLowercase) chars += excludeSimilar ? "abcdefghijkmnopqrstuvwxyz" : "abcdefghijklmnopqrstuvwxyz";
-    if (useNumbers) chars += excludeSimilar ? "23456789" : "0123456789";
-    if (useSymbols) chars += "!@#$%^&*()_+-=[]{}|;:,.<>?";
+  const sets = [
+    useUppercase && (excludeSimilar ? "ABCDEFGHJKLMNPQRSTUVWXYZ" : "ABCDEFGHIJKLMNOPQRSTUVWXYZ"),
+    useLowercase && (excludeSimilar ? "abcdefghijkmnopqrstuvwxyz" : "abcdefghijklmnopqrstuvwxyz"),
+    useNumbers && (excludeSimilar ? "23456789" : "0123456789"),
+    useSymbols && "!@#$%^&*()_+-=[]{}|;:,.<>?",
+  ].filter(Boolean) as string[];
+  const pool = sets.join("");
 
-    if (!chars) {
+  const generatePassword = useCallback(() => {
+    if (!pool) {
       setPassword("");
       return;
     }
-
-    const array = new Uint32Array(length);
-    window.crypto.getRandomValues(array);
-    let result = "";
-    for (let i = 0; i < length; i++) {
-      result += chars[array[i] % chars.length];
+    // One character from every chosen set, so ticking "numbers" always
+    // yields a number; the rest from the full pool; then a shuffle so the
+    // guaranteed characters are not always at the front.
+    const chars = sets.map((set) => set[secureRandomInt(set.length)]);
+    while (chars.length < length) chars.push(pool[secureRandomInt(pool.length)]);
+    for (let i = chars.length - 1; i > 0; i--) {
+      const j = secureRandomInt(i + 1);
+      [chars[i], chars[j]] = [chars[j], chars[i]];
     }
-    setPassword(result);
+    setPassword(chars.slice(0, length).join(""));
+    // sets is derived from the same flags listed below.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [length, useUppercase, useLowercase, useNumbers, useSymbols, excludeSimilar]);
 
   useEffect(() => {
-    generatePassword();
+    // Deferred so generating never happens synchronously inside the effect.
+    const id = setTimeout(generatePassword, 0);
+    return () => clearTimeout(id);
   }, [generatePassword]);
 
-  // Calculate strength score (0 to 100)
-  const getStrength = () => {
-    let score = 0;
-    if (password.length >= 12) score += 30;
-    else if (password.length >= 8) score += 15;
-    if (useUppercase && /[A-Z]/.test(password)) score += 20;
-    if (useLowercase && /[a-z]/.test(password)) score += 15;
-    if (useNumbers && /[0-9]/.test(password)) score += 15;
-    if (useSymbols && /[^A-Za-z0-9]/.test(password)) score += 20;
-    return Math.min(score, 100);
-  };
-
-  const strength = getStrength();
+  // Strength from entropy: length × log2(size of the character pool). This
+  // is what an attacker guessing at random has to search.
+  const entropyBits = password && pool ? Math.round(password.length * Math.log2(new Set(pool).size)) : 0;
+  const strength = Math.min(100, Math.round((entropyBits / 128) * 100));
   const strengthLabel =
-    strength >= 80 ? "Very Strong" : strength >= 60 ? "Strong" : strength >= 40 ? "Moderate" : "Weak";
+    entropyBits >= 100 ? "Very strong" : entropyBits >= 70 ? "Strong" : entropyBits >= 50 ? "Moderate" : "Weak";
   const strengthColor =
-    strength >= 80
+    entropyBits >= 100
       ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40"
-      : strength >= 60
+      : entropyBits >= 70
       ? "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40"
       : "text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40";
 
@@ -68,31 +80,31 @@ export default function PasswordGenerator() {
     try {
       await navigator.clipboard.writeText(password);
       setCopied(true);
-      confetti({ particleCount: 35, spread: 50, origin: { y: 0.85 } });
+      markToolCompleted();
       setTimeout(() => setCopied(false), 2000);
-    } catch (e) {
-      console.error(e);
+    } catch {
+      toast.error("Couldn't copy the password", { description: "Select it and copy it manually." });
     }
   };
 
   return (
     <div className="space-y-6">
       {/* Generated Password Output Box */}
-      <div className="p-5 rounded-2xl bg-slate-900 text-white shadow-inner flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="font-mono text-lg sm:text-2xl font-bold tracking-wider break-all text-emerald-400">
+      <div className="p-5 rounded-xl border text-slate-900 dark:text-white flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/30">
+        <div className="font-mono text-lg sm:text-2xl font-semibold tracking-wide break-all text-slate-900 dark:text-slate-100" aria-live="polite">
           {password || "Select at least one character set"}
         </div>
         <div className="flex items-center space-x-2 shrink-0">
-          <button
+          <button aria-label="Generate new password"
             onClick={generatePassword}
-            className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 transition"
+            className="p-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 transition"
             title="Generate new password"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
           <button
             onClick={handleCopy}
-            className="flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition"
+            className="flex items-center space-x-1.5 px-4 py-2.5 rounded-lg text-xs transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
           >
             {copied ? (
               <>
@@ -110,15 +122,15 @@ export default function PasswordGenerator() {
       </div>
 
       {/* Strength Indicator */}
-      <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 space-y-2">
+      <div className="p-4 rounded-xl border space-y-2 bg-muted/30">
         <div className="flex justify-between text-xs font-semibold">
-          <span className="text-slate-600 dark:text-slate-400">Password Strength:</span>
-          <span className={`px-2 py-0.5 rounded-md ${strengthColor}`}>{strengthLabel} ({strength}%)</span>
+          <span className="text-slate-600 dark:text-slate-400">Password strength</span>
+          <span className={`px-2 py-0.5 rounded-md ${strengthColor}`}>{strengthLabel} · ~{entropyBits} bits</span>
         </div>
         <div className="w-full h-2 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
           <div
             className={`h-full transition-all duration-300 ${
-              strength >= 80 ? "bg-emerald-500" : strength >= 60 ? "bg-blue-500" : "bg-amber-500"
+              entropyBits >= 100 ? "bg-emerald-500" : entropyBits >= 70 ? "bg-blue-500" : "bg-amber-500"
             }`}
             style={{ width: `${strength}%` }}
           />
@@ -126,14 +138,14 @@ export default function PasswordGenerator() {
       </div>
 
       {/* Customization Options */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-5 rounded-xl border bg-muted/30">
         <div className="space-y-4">
           <div>
-            <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
+            <div className="flex justify-between text-sm mb-2 font-medium text-foreground">
               <span>Password Length</span>
-              <span className="text-blue-600 dark:text-blue-400 font-bold">{length} characters</span>
+              <span className="text-blue-600 dark:text-blue-400 font-semibold">{length} characters</span>
             </div>
-            <input
+            <input aria-label="Password length"
               type="range"
               min={6}
               max={64}

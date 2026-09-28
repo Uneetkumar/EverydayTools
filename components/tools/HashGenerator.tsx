@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import CryptoJS from "crypto-js";
 import { Copy, Check, Lock, RefreshCw } from "lucide-react";
-import confetti from "canvas-confetti";
+import { markToolCompleted } from "@/lib/analytics";
 
 export default function HashGenerator() {
   const [text, setText] = useState<string>("Hello, TabBench!");
@@ -27,6 +27,7 @@ export default function HashGenerator() {
     try {
       await navigator.clipboard.writeText(val);
       setCopiedKey(name);
+      markToolCompleted();
       setTimeout(() => setCopiedKey(null), 1500);
     } catch (e) {
       console.error(e);
@@ -37,7 +38,7 @@ export default function HashGenerator() {
     <div className="space-y-6">
       {/* Input */}
       <div className="space-y-2">
-        <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
+        <div className="flex justify-between text-sm font-medium text-foreground">
           <span>Input String to Hash</span>
           <label className="flex items-center space-x-1.5 cursor-pointer">
             <input
@@ -49,12 +50,12 @@ export default function HashGenerator() {
             <span>UPPERCASE Hex</span>
           </label>
         </div>
-        <textarea
+        <textarea aria-label="Text to hash"
           rows={4}
           value={text}
           onChange={(e) => setText(e.target.value)}
           placeholder="Type or paste text to compute cryptographic hashes..."
-          className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full p-3.5 font-mono text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         />
       </div>
 
@@ -63,11 +64,11 @@ export default function HashGenerator() {
         {hashes.map((h) => (
           <div
             key={h.name}
-            className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-1.5"
+            className="p-4 rounded-xl border space-y-1.5 bg-muted/30"
           >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span className="text-xs font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-muted-foreground" />
                 {h.name} ({h.bits}-bit)
               </span>
               <button
@@ -78,7 +79,7 @@ export default function HashGenerator() {
                 <span>{copiedKey === h.name ? "Copied!" : "Copy"}</span>
               </button>
             </div>
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 font-mono text-xs text-slate-800 dark:text-emerald-400 break-all select-all">
+            <div className="p-2.5 rounded-xl bg-background font-mono text-xs break-all select-all text-foreground">
               {h.value || "// Enter string above to compute"}
             </div>
           </div>

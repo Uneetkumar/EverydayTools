@@ -45,37 +45,38 @@ export default function GuidesIndexPage() {
       <script type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(listSchema) }} />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
+      <div className="page-container py-8 md:py-12">
         <Breadcrumbs items={[{ name: "Guides" }]} />
 
-        <header className="space-y-4 max-w-3xl">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Guides
-          </h1>
-          <p className="text-base leading-relaxed text-slate-600 dark:text-slate-400">
-            Walkthroughs for the file problems that actually come up — getting a
-            photograph under a 50KB exam-portal limit, shrinking a scanned PDF
-            for an upload cap, or converting a document without wrecking its
-            layout. Each guide explains why the constraint exists and the order
-            of operations that solves it, then points you at the tool.
+        <header className="mt-6 max-w-3xl">
+          <h1 className="type-h1 text-foreground">Guides</h1>
+          <p className="mt-4 type-body text-muted-foreground md:text-lg">
+            Walkthroughs for the file problems that actually come up — getting a photograph under a 50KB
+            exam-portal limit, shrinking a scanned PDF for an upload cap, or converting a document without
+            wrecking its layout. Each guide explains why the constraint exists and the order of operations that
+            solves it, then points you at the tool.
           </p>
         </header>
 
-        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <ul className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {GUIDES.map((g) => (
-            <li key={g.slug}>
-              <Link href={`/guides/${g.slug}`}
-                className="group flex h-full flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 transition hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md">
-                <span className="flex items-start justify-between gap-2">
-                  <h2 className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                    {g.title}
-                  </h2>
-                  <ArrowRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-blue-600" />
-                </span>
-                <p className="mt-2 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                  {g.metaDescription}
-                </p>
-              </Link>
+            <li
+              key={g.slug}
+              className="group relative flex flex-col rounded-xl border bg-card p-5 shadow-soft transition-colors hover:border-foreground/15 hover:bg-accent/50 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-ring"
+            >
+              <h2 className="flex items-start justify-between gap-2 type-h4 text-foreground">
+                <Link
+                  href={`/guides/${g.slug}`}
+                  className="outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:outline-none"
+                >
+                  {g.title}
+                </Link>
+                <ArrowRight
+                  aria-hidden="true"
+                  className="mt-1 size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+                />
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">{g.metaDescription}</p>
             </li>
           ))}
         </ul>

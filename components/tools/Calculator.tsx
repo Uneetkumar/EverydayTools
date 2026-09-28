@@ -2,24 +2,13 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { usePersistentState } from "@/lib/hooks/usePersistentState";
-import {
-  Calculator as CalcIcon,
-  Volume2,
-  VolumeX,
-  History,
-  RotateCcw,
-  Copy,
-  Check,
-  Printer,
-  Trash2,
-  Sliders,
-  Sparkles,
-  ArrowRight,
-  Sun,
-  X,
-  Share2,
-} from "lucide-react";
-import confetti from "canvas-confetti";
+import { Calculator as CalcIcon, Check, Copy, Delete, History, Trash2, Volume2, VolumeX, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/kbd";
+import { Segmented } from "@/components/tool/kit";
+import { markToolCompleted } from "@/lib/analytics";
+import { copyText } from "@/lib/utils/clipboard";
+import { cn } from "@/lib/utils";
 
 interface HistoryItem {
   id: string;
@@ -28,37 +17,108 @@ interface HistoryItem {
   timestamp: string;
 }
 
+const OPERATORS = ["+", "−", "×", "÷", "^"];
+const endsWithOperator = (expr: string) => OPERATORS.some((op) => expr.endsWith(op));
+
+type KeyKind = "digit" | "fn" | "op" | "eq";
+
+const KEY_BASE =
+  "flex h-12 items-center justify-center rounded-xl tabular-nums transition-colors outline-none select-none active:scale-[0.97] focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-13";
+const KEY_KIND: Record<KeyKind, string> = {
+  digit: "border bg-background text-xl font-medium text-foreground hover:bg-muted dark:bg-input/30 dark:hover:bg-input/60",
+  fn: "bg-muted text-base font-medium text-foreground hover:bg-muted/70 dark:bg-muted/60 dark:hover:bg-muted",
+  op: "bg-brand-subtle text-xl font-medium text-brand-subtle-foreground hover:bg-brand-subtle/70",
+  eq: "bg-primary text-xl font-medium text-primary-foreground hover:bg-primary/90",
+};
+
+function Key({
+  label,
+  ariaLabel,
+  kind,
+  onClick,
+  pressed,
+  active,
+  className,
+}: {
+  label: React.ReactNode;
+  ariaLabel?: string;
+  kind: KeyKind;
+  onClick: () => void;
+  /** Flashes when the matching keyboard key is pressed. */
+  pressed?: boolean;
+  /** An operator waiting for its second number. */
+  active?: boolean;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      aria-pressed={active === undefined ? undefined : active}
+      className={cn(
+        KEY_BASE,
+        KEY_KIND[kind],
+        active && "bg-primary text-primary-foreground hover:bg-primary/90",
+        pressed && "ring-3 ring-ring/40",
+        className
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
+function SciKey({
+  label,
+  ariaLabel,
+  onClick,
+  active,
+}: {
+  label: React.ReactNode;
+  ariaLabel?: string;
+  onClick: () => void;
+  active?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={ariaLabel}
+      aria-pressed={active}
+      className={cn(
+        "flex h-10 items-center justify-center rounded-lg text-sm font-medium transition-colors outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        active
+          ? "bg-brand-subtle text-brand-subtle-foreground"
+          : "text-foreground hover:bg-muted"
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
 export default function Calculator() {
   // Calculator Core State
   const [display, setDisplay] = useState<string>("0");
   const [expression, setExpression] = useState<string>("");
   const [isNewNumber, setIsNewNumber] = useState<boolean>(true);
+  // True when the number on the display is already part of `expression`
+  // (right after an operator or a closing bracket), so it isn't added twice.
+  const [entryInExpr, setEntryInExpr] = useState<boolean>(false);
   const [memory, setMemory] = usePersistentState<number>("calc_mem", 0);
-  const [history, setHistory] = usePersistentState<HistoryItem[]>("calc_history", [
-    {
-      id: "demo-1",
-      expression: "250 × 1.18",
-      result: "295",
-      timestamp: "Today",
-    },
-    {
-      id: "demo-2",
-      expression: "1,200 ÷ 12",
-      result: "100",
-      timestamp: "Today",
-    },
-  ]);
+  const [history, setHistory] = usePersistentState<HistoryItem[]>("calc_history", []);
 
   // Mode and Features
   const [mode, setMode] = usePersistentState<"standard" | "scientific">("calc_mode", "standard");
   const [angleUnit, setAngleUnit] = usePersistentState<"DEG" | "RAD">("calc_angle", "DEG");
-  const [soundEnabled, setSoundEnabled] = usePersistentState<boolean>("calc_sound", true);
+  const [soundEnabled, setSoundEnabled] = usePersistentState<boolean>("calc_sound", false);
   const [isSecondFunc, setIsSecondFunc] = useState<boolean>(false);
   const [isTapeOpen, setIsTapeOpen] = useState<boolean>(false);
   const [copiedResult, setCopiedResult] = useState<boolean>(false);
   const [lastKeyPressed, setLastKeyPressed] = useState<string | null>(null);
 
-  // Audio Context Ref for synthesized realistic key click sounds
+  // Audio Context Ref for synthesized key click sounds
   const audioCtxRef = useRef<AudioContext | null>(null);
 
   const playKeySound = useCallback(
@@ -105,7 +165,6 @@ export default function Calculator() {
           osc.start(now);
           osc.stop(now + 0.04);
         } else {
-          // Standard tactile plastic snap
           osc.type = "sine";
           osc.frequency.setValueAtTime(320 + Math.random() * 40, now);
           gain.gain.setValueAtTime(0.06, now);
@@ -117,7 +176,7 @@ export default function Calculator() {
         // AudioContext not allowed or unsupported
       }
 
-      // Mobile haptic vibration feedback
+      // Mobile haptic feedback, only when sound is on
       if (typeof navigator !== "undefined" && navigator.vibrate) {
         navigator.vibrate(type === "eq" ? [12, 40, 15] : 8);
       }
@@ -148,6 +207,15 @@ export default function Calculator() {
     return `${isNegative ? "-" : ""}${formattedInt}${decimalPart}`;
   };
 
+  /**
+   * A new number is starting. If the expression ends with a closing bracket,
+   * "(2 + 3) 4" means "(2 + 3) × 4", so the multiplication is added.
+   */
+  const openSlot = () => {
+    if (entryInExpr && expression.endsWith(")")) setExpression(`${expression} ×`);
+    setEntryInExpr(false);
+  };
+
   // Input Digits
   const handleDigit = (digit: string) => {
     playKeySound("num");
@@ -156,10 +224,12 @@ export default function Calculator() {
     if (display === "Error" || display === "NaN" || display === "Infinity") {
       setDisplay(digit);
       setIsNewNumber(false);
+      setEntryInExpr(false);
       return;
     }
 
     if (isNewNumber) {
+      openSlot();
       setDisplay(digit);
       setIsNewNumber(false);
     } else {
@@ -174,6 +244,7 @@ export default function Calculator() {
     triggerVisualKey(".");
 
     if (isNewNumber) {
+      openSlot();
       setDisplay("0.");
       setIsNewNumber(false);
     } else if (!display.includes(".")) {
@@ -188,10 +259,53 @@ export default function Calculator() {
 
     if (display === "Error") return;
 
-    const currentNum = parseFloat(display);
-    if (isNaN(currentNum)) return;
+    if (entryInExpr) {
+      // Two operators in a row: the second one replaces the first.
+      if (endsWithOperator(expression)) {
+        setExpression(`${expression.slice(0, -1).trimEnd()} ${displayOp}`);
+      } else {
+        setExpression(`${expression} ${displayOp}`.trim());
+      }
+    } else {
+      const currentNum = parseFloat(display);
+      if (isNaN(currentNum)) return;
+      setExpression(`${expression} ${display} ${displayOp}`.trim());
+    }
+    setEntryInExpr(true);
+    setIsNewNumber(true);
+  };
 
-    setExpression(`${expression} ${display} ${displayOp}`.trim());
+  // Brackets
+  const handleParen = (paren: "(" | ")") => {
+    playKeySound("op");
+    triggerVisualKey(paren);
+
+    if (paren === "(") {
+      if (!entryInExpr && !isNewNumber) {
+        // "2 (" means "2 × ("
+        setExpression(`${expression} ${display} × (`.trim());
+      } else if (entryInExpr && expression.endsWith(")")) {
+        setExpression(`${expression} × (`);
+      } else {
+        setExpression(`${expression} (`.trim());
+      }
+      setDisplay("0");
+      setIsNewNumber(true);
+      setEntryInExpr(false);
+      return;
+    }
+
+    const open = (expression.match(/\(/g) || []).length;
+    const close = (expression.match(/\)/g) || []).length;
+    if (open <= close) return;
+    if (entryInExpr && expression.endsWith(")")) {
+      setExpression(`${expression} )`);
+    } else {
+      // Close over the number on the display (it isn't in the expression yet,
+      // or an operator is still waiting for it).
+      setExpression(`${expression} ${display} )`);
+    }
+    setEntryInExpr(true);
     setIsNewNumber(true);
   };
 
@@ -202,7 +316,7 @@ export default function Calculator() {
 
     if (!expression && isNewNumber) return;
 
-    const fullExpr = `${expression} ${display}`.trim();
+    const fullExpr = (entryInExpr && !endsWithOperator(expression) ? expression : `${expression} ${display}`).trim();
     if (!fullExpr) return;
 
     try {
@@ -221,7 +335,7 @@ export default function Calculator() {
       }
 
       // Safe evaluation of mathematical expression only
-      if (/[^0-9+\-*/().\s*%^]/.test(sanitized)) {
+      if (/[^0-9+\-*/().\s*%^e]/.test(sanitized)) {
         throw new Error("Invalid characters");
       }
 
@@ -233,6 +347,7 @@ export default function Calculator() {
         setDisplay("Error");
         setExpression("");
         setIsNewNumber(true);
+        setEntryInExpr(false);
         return;
       }
 
@@ -245,7 +360,6 @@ export default function Calculator() {
         cleanRes = String(rounded);
       }
 
-      // Add to paper tape history
       const newHistoryItem: HistoryItem = {
         id: String(Date.now()),
         expression: fullExpr,
@@ -253,14 +367,17 @@ export default function Calculator() {
         timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setHistory((prev) => [newHistoryItem, ...prev.slice(0, 49)]);
+      markToolCompleted();
 
       setDisplay(cleanRes);
       setExpression("");
       setIsNewNumber(true);
+      setEntryInExpr(false);
     } catch {
       setDisplay("Error");
       setExpression("");
       setIsNewNumber(true);
+      setEntryInExpr(false);
     }
   };
 
@@ -271,6 +388,7 @@ export default function Calculator() {
     setDisplay("0");
     setExpression("");
     setIsNewNumber(true);
+    setEntryInExpr(false);
   };
 
   const handleClearEntry = () => {
@@ -278,19 +396,22 @@ export default function Calculator() {
     triggerVisualKey("CE");
     setDisplay("0");
     setIsNewNumber(true);
+    // After ")" the display isn't a pending operand, so the expression stays complete.
+    setEntryInExpr(expression.endsWith(")"));
   };
 
   const handleBackspace = () => {
     playKeySound("num");
     triggerVisualKey("DEL");
 
+    if (entryInExpr) return;
     if (display === "Error" || isNewNumber) {
       setDisplay("0");
       setIsNewNumber(true);
       return;
     }
 
-    if (display.length > 1) {
+    if (display.length > 1 && display !== "-0" && !/^-\d$/.test(display)) {
       setDisplay(display.slice(0, -1));
     } else {
       setDisplay("0");
@@ -302,7 +423,7 @@ export default function Calculator() {
     playKeySound("num");
     triggerVisualKey("+/-");
 
-    if (display === "0" || display === "Error") return;
+    if (entryInExpr || display === "0" || display === "Error") return;
     if (display.startsWith("-")) {
       setDisplay(display.slice(1));
     } else {
@@ -310,16 +431,22 @@ export default function Calculator() {
     }
   };
 
+  /**
+   * Percent works like a desk calculator: after + or − it is a share of the
+   * number before the operator (200 + 10 % → 200 + 20); otherwise it divides
+   * by 100 (200 × 10 % → 200 × 0.1).
+   */
   const handlePercentage = () => {
     playKeySound("op");
     triggerVisualKey("%");
 
+    if (entryInExpr) return;
     const val = parseFloat(display);
-    if (!isNaN(val)) {
-      const res = val / 100;
-      setDisplay(String(res));
-      setIsNewNumber(true);
-    }
+    if (isNaN(val)) return;
+    const base = expression.match(/(-?\d+(?:\.\d+)?)\s*[+−]$/);
+    const res = base ? (parseFloat(base[1]) * val) / 100 : val / 100;
+    setDisplay(String(Math.round((res + Number.EPSILON) * 1e12) / 1e12));
+    setIsNewNumber(true);
   };
 
   // Scientific & Instant Operations
@@ -374,14 +501,14 @@ export default function Calculator() {
         break;
       }
       case "ln":
-        if (val <= 0) {
+        if (!isSecondFunc && val <= 0) {
           setDisplay("Error");
           return;
         }
         res = isSecondFunc ? Math.exp(val) : Math.log(val);
         break;
       case "log":
-        if (val <= 0) {
+        if (!isSecondFunc && val <= 0) {
           setDisplay("Error");
           return;
         }
@@ -413,7 +540,13 @@ export default function Calculator() {
         return;
     }
 
+    if (!isFinite(res) || isNaN(res)) {
+      setDisplay("Error");
+      setIsNewNumber(true);
+      return;
+    }
     const clean = String(Math.round((res + Number.EPSILON) * 1e12) / 1e12);
+    openSlot();
     setDisplay(clean);
     setIsNewNumber(true);
   };
@@ -429,6 +562,7 @@ export default function Calculator() {
         setMemory(0);
         break;
       case "MR":
+        openSlot();
         setDisplay(String(memory));
         setIsNewNumber(true);
         break;
@@ -448,32 +582,43 @@ export default function Calculator() {
   };
 
   // Copy Result
-  const handleCopyResult = () => {
-    navigator.clipboard.writeText(display);
+  const handleCopyResult = async () => {
+    if (!(await copyText(display))) return;
     setCopiedResult(true);
-    confetti({ particleCount: 20, spread: 45, origin: { y: 0.85 } });
+    markToolCompleted();
     setTimeout(() => setCopiedResult(false), 2000);
   };
 
-  // Recall from Paper Tape History
+  // Recall from history
   const recallHistoryItem = (item: HistoryItem) => {
     playKeySound("num");
+    openSlot();
     setDisplay(item.result);
     setIsNewNumber(true);
   };
 
-  // Physical Keyboard Listener
+  // Physical keyboard. The listener is registered once and always calls the
+  // latest handler, so it never works with stale state or settings.
+  const keyHandlerRef = useRef<(e: KeyboardEvent) => void>(() => {});
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ignore when focusing input or textarea outside calculator
-      if (["INPUT", "TEXTAREA"].includes((e.target as HTMLElement)?.tagName)) {
+    keyHandlerRef.current = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && (["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName) || target.isContentEditable)) return;
+
+      // Ctrl/Cmd+C copies the result when no text is selected.
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "c") {
+        if (!window.getSelection()?.toString()) {
+          e.preventDefault();
+          void handleCopyResult();
+        }
         return;
       }
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
 
       if (e.key >= "0" && e.key <= "9") {
         e.preventDefault();
         handleDigit(e.key);
-      } else if (e.key === ".") {
+      } else if (e.key === "." || e.key === ",") {
         e.preventDefault();
         handleDecimal();
       } else if (e.key === "+") {
@@ -482,18 +627,24 @@ export default function Calculator() {
       } else if (e.key === "-") {
         e.preventDefault();
         handleOperator("-", "−");
-      } else if (e.key === "*") {
+      } else if (e.key === "*" || e.key === "x") {
         e.preventDefault();
         handleOperator("*", "×");
       } else if (e.key === "/") {
         e.preventDefault();
         handleOperator("/", "÷");
+      } else if (e.key === "^") {
+        e.preventDefault();
+        handleOperator("^", "^");
       } else if (e.key === "=" || e.key === "Enter") {
         e.preventDefault();
         handleEquals();
       } else if (e.key === "Backspace") {
         e.preventDefault();
         handleBackspace();
+      } else if (e.key === "Delete") {
+        e.preventDefault();
+        handleClearEntry();
       } else if (e.key === "Escape") {
         e.preventDefault();
         handleClear();
@@ -502,642 +653,277 @@ export default function Calculator() {
         handlePercentage();
       } else if (e.key === "(" || e.key === ")") {
         e.preventDefault();
-        setExpression((prev) => `${prev} ${e.key}`.trim());
-        triggerVisualKey(e.key);
+        handleParen(e.key);
       }
     };
+  });
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => keyHandlerRef.current(e);
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [display, expression, isNewNumber]);
+  // The operator waiting for its second number, highlighted on the keypad.
+  const pendingOp = entryInExpr && endsWithOperator(expression) ? expression.slice(-1) : null;
+  const shown = formatDisplay(display);
+  const displaySize = shown.length > 16 ? "text-2xl" : shown.length > 11 ? "text-3xl" : "text-4xl sm:text-5xl";
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      {/* Top Toolbar / Mode Selector */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-2 rounded-2xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+    <div className="space-y-5">
+      {/* Toolbar */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Segmented
+          value={mode}
+          onChange={setMode}
+          ariaLabel="Calculator mode"
+          size="sm"
+          options={[
+            { value: "standard", label: "Standard" },
+            { value: "scientific", label: "Scientific" },
+          ]}
+        />
         <div className="flex items-center gap-1.5">
-          <button
+          <Button
             type="button"
-            onClick={() => setMode("standard")}
-            className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-1.5 ${
-              mode === "standard"
-                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            <CalcIcon className="w-3.5 h-3.5" />
-            <span>Standard Desktop</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("scientific")}
-            className={`px-4 py-2 text-xs font-bold rounded-xl transition flex items-center gap-1.5 ${
-              mode === "scientific"
-                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
-                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-            }`}
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Scientific Studio</span>
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Sound Toggle */}
-          <button
-            type="button"
+            variant="ghost"
+            size="sm"
+            aria-pressed={soundEnabled}
             onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`p-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition ${
-              soundEnabled
-                ? "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 shadow-xs"
-                : "bg-slate-200/60 dark:bg-slate-800/40 text-slate-400 border-transparent"
-            }`}
-            title={soundEnabled ? "Tactile click sound ON" : "Click sound MUTED"}
+            title={soundEnabled ? "Key sounds on" : "Key sounds off"}
           >
-            {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-blue-600" /> : <VolumeX className="w-3.5 h-3.5 text-slate-400" />}
-            <span className="text-[11px] hidden sm:inline">{soundEnabled ? "Sound" : "Muted"}</span>
-          </button>
-
-          {/* Paper Tape Drawer Toggle */}
-          <button
+            {soundEnabled ? <Volume2 aria-hidden="true" /> : <VolumeX aria-hidden="true" />}
+            <span className="hidden sm:inline">{soundEnabled ? "Sound on" : "Sound off"}</span>
+          </Button>
+          <Button
             type="button"
+            variant={isTapeOpen ? "secondary" : "outline"}
+            size="sm"
+            aria-pressed={isTapeOpen}
+            aria-controls="calc-history"
             onClick={() => setIsTapeOpen(!isTapeOpen)}
-            className={`p-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition ${
-              isTapeOpen
-                ? "bg-blue-600 text-white border-blue-600 shadow-xs"
-                : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700"
-            }`}
-            title="Toggle calculation history tape"
           >
-            <History className="w-3.5 h-3.5" />
-            <span className="text-[11px] hidden sm:inline">Tape History</span>
+            <History aria-hidden="true" />
+            History
             {history.length > 0 && (
-              <span className="w-4 h-4 rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-300 text-[10px] font-bold flex items-center justify-center">
+              <span className="rounded-full bg-muted px-1.5 text-xs tabular-nums text-muted-foreground">
                 {history.length}
               </span>
             )}
-          </button>
+          </Button>
         </div>
       </div>
 
-      {/* Main Calculator Studio Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left/Center Column: Realistic Skeuomorphic Hardware Body */}
-        <div className={`transition-all duration-300 ${isTapeOpen ? "lg:col-span-8" : "lg:col-span-12 max-w-2xl mx-auto"}`}>
-          <div
-            className="p-5 sm:p-7 rounded-[32px] border shadow-2xl relative overflow-hidden transition-all select-none"
-            style={{
-              background: "linear-gradient(175deg, #1e293b 0%, #0f172a 100%)",
-              borderColor: "#334155",
-              boxShadow: "0 25px 50px -12px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15)",
-            }}
-          >
-            {/* Top Hardware Bezel: Solar Panel Strip & Brand */}
-            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-700/60">
-              {/* Brand Label */}
-              <div className="flex items-center gap-2">
-                <div className="px-2 py-0.5 rounded-md bg-slate-800/80 border border-slate-700 text-[10px] font-extrabold tracking-widest text-slate-300 uppercase shadow-inner">
-                  TABBENCH
-                </div>
-                <span className="text-[10px] font-mono text-slate-400 font-bold uppercase tracking-wider">
-                  {mode === "scientific" ? "FX-991 MATRIX PRO" : "DESK MASTER 12"}
-                </span>
-              </div>
-
-              {/* Realistic Photovoltaic Solar Panel */}
-              <div
-                className="w-28 sm:w-36 h-5 rounded-md border border-amber-950/80 shadow-inner flex items-center justify-evenly px-1 relative overflow-hidden"
-                style={{
-                  background: "linear-gradient(180deg, #3d2314 0%, #1f120a 100%)",
-                }}
-                title="Photovoltaic Solar Cell (Decorative Ambient Aesthetic)"
-              >
-                {/* Solar Cell Grid Lines */}
-                <div className="w-[1px] h-full bg-amber-700/30" />
-                <div className="w-[1px] h-full bg-amber-700/30" />
-                <div className="w-[1px] h-full bg-amber-700/30" />
-                <div className="w-[1px] h-full bg-amber-700/30" />
-                {/* Light reflection glass sheen */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent pointer-events-none" />
-              </div>
-            </div>
-
-            {/* Recessed Realistic LCD Display */}
-            <div
-              className="p-4 sm:p-5 rounded-2xl border mb-5 relative shadow-inner overflow-hidden"
-              style={{
-                background: "linear-gradient(180deg, #091312 0%, #030a09 100%)",
-                borderColor: "#1e3a35",
-                boxShadow: "inset 0 4px 10px rgba(0,0,0,0.8), 0 1px 0 rgba(255,255,255,0.05)",
-              }}
-            >
-              {/* Status Flags Header */}
-              <div className="flex items-center justify-between text-[11px] font-mono font-bold text-emerald-500/70 pb-1">
-                <div className="flex items-center gap-2">
-                  <span className={`px-1.5 py-0.2 rounded ${mode === "scientific" ? "bg-emerald-950/80 text-emerald-400 border border-emerald-800/50" : "opacity-30"}`}>
-                    {angleUnit}
+      <div className={cn("flex flex-col gap-5", isTapeOpen && "lg:flex-row lg:items-start lg:justify-center")}>
+        {/* Calculator */}
+        <div className={cn("mx-auto w-full max-w-sm space-y-3", isTapeOpen && "lg:mx-0")}>
+          {/* Display */}
+          <div className="rounded-xl border bg-muted/40 px-4 pt-2.5 pb-3">
+            <div className="flex h-7 items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                {mode === "scientific" && <span className="rounded bg-background px-1.5 py-0.5 dark:bg-input/40">{angleUnit}</span>}
+                {memory !== 0 && (
+                  <span className="rounded bg-background px-1.5 py-0.5 dark:bg-input/40" title={`Memory: ${formatDisplay(String(memory))}`}>
+                    M
                   </span>
-                  {memory !== 0 && (
-                    <span className="px-1.5 py-0.2 rounded bg-amber-950/80 text-amber-400 border border-amber-800/50">
-                      M
-                    </span>
-                  )}
-                  {isSecondFunc && (
-                    <span className="px-1.5 py-0.2 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-800/50">
-                      2nd
-                    </span>
-                  )}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleCopyResult}
-                  className="flex items-center gap-1 text-[10px] text-slate-400 hover:text-emerald-400 transition"
-                  title="Copy current value"
-                >
-                  {copiedResult ? (
-                    <>
-                      <Check className="w-3 h-3 text-emerald-400" />
-                      <span className="text-emerald-400 font-sans">Copied</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3 h-3" />
-                      <span className="font-sans">Copy</span>
-                    </>
-                  )}
-                </button>
+                )}
+                {isSecondFunc && <span className="rounded bg-background px-1.5 py-0.5 dark:bg-input/40">2nd</span>}
               </div>
-
-              {/* Expression Ticker (Sub-display) */}
-              <div className="h-6 flex items-center justify-end font-mono text-xs text-emerald-600/80 dark:text-emerald-500/80 overflow-x-auto whitespace-nowrap scrollbar-none">
-                {expression || "\u00A0"}
-              </div>
-
-              {/* Primary Digital Digits */}
-              <div className="flex items-baseline justify-end overflow-x-auto whitespace-nowrap scrollbar-none py-1">
-                <span
-                  className="font-mono font-bold tracking-tight text-right text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.35)]"
-                  style={{
-                    fontSize: display.length > 12 ? "1.8rem" : display.length > 9 ? "2.3rem" : "2.85rem",
-                    letterSpacing: "0.04em",
-                  }}
-                >
-                  {formatDisplay(display)}
-                </span>
-              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                onClick={handleCopyResult}
+                aria-label={copiedResult ? "Copied" : "Copy result"}
+                className="-mr-2 text-muted-foreground"
+              >
+                {copiedResult ? <Check aria-hidden="true" className="text-success" /> : <Copy aria-hidden="true" />}
+                {copiedResult ? "Copied" : "Copy"}
+              </Button>
             </div>
-
-            {/* Memory Buttons Row */}
-            <div className="grid grid-cols-5 gap-2 mb-3">
-              {[
-                { id: "MC", label: "MC" },
-                { id: "MR", label: "MR" },
-                { id: "M+", label: "M+" },
-                { id: "M-", label: "M-" },
-                { id: "MS", label: "MS" },
-              ].map((btn) => (
-                <button
-                  key={btn.id}
-                  type="button"
-                  onClick={() => handleMemory(btn.id as "MC" | "MR" | "M+" | "M-" | "MS")}
-                  className={`py-1.5 text-xs font-mono font-bold rounded-lg border transition active:scale-95 ${
-                    lastKeyPressed === btn.id
-                      ? "bg-blue-600 text-white border-blue-500 shadow-inner"
-                      : "bg-slate-800/80 hover:bg-slate-750 text-slate-300 border-slate-700/60 shadow-xs"
-                  }`}
-                >
-                  {btn.label}
-                </button>
-              ))}
+            <div className="min-h-5 overflow-x-auto overflow-y-hidden text-right font-mono text-sm whitespace-nowrap text-muted-foreground" aria-label="Expression">
+              {expression || " "}
             </div>
+            <output
+              aria-live="polite"
+              aria-label="Result"
+              className={cn(
+                "mt-0.5 block overflow-x-auto overflow-y-hidden text-right leading-tight font-semibold tracking-tight whitespace-nowrap tabular-nums text-foreground",
+                displaySize,
+                display === "Error" && "text-destructive"
+              )}
+            >
+              {shown}
+            </output>
+          </div>
 
-            {/* Scientific Function Panel (When in Scientific Mode) */}
-            {mode === "scientific" && (
-              <div className="p-2.5 rounded-2xl bg-slate-950/60 border border-slate-800 mb-3 grid grid-cols-5 gap-1.5 sm:gap-2 animate-in fade-in duration-200">
-                <button
-                  type="button"
-                  onClick={() => setIsSecondFunc(!isSecondFunc)}
-                  className={`py-2 text-[11px] font-mono font-bold rounded-xl border transition ${
-                    isSecondFunc
-                      ? "bg-indigo-600 text-white border-indigo-500 shadow-inner"
-                      : "bg-slate-800/90 text-indigo-400 border-slate-700/70 hover:bg-slate-800"
-                  }`}
-                >
-                  2nd
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setAngleUnit(angleUnit === "DEG" ? "RAD" : "DEG")}
-                  className="py-2 text-[11px] font-mono font-bold rounded-xl bg-slate-800/90 hover:bg-slate-800 text-emerald-400 border border-slate-700/70"
-                >
-                  {angleUnit}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInstantMath("sin")}
-                  className="py-2 text-[11px] font-mono font-bold rounded-xl bg-slate-800/90 hover:bg-slate-800 text-slate-300 border border-slate-700/70"
-                >
-                  {isSecondFunc ? "sin⁻¹" : "sin"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInstantMath("cos")}
-                  className="py-2 text-[11px] font-mono font-bold rounded-xl bg-slate-800/90 hover:bg-slate-800 text-slate-300 border border-slate-700/70"
-                >
-                  {isSecondFunc ? "cos⁻¹" : "cos"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInstantMath("tan")}
-                  className="py-2 text-[11px] font-mono font-bold rounded-xl bg-slate-800/90 hover:bg-slate-800 text-slate-300 border border-slate-700/70"
-                >
-                  {isSecondFunc ? "tan⁻¹" : "tan"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleInstantMath("ln")}
-                  className="py-2 text-[11px] font-mono font-bold rounded-xl bg-slate-800/90 hover:bg-slate-800 text-slate-300 border border-slate-700/70"
-                >
-                  {isSecondFunc ? "eˣ" : "ln"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInstantMath("log")}
-                  className="py-2 text-[11px] font-mono font-bold rounded-xl bg-slate-800/90 hover:bg-slate-800 text-slate-300 border border-slate-700/70"
-                >
-                  {isSecondFunc ? "10ˣ" : "log"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleOperator("^", "^")}
-                  className="py-2 text-[11px] font-mono font-bold rounded-xl bg-slate-800/90 hover:bg-slate-800 text-slate-300 border border-slate-700/70"
-                >
-                  xʸ
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInstantMath("sqrt")}
-                  className="py-2 text-[11px] font-mono font-bold rounded-xl bg-slate-800/90 hover:bg-slate-800 text-slate-300 border border-slate-700/70"
-                >
-                  √x
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInstantMath("fact")}
-                  className="py-2 text-[11px] font-mono font-bold rounded-xl bg-slate-800/90 hover:bg-slate-800 text-slate-300 border border-slate-700/70"
-                >
-                  x!
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleInstantMath("pi")}
-                  className="py-2 text-[11px] font-mono font-bold rounded-xl bg-slate-800/90 hover:bg-slate-800 text-amber-400 border border-slate-700/70"
-                >
-                  π
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInstantMath("e")}
-                  className="py-2 text-[11px] font-mono font-bold rounded-xl bg-slate-800/90 hover:bg-slate-800 text-amber-400 border border-slate-700/70"
-                >
-                  e
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    playKeySound("op");
-                    setExpression((prev) => `${prev} (`.trim());
-                  }}
-                  className="py-2 text-[11px] font-mono font-bold rounded-xl bg-slate-800/90 hover:bg-slate-800 text-slate-300 border border-slate-700/70"
-                >
-                  (
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    playKeySound("op");
-                    setExpression((prev) => `${prev} )`.trim());
-                  }}
-                  className="py-2 text-[11px] font-mono font-bold rounded-xl bg-slate-800/90 hover:bg-slate-800 text-slate-300 border border-slate-700/70"
-                >
-                  )
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleInstantMath("inv")}
-                  className="py-2 text-[11px] font-mono font-bold rounded-xl bg-slate-800/90 hover:bg-slate-800 text-slate-300 border border-slate-700/70"
-                >
-                  1/x
-                </button>
-              </div>
-            )}
-
-            {/* Main Tactile Keypad Grid */}
-            <div className="grid grid-cols-4 gap-2.5 sm:gap-3">
-              {/* Row 1: Function Controls */}
+          {/* Memory */}
+          <div className="grid grid-cols-5 gap-1" role="group" aria-label="Memory">
+            {(
+              [
+                { id: "MC", label: "MC", aria: "Memory clear", needsMemory: true },
+                { id: "MR", label: "MR", aria: "Memory recall", needsMemory: true },
+                { id: "M+", label: "M+", aria: "Add to memory", needsMemory: false },
+                { id: "M-", label: "M−", aria: "Subtract from memory", needsMemory: false },
+                { id: "MS", label: "MS", aria: "Memory store", needsMemory: false },
+              ] as const
+            ).map((btn) => (
               <button
+                key={btn.id}
                 type="button"
-                onClick={handleClear}
-                className={`py-3.5 sm:py-4 text-sm font-bold rounded-2xl border transition active:scale-95 text-rose-300 border-rose-900/50 shadow-sm ${
-                  lastKeyPressed === "C"
-                    ? "bg-rose-700 shadow-inner"
-                    : "bg-gradient-to-b from-rose-950/80 to-rose-900/70 hover:from-rose-900/80 hover:to-rose-850"
-                }`}
-                style={{
-                  boxShadow: "0 4px 0 rgba(159, 18, 57, 0.4), 0 5px 10px rgba(0,0,0,0.3)",
-                }}
+                onClick={() => handleMemory(btn.id)}
+                disabled={btn.needsMemory && memory === 0}
+                aria-label={btn.aria}
+                title={btn.aria}
+                className={cn(
+                  "h-8 rounded-md text-xs font-medium text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40",
+                  lastKeyPressed === btn.id && "bg-muted text-foreground"
+                )}
               >
-                C
+                {btn.label}
               </button>
+            ))}
+          </div>
 
-              <button
-                type="button"
-                onClick={handleClearEntry}
-                className={`py-3.5 sm:py-4 text-sm font-bold rounded-2xl border transition active:scale-95 text-amber-300 border-amber-900/50 shadow-sm ${
-                  lastKeyPressed === "CE"
-                    ? "bg-amber-700 shadow-inner"
-                    : "bg-gradient-to-b from-amber-950/80 to-amber-900/70 hover:from-amber-900/80"
-                }`}
-                style={{
-                  boxShadow: "0 4px 0 rgba(180, 83, 9, 0.4), 0 5px 10px rgba(0,0,0,0.3)",
-                }}
-              >
-                CE
-              </button>
+          {/* Scientific functions */}
+          {mode === "scientific" && (
+            <div className="grid grid-cols-5 gap-1 rounded-xl border p-1.5" role="group" aria-label="Scientific functions">
+              <SciKey label="2nd" ariaLabel="Second functions" active={isSecondFunc} onClick={() => setIsSecondFunc(!isSecondFunc)} />
+              <SciKey
+                label={angleUnit}
+                ariaLabel={`Angle unit: ${angleUnit === "DEG" ? "degrees" : "radians"}. Switch`}
+                onClick={() => setAngleUnit(angleUnit === "DEG" ? "RAD" : "DEG")}
+              />
+              <SciKey label={isSecondFunc ? "sin⁻¹" : "sin"} ariaLabel={isSecondFunc ? "Inverse sine" : "Sine"} onClick={() => handleInstantMath("sin")} />
+              <SciKey label={isSecondFunc ? "cos⁻¹" : "cos"} ariaLabel={isSecondFunc ? "Inverse cosine" : "Cosine"} onClick={() => handleInstantMath("cos")} />
+              <SciKey label={isSecondFunc ? "tan⁻¹" : "tan"} ariaLabel={isSecondFunc ? "Inverse tangent" : "Tangent"} onClick={() => handleInstantMath("tan")} />
 
-              <button
-                type="button"
-                onClick={handlePercentage}
-                className="py-3.5 sm:py-4 text-sm font-bold rounded-2xl bg-gradient-to-b from-slate-800 to-slate-850 hover:from-slate-750 text-slate-200 border border-slate-700/80 active:scale-95 transition"
-                style={{
-                  boxShadow: "0 4px 0 rgba(15, 23, 42, 0.8), 0 5px 10px rgba(0,0,0,0.3)",
-                }}
-              >
-                %
-              </button>
+              <SciKey label={isSecondFunc ? "eˣ" : "ln"} ariaLabel={isSecondFunc ? "e to the power of x" : "Natural logarithm"} onClick={() => handleInstantMath("ln")} />
+              <SciKey label={isSecondFunc ? "10ˣ" : "log"} ariaLabel={isSecondFunc ? "10 to the power of x" : "Logarithm base 10"} onClick={() => handleInstantMath("log")} />
+              <SciKey label="xʸ" ariaLabel="Power" onClick={() => handleOperator("^", "^")} />
+              <SciKey
+                label={isSecondFunc ? "∛x" : "x³"}
+                ariaLabel={isSecondFunc ? "Cube root" : "Cube"}
+                onClick={() => handleInstantMath(isSecondFunc ? "cbrt" : "cube")}
+              />
+              <SciKey label="x!" ariaLabel="Factorial" onClick={() => handleInstantMath("fact")} />
 
-              <button
-                type="button"
-                onClick={() => handleOperator("/", "÷")}
-                className={`py-3.5 sm:py-4 text-lg font-bold rounded-2xl border transition active:scale-95 text-white border-amber-500/50 ${
-                  lastKeyPressed === "/"
-                    ? "bg-amber-700 shadow-inner"
-                    : "bg-gradient-to-b from-amber-500 to-amber-600 hover:from-amber-450 hover:to-amber-550"
-                }`}
-                style={{
-                  boxShadow: "0 4px 0 rgba(180, 83, 9, 0.8), 0 5px 12px rgba(245, 158, 11, 0.3)",
-                }}
-              >
-                ÷
-              </button>
-
-              {/* Row 2: 7, 8, 9, × */}
-              {["7", "8", "9"].map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => handleDigit(num)}
-                  className={`py-3.5 sm:py-4 text-xl font-bold rounded-2xl border transition active:scale-95 text-white border-slate-650 ${
-                    lastKeyPressed === num
-                      ? "bg-slate-650 shadow-inner translate-y-0.5"
-                      : "bg-gradient-to-b from-slate-750 to-slate-850 hover:from-slate-700"
-                  }`}
-                  style={{
-                    boxShadow: "0 4px 0 rgba(15, 23, 42, 0.9), 0 5px 10px rgba(0,0,0,0.3)",
-                  }}
-                >
-                  {num}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => handleOperator("*", "×")}
-                className={`py-3.5 sm:py-4 text-lg font-bold rounded-2xl border transition active:scale-95 text-white border-amber-500/50 ${
-                  lastKeyPressed === "*"
-                    ? "bg-amber-700 shadow-inner"
-                    : "bg-gradient-to-b from-amber-500 to-amber-600 hover:from-amber-450 hover:to-amber-550"
-                }`}
-                style={{
-                  boxShadow: "0 4px 0 rgba(180, 83, 9, 0.8), 0 5px 12px rgba(245, 158, 11, 0.3)",
-                }}
-              >
-                ×
-              </button>
-
-              {/* Row 3: 4, 5, 6, − */}
-              {["4", "5", "6"].map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => handleDigit(num)}
-                  className={`py-3.5 sm:py-4 text-xl font-bold rounded-2xl border transition active:scale-95 text-white border-slate-650 ${
-                    lastKeyPressed === num
-                      ? "bg-slate-650 shadow-inner translate-y-0.5"
-                      : "bg-gradient-to-b from-slate-750 to-slate-850 hover:from-slate-700"
-                  }`}
-                  style={{
-                    boxShadow: "0 4px 0 rgba(15, 23, 42, 0.9), 0 5px 10px rgba(0,0,0,0.3)",
-                  }}
-                >
-                  {num}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => handleOperator("-", "−")}
-                className={`py-3.5 sm:py-4 text-lg font-bold rounded-2xl border transition active:scale-95 text-white border-amber-500/50 ${
-                  lastKeyPressed === "-"
-                    ? "bg-amber-700 shadow-inner"
-                    : "bg-gradient-to-b from-amber-500 to-amber-600 hover:from-amber-450 hover:to-amber-550"
-                }`}
-                style={{
-                  boxShadow: "0 4px 0 rgba(180, 83, 9, 0.8), 0 5px 12px rgba(245, 158, 11, 0.3)",
-                }}
-              >
-                −
-              </button>
-
-              {/* Row 4: 1, 2, 3, + */}
-              {["1", "2", "3"].map((num) => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => handleDigit(num)}
-                  className={`py-3.5 sm:py-4 text-xl font-bold rounded-2xl border transition active:scale-95 text-white border-slate-650 ${
-                    lastKeyPressed === num
-                      ? "bg-slate-650 shadow-inner translate-y-0.5"
-                      : "bg-gradient-to-b from-slate-750 to-slate-850 hover:from-slate-700"
-                  }`}
-                  style={{
-                    boxShadow: "0 4px 0 rgba(15, 23, 42, 0.9), 0 5px 10px rgba(0,0,0,0.3)",
-                  }}
-                >
-                  {num}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => handleOperator("+", "+")}
-                className={`py-3.5 sm:py-4 text-lg font-bold rounded-2xl border transition active:scale-95 text-white border-amber-500/50 ${
-                  lastKeyPressed === "+"
-                    ? "bg-amber-700 shadow-inner"
-                    : "bg-gradient-to-b from-amber-500 to-amber-600 hover:from-amber-450 hover:to-amber-550"
-                }`}
-                style={{
-                  boxShadow: "0 4px 0 rgba(180, 83, 9, 0.8), 0 5px 12px rgba(245, 158, 11, 0.3)",
-                }}
-              >
-                +
-              </button>
-
-              {/* Row 5: +/-, 0, ., = */}
-              <button
-                type="button"
-                onClick={handleToggleSign}
-                className="py-3.5 sm:py-4 text-sm font-bold rounded-2xl bg-gradient-to-b from-slate-800 to-slate-850 hover:from-slate-750 text-slate-200 border border-slate-700/80 active:scale-95 transition"
-                style={{
-                  boxShadow: "0 4px 0 rgba(15, 23, 42, 0.8), 0 5px 10px rgba(0,0,0,0.3)",
-                }}
-              >
-                ±
-              </button>
-
-              <button
-                type="button"
-                onClick={() => handleDigit("0")}
-                className={`py-3.5 sm:py-4 text-xl font-bold rounded-2xl border transition active:scale-95 text-white border-slate-650 ${
-                  lastKeyPressed === "0"
-                    ? "bg-slate-650 shadow-inner translate-y-0.5"
-                    : "bg-gradient-to-b from-slate-750 to-slate-850 hover:from-slate-700"
-                }`}
-                style={{
-                  boxShadow: "0 4px 0 rgba(15, 23, 42, 0.9), 0 5px 10px rgba(0,0,0,0.3)",
-                }}
-              >
-                0
-              </button>
-
-              <button
-                type="button"
-                onClick={handleDecimal}
-                className={`py-3.5 sm:py-4 text-xl font-bold rounded-2xl border transition active:scale-95 text-white border-slate-650 ${
-                  lastKeyPressed === "."
-                    ? "bg-slate-650 shadow-inner translate-y-0.5"
-                    : "bg-gradient-to-b from-slate-750 to-slate-850 hover:from-slate-700"
-                }`}
-                style={{
-                  boxShadow: "0 4px 0 rgba(15, 23, 42, 0.9), 0 5px 10px rgba(0,0,0,0.3)",
-                }}
-              >
-                .
-              </button>
-
-              <button
-                type="button"
-                onClick={handleEquals}
-                className={`py-3.5 sm:py-4 text-xl font-bold rounded-2xl border transition active:scale-95 text-white border-blue-500/60 ${
-                  lastKeyPressed === "="
-                    ? "bg-blue-700 shadow-inner"
-                    : "bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-550 hover:to-blue-650"
-                }`}
-                style={{
-                  boxShadow: "0 4px 0 rgba(29, 78, 216, 0.8), 0 5px 15px rgba(37, 99, 235, 0.4)",
-                }}
-              >
-                =
-              </button>
+              <SciKey label="π" ariaLabel="Pi" onClick={() => handleInstantMath("pi")} />
+              <SciKey label="e" ariaLabel="Euler's number" onClick={() => handleInstantMath("e")} />
+              <SciKey label="(" ariaLabel="Open bracket" onClick={() => handleParen("(")} />
+              <SciKey label=")" ariaLabel="Close bracket" onClick={() => handleParen(")")} />
+              <SciKey label="|x|" ariaLabel="Absolute value" onClick={() => handleInstantMath("abs")} />
             </div>
+          )}
+
+          {/* Keypad */}
+          <div className="grid grid-cols-4 gap-2" role="group" aria-label="Keypad">
+            <Key kind="fn" label="%" ariaLabel="Percent" onClick={handlePercentage} pressed={lastKeyPressed === "%"} />
+            <Key kind="fn" label="CE" ariaLabel="Clear entry" onClick={handleClearEntry} pressed={lastKeyPressed === "CE"} />
+            <Key kind="fn" label="C" ariaLabel="Clear all" onClick={handleClear} pressed={lastKeyPressed === "C"} className="text-destructive" />
+            <Key
+              kind="fn"
+              label={<Delete className="size-5" aria-hidden="true" />}
+              ariaLabel="Backspace"
+              onClick={handleBackspace}
+              pressed={lastKeyPressed === "DEL"}
+            />
+
+            <Key kind="fn" label="¹⁄ₓ" ariaLabel="Reciprocal" onClick={() => handleInstantMath("inv")} pressed={lastKeyPressed === "inv"} />
+            <Key kind="fn" label="x²" ariaLabel="Square" onClick={() => handleInstantMath("sq")} pressed={lastKeyPressed === "sq"} />
+            <Key kind="fn" label="√x" ariaLabel="Square root" onClick={() => handleInstantMath("sqrt")} pressed={lastKeyPressed === "sqrt"} />
+            <Key kind="op" label="÷" ariaLabel="Divide" onClick={() => handleOperator("/", "÷")} pressed={lastKeyPressed === "/"} active={pendingOp === "÷"} />
+
+            {["7", "8", "9"].map((n) => (
+              <Key key={n} kind="digit" label={n} onClick={() => handleDigit(n)} pressed={lastKeyPressed === n} />
+            ))}
+            <Key kind="op" label="×" ariaLabel="Multiply" onClick={() => handleOperator("*", "×")} pressed={lastKeyPressed === "*"} active={pendingOp === "×"} />
+
+            {["4", "5", "6"].map((n) => (
+              <Key key={n} kind="digit" label={n} onClick={() => handleDigit(n)} pressed={lastKeyPressed === n} />
+            ))}
+            <Key kind="op" label="−" ariaLabel="Subtract" onClick={() => handleOperator("-", "−")} pressed={lastKeyPressed === "-"} active={pendingOp === "−"} />
+
+            {["1", "2", "3"].map((n) => (
+              <Key key={n} kind="digit" label={n} onClick={() => handleDigit(n)} pressed={lastKeyPressed === n} />
+            ))}
+            <Key kind="op" label="+" ariaLabel="Add" onClick={() => handleOperator("+", "+")} pressed={lastKeyPressed === "+"} active={pendingOp === "+"} />
+
+            <Key kind="digit" label="±" ariaLabel="Change sign" onClick={handleToggleSign} pressed={lastKeyPressed === "+/-"} className="text-lg" />
+            <Key kind="digit" label="0" onClick={() => handleDigit("0")} pressed={lastKeyPressed === "0"} />
+            <Key kind="digit" label="." ariaLabel="Decimal point" onClick={handleDecimal} pressed={lastKeyPressed === "."} />
+            <Key kind="eq" label="=" ariaLabel="Equals" onClick={handleEquals} pressed={lastKeyPressed === "="} />
           </div>
         </div>
 
-        {/* Right Column: Paper Tape History Drawer */}
+        {/* History */}
         {isTapeOpen && (
-          <div className="lg:col-span-4 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden animate-in slide-in-from-right duration-200 flex flex-col h-[560px]">
-            {/* Tape Header */}
-            <div className="p-4 bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <History className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                  Paper Tape Audit
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
+          <section
+            id="calc-history"
+            aria-label="Calculation history"
+            className="mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-xl border lg:mx-0 lg:h-[34rem] lg:w-72"
+          >
+            <div className="flex items-center justify-between border-b px-3.5 py-2.5">
+              <h3 className="text-sm font-semibold text-foreground">History</h3>
+              <div className="flex items-center gap-0.5">
                 {history.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => setHistory([])}
-                    className="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                    title="Clear history tape"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <Button type="button" variant="ghost" size="icon-sm" onClick={() => setHistory([])} aria-label="Clear history" title="Clear history">
+                    <Trash2 aria-hidden="true" />
+                  </Button>
                 )}
-                <button
-                  type="button"
-                  onClick={() => setIsTapeOpen(false)}
-                  className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+                <Button type="button" variant="ghost" size="icon-sm" onClick={() => setIsTapeOpen(false)} aria-label="Close history">
+                  <X aria-hidden="true" />
+                </Button>
               </div>
             </div>
 
-            {/* Tape Receipt Body */}
-            <div className="flex-1 p-4 overflow-y-auto space-y-3 font-mono">
+            <div className="max-h-80 flex-1 overflow-y-auto p-1.5 lg:max-h-none">
               {history.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center text-center p-6 text-slate-400 text-xs">
-                  <CalcIcon className="w-8 h-8 stroke-1 text-slate-300 dark:text-slate-700 mb-2" />
-                  <p>Tape is clear.</p>
-                  <p className="text-[10px] text-slate-500 mt-1">Calculations will print here continuously as you work.</p>
+                <div className="flex h-full min-h-40 flex-col items-center justify-center gap-1 p-6 text-center">
+                  <CalcIcon className="size-6 text-muted-foreground/60" aria-hidden="true" />
+                  <p className="text-sm text-muted-foreground">No calculations yet.</p>
+                  <p className="text-xs text-muted-foreground">Results appear here when you press =.</p>
                 </div>
               ) : (
-                history.map((item) => (
-                  <div
-                    key={item.id}
-                    onClick={() => recallHistoryItem(item)}
-                    className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800/80 hover:border-blue-500/50 cursor-pointer group transition text-right"
-                  >
-                    <div className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-between">
-                      <span className="text-[10px] text-slate-400">{item.timestamp}</span>
-                      <span className="group-hover:text-blue-500 transition">{item.expression}</span>
-                    </div>
-                    <div className="text-base font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 mt-1">
-                      = {formatDisplay(item.result)}
-                    </div>
-                  </div>
-                ))
+                <ul className="space-y-0.5">
+                  {history.map((item) => (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        onClick={() => recallHistoryItem(item)}
+                        className="w-full rounded-lg px-2.5 py-2 text-right transition-colors outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+                        aria-label={`Use ${formatDisplay(item.result)} (${item.expression})`}
+                      >
+                        <span className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+                          <span>{item.timestamp}</span>
+                          <span className="truncate font-mono">{item.expression}</span>
+                        </span>
+                        <span className="mt-0.5 block text-base font-semibold tabular-nums text-foreground">
+                          = {formatDisplay(item.result)}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
 
-            {/* Tape Footer */}
             {history.length > 0 && (
-              <div className="p-3 bg-slate-50 dark:bg-slate-950/80 border-t border-slate-200 dark:border-slate-800 text-[11px] text-slate-500 flex items-center justify-between">
-                <span>{history.length} operations logged</span>
-                <span className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold">
-                  Click any row to reuse
-                </span>
-              </div>
+              <p className="border-t px-3.5 py-2 text-xs text-muted-foreground">
+                Select a result to use it again. Kept in this browser for three days.
+              </p>
             )}
-          </div>
+          </section>
         )}
       </div>
 
-      {/* Keyboard Shortcuts Guide Footnote */}
-      <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-400 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <span className="font-semibold text-slate-900 dark:text-white">Keyboard Friendly:</span>
-          <span className="hidden sm:inline">Use standard numbers 0–9, numpad, operators (+, -, *, /), Enter for =, and Backspace to delete.</span>
-        </div>
-        <div className="flex items-center gap-1.5 font-mono text-[11px]">
-          <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700">Esc</kbd>
-          <span>Clear</span>
-          <kbd className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 ml-2">Enter</kbd>
-          <span>Calculate</span>
-        </div>
-      </div>
+      {/* Keyboard hint */}
+      <p className="hidden flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground sm:flex">
+        <span>Keyboard works too:</span>
+        <span className="inline-flex items-center gap-1"><Kbd>0–9</Kbd><Kbd>+</Kbd><Kbd>−</Kbd><Kbd>*</Kbd><Kbd>/</Kbd></span>
+        <span className="inline-flex items-center gap-1"><Kbd>Enter</Kbd> equals</span>
+        <span className="inline-flex items-center gap-1"><Kbd>Backspace</Kbd> delete</span>
+        <span className="inline-flex items-center gap-1"><Kbd>Esc</Kbd> clear</span>
+      </p>
     </div>
   );
 }

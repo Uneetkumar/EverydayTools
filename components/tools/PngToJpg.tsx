@@ -11,7 +11,7 @@ import {
   Sparkles,
   Layers,
 } from "lucide-react";
-import confetti from "canvas-confetti";
+import { markToolCompleted } from "@/lib/analytics";
 import { downloadDataUrl } from "@/lib/utils/download";
 
 type ConversionMode =
@@ -116,13 +116,13 @@ export default function PngToJpg({
 
     const name = file.name.replace(/\.[^/.]+$/, "");
     downloadDataUrl(convertedUrl, `${name}.${ext}`);
-    confetti({ particleCount: 40, spread: 55, origin: { y: 0.85 } });
+    markToolCompleted();
   };
 
   return (
     <div className="space-y-6">
       {/* Mode Switches */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1.5 border rounded-lg bg-muted/60">
         {[
           { id: "png_to_jpg", label: "PNG to JPG" },
           { id: "jpg_to_png", label: "JPG to PNG" },
@@ -138,7 +138,7 @@ export default function PngToJpg({
             }}
             className={`py-2 text-xs font-semibold rounded-xl transition ${
               mode === tab.id
-                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                ? "bg-background text-foreground shadow-xs dark:bg-input/50"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
@@ -148,12 +148,12 @@ export default function PngToJpg({
       </div>
 
       {/* Upload Box */}
-      <div className="p-8 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/40 hover:bg-blue-50/30 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-2.5 relative">
-        <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+      <div className="p-8 rounded-xl border-dashed text-center cursor-pointer flex flex-col items-center justify-center space-y-2.5 relative border-2 border-input bg-muted/30 transition-colors hover:border-primary/50 hover:bg-muted/60">
+        <div className="w-12 h-12 rounded-xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 flex items-center justify-center">
           <ImageIcon className="w-6 h-6" />
         </div>
         <div>
-          <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+          <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
             Upload image to convert to{" "}
             {mode === "png_to_jpg" || mode === "webp_to_jpg"
               ? "JPG"
@@ -162,10 +162,10 @@ export default function PngToJpg({
               : "PNG"}
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
-            Instant client-side conversion &bull; 100% Private in Browser
+            Converted on your device. Nothing is uploaded.
           </p>
         </div>
-        <input
+        <input aria-label="Choose an image"
           type="file"
           accept="image/*"
           onChange={handleFile}
@@ -175,14 +175,14 @@ export default function PngToJpg({
 
       {/* Conversion Settings */}
       {(mode === "png_to_jpg" || mode === "webp_to_jpg" || mode === "img_to_webp") && (
-        <div className="p-5 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="p-5 rounded-xl border grid grid-cols-1 sm:grid-cols-2 gap-4 bg-muted/30">
           {(mode === "png_to_jpg" || mode === "webp_to_jpg") && (
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
+              <label className="block text-sm mb-1.5 font-medium text-foreground">
                 Background Fill Color (for transparency):
               </label>
               <div className="flex items-center space-x-2">
-                <input
+                <input aria-label="Background colour for transparent areas"
                   type="color"
                   value={bgColor}
                   onChange={(e) => {
@@ -197,11 +197,11 @@ export default function PngToJpg({
           )}
 
           <div>
-            <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-              <span>Compression Quality:</span>
-              <span className="text-blue-600 font-bold">{Math.round(quality * 100)}%</span>
+            <div className="flex justify-between text-sm mb-1.5 font-medium text-foreground">
+              <span>Compression quality</span>
+              <span className="text-blue-600 font-semibold">{Math.round(quality * 100)}%</span>
             </div>
-            <input
+            <input aria-label="Compression quality"
               type="range"
               min={0.4}
               max={1.0}
@@ -220,18 +220,18 @@ export default function PngToJpg({
 
       {/* Download Card with File Size Comparison */}
       {convertedUrl && (
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+        <div className="p-6 rounded-xl border flex flex-col sm:flex-row items-center justify-between gap-4 bg-muted/30">
           <div className="space-y-1 text-left w-full sm:w-auto">
             <div className="flex items-center space-x-2">
               <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-              <span className="text-xs font-bold text-slate-900 dark:text-white">
+              <span className="text-xs font-semibold text-slate-900 dark:text-white">
                 Conversion Complete!
               </span>
             </div>
             <div className="text-xs text-slate-500 font-mono flex items-center space-x-2">
               <span>Original: {(originalSize / 1024).toFixed(1)} KB</span>
               <span>&bull;</span>
-              <span className="text-emerald-600 font-bold">
+              <span className="text-emerald-600 font-semibold">
                 Converted: {(convertedSize / 1024).toFixed(1)} KB
               </span>
             </div>
@@ -240,7 +240,7 @@ export default function PngToJpg({
           <button
             onClick={handleDownload}
             disabled={isProcessing}
-            className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition"
+            className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 rounded-lg text-xs transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
           >
             <Download className="w-4 h-4" />
             <span>

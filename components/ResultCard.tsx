@@ -1,8 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { Copy, Check, Share2, Sparkles } from "lucide-react";
-import confetti from "canvas-confetti";
+import { Check, Copy, Share2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { markToolCompleted } from "@/lib/analytics";
+import { cn } from "@/lib/utils";
 
 interface ResultCardProps {
   title?: string;
@@ -29,10 +32,30 @@ interface ResultCardProps {
   /** Title used by the native share sheet. Defaults to the card heading. */
   shareTitle?: string;
   details?: { label: string; value: string | number }[];
+  /**
+   * Semantic tone of the answer. The historical colour names are kept so no
+   * call site changes: indigo is the neutral brand tone, emerald a good
+   * outcome, amber a caution, rose a bad outcome.
+   */
   highlightColor?: "indigo" | "emerald" | "amber" | "rose";
+  /** @deprecated No longer animates; kept so existing call sites compile. */
   showConfetti?: boolean;
 }
 
+// One calm neutral surface for every result; the tone only colours the number,
+// so a page of results doesn't turn into blocks of green, blue and red.
+const TONES = {
+  indigo: { value: "text-foreground", surface: "bg-muted/40 border-border" },
+  emerald: { value: "text-success", surface: "bg-muted/40 border-border" },
+  amber: { value: "text-warning", surface: "bg-muted/40 border-border" },
+  rose: { value: "text-destructive", surface: "bg-muted/40 border-border" },
+} as const;
+
+/**
+ * The answer block shared by the calculators: one prominent value, how it was
+ * derived, a breakdown, and copy/share. The value region is a polite live
+ * region so screen-reader users hear the result change as they edit inputs.
+ */
 export default function ResultCard({
   title,
   label,
@@ -44,35 +67,28 @@ export default function ResultCard({
   shareTitle,
   details = [],
   highlightColor = "indigo",
-  showConfetti = false,
 }: ResultCardProps) {
-  const heading = title ?? label ?? "Calculation Result";
+  const heading = title ?? label ?? "Result";
   const caption = subtitle ?? formulaExplanation;
+  const tone = TONES[highlightColor] ?? TONES.indigo;
   const [copied, setCopied] = useState(false);
-  const [shared, setShared] = useState(false);
+
+  const composed =
+    copyText ??
+    `${value}${unit ? " " + unit : ""}${
+      details.length > 0 ? "\n" + details.map((d) => `${d.label}: ${d.value}`).join("\n") : ""
+    }`;
 
   const handleCopy = async () => {
-    const textToCopy =
-      copyText ??
-      `${value}${unit ? " " + unit : ""}${
-        details.length > 0
-          ? "\n" + details.map((d) => `${d.label}: ${d.value}`).join("\n")
-          : ""
-      }`;
-
     try {
-      await navigator.clipboard.writeText(textToCopy);
+      await navigator.clipboard.writeText(composed);
       setCopied(true);
-      if (showConfetti) {
-        confetti({
-          particleCount: 40,
-          spread: 60,
-          origin: { y: 0.8 },
-        });
-      }
+      markToolCompleted();
       setTimeout(() => setCopied(false), 2000);
-    } catch (e) {
-      console.error(e);
+    } catch {
+      toast.error("Couldn't copy to the clipboard", {
+        description: "Your browser blocked clipboard access. Select the result and copy it manually.",
+      });
     }
   };
 
@@ -81,121 +97,56 @@ export default function ResultCard({
       try {
         await navigator.share({
           title: shareTitle ?? heading,
-          text: `Check out this calculation: ${value} ${unit}`,
+          text: `${heading}: ${value}${unit ? " " + unit : ""}`,
           url: window.location.href,
         });
-        setShared(true);
-        setTimeout(() => setShared(false), 2000);
+        markToolCompleted();
+        return;
       } catch (e) {
-        console.error(e);
+        if ((e as DOMException)?.name === "AbortError") return;
       }
-    } else {
-      handleCopy();
     }
+    await handleCopy();
+    toast.success("Result copied", { description: "Paste it wherever you want to share it." });
   };
-
-  const colorStyles = {
-    indigo: {
-      bg: "bg-indigo-50/70 dark:bg-indigo-950/40",
-      border: "border-indigo-200 dark:border-indigo-800/80",
-      text: "text-indigo-600 dark:text-indigo-400",
-      pill: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/60 dark:text-indigo-300",
-    },
-    emerald: {
-      bg: "bg-emerald-50/70 dark:bg-emerald-950/40",
-      border: "border-emerald-200 dark:border-emerald-800/80",
-      text: "text-emerald-600 dark:text-emerald-400",
-      pill: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300",
-    },
-    amber: {
-      bg: "bg-amber-50/70 dark:bg-amber-950/40",
-      border: "border-amber-200 dark:border-amber-800/80",
-      text: "text-amber-600 dark:text-amber-400",
-      pill: "bg-amber-100 text-amber-700 dark:bg-amber-900/60 dark:text-amber-300",
-    },
-    rose: {
-      bg: "bg-rose-50/70 dark:bg-rose-950/40",
-      border: "border-rose-200 dark:border-rose-800/80",
-      text: "text-rose-600 dark:text-rose-400",
-      pill: "bg-rose-100 text-rose-700 dark:bg-rose-900/60 dark:text-rose-300",
-    },
-  };
-
-  const currentTheme = colorStyles[highlightColor];
 
   return (
-    <div
-      className={`rounded-2xl border ${currentTheme.border} ${currentTheme.bg} p-6 shadow-sm relative overflow-hidden transition-all`}
-    >
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-          <Sparkles className={`w-3.5 h-3.5 ${currentTheme.text}`} />
-          {heading}
-        </span>
-        <div className="flex items-center space-x-1.5">
-          <button
-            onClick={handleCopy}
-            className="flex items-center space-x-1 px-2.5 py-1 text-xs font-medium rounded-lg bg-white/90 dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition shadow-xs"
-            title="Copy to clipboard"
-          >
-            {copied ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-emerald-500" />
-                <span className="text-emerald-600 dark:text-emerald-400">Copied!</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3.5 h-3.5 text-slate-400" />
-                <span>Copy</span>
-              </>
-            )}
-          </button>
-
-          <button
-            onClick={handleShare}
-            className="flex items-center space-x-1 px-2.5 py-1 text-xs font-medium rounded-lg bg-white/90 dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-white dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition shadow-xs"
-            title="Share result"
-          >
-            <Share2 className="w-3.5 h-3.5 text-slate-400" />
-            <span>{shared ? "Shared!" : "Share"}</span>
-          </button>
+    <div className={cn("@container rounded-xl border p-5 sm:p-6", tone.surface)}>
+      <div className="flex items-center justify-between gap-3">
+        <p className="type-overline text-muted-foreground">{heading}</p>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <Button type="button" variant="outline" size="sm" onClick={handleCopy} aria-label={copied ? "Copied" : `Copy ${heading}`}>
+            {copied ? <Check aria-hidden="true" className="text-success" /> : <Copy aria-hidden="true" />}
+            <span>{copied ? "Copied" : "Copy"}</span>
+          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={handleShare} aria-label={`Share ${heading}`}>
+            <Share2 aria-hidden="true" />
+            <span className="hidden sm:inline">Share</span>
+          </Button>
         </div>
       </div>
 
-      <div className="my-3">
-        <div className="flex items-baseline space-x-2 flex-wrap">
-          <span className={`text-4xl sm:text-5xl font-black tracking-tight ${currentTheme.text}`}>
+      <div className="mt-3" aria-live="polite" aria-atomic="true">
+        <p className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+          <span className={cn("text-4xl font-semibold tracking-tight tabular-nums wrap-anywhere @sm:text-5xl", tone.value)}>
             {value}
           </span>
-          {unit && (
-            <span className="text-lg sm:text-xl font-bold text-slate-600 dark:text-slate-300">
-              {unit}
-            </span>
-          )}
-        </div>
-        {caption && (
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-2">
-            {caption}
-          </p>
-        )}
+          {unit && <span className="text-lg font-semibold text-muted-foreground @sm:text-xl">{unit}</span>}
+        </p>
+        {caption && <p className="mt-2 type-body-sm text-muted-foreground">{caption}</p>}
       </div>
 
       {details.length > 0 && (
-        <div className="mt-5 pt-4 border-t border-slate-200/60 dark:border-slate-800/80 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <dl className="mt-5 grid grid-cols-2 gap-2.5 border-t pt-4 @md:grid-cols-3">
           {details.map((item, idx) => (
-            <div
-              key={idx}
-              className="p-2.5 rounded-lg bg-white/60 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50"
-            >
-              <div className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
-                {item.label}
-              </div>
-              <div className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white mt-0.5 truncate">
+            <div key={idx} className="min-w-0 rounded-lg border bg-card px-3 py-2.5">
+              <dt className="text-xs text-muted-foreground">{item.label}</dt>
+              <dd className="mt-0.5 text-sm font-semibold tabular-nums wrap-anywhere text-foreground">
                 {item.value}
-              </div>
+              </dd>
             </div>
           ))}
-        </div>
+        </dl>
       )}
     </div>
   );

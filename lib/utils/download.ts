@@ -1,4 +1,11 @@
 import { recordResult } from "@/lib/history/results";
+import { track, sizeBucket, currentToolSlug } from "@/lib/analytics";
+
+/** Extension only — file names can be personal and are never logged. */
+function extOf(filename: string): string {
+  const m = filename.toLowerCase().match(/\.([a-z0-9]{1,5})$/);
+  return m ? m[1] : "none";
+}
 
 /**
  * Universal, high-reliability download utility.
@@ -18,6 +25,11 @@ export function downloadBlob(
   // Recording here rather than in each tool means every download is captured
   // from one place, and a tool added later gets history for free.
   void recordResult(blob, filename, toolSlug);
+  track("download_started", {
+    tool: toolSlug ?? currentToolSlug(),
+    file_type: extOf(filename),
+    size: sizeBucket(blob.size),
+  });
   const url = URL.createObjectURL(blob);
   downloadDataUrl(url, filename, true);
 }
@@ -45,6 +57,9 @@ export function downloadDataUrl(url: string, filename: string, isBlobUrl = false
   // Appending to document body is required for Safari and Firefox
   document.body.appendChild(link);
   link.click();
+  // The browser gives no signal when a save finishes; this marks the file
+  // having been handed to it, which is the last point the page can observe.
+  track("download_completed", { tool: currentToolSlug(), file_type: extOf(filename) });
 
   // Clean up DOM and memory
   setTimeout(() => {

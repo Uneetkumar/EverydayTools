@@ -12,7 +12,6 @@ import {
   PDFDropdown,
 } from "pdf-lib";
 import {
-  Upload,
   Download,
   RotateCw,
   RotateCcw,
@@ -20,30 +19,20 @@ import {
   ArrowLeft,
   ArrowRight,
   RefreshCw,
-  AlertTriangle,
   Undo2,
   Redo2,
   Type,
-  Square,
   ImageIcon,
-  MousePointer2,
   ChevronLeft,
   ChevronRight,
   FileText,
-  ListChecks,
   Pencil,
-  Eye,
-  EyeOff,
   Highlighter,
   PenTool,
-  Check,
   Copy,
   Plus,
   Minus,
-  ZoomIn,
-  ZoomOut,
   Layers,
-  X,
   Bold,
   Italic,
   FileUp,
@@ -51,14 +40,15 @@ import {
   ChevronsRight,
   Maximize2,
   Minimize2,
-  ShieldCheck,
-  UserCheck,
-  Globe,
-  Sparkles,
   Shapes,
 } from "lucide-react";
-import confetti from "canvas-confetti";
+import { markToolCompleted } from "@/lib/analytics";
 import { loadPdfJs, pdfDocumentOptions } from "@/lib/pdf/loader";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Field, Notice, Segmented, TextInput, ToggleRow } from "@/components/tool/kit";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ToolLoadingState } from "@/components/tool/tool-states";
+import { cn } from "@/lib/utils";
 import { downloadBlob } from "@/lib/utils/download";
 
 export type EditorTool =
@@ -190,7 +180,10 @@ function detectFontProperties(
 } {
   const cleanName = (fontName || "").replace(/^[A-Z]{6}\+/i, "");
   const cleanFamily = (styleObj?.fontFamily || "").replace(/^[A-Z]{6}\+/i, "");
-  const combined = `${cleanName} ${cleanFamily}`.toLowerCase();
+  // pdf.js reports standard sans fonts (Helvetica, Arial) with the family
+  // "sans-serif"; drop that first so the word "serif" inside it isn't read as
+  // a serif font and the retyped text doesn't switch to Times.
+  const combined = `${cleanName} ${cleanFamily}`.toLowerCase().replace(/sans[-\s]?serif/g, "sans");
 
   const isBold =
     /\b(bold|black|heavy|semibold|semi-bold|demibold|demi|medium|w[6-9]|700|800|900)\b/i.test(combined) ||
@@ -218,6 +211,35 @@ function detectFontProperties(
 
   return { fontCategory, isBold, isItalic };
 }
+
+const toolOptionClass = (active: boolean) =>
+  cn(
+    "flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+    active ? "border-primary/50 bg-brand-subtle" : "bg-background hover:bg-muted dark:bg-input/20 dark:hover:bg-input/40"
+  );
+
+function ToolOptionBody({ icon: Icon, title, description, active }: { icon: React.ComponentType<{ className?: string }>; title: string; description: string; active?: boolean }) {
+  return (
+    <>
+      <span className={cn("flex size-8 shrink-0 items-center justify-center rounded-md", active ? "bg-primary/15 text-brand-subtle-foreground" : "bg-muted text-muted-foreground")}>
+        <Icon className="size-4" aria-hidden="true" />
+      </span>
+      <span className="min-w-0">
+        <span className={cn("block text-sm font-medium", active ? "text-brand-subtle-foreground" : "text-foreground")}>{title}</span>
+        <span className="block text-xs text-muted-foreground">{description}</span>
+      </span>
+    </>
+  );
+}
+
+function ToolOption({ icon, title, description, active = false, onClick }: { icon: React.ComponentType<{ className?: string }>; title: string; description: string; active?: boolean; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} aria-pressed={active} className={toolOptionClass(active)}>
+      <ToolOptionBody icon={icon} title={title} description={description} active={active} />
+    </button>
+  );
+}
+
 
 export default function PdfEditor() {
   const [tab, setTab] = useState<EditorTab>("edit");
@@ -1375,29 +1397,38 @@ function legibleInk(ink?: string, bg?: string): string {
   };
 
   // Signature canvas handlers
-  const handleSigCanvasDown = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  // Pointer position in the pad's own pixels (the pad is scaled by CSS).
+  const sigPoint = (canvas: HTMLCanvasElement, e: React.PointerEvent<HTMLCanvasElement>) => {
+    const rect = canvas.getBoundingClientRect();
+    return [(e.clientX - rect.left) * (canvas.width / rect.width), (e.clientY - rect.top) * (canvas.height / rect.height)] as const;
+  };
+
+  const handleSigCanvasDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = sigCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const rect = canvas.getBoundingClientRect();
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch {
+      /* pointer already released */
+    }
     ctx.beginPath();
-    ctx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
-    ctx.lineWidth = 2.5;
+    ctx.moveTo(...sigPoint(canvas, e));
+    ctx.lineWidth = 5; // the pad is drawn at 2× its display size
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.strokeStyle = "#1e293b";
     isSigDrawing.current = true;
   };
 
-  const handleSigCanvasMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+  const handleSigCanvasMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!isSigDrawing.current) return;
     const canvas = sigCanvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-    const rect = canvas.getBoundingClientRect();
-    ctx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+    ctx.lineTo(...sigPoint(canvas, e));
     ctx.stroke();
   };
 
@@ -1743,7 +1774,7 @@ function legibleInk(ink?: string, bg?: string): string {
         `${fileName.replace(/\.pdf$/i, "") || "document"}-edited.pdf`
       );
       setStatus("Successfully downloaded edited PDF!");
-      confetti({ particleCount: 45, spread: 60, origin: { y: 0.8 } });
+      markToolCompleted();
     } catch (e) {
       console.error(e);
       setError("Could not build the edited PDF file.");
@@ -1771,125 +1802,73 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
 
   return (
     <div className="space-y-5">
-      {/* Top Header & Trust Badges */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200/80 pb-4 dark:border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/20">
-            <Pencil className="h-6 w-6" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              {/* The page-level <h1> belongs to ToolShell. This is the widget's
-                  own heading, so it must not compete for that role. */}
-              <p className="text-xl font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-2xl">
-                PDF Editor
-              </p>
-              <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950/80 dark:text-indigo-300">
-                PRO STUDIO
-              </span>
+      {/* Document bar: a drop target before a PDF is open, the file and its actions after. */}
+      {pages.length === 0 ? (
+        <div className="flex flex-col items-stretch justify-between gap-3 rounded-xl border-2 border-dashed border-input bg-muted/30 p-4 transition-colors hover:border-primary/50 hover:bg-muted/60 sm:flex-row sm:items-center sm:p-5">
+          <label className="relative flex min-w-0 flex-1 cursor-pointer items-center gap-4">
+            <div className="flex size-11 shrink-0 items-center justify-center rounded-xl border bg-background text-muted-foreground dark:bg-input/30">
+              <FileUp className="size-5" aria-hidden="true" />
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Edit text, add images, fill forms and annotate your PDF directly in the browser.
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-foreground sm:text-base">Choose a PDF to edit</p>
+              <p className="text-xs text-muted-foreground">Drop a PDF here or choose one — up to 50 MB and 500 pages. It stays on your device.</p>
+            </div>
+            <input
+              type="file"
+              accept="application/pdf,.pdf"
+              disabled={busy}
+              onChange={(e) => onFile(e.target.files?.[0])}
+              aria-label="Choose a PDF"
+              className="absolute inset-0 cursor-pointer opacity-0 disabled:cursor-wait"
+            />
+          </label>
+          <label className={cn(buttonVariants({ size: "lg" }), "relative h-10 cursor-pointer px-4")}>
+            Choose PDF
+            <input
+              type="file"
+              accept="application/pdf,.pdf"
+              disabled={busy}
+              onChange={(e) => onFile(e.target.files?.[0])}
+              aria-label="Choose a PDF"
+              className="absolute inset-0 cursor-pointer opacity-0 disabled:cursor-wait"
+            />
+          </label>
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-background px-3 py-2.5 dark:bg-input/20">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+            <FileText className="size-4.5" aria-hidden="true" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-foreground" title={fileName}>
+              {fileName}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {pages.length} {pages.length === 1 ? "page" : "pages"} · edits stay on your device until you download
             </p>
           </div>
-        </div>
-
-        {/* Badges */}
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="flex items-center gap-1.5 rounded-xl border border-emerald-200 bg-emerald-50/80 px-3 py-1.5 text-xs font-semibold text-emerald-700 shadow-2xs dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300">
-            <ShieldCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-            100% Private
-          </span>
-          <span className="flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/80 px-3 py-1.5 text-xs font-semibold text-blue-700 shadow-2xs dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
-            <UserCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-            No Signup Required
-          </span>
-          <span className="flex items-center gap-1.5 rounded-xl border border-purple-200 bg-purple-50/80 px-3 py-1.5 text-xs font-semibold text-purple-700 shadow-2xs dark:border-purple-900/50 dark:bg-purple-950/40 dark:text-purple-300">
-            <Globe className="h-3.5 w-3.5 text-purple-600 dark:text-purple-400" />
-            Works in Browser
-          </span>
-        </div>
-      </div>
-
-      {/* Top Document / Uploader Action Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 rounded-2xl border-2 border-dashed border-blue-400/70 bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-blue-50/70 p-4 sm:p-5 shadow-xs transition-all hover:border-blue-500 hover:bg-blue-50/90 dark:border-blue-500/40 dark:from-blue-950/30 dark:via-indigo-950/20 dark:to-blue-950/30 dark:hover:border-blue-400">
-        {/* Left: Upload Target & Info with Small Compact Badges */}
-        <label className="group relative flex flex-1 cursor-pointer items-center gap-4 min-w-0">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-600/10 text-blue-600 group-hover:scale-105 transition-transform dark:bg-blue-500/20 dark:text-blue-400">
-            <FileUp className="h-6 w-6" />
-          </div>
-
-          <div className="min-w-0 space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate">
-                {pages.length > 0 ? "Replace PDF Document" : "Upload PDF to Edit"}
-              </p>
-
-              {/* Small Compact Alerts */}
-              <span className="inline-flex items-center gap-1 rounded-md border border-blue-200/80 bg-blue-100/50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/60 dark:text-blue-300">
-                Max 50 MB
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-md border border-indigo-200/80 bg-indigo-100/50 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 dark:border-indigo-900/50 dark:bg-indigo-950/60 dark:text-indigo-300">
-                {pages.length > 0 ? `${pages.length} Pages Loaded` : "1 - 500 Pages"}
-              </span>
-            </div>
-
-            <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-              {pages.length > 0
-                ? fileName
-                : "Click to browse or drag & drop your PDF file here · 100% private in-browser"}
-            </p>
-          </div>
-
-          <input
-            type="file"
-            accept="application/pdf,.pdf"
-            disabled={busy}
-            onChange={(e) => onFile(e.target.files?.[0])}
-            aria-label="Choose a PDF"
-            className="absolute inset-0 cursor-pointer opacity-0 disabled:cursor-wait"
-          />
-        </label>
-
-        {/* Right Action Button: Choose PDF or Save PDF */}
-        <div className="shrink-0 flex items-center gap-2">
-          {pages.length === 0 ? (
-            <label className="relative flex cursor-pointer items-center justify-center rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/20 transition hover:bg-blue-700">
-              <span>Choose PDF File</span>
-              <input
-                type="file"
-                accept="application/pdf,.pdf"
-                disabled={busy}
-                onChange={(e) => onFile(e.target.files?.[0])}
-                aria-label="Choose a PDF"
-                className="absolute inset-0 cursor-pointer opacity-0 disabled:cursor-wait"
-              />
-            </label>
-          ) : (
-            <button
-              onClick={save}
-              disabled={pages.length === 0 || busy}
-              className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-500/20 transition hover:scale-[1.02] hover:shadow-lg disabled:opacity-50 disabled:pointer-events-none"
-            >
-              <Download className="h-4 w-4" />
-              <span>Save & Download PDF</span>
-            </button>
-          )}
-        </div>
-      </div>
-
-      {busy && (
-        <div className="flex items-center justify-center gap-3 rounded-2xl border border-blue-200 bg-blue-50/80 p-4 text-sm font-medium text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
-          <RefreshCw className="h-5 w-5 animate-spin" /> {status ?? "Processing PDF…"}
+          <label className={cn(buttonVariants({ variant: "outline" }), "relative cursor-pointer")}>
+            <FileUp aria-hidden="true" />
+            Replace
+            <input
+              type="file"
+              accept="application/pdf,.pdf"
+              disabled={busy}
+              onChange={(e) => onFile(e.target.files?.[0])}
+              aria-label="Replace the PDF"
+              className="absolute inset-0 cursor-pointer opacity-0 disabled:cursor-wait"
+            />
+          </label>
+          <Button type="button" onClick={save} disabled={busy}>
+            <Download aria-hidden="true" />
+            Download PDF
+          </Button>
         </div>
       )}
 
-      {error && (
-        <div className="flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 p-4 dark:border-amber-900/40 dark:bg-amber-950/30">
-          <AlertTriangle className="h-5 w-5 shrink-0 text-amber-600" />
-          <p className="text-xs text-amber-800 dark:text-amber-200">{error}</p>
-        </div>
-      )}
+      {busy && <ToolLoadingState label={status ?? "Working on the PDF…"} />}
+
+      {error && <Notice tone="error">{error}</Notice>}
 
       {/* Main Studio Workspace Layout */}
       {pages.length > 0 && !busy && (
@@ -1898,150 +1877,10 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
             <div
               className={
                 isFullscreen
-                  ? "fixed inset-0 z-[999999] bg-slate-950 text-slate-100 flex flex-col h-screen w-screen overflow-hidden p-3 sm:p-4 select-none"
+                  ? "fixed inset-0 z-50 flex h-screen w-screen flex-col gap-3 overflow-hidden bg-background p-3 text-foreground select-none sm:p-4"
                   : "space-y-4"
               }
             >
-              {/* Top Fullscreen Master Header (Single unified studio toolbar) */}
-              {isFullscreen && (
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/95 px-4 py-2.5 shadow-xl shrink-0">
-                  {/* Left: Document Info & Status */}
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-600/20 text-blue-400">
-                      <FileText className="h-5 w-5" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs sm:text-sm font-bold text-white truncate max-w-[180px] sm:max-w-xs">
-                        {fileName}
-                      </p>
-                      <p className="text-[10px] text-slate-400">
-                        Page {pageIndex + 1} of {pages.length} · 100% In-Browser Private
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Center: Pagination & Zoom Controls */}
-                  <div className="flex items-center gap-2">
-                    {/* Pagination */}
-                    <div className="flex items-center gap-1 rounded-xl bg-slate-800/90 p-1 border border-slate-700">
-                      <button
-                        onClick={() => setPageIndex(0)}
-                        disabled={pageIndex === 0}
-                        title="First Page"
-                        className="rounded p-1 text-slate-300 hover:text-white disabled:opacity-30"
-                      >
-                        <ChevronsLeft className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
-                        disabled={pageIndex === 0}
-                        title="Previous Page"
-                        className="rounded p-1 text-slate-300 hover:text-white disabled:opacity-30"
-                      >
-                        <ChevronLeft className="h-3.5 w-3.5" />
-                      </button>
-
-                      <span className="px-1.5 text-xs font-semibold tabular-nums text-white">
-                        {pageIndex + 1} / {pages.length}
-                      </span>
-
-                      <button
-                        onClick={() =>
-                          setPageIndex((p) => Math.min(pages.length - 1, p + 1))
-                        }
-                        disabled={pageIndex === pages.length - 1}
-                        title="Next Page"
-                        className="rounded p-1 text-slate-300 hover:text-white disabled:opacity-30"
-                      >
-                        <ChevronRight className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => setPageIndex(pages.length - 1)}
-                        disabled={pageIndex === pages.length - 1}
-                        title="Last Page"
-                        className="rounded p-1 text-slate-300 hover:text-white disabled:opacity-30"
-                      >
-                        <ChevronsRight className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-
-                    {/* Zoom */}
-                    <div className="flex items-center rounded-xl bg-slate-800/90 p-1 border border-slate-700">
-                      <button
-                        onClick={() => setZoom((z) => Math.max(0.4, z - 0.1))}
-                        title="Zoom Out"
-                        className="rounded p-1 text-slate-300 hover:text-white"
-                      >
-                        <Minus className="h-3 w-3" />
-                      </button>
-                      <span className="px-1.5 text-[11px] font-bold tabular-nums text-white">
-                        {Math.round(zoom * 100)}%
-                      </span>
-                      <button
-                        onClick={() => setZoom((z) => Math.min(3.0, z + 0.1))}
-                        title="Zoom In"
-                        className="rounded p-1 text-slate-300 hover:text-white"
-                      >
-                        <Plus className="h-3 w-3" />
-                      </button>
-                    </div>
-
-                    <button
-                      onClick={() => setZoom(1)}
-                      title="Reset Zoom"
-                      className="rounded-lg bg-slate-800 px-2 py-1 text-[11px] font-semibold text-slate-300 hover:bg-slate-700 border border-slate-700"
-                    >
-                      100%
-                    </button>
-                    <button
-                      onClick={() => setZoom(1.35)}
-                      title="Fit Width (135%)"
-                      className="rounded-lg bg-slate-800 px-2 py-1 text-[11px] font-semibold text-slate-300 hover:bg-slate-700 border border-slate-700"
-                    >
-                      Fit Width
-                    </button>
-                  </div>
-
-                  {/* Right: Undo, Redo, Save PDF & Exit Fullscreen */}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={undo}
-                      disabled={!history.length}
-                      title="Undo (Ctrl+Z)"
-                      className="flex items-center gap-1 rounded-lg bg-slate-800 px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 disabled:opacity-30 border border-slate-700"
-                    >
-                      <Undo2 className="h-3.5 w-3.5" />
-                    </button>
-
-                    <button
-                      onClick={redo}
-                      disabled={!redoStack.length}
-                      title="Redo (Ctrl+Y)"
-                      className="flex items-center gap-1 rounded-lg bg-slate-800 px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 disabled:opacity-30 border border-slate-700"
-                    >
-                      <Redo2 className="h-3.5 w-3.5" />
-                    </button>
-
-                    <button
-                      onClick={save}
-                      className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white shadow-md hover:from-blue-500 hover:to-indigo-500 transition"
-                    >
-                      <Download className="h-4 w-4" />
-                      <span>Save PDF</span>
-                    </button>
-
-                    <button
-                      onClick={() => setIsFullscreen(false)}
-                      title="Exit Full Screen (Esc)"
-                      className="flex items-center gap-1.5 rounded-xl bg-slate-800 px-3 py-2 text-xs font-bold text-slate-200 border border-slate-700 hover:bg-slate-700 hover:text-white transition"
-                    >
-                      <Minimize2 className="h-4 w-4 text-slate-400" />
-                      <span>Exit (Esc)</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {/* TWO-COLUMN SIDE-BY-SIDE GRID */}
               <div
                 className={
@@ -2058,140 +1897,80 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                       : "space-y-3 lg:col-span-8"
                   }
                 >
-                  {/* Inline Stage Workspace Toolbar (Only shown in standard non-fullscreen mode) */}
-                  {!isFullscreen && (
-                    <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-slate-200/80 bg-white/95 p-2.5 shadow-2xs backdrop-blur-md dark:border-slate-800/80 dark:bg-slate-900/95">
-                      {/* Document Preview & Pagination */}
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                          <FileText className="h-4 w-4 text-blue-600" /> Document Preview
+                  {/* Page, zoom and history controls (same bar in both views). */}
+                  <div className={cn("flex flex-wrap items-center justify-between gap-2 rounded-xl border bg-background p-1.5 dark:bg-input/20", isFullscreen && "mb-3 shrink-0")}>
+                    <div className="flex min-w-0 items-center gap-0.5">
+                      {isFullscreen && (
+                        <span className="mr-2 hidden max-w-56 truncate px-1.5 text-sm font-medium text-foreground sm:inline" title={fileName}>
+                          {fileName}
                         </span>
-
-                        <div className="flex items-center gap-1 rounded-xl bg-slate-100/90 p-1 dark:bg-slate-800">
-                          <button
-                            onClick={() => setPageIndex(0)}
-                            disabled={pageIndex === 0}
-                            title="First Page"
-                            className="rounded p-1 text-slate-600 hover:text-blue-600 disabled:opacity-30 dark:text-slate-300"
-                          >
-                            <ChevronsLeft className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            onClick={() => setPageIndex((p) => Math.max(0, p - 1))}
-                            disabled={pageIndex === 0}
-                            title="Previous Page"
-                            className="rounded p-1 text-slate-600 hover:text-blue-600 disabled:opacity-30 dark:text-slate-300"
-                          >
-                            <ChevronLeft className="h-3.5 w-3.5" />
-                          </button>
-
-                          <span className="px-1 text-xs font-semibold tabular-nums text-slate-700 dark:text-slate-200">
-                            {pageIndex + 1} / {pages.length}
-                          </span>
-
-                          <button
-                            onClick={() =>
-                              setPageIndex((p) => Math.min(pages.length - 1, p + 1))
-                            }
-                            disabled={pageIndex === pages.length - 1}
-                            title="Next Page"
-                            className="rounded p-1 text-slate-600 hover:text-blue-600 disabled:opacity-30 dark:text-slate-300"
-                          >
-                            <ChevronRight className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            onClick={() => setPageIndex(pages.length - 1)}
-                            disabled={pageIndex === pages.length - 1}
-                            title="Last Page"
-                            className="rounded p-1 text-slate-600 hover:text-blue-600 disabled:opacity-30 dark:text-slate-300"
-                          >
-                            <ChevronsRight className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Zoom, Fullscreen, Undo, Redo, Download Actions */}
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => setIsFullscreen(true)}
-                          title="Enter Full Screen (Maximize view)"
-                          className="flex items-center gap-1.5 rounded-xl bg-indigo-50 px-2.5 py-1 text-xs font-bold text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/80 dark:text-indigo-300 dark:hover:bg-indigo-900 transition shadow-2xs"
-                        >
-                          <Maximize2 className="h-3.5 w-3.5" />
-                          <span>Full Screen</span>
-                        </button>
-
-                        <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
-
-                        <div className="flex items-center rounded-xl bg-slate-100/90 p-0.5 dark:bg-slate-800">
-                          <button
-                            onClick={() => setZoom((z) => Math.max(0.4, z - 0.1))}
-                            title="Zoom Out"
-                            className="rounded p-1 text-slate-600 hover:text-blue-600 dark:text-slate-300"
-                          >
-                            <Minus className="h-3 w-3" />
-                          </button>
-                          <span className="px-1 text-[11px] font-bold tabular-nums text-slate-700 dark:text-slate-200">
-                            {Math.round(zoom * 100)}%
-                          </span>
-                          <button
-                            onClick={() => setZoom((z) => Math.min(3.0, z + 0.1))}
-                            title="Zoom In"
-                            className="rounded p-1 text-slate-600 hover:text-blue-600 dark:text-slate-300"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </button>
-                        </div>
-
-                        <button
-                          onClick={() => setZoom(1)}
-                          title="Reset Zoom to 100%"
-                          className="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
-                        >
-                          100%
-                        </button>
-
-                        <button
-                          onClick={() => setZoom(1.35)}
-                          title="Large View (135%)"
-                          className="rounded-lg bg-slate-100 px-2 py-1 text-[11px] font-semibold text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"
-                        >
-                          Fit Width
-                        </button>
-
-                        <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
-
-                        <button
-                          onClick={undo}
-                          disabled={!history.length}
-                          title="Undo (Ctrl+Z)"
-                          className="flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-200 disabled:opacity-30 dark:bg-slate-800 dark:text-slate-200"
-                        >
-                          <Undo2 className="h-3.5 w-3.5" />
-                        </button>
-
-                        <button
-                          onClick={redo}
-                          disabled={!redoStack.length}
-                          title="Redo (Ctrl+Y)"
-                          className="flex items-center gap-1 rounded-lg bg-slate-100 px-2 py-1 text-xs font-semibold text-slate-700 transition hover:bg-slate-200 disabled:opacity-30 dark:bg-slate-800 dark:text-slate-200"
-                        >
-                          <Redo2 className="h-3.5 w-3.5" />
-                        </button>
-
-                        <button
-                          onClick={save}
-                          className="flex items-center gap-1 rounded-xl bg-blue-600 px-3 py-1 text-xs font-bold text-white shadow-2xs transition hover:bg-blue-700"
-                        >
-                          <Download className="h-3.5 w-3.5" /> Download
-                        </button>
-                      </div>
+                      )}
+                      <Button type="button" variant="ghost" size="icon-sm" aria-label="First page" title="First page" onClick={() => setPageIndex(0)} disabled={pageIndex === 0}>
+                        <ChevronsLeft aria-hidden="true" />
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon-sm" aria-label="Previous page" title="Previous page" onClick={() => setPageIndex((p) => Math.max(0, p - 1))} disabled={pageIndex === 0}>
+                        <ChevronLeft aria-hidden="true" />
+                      </Button>
+                      <span className="min-w-14 text-center text-sm tabular-nums text-foreground" aria-live="polite">
+                        {pageIndex + 1} / {pages.length}
+                      </span>
+                      <Button type="button" variant="ghost" size="icon-sm" aria-label="Next page" title="Next page" onClick={() => setPageIndex((p) => Math.min(pages.length - 1, p + 1))} disabled={pageIndex === pages.length - 1}>
+                        <ChevronRight aria-hidden="true" />
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon-sm" aria-label="Last page" title="Last page" onClick={() => setPageIndex(pages.length - 1)} disabled={pageIndex === pages.length - 1}>
+                        <ChevronsRight aria-hidden="true" />
+                      </Button>
                     </div>
-                  )}
+
+                    <div className="flex items-center gap-0.5">
+                      <Button type="button" variant="ghost" size="icon-sm" aria-label="Zoom out" title="Zoom out" onClick={() => setZoom((z) => Math.max(0.4, z - 0.1))}>
+                        <Minus aria-hidden="true" />
+                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => setZoom(1)}
+                        title="Reset to 100%"
+                        aria-label={`Zoom ${Math.round(zoom * 100)}%. Reset to 100%`}
+                        className="min-w-12 rounded-md px-1.5 py-1 text-sm tabular-nums text-foreground transition-colors outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
+                      >
+                        {Math.round(zoom * 100)}%
+                      </button>
+                      <Button type="button" variant="ghost" size="icon-sm" aria-label="Zoom in" title="Zoom in" onClick={() => setZoom((z) => Math.min(3.0, z + 0.1))}>
+                        <Plus aria-hidden="true" />
+                      </Button>
+                      <Button type="button" variant="ghost" size="sm" onClick={() => setZoom(1.35)} title="Zoom to 135%" className="hidden sm:inline-flex">
+                        135%
+                      </Button>
+                      <span className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
+                      <Button type="button" variant="ghost" size="icon-sm" aria-label="Undo" title="Undo (Ctrl+Z)" onClick={undo} disabled={!history.length}>
+                        <Undo2 aria-hidden="true" />
+                      </Button>
+                      <Button type="button" variant="ghost" size="icon-sm" aria-label="Redo" title="Redo (Ctrl+Y)" onClick={redo} disabled={!redoStack.length}>
+                        <Redo2 aria-hidden="true" />
+                      </Button>
+                      <span className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
+                      {isFullscreen ? (
+                        <>
+                          <Button type="button" size="sm" onClick={save}>
+                            <Download aria-hidden="true" />
+                            Download PDF
+                          </Button>
+                          <Button type="button" variant="outline" size="sm" onClick={() => setIsFullscreen(false)} title="Exit full screen (Esc)">
+                            <Minimize2 aria-hidden="true" />
+                            Exit
+                          </Button>
+                        </>
+                      ) : (
+                        <Button type="button" variant="ghost" size="icon-sm" aria-label="Full screen" title="Full screen" onClick={() => setIsFullscreen(true)}>
+                          <Maximize2 aria-hidden="true" />
+                        </Button>
+                      )}
+                    </div>
+                  </div>
 
                   {/* Canvas Stage with Left Thumbnail Filmstrip */}
                   <div
-                    className={`flex gap-3 rounded-2xl border border-slate-200/90 bg-slate-100/70 p-3 dark:border-slate-800 dark:bg-slate-950/60 ${
+                    className={`flex gap-3 rounded-xl border p-3 bg-muted/30 ${
                       isFullscreen
                         ? "flex-1 min-h-0 h-full overflow-hidden"
                         : "min-h-[750px] lg:h-[820px]"
@@ -2206,28 +1985,29 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                 {pages.map((p, i) => (
                   <button
                     key={`${p.sourceIndex}-${i}`}
+                    type="button"
                     onClick={() => setPageIndex(i)}
-                    className={`group relative aspect-[3/4] w-full overflow-hidden rounded-xl border-2 transition-all ${
-                      pageIndex === i
-                        ? "border-blue-600 ring-2 ring-blue-500/30 shadow-md scale-105"
-                        : "border-slate-200 bg-white opacity-70 hover:opacity-100 dark:border-slate-800 dark:bg-slate-900"
-                    }`}
+                    aria-label={`Page ${i + 1}`}
+                    aria-current={pageIndex === i ? "page" : undefined}
+                    className={cn(
+                      "group relative aspect-[3/4] w-full shrink-0 overflow-hidden rounded-md border bg-white transition-shadow outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                      pageIndex === i ? "border-primary ring-2 ring-primary/30" : "border-border hover:ring-2 hover:ring-border"
+                    )}
                   >
                     {p.thumbnail && (
                       /* eslint-disable-next-line @next/next/no-img-element */
                       <img
                         src={p.thumbnail}
-                        alt={`Page ${i + 1}`}
+                        alt=""
                         style={{ transform: `rotate(${p.rotation}deg)` }}
                         className="h-full w-full object-contain pointer-events-none"
                       />
                     )}
                     <span
-                      className={`absolute bottom-1 right-1 rounded px-1 text-[9px] font-bold ${
-                        pageIndex === i
-                          ? "bg-blue-600 text-white"
-                          : "bg-black/60 text-white"
-                      }`}
+                      className={cn(
+                        "absolute right-1 bottom-1 rounded px-1 text-xs font-medium",
+                        pageIndex === i ? "bg-primary text-primary-foreground" : "bg-black/60 text-white"
+                      )}
                     >
                       {i + 1}
                     </span>
@@ -2395,7 +2175,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                 fontStyle: a.isItalic ? "italic" : "normal",
                                 fontSize: `${(a.size ?? 14) * scale}px`,
                               }}
-                              className="block min-w-[60px] resize-none border-0 bg-transparent p-0 outline-none"
+                              className="block min-w-[60px] resize-none border-0 bg-transparent p-0 outline-none text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                             />
                           ) : (
                             <span
@@ -2437,7 +2217,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                   className="h-4 w-4 rounded accent-blue-600 cursor-pointer"
                                 />
                                 {isSelected && (
-                                  <span className="text-[10px] font-bold text-blue-700 truncate">
+                                  <span className="text-xs font-semibold truncate text-muted-foreground">
                                     {a.fieldName || "Check"}
                                   </span>
                                 )}
@@ -2453,7 +2233,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                   fontStyle: a.isItalic ? "italic" : "normal",
                                   color: legibleInk(a.color, a.bgColor || "#ffffff"),
                                 }}
-                                className="w-full cursor-pointer border-0 bg-transparent p-0 leading-none focus:outline-none"
+                                className="w-full cursor-pointer border-0 bg-transparent p-0 leading-none text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                               >
                                 {(a.fieldOptions || ["Option 1", "Option 2"]).map((opt) => (
                                   <option key={opt} value={opt} className="text-slate-950">
@@ -2477,7 +2257,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                   fontStyle: a.isItalic ? "italic" : "normal",
                                   color: legibleInk(a.color, a.bgColor || "#ffffff"),
                                 }}
-                                className="w-full border-0 bg-transparent p-0 leading-none placeholder:text-slate-400 focus:outline-none focus:ring-0"
+                                className="w-full border-0 bg-transparent p-0 leading-none placeholder:text-slate-400 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                               />
                             )}
                           </div>
@@ -2529,7 +2309,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                             {/* SIGNATURE SPECIFIC TOOLBAR */}
                             {a.type === "signature" && (
                               <>
-                                <span className="flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                <span className="flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                                   <PenTool className="h-3 w-3" /> Signature
                                 </span>
                                 <div className="flex items-center gap-0.5 border-l border-slate-200 pl-1 dark:border-slate-700">
@@ -2540,7 +2320,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                       patch(a.id, { w: nw, h: nh });
                                     }}
                                     title="Scale Down (-15%)"
-                                    className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                    className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-sm hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 font-medium text-foreground"
                                   >
                                     <Minus className="h-3 w-3" /> Smaller
                                   </button>
@@ -2551,7 +2331,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                       patch(a.id, { w: nw, h: nh });
                                     }}
                                     title="Scale Up (+15%)"
-                                    className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                    className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-sm hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 font-medium text-foreground"
                                   >
                                     <Plus className="h-3 w-3" /> Larger
                                   </button>
@@ -2560,21 +2340,21 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                   <button
                                     onClick={() => patch(a.id, { w: 0.18, h: 0.06 })}
                                     title="Small Preset"
-                                    className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                    className="rounded px-1.5 py-0.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                                   >
                                     S
                                   </button>
                                   <button
                                     onClick={() => patch(a.id, { w: 0.28, h: 0.10 })}
                                     title="Medium Preset"
-                                    className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                    className="rounded px-1.5 py-0.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                                   >
                                     M
                                   </button>
                                   <button
                                     onClick={() => patch(a.id, { w: 0.40, h: 0.14 })}
                                     title="Large Preset"
-                                    className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                    className="rounded px-1.5 py-0.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                                   >
                                     L
                                   </button>
@@ -2582,7 +2362,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                 <button
                                   onClick={() => setShowSignatureModal(true)}
                                   title="Replace with new signature"
-                                  className="flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
+                                  className="flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200"
                                 >
                                   <RefreshCw className="h-2.5 w-2.5" /> Re-sign
                                 </button>
@@ -2592,7 +2372,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                             {/* IMAGE SPECIFIC TOOLBAR */}
                             {a.type === "image" && (
                               <>
-                                <span className="flex items-center gap-1 rounded bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                                <span className="flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                                   <ImageIcon className="h-3 w-3" /> Image
                                 </span>
                                 <div className="flex items-center gap-0.5 border-l border-slate-200 pl-1 dark:border-slate-700">
@@ -2603,7 +2383,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                       patch(a.id, { w: nw, h: nh });
                                     }}
                                     title="Scale Down (-15%)"
-                                    className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                    className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-sm hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 font-medium text-foreground"
                                   >
                                     <Minus className="h-3 w-3" /> Smaller
                                   </button>
@@ -2614,7 +2394,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                       patch(a.id, { w: nw, h: nh });
                                     }}
                                     title="Scale Up (+15%)"
-                                    className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                    className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-sm hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 font-medium text-foreground"
                                   >
                                     <Plus className="h-3 w-3" /> Larger
                                   </button>
@@ -2623,21 +2403,21 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                   <button
                                     onClick={() => patch(a.id, { w: 0.20, h: 0.08 })}
                                     title="Small Preset"
-                                    className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                    className="rounded px-1.5 py-0.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                                   >
                                     S
                                   </button>
                                   <button
                                     onClick={() => patch(a.id, { w: 0.35, h: 0.14 })}
                                     title="Medium Preset"
-                                    className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                    className="rounded px-1.5 py-0.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                                   >
                                     M
                                   </button>
                                   <button
                                     onClick={() => patch(a.id, { w: 0.55, h: 0.22 })}
                                     title="Large Preset"
-                                    className="rounded px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                    className="rounded px-1.5 py-0.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                                   >
                                     L
                                   </button>
@@ -2648,7 +2428,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                             {/* FORM FIELD SPECIFIC TOOLBAR */}
                             {a.type === "formfield" && (
                               <>
-                                <span className="flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-[10px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                <span className="flex items-center gap-1 rounded bg-blue-50 px-1.5 py-0.5 text-xs font-semibold text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                                   <FileText className="h-3 w-3" /> Field
                                 </span>
 
@@ -2660,7 +2440,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                     patch(a.id, { fontCategory: cat });
                                     setFontCategory(cat);
                                   }}
-                                  className="rounded border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                  className="rounded px-1 py-0.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                                 >
                                   <option value="sans-serif">Sans</option>
                                   <option value="serif">Serif</option>
@@ -2669,7 +2449,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
 
                                 {/* Font Size Controls */}
                                 <div className="flex items-center gap-0.5 border-l border-slate-200 pl-1 dark:border-slate-700">
-                                  <button
+                                  <button aria-label="Decrease Font Size"
                                     onClick={() => {
                                       const next = Math.max(6, (a.size ?? 12) - 1);
                                       patch(a.id, { size: next });
@@ -2680,10 +2460,10 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                   >
                                     <Minus className="h-3 w-3" />
                                   </button>
-                                  <span className="px-1 text-[10px] font-bold text-slate-700 dark:text-slate-200 tabular-nums">
+                                  <span className="px-1 text-xs font-semibold text-slate-700 dark:text-slate-200 tabular-nums">
                                     {a.size ?? 12}pt
                                   </span>
-                                  <button
+                                  <button aria-label="Increase Font Size"
                                     onClick={() => {
                                       const next = Math.min(48, (a.size ?? 12) + 1);
                                       patch(a.id, { size: next });
@@ -2704,7 +2484,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                     setIsBold(next);
                                   }}
                                   title="Toggle Bold"
-                                  className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${
+                                  className={`rounded px-1.5 py-0.5 text-xs font-semibold ${
                                     a.isBold
                                       ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
                                       : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -2721,7 +2501,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                       patch(a.id, { w: nw });
                                     }}
                                     title="Make Box Narrower"
-                                    className="rounded px-1 py-0.5 text-[10px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                    className="rounded px-1 py-0.5 text-xs font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                                   >
                                     - Width
                                   </button>
@@ -2731,7 +2511,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                       patch(a.id, { w: nw });
                                     }}
                                     title="Make Box Wider"
-                                    className="rounded px-1 py-0.5 text-[10px] font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                    className="rounded px-1 py-0.5 text-xs font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                                   >
                                     + Width
                                   </button>
@@ -2744,7 +2524,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                 <button
                                   onClick={() => setEditingId(a.id)}
                                   title="Edit text"
-                                  className="flex items-center gap-1 rounded-md bg-blue-50 px-2 py-1 text-[11px] font-semibold text-blue-700 hover:bg-blue-100 dark:bg-blue-950/50 dark:text-blue-300"
+                                  className="flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold bg-background text-foreground border hover:bg-muted"
                                 >
                                   <Pencil className="h-3 w-3" /> Edit
                                 </button>
@@ -2756,14 +2536,14 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                     patch(a.id, { fontCategory: cat });
                                     setFontCategory(cat);
                                   }}
-                                  className="rounded border border-slate-200 bg-slate-50 px-1 py-0.5 text-[10px] font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                  className="rounded px-1 py-0.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                                 >
                                   <option value="sans-serif">Sans</option>
                                   <option value="serif">Serif</option>
                                   <option value="monospace">Mono</option>
                                 </select>
 
-                                <button
+                                <button aria-label="Bold"
                                   onClick={() => {
                                     const next = !a.isBold;
                                     patch(a.id, { isBold: next });
@@ -2779,7 +2559,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                   <Bold className="h-3 w-3" />
                                 </button>
 
-                                <button
+                                <button aria-label="Italic"
                                   onClick={() => {
                                     const next = !a.isItalic;
                                     patch(a.id, { isItalic: next });
@@ -2795,7 +2575,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                   <Italic className="h-3 w-3" />
                                 </button>
 
-                                <button
+                                <button aria-label="Smaller font"
                                   onClick={() => {
                                     const next = Math.max(6, (a.size ?? 14) - 1);
                                     patch(a.id, { size: next });
@@ -2806,10 +2586,10 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                 >
                                   <Minus className="h-3 w-3" />
                                 </button>
-                                <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-300 px-0.5">
+                                <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 px-0.5">
                                   {a.size ?? 14}pt
                                 </span>
-                                <button
+                                <button aria-label="Larger font"
                                   onClick={() => {
                                     const next = Math.min(72, (a.size ?? 14) + 1);
                                     patch(a.id, { size: next });
@@ -2833,7 +2613,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                     })
                                   }
                                   title="Narrower"
-                                  className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                  className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-sm hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 font-medium text-foreground"
                                 >
                                   <Minus className="h-3 w-3" /> Width
                                 </button>
@@ -2844,7 +2624,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                     })
                                   }
                                   title="Wider"
-                                  className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                                  className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-sm hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 font-medium text-foreground"
                                 >
                                   <Plus className="h-3 w-3" /> Width
                                 </button>
@@ -2852,7 +2632,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                             )}
 
                             <div className="flex items-center gap-0.5 border-l border-slate-200 pl-1 dark:border-slate-700">
-                              <button
+                              <button aria-label="Duplicate"
                                 onClick={() => duplicateAnnot(a.id)}
                                 title="Duplicate"
                                 className="flex items-center gap-1 rounded p-1 text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -2860,7 +2640,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                 <Copy className="h-3.5 w-3.5" />
                               </button>
 
-                              <button
+                              <button aria-label="Delete"
                                 onClick={() => removeAnnot(a.id)}
                                 title="Delete"
                                 className="flex items-center gap-1 rounded p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
@@ -2886,318 +2666,245 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                 : "space-y-4 lg:col-span-4"
             }
           >
-            <div className="rounded-2xl border border-slate-200/90 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
-              {/* Studio Sidebar Tabs Header */}
-              <div className="flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
+            <div className="space-y-5 rounded-xl border bg-background p-4 dark:bg-input/10">
+              {/* Panel tabs */}
+              <div role="tablist" aria-label="Editor tools" className="grid grid-cols-4 gap-1 rounded-lg bg-muted/60 p-1">
                 {(
                   [
                     ["edit", "Edit", Pencil],
                     ["annotate", "Annotate", PenTool],
                     ["forms", "Forms", FileText],
-                    ["organize", "Organize", Layers],
+                    ["organize", "Pages", Layers],
                   ] as const
                 ).map(([tabId, tabLabel, Icon]) => (
                   <button
                     key={tabId}
+                    type="button"
+                    role="tab"
+                    aria-selected={tab === tabId}
                     onClick={() => {
                       setTab(tabId);
                       setSelectedId(null);
                       setEditingId(null);
                     }}
-                    className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition ${
-                      tab === tabId
-                        ? "bg-white text-blue-600 shadow-2xs dark:bg-slate-900 dark:text-blue-400"
-                        : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                    }`}
+                    className={cn(
+                      "flex items-center justify-center gap-1.5 rounded-md py-1.5 text-xs font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
+                      tab === tabId ? "bg-background text-foreground shadow-xs dark:bg-input/50" : "text-muted-foreground hover:text-foreground"
+                    )}
                   >
-                    <Icon className="h-3.5 w-3.5" />
-                    <span>{tabLabel}</span>
+                    <Icon className="size-3.5" aria-hidden="true" />
+                    {tabLabel}
                   </button>
                 ))}
               </div>
 
               {/* TAB 1: EDIT CONTENT */}
               {tab === "edit" && (
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
-                      Edit Content
-                    </h3>
-                    <div className="space-y-2">
-                      {/* Edit Text Card */}
-                      <button
-                        onClick={() => {
-                          setTool("select");
-                          setEditingId(null);
-                        }}
-                        className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
-                          tool === "select"
-                            ? "border-blue-500 bg-blue-50/70 dark:border-blue-500 dark:bg-blue-950/40"
-                            : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900"
-                        }`}
-                      >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400 font-bold">
-                          <Type className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white">
-                            Edit Text
-                          </div>
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                            Click any word to retype with matching font
-                          </div>
-                        </div>
-                      </button>
-
-                      {/* Add Image Card */}
-                      <label className="w-full flex cursor-pointer items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left transition-all hover:border-emerald-300 hover:bg-emerald-50/30 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-emerald-900">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-600/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400">
-                          <ImageIcon className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white">
-                            Add Image
-                          </div>
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                            Insert image from your device
-                          </div>
-                        </div>
-                        <input
-                          type="file"
-                          accept="image/png,image/jpeg"
-                          onChange={(e) => addImage(e.target.files?.[0])}
-                          className="hidden"
-                        />
-                      </label>
-
-                      {/* Add Shape / Cover Card */}
-                      <button
-                        onClick={() => {
-                          setTool("whiteout");
-                          setEditingId(null);
-                        }}
-                        className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
-                          tool === "whiteout"
-                            ? "border-amber-500 bg-amber-50/70 dark:border-amber-500 dark:bg-amber-950/40"
-                            : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900"
-                        }`}
-                      >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-600/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
-                          <Shapes className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white">
-                            Add Shape / Cover
-                          </div>
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                            Draw shapes and cover areas
-                          </div>
-                        </div>
-                      </button>
-
-                      {/* Add Interactive Form Field Card (Quick Access) */}
-                      <button
-                        onClick={() => setShowFormFieldModal(true)}
-                        className="w-full flex items-center gap-3 rounded-xl border border-indigo-200 bg-indigo-50/40 p-3 text-left transition-all hover:border-indigo-400 hover:bg-indigo-50/80 dark:border-indigo-900/50 dark:bg-indigo-950/20 dark:hover:border-indigo-500"
-                      >
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
-                          <FileText className="h-5 w-5" />
-                        </div>
-                        <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
-                            <span>Add Form Field / Input</span>
-                            <span className="rounded bg-indigo-600 px-1.5 py-0.2 text-[9px] font-bold text-white">NEW</span>
-                          </div>
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                            Place fillable text box, checkbox, or dropdown
-                          </div>
-                        </div>
-                      </button>
-                    </div>
+                <div className="space-y-5">
+                  <div className="space-y-1.5">
+                    <ToolOption
+                      icon={Type}
+                      title="Edit text"
+                      description="Click any line on the page to retype it"
+                      active={tool === "select"}
+                      onClick={() => {
+                        setTool("select");
+                        setEditingId(null);
+                      }}
+                    />
+                    <label className={toolOptionClass(false) + " cursor-pointer"}>
+                      <ToolOptionBody icon={ImageIcon} title="Add image" description="Place a PNG or JPG from your device" />
+                      <input type="file" accept="image/png,image/jpeg" onChange={(e) => addImage(e.target.files?.[0])} className="hidden" />
+                    </label>
+                    <ToolOption
+                      icon={Shapes}
+                      title="Cover an area"
+                      description="Draw a box to hide or white-out content"
+                      active={tool === "whiteout"}
+                      onClick={() => {
+                        setTool("whiteout");
+                        setEditingId(null);
+                      }}
+                    />
+                    <ToolOption icon={FileText} title="Add form field" description="A fillable text box, checkbox or dropdown" onClick={() => setShowFormFieldModal(true)} />
                   </div>
 
-                  {/* Active Typography Toolset */}
-                  <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-950/40 space-y-2">
-                    <span className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                      Typography & Styling
-                    </span>
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-foreground">Text style</h3>
                     <div className="flex flex-wrap items-center gap-1.5">
                       <select
+                        aria-label="Font"
                         value={fontCategory}
                         onChange={(e) => {
                           const cat = e.target.value as FontCategory;
                           setFontCategory(cat);
                           if (selectedId) patch(selectedId, { fontCategory: cat });
                         }}
-                        className="flex-1 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-medium text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+                        className="h-8 min-w-0 flex-1 rounded-lg border border-input bg-background px-2 text-sm text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 dark:bg-input/30"
                       >
                         <option value="sans-serif">Sans (Helvetica)</option>
                         <option value="serif">Serif (Times)</option>
                         <option value="monospace">Mono (Courier)</option>
                       </select>
-
-                      <div className="flex items-center rounded-lg border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+                      <div className="flex h-8 items-center rounded-lg border border-input bg-background dark:bg-input/30">
                         <button
+                          type="button"
+                          aria-label="Smaller text"
                           onClick={() => {
                             const next = Math.max(6, fontSize - 1);
                             setFontSize(next);
                             if (selectedId) patch(selectedId, { size: next });
                           }}
-                          className="p-1 text-slate-500 hover:text-blue-600"
+                          className="flex h-full w-7 items-center justify-center rounded-l-lg text-muted-foreground hover:bg-muted hover:text-foreground"
                         >
-                          <Minus className="h-3 w-3" />
+                          <Minus className="size-3" aria-hidden="true" />
                         </button>
-                        <span className="px-1 text-[11px] font-bold tabular-nums text-slate-700 dark:text-slate-200">
-                          {fontSize}pt
-                        </span>
+                        <span className="w-10 text-center text-xs tabular-nums text-foreground">{fontSize} pt</span>
                         <button
+                          type="button"
+                          aria-label="Larger text"
                           onClick={() => {
                             const next = Math.min(72, fontSize + 1);
                             setFontSize(next);
                             if (selectedId) patch(selectedId, { size: next });
                           }}
-                          className="p-1 text-slate-500 hover:text-blue-600"
+                          className="flex h-full w-7 items-center justify-center rounded-r-lg text-muted-foreground hover:bg-muted hover:text-foreground"
                         >
-                          <Plus className="h-3 w-3" />
+                          <Plus className="size-3" aria-hidden="true" />
                         </button>
                       </div>
-
-                      <button
+                      <Button
+                        type="button"
+                        variant={isBold ? "secondary" : "outline"}
+                        size="icon"
+                        aria-label="Bold"
+                        aria-pressed={isBold}
                         onClick={() => {
                           const next = !isBold;
                           setIsBold(next);
                           if (selectedId) patch(selectedId, { isBold: next });
                         }}
-                        className={`rounded-lg p-1.5 ${
-                          isBold
-                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-                            : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                        }`}
                       >
-                        <Bold className="h-3.5 w-3.5" />
-                      </button>
-
-                      <button
+                        <Bold aria-hidden="true" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant={isItalic ? "secondary" : "outline"}
+                        size="icon"
+                        aria-label="Italic"
+                        aria-pressed={isItalic}
                         onClick={() => {
                           const next = !isItalic;
                           setIsItalic(next);
                           if (selectedId) patch(selectedId, { isItalic: next });
                         }}
-                        className={`rounded-lg p-1.5 ${
-                          isItalic
-                            ? "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
-                            : "bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300"
-                        }`}
                       >
-                        <Italic className="h-3.5 w-3.5" />
-                      </button>
+                        <Italic aria-hidden="true" />
+                      </Button>
                     </div>
+                    <p className="text-xs text-muted-foreground">Applies to the selected text and to text you add next.</p>
                   </div>
 
-                  {/* PAGE TOOLS */}
-                  <div>
-                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
-                      Page Tools
-                    </h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        onClick={() => rotatePage(pageIndex, -90)}
-                        className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white p-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-                      >
-                        <RotateCcw className="h-3.5 w-3.5" /> Rotate Left
-                      </button>
-                      <button
-                        onClick={() => rotatePage(pageIndex, 90)}
-                        className="flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white p-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
-                      >
-                        <RotateCw className="h-3.5 w-3.5" /> Rotate Right
-                      </button>
-                      <button
-                        onClick={() => removePage(pageIndex)}
-                        disabled={pages.length <= 1}
-                        className="col-span-2 flex items-center justify-center gap-1.5 rounded-xl border border-red-200 bg-red-50/60 p-2 text-xs font-semibold text-red-700 hover:bg-red-100 disabled:opacity-30 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" /> Delete Page {pageIndex + 1}
-                      </button>
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-foreground">This page</h3>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      <Button type="button" variant="outline" onClick={() => rotatePage(pageIndex, -90)}>
+                        <RotateCcw aria-hidden="true" />
+                        Rotate left
+                      </Button>
+                      <Button type="button" variant="outline" onClick={() => rotatePage(pageIndex, 90)}>
+                        <RotateCw aria-hidden="true" />
+                        Rotate right
+                      </Button>
                     </div>
+                    <Button type="button" variant="ghost" size="sm" className="w-full text-destructive hover:bg-destructive/10 hover:text-destructive" onClick={() => removePage(pageIndex)} disabled={pages.length <= 1}>
+                      <Trash2 aria-hidden="true" />
+                      Delete page {pageIndex + 1}
+                    </Button>
                   </div>
                 </div>
               )}
 
               {/* TAB 2: ANNOTATE */}
               {tab === "annotate" && (
-                <div className="space-y-3">
-                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
-                    Annotation Tools
-                  </h3>
-
-                  {/* Signature Card */}
-                  <button
-                    onClick={() => setShowSignatureModal(true)}
-                    className="w-full flex items-center gap-3 rounded-xl border border-indigo-200 bg-indigo-50/60 p-3 text-left transition hover:border-indigo-300 hover:bg-indigo-50 dark:border-indigo-900/60 dark:bg-indigo-950/40"
-                  >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-600/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400">
-                      <PenTool className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-slate-900 dark:text-white">
-                        Create Signature
-                      </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                        Draw or type a handwritten signature
-                      </div>
-                    </div>
-                  </button>
-
-                  {/* Highlighter Card */}
-                  <button
+                <div className="space-y-1.5">
+                  <ToolOption icon={PenTool} title="Signature" description="Draw or type your signature and place it" onClick={() => setShowSignatureModal(true)} />
+                  <ToolOption
+                    icon={Highlighter}
+                    title="Highlighter"
+                    description="Drag across text to highlight it"
+                    active={tool === "highlight"}
                     onClick={() => {
                       setTool("highlight");
                       setSelectedId(null);
                     }}
-                    className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
-                      tool === "highlight"
-                        ? "border-amber-500 bg-amber-50/80 dark:border-amber-500 dark:bg-amber-950/50"
-                        : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900"
-                    }`}
-                  >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400">
-                      <Highlighter className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-slate-900 dark:text-white">
-                        Highlighter
-                      </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                        Highlight text with vibrant colors
-                      </div>
-                    </div>
-                  </button>
-
-                  {/* Freehand Draw Card */}
-                  <button
+                  />
+                  <ToolOption
+                    icon={Pencil}
+                    title="Draw"
+                    description="Freehand lines and marks"
+                    active={tool === "draw"}
                     onClick={() => {
                       setTool("draw");
                       setSelectedId(null);
                     }}
-                    className={`w-full flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
-                      tool === "draw"
-                        ? "border-blue-500 bg-blue-50/80 dark:border-blue-500 dark:bg-blue-950/50"
-                        : "border-slate-200 bg-white hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900"
-                    }`}
-                  >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-500/20 dark:text-blue-400">
-                      <Pencil className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="text-xs font-bold text-slate-900 dark:text-white">
-                        Freehand Draw
+                  />
+
+                  {tool === "highlight" && (
+                    <div className="space-y-2 pt-3">
+                      <h3 className="text-sm font-semibold text-foreground">Highlight colour</h3>
+                      <div role="radiogroup" aria-label="Highlight colour" className="flex flex-wrap gap-2">
+                        {HIGHLIGHT_COLORS.map((c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            role="radio"
+                            aria-checked={highlightColor === c}
+                            aria-label={c}
+                            onClick={() => setHighlightColor(c)}
+                            className={cn("size-7 rounded-full border outline-none focus-visible:ring-3 focus-visible:ring-ring/50", highlightColor === c && "ring-2 ring-primary ring-offset-2 ring-offset-background")}
+                            style={{ backgroundColor: c }}
+                          />
+                        ))}
                       </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                        Draw freehand lines and marks
-                      </div>
                     </div>
-                  </button>
+                  )}
+
+                  {tool === "draw" && (
+                    <div className="space-y-3 pt-3">
+                      <div className="space-y-2">
+                        <h3 className="text-sm font-semibold text-foreground">Pen colour</h3>
+                        <div role="radiogroup" aria-label="Pen colour" className="flex flex-wrap gap-2">
+                          {PRESET_COLORS.map((c) => (
+                            <button
+                              key={c}
+                              type="button"
+                              role="radio"
+                              aria-checked={drawColor === c}
+                              aria-label={c}
+                              onClick={() => setDrawColor(c)}
+                              className={cn("size-7 rounded-full border outline-none focus-visible:ring-3 focus-visible:ring-ring/50", drawColor === c && "ring-2 ring-primary ring-offset-2 ring-offset-background")}
+                              style={{ backgroundColor: c }}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                      <Field label="Pen width">
+                        <Segmented
+                          value={String(drawWidth)}
+                          onChange={(v) => setDrawWidth(Number(v))}
+                          ariaLabel="Pen width"
+                          size="sm"
+                          fill
+                          options={[
+                            { value: "2", label: "Fine" },
+                            { value: "3", label: "Medium" },
+                            { value: "6", label: "Bold" },
+                          ]}
+                        />
+                      </Field>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -3205,54 +2912,39 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
               {tab === "forms" && (
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-                      Document Fields ({fields.length + userFieldAnnots.length})
+                    <h3 className="text-sm font-semibold text-foreground">
+                      Form fields <span className="font-normal text-muted-foreground">({fields.length + userFieldAnnots.length})</span>
                     </h3>
-                    <button
-                      onClick={() => setShowFormFieldModal(true)}
-                      className="flex items-center gap-1 rounded-lg bg-indigo-600 px-2.5 py-1 text-xs font-bold text-white shadow-2xs hover:bg-indigo-700"
-                    >
-                      <Plus className="h-3.5 w-3.5" /> Add Field
-                    </button>
+                    <Button type="button" size="sm" onClick={() => setShowFormFieldModal(true)}>
+                      <Plus aria-hidden="true" />
+                      Add field
+                    </Button>
                   </div>
 
-                  <p className="rounded-lg bg-indigo-50 px-2.5 py-2 text-[11px] leading-relaxed text-indigo-800 dark:bg-indigo-950/40 dark:text-indigo-200">
-                    Fields are saved as real, fillable PDF fields. Reopen the exported
-                    file here or in any PDF reader and you only need to change the
-                    values — the layout stays put.
+                  <p className="text-xs text-muted-foreground">
+                    Fields are saved as real, fillable PDF fields, so the downloaded file can be filled in again here or in any PDF reader.
                   </p>
 
                   {fields.length + userFieldAnnots.length > 0 ? (
-                    <div className="space-y-2.5 max-h-[480px] overflow-y-auto pr-1">
+                    <div className="max-h-[480px] space-y-2 overflow-y-auto pr-1">
                       {/* Fields that were already in the uploaded PDF */}
                       {fields.map((f) => (
-                        <div
-                          key={`src-${f.name}`}
-                          className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-1 dark:border-slate-800 dark:bg-slate-950/40"
-                        >
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="font-bold text-slate-800 dark:text-slate-200 truncate">
-                              🏷️ {f.name}
-                            </span>
-                            <div className="flex items-center gap-1.5">
-                              <span className="rounded bg-slate-200/80 px-1.5 py-0.2 text-[9px] uppercase font-mono text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                                {f.type}
-                              </span>
-                              <button
-                                onClick={() => removeFormField(f.name)}
-                                title={`Delete field "${f.name}"`}
-                                className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 transition"
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
+                        <div key={`src-${f.name}`} className="space-y-1.5 rounded-lg border bg-muted/30 p-3">
+                          <div className="flex items-center justify-between gap-2 text-xs">
+                            <span className="truncate font-medium text-foreground">{f.name}</span>
+                            <div className="flex shrink-0 items-center gap-1">
+                              <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{f.type}</span>
+                              <Button type="button" variant="ghost" size="icon-xs" onClick={() => removeFormField(f.name)} aria-label={`Delete field ${f.name}`} title={`Delete field "${f.name}"`}>
+                                <Trash2 aria-hidden="true" />
+                              </Button>
                             </div>
                           </div>
-
                           {f.type === "dropdown" ? (
                             <select
+                              aria-label={`Value of ${f.name}`}
                               value={f.value}
                               onChange={(e) => updateSourceField(f.name, e.target.value)}
-                              className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                              className="h-9 w-full rounded-lg border border-input bg-background px-2.5 text-base text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
                             >
                               {(f.options ?? ["Option 1", "Option 2"]).map((o) => (
                                 <option key={o} value={o}>
@@ -3261,26 +2953,23 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                               ))}
                             </select>
                           ) : f.type === "checkbox" ? (
-                            <div className="flex items-center gap-2 pt-0.5">
+                            <label className="flex items-center gap-2 text-sm text-foreground">
                               <input
                                 type="checkbox"
                                 checked={f.value === "on" || f.value === "true"}
-                                onChange={(e) =>
-                                  updateSourceField(f.name, e.target.checked ? "on" : "")
-                                }
-                                className="h-4 w-4 rounded accent-blue-600 cursor-pointer"
+                                onChange={(e) => updateSourceField(f.name, e.target.checked ? "on" : "")}
+                                className="size-4 cursor-pointer rounded accent-primary"
                               />
-                              <span className="text-xs text-slate-600 dark:text-slate-400">
-                                Checked
-                              </span>
-                            </div>
+                              Checked
+                            </label>
                           ) : (
                             <input
                               type="text"
+                              aria-label={`Value of ${f.name}`}
                               value={f.value}
-                              placeholder={`Enter value for ${f.name}...`}
+                              placeholder="Value"
                               onChange={(e) => updateSourceField(f.name, e.target.value)}
-                              className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                              className="h-9 w-full rounded-lg border border-input bg-background px-2.5 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
                             />
                           )}
                         </div>
@@ -3294,45 +2983,47 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                             setPageIndex(a.page);
                             setSelectedId(a.id);
                           }}
-                          className={`cursor-pointer rounded-xl border p-3 space-y-1 transition ${
-                            selectedId === a.id
-                              ? "border-indigo-500 bg-indigo-50/60 ring-2 ring-indigo-500/20 dark:border-indigo-500 dark:bg-indigo-950/30"
-                              : "border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-950/40"
-                          }`}
+                          className={cn(
+                            "cursor-pointer space-y-1.5 rounded-lg border p-3 transition-colors",
+                            selectedId === a.id ? "border-primary/50 bg-brand-subtle/60" : "bg-muted/30 hover:bg-muted/60"
+                          )}
                         >
-                          <div className="flex items-center justify-between text-xs">
+                          <div className="flex items-center justify-between gap-2 text-xs">
                             <input
                               value={a.fieldName ?? ""}
                               onClick={(e) => e.stopPropagation()}
                               onChange={(e) => patch(a.id, { fieldName: e.target.value })}
                               placeholder="Field name"
+                              aria-label="Field name"
                               title="The name this field will carry in the PDF"
-                              className="min-w-0 flex-1 rounded border-0 bg-transparent px-0 text-xs font-bold text-slate-800 outline-none focus:bg-white focus:px-1.5 focus:py-0.5 focus:ring-1 focus:ring-indigo-400 dark:text-slate-200 dark:focus:bg-slate-900"
+                              className="h-7 min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-1.5 text-sm font-medium text-foreground outline-none hover:border-input focus-visible:border-ring focus-visible:bg-background focus-visible:ring-3 focus-visible:ring-ring/50"
                             />
-                            <div className="flex shrink-0 items-center gap-1.5">
-                              <span className="rounded bg-indigo-100 px-1.5 py-0.2 text-[9px] uppercase font-mono text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
-                                {a.fieldType ?? "text"}
-                              </span>
-                              <span className="text-[9px] text-slate-400">p{a.page + 1}</span>
-                              <button
+                            <div className="flex shrink-0 items-center gap-1">
+                              <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">{a.fieldType ?? "text"}</span>
+                              <span className="text-xs text-muted-foreground">p. {a.page + 1}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon-xs"
+                                aria-label="Delete this field"
+                                title="Delete this field"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   removeAnnot(a.id);
                                 }}
-                                title="Delete this field"
-                                className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40 transition"
                               >
-                                <Trash2 className="h-3.5 w-3.5" />
-                              </button>
+                                <Trash2 aria-hidden="true" />
+                              </Button>
                             </div>
                           </div>
 
                           {a.fieldType === "dropdown" ? (
                             <select
+                              aria-label="Default value"
                               value={a.fieldValue ?? ""}
                               onClick={(e) => e.stopPropagation()}
                               onChange={(e) => setFieldValue(a, e.target.value)}
-                              className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                              className="h-9 w-full rounded-lg border border-input bg-background px-2.5 text-base text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
                             >
                               {(a.fieldOptions ?? ["Option 1", "Option 2"]).map((o) => (
                                 <option key={o} value={o}>
@@ -3341,53 +3032,47 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                               ))}
                             </select>
                           ) : a.fieldType === "checkbox" ? (
-                            <div className="flex items-center gap-2 pt-0.5">
+                            <label className="flex items-center gap-2 text-sm text-foreground" onClick={(e) => e.stopPropagation()}>
                               <input
                                 type="checkbox"
                                 checked={a.fieldValue === "on" || a.fieldValue === "true"}
-                                onClick={(e) => e.stopPropagation()}
-                                onChange={(e) =>
-                                  setFieldValue(a, e.target.checked ? "on" : "")
-                                }
-                                className="h-4 w-4 rounded accent-blue-600 cursor-pointer"
+                                onChange={(e) => setFieldValue(a, e.target.checked ? "on" : "")}
+                                className="size-4 cursor-pointer rounded accent-primary"
                               />
-                              <span className="text-xs text-slate-600 dark:text-slate-400">
-                                Checked
-                              </span>
-                            </div>
+                              Checked by default
+                            </label>
                           ) : (
                             <input
                               type="text"
+                              aria-label="Default value"
                               value={a.fieldValue ?? ""}
-                              placeholder="Default value (can be left empty)"
+                              placeholder="Default value (optional)"
                               onClick={(e) => e.stopPropagation()}
                               onChange={(e) => setFieldValue(a, e.target.value)}
-                              className="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 dark:border-slate-700 dark:bg-slate-900 dark:text-white"
+                              className="h-9 w-full rounded-lg border border-input bg-background px-2.5 text-base text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
                             />
                           )}
 
                           {/* Background is opt-in. A field that paints over the
                               page erases whatever it sits on, so the default is
                               transparent and covering is chosen deliberately. */}
-                          <div
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-1.5 pt-1"
-                          >
-                            <span className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-                              Background
-                            </span>
+                          <div onClick={(e) => e.stopPropagation()} className="flex items-center gap-1.5 pt-0.5">
+                            <span className="text-xs text-muted-foreground">Background</span>
                             <button
+                              type="button"
+                              aria-pressed={!a.bgColor}
                               onClick={() => patch(a.id, { bgColor: undefined })}
                               title="Let the page show through (default)"
-                              className={`rounded px-1.5 py-0.5 text-[10px] font-semibold transition ${
-                                !a.bgColor
-                                  ? "bg-indigo-600 text-white"
-                                  : "bg-slate-200 text-slate-600 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300"
-                              }`}
+                              className={cn(
+                                "h-6 rounded-md border px-2 text-xs font-medium transition-colors",
+                                !a.bgColor ? "border-primary/50 bg-brand-subtle text-brand-subtle-foreground" : "bg-background text-muted-foreground hover:bg-muted dark:bg-input/20"
+                              )}
                             >
                               None
                             </button>
                             <button
+                              type="button"
+                              aria-pressed={!!a.bgColor}
                               onClick={() =>
                                 patch(a.id, {
                                   bgColor: sampleFillUnder({
@@ -3399,11 +3084,10 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                 })
                               }
                               title="Fill with the colour of the page underneath, hiding whatever the field covers"
-                              className={`rounded px-1.5 py-0.5 text-[10px] font-semibold transition ${
-                                a.bgColor
-                                  ? "bg-indigo-600 text-white"
-                                  : "bg-slate-200 text-slate-600 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300"
-                              }`}
+                              className={cn(
+                                "h-6 rounded-md border px-2 text-xs font-medium transition-colors",
+                                a.bgColor ? "border-primary/50 bg-brand-subtle text-brand-subtle-foreground" : "bg-background text-muted-foreground hover:bg-muted dark:bg-input/20"
+                              )}
                             >
                               Cover
                             </button>
@@ -3413,16 +3097,16 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                               onChange={(e) => patch(a.id, { bgColor: e.target.value })}
                               aria-label="Exact background colour"
                               title="Pick an exact background colour"
-                              className="h-5 w-7 cursor-pointer rounded border border-slate-300 bg-transparent p-0 dark:border-slate-700"
+                              className="h-6 w-8 cursor-pointer rounded-md border bg-transparent p-0.5"
                             />
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <div className="rounded-xl border border-dashed border-slate-200 p-6 text-center text-xs text-slate-500 dark:border-slate-800">
-                      No interactive fields yet. Click <strong>&ldquo;+ Add Field&rdquo;</strong> to place text boxes, checkboxes, or dropdowns.
-                    </div>
+                    <p className="rounded-lg border border-dashed p-5 text-center text-sm text-muted-foreground">
+                      No form fields yet. Use Add field to place a text box, checkbox or dropdown.
+                    </p>
                   )}
                 </div>
               )}
@@ -3430,69 +3114,49 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
               {/* TAB 4: ORGANIZE */}
               {tab === "organize" && (
                 <div className="space-y-3">
-                  <h3 className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
-                    Organize Pages ({pages.length})
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Pages <span className="font-normal text-muted-foreground">({pages.length})</span>
                   </h3>
-                  <div className="grid grid-cols-2 gap-2.5 max-h-[500px] overflow-y-auto pr-1">
+                  <div className="grid max-h-[500px] grid-cols-2 gap-2 overflow-y-auto pr-1">
                     {pages.map((p, i) => (
                       <div
                         key={`${p.sourceIndex}-${i}`}
-                        className={`group relative flex flex-col overflow-hidden rounded-xl border transition-all ${
-                          pageIndex === i
-                            ? "border-blue-500 shadow-md ring-2 ring-blue-500/20"
-                            : "border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-950"
-                        }`}
+                        className={cn(
+                          "group relative flex flex-col overflow-hidden rounded-lg border transition-colors",
+                          pageIndex === i ? "border-primary ring-2 ring-primary/20" : "bg-muted/30"
+                        )}
                       >
-                        <div
+                        <button
+                          type="button"
                           onClick={() => setPageIndex(i)}
-                          className="relative aspect-[3/4] cursor-pointer overflow-hidden grid place-items-center bg-slate-200/50 dark:bg-slate-900"
+                          aria-label={`Show page ${i + 1}`}
+                          aria-current={pageIndex === i ? "page" : undefined}
+                          className="relative grid aspect-[3/4] place-items-center overflow-hidden bg-muted/60 outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
                         >
                           {p.thumbnail && (
                             /* eslint-disable-next-line @next/next/no-img-element */
                             <img
                               src={p.thumbnail}
-                              alt={`Page ${i + 1}`}
+                              alt=""
                               style={{ transform: `rotate(${p.rotation}deg)` }}
-                              className="max-h-full max-w-full transition-transform pointer-events-none"
+                              className="pointer-events-none max-h-full max-w-full transition-transform"
                             />
                           )}
-                          <span className="absolute left-1.5 top-1.5 rounded bg-black/70 px-1.5 py-0.5 text-[10px] font-bold text-white shadow">
-                            {i + 1}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-around border-t border-slate-200 bg-white p-1 dark:border-slate-800 dark:bg-slate-900">
-                          <button
-                            onClick={() => movePage(i, -1)}
-                            disabled={i === 0}
-                            title="Move Left"
-                            className="rounded p-1 text-slate-500 hover:text-blue-600 disabled:opacity-25"
-                          >
-                            <ArrowLeft className="h-3 w-3" />
-                          </button>
-                          <button
-                            onClick={() => rotatePage(i, 90)}
-                            title="Rotate Right"
-                            className="rounded p-1 text-slate-500 hover:text-blue-600"
-                          >
-                            <RotateCw className="h-3 w-3" />
-                          </button>
-                          <button
-                            onClick={() => removePage(i)}
-                            disabled={pages.length <= 1}
-                            title="Delete Page"
-                            className="rounded p-1 text-slate-500 hover:text-red-500 disabled:opacity-25"
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </button>
-                          <button
-                            onClick={() => movePage(i, 1)}
-                            disabled={i === pages.length - 1}
-                            title="Move Right"
-                            className="rounded p-1 text-slate-500 hover:text-blue-600 disabled:opacity-25"
-                          >
-                            <ArrowRight className="h-3 w-3" />
-                          </button>
+                          <span className="absolute top-1.5 left-1.5 rounded bg-black/65 px-1.5 py-0.5 text-xs font-medium text-white">{i + 1}</span>
+                        </button>
+                        <div className="flex items-center justify-around border-t bg-background p-0.5 dark:bg-input/20">
+                          <Button type="button" variant="ghost" size="icon-xs" aria-label={`Move page ${i + 1} earlier`} title="Move earlier" onClick={() => movePage(i, -1)} disabled={i === 0}>
+                            <ArrowLeft aria-hidden="true" />
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon-xs" aria-label={`Rotate page ${i + 1}`} title="Rotate right" onClick={() => rotatePage(i, 90)}>
+                            <RotateCw aria-hidden="true" />
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon-xs" aria-label={`Delete page ${i + 1}`} title="Delete page" onClick={() => removePage(i)} disabled={pages.length <= 1}>
+                            <Trash2 aria-hidden="true" />
+                          </Button>
+                          <Button type="button" variant="ghost" size="icon-xs" aria-label={`Move page ${i + 1} later`} title="Move later" onClick={() => movePage(i, 1)} disabled={i === pages.length - 1}>
+                            <ArrowRight aria-hidden="true" />
+                          </Button>
                         </div>
                       </div>
                     ))}
@@ -3511,246 +3175,134 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
         })()
       )}
 
-      {/* SIGNATURE MODAL - PORTALED TO BODY FOR EXACT CENTER */}
-      {showSignatureModal && mounted &&
-        createPortal(
-          <div className="fixed inset-0 z-[9999] flex min-h-screen w-screen items-center justify-center bg-black/65 backdrop-blur-xs p-4 overflow-y-auto">
-            <div className="relative m-auto w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <PenTool className="h-5 w-5 text-blue-600" /> Create Signature
-                </h3>
-                <button
-                  onClick={() => setShowSignatureModal(false)}
-                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
+      {/* Signature dialog */}
+      <Dialog open={showSignatureModal} onOpenChange={setShowSignatureModal}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add your signature</DialogTitle>
+            <DialogDescription>Draw it or type your name. You can move and resize it on the page afterwards.</DialogDescription>
+          </DialogHeader>
 
-              {/* Draw vs Type Switcher */}
-              <div className="flex rounded-xl bg-slate-100 p-1 dark:bg-slate-800">
-                <button
-                  onClick={() => setSigMode("draw")}
-                  className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${
-                    sigMode === "draw"
-                      ? "bg-white text-blue-600 shadow-xs dark:bg-slate-900 dark:text-blue-400"
-                      : "text-slate-600 dark:text-slate-400"
-                  }`}
-                >
-                  Draw Signature
-                </button>
-                <button
-                  onClick={() => setSigMode("type")}
-                  className={`flex-1 rounded-lg py-1.5 text-xs font-semibold transition ${
-                    sigMode === "type"
-                      ? "bg-white text-blue-600 shadow-xs dark:bg-slate-900 dark:text-blue-400"
-                      : "text-slate-600 dark:text-slate-400"
-                  }`}
-                >
-                  Type Signature
-                </button>
-              </div>
+          <Segmented
+            value={sigMode}
+            onChange={setSigMode}
+            ariaLabel="Signature method"
+            size="sm"
+            fill
+            options={[
+              { value: "draw", label: "Draw" },
+              { value: "type", label: "Type" },
+            ]}
+          />
 
-              {sigMode === "draw" ? (
-                <div className="space-y-2">
-                  <div className="rounded-xl border border-slate-300 bg-slate-50 p-2 dark:border-slate-700 dark:bg-slate-950">
-                    <canvas
-                      ref={sigCanvasRef}
-                      width={460}
-                      height={160}
-                      onMouseDown={handleSigCanvasDown}
-                      onMouseMove={handleSigCanvasMove}
-                      onMouseUp={handleSigCanvasUp}
-                      onMouseLeave={handleSigCanvasUp}
-                      className="w-full cursor-crosshair rounded-lg bg-white touch-none"
-                    />
-                  </div>
-                  <div className="flex justify-between items-center text-xs">
-                    <span className="text-slate-500">Draw with mouse or touchscreen</span>
-                    <button
-                      onClick={clearSigCanvas}
-                      className="text-red-600 hover:underline"
-                    >
-                      Clear pad
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <input
-                    type="text"
-                    placeholder="Type your full name..."
-                    value={typedSigText}
-                    onChange={(e) => setTypedSigText(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 p-3 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  />
-                  {typedSigText && (
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-center dark:border-slate-800 dark:bg-slate-950">
-                      <p
-                        style={{
-                          fontFamily:
-                            "'Brush Script MT', 'Dancing Script', cursive, sans-serif",
-                        }}
-                        className="text-3xl italic text-slate-800 dark:text-slate-100"
-                      >
-                        {typedSigText}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  onClick={() => setShowSignatureModal(false)}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={sigMode === "draw" ? saveDrawnSignature : saveTypedSignature}
-                  className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700"
-                >
-                  Insert Signature
+          {sigMode === "draw" ? (
+            <div className="space-y-2">
+              <canvas
+                ref={sigCanvasRef}
+                width={920}
+                height={320}
+                onPointerDown={handleSigCanvasDown}
+                onPointerMove={handleSigCanvasMove}
+                onPointerUp={handleSigCanvasUp}
+                onPointerCancel={handleSigCanvasUp}
+                aria-label="Signature pad"
+                className="aspect-[23/8] w-full cursor-crosshair touch-none rounded-lg border bg-white"
+              />
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Sign with a mouse, trackpad, pen or finger.</span>
+                <button type="button" onClick={clearSigCanvas} className="font-medium text-foreground hover:underline">
+                  Clear
                 </button>
               </div>
             </div>
-          </div>,
-          document.body
-        )}
-
-      {/* INTERACTIVE FORM FIELD CREATOR MODAL - PORTALED TO BODY FOR EXACT CENTER */}
-      {showFormFieldModal && mounted &&
-        createPortal(
-          <div className="fixed inset-0 z-[9999] flex min-h-screen w-screen items-center justify-center bg-black/65 backdrop-blur-xs p-4 overflow-y-auto">
-            <div className="relative m-auto w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl dark:border-slate-800 dark:bg-slate-900 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-indigo-600" /> Add Interactive Form Field
-                </h3>
-                <button
-                  onClick={() => setShowFormFieldModal(false)}
-                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              <p className="text-xs text-slate-500">
-                Create an interactive AcroForm field that anyone can click, fill out, and edit in Adobe Acrobat, Chrome, or any PDF reader.
-              </p>
-
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Field Identifier Name <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. full_name, invoice_date, customer_sign, agreed_terms"
-                    value={formFieldName}
-                    onChange={(e) => setFormFieldName(e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 p-2.5 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                    Field Type
-                  </label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(
-                      [
-                        ["text", "Text Input"],
-                        ["checkbox", "Checkbox"],
-                        ["dropdown", "Dropdown"],
-                      ] as const
-                    ).map(([type, label]) => (
-                      <button
-                        key={type}
-                        type="button"
-                        onClick={() => setFormFieldType(type)}
-                        className={`rounded-xl border p-2 text-xs font-semibold transition ${
-                          formFieldType === type
-                            ? "border-indigo-600 bg-indigo-50 text-indigo-700 dark:border-indigo-500 dark:bg-indigo-950/60 dark:text-indigo-300 shadow-xs"
-                            : "border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {formFieldType === "dropdown" ? (
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Dropdown Options (comma separated)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="Option 1, Option 2, Option 3"
-                      value={formFieldOpts}
-                      onChange={(e) => setFormFieldOpts(e.target.value)}
-                      className="w-full rounded-xl border border-slate-300 p-2.5 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    />
-                  </div>
-                ) : formFieldType === "checkbox" ? (
-                  <div className="flex items-center gap-2 pt-1">
-                    <input
-                      type="checkbox"
-                      checked={formFieldVal === "on"}
-                      onChange={(e) => setFormFieldVal(e.target.checked ? "on" : "")}
-                      className="h-4 w-4 rounded accent-indigo-600"
-                    />
-                    <span className="text-xs text-slate-600 dark:text-slate-400">Default checked</span>
-                  </div>
-                ) : (
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                      Default Initial Value (optional)
-                    </label>
-                    <input
-                      type="text"
-                      placeholder="e.g. John Doe / Initial text"
-                      value={formFieldVal}
-                      onChange={(e) => setFormFieldVal(e.target.value)}
-                      className="w-full rounded-xl border border-slate-300 p-2.5 text-sm dark:border-slate-700 dark:bg-slate-950 dark:text-white"
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setShowFormFieldModal(false)}
-                  className="rounded-xl border border-slate-300 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const opts =
-                      formFieldType === "dropdown"
-                        ? formFieldOpts
-                            .split(",")
-                            .map((s: string) => s.trim())
-                            .filter(Boolean)
-                        : [];
-                    insertFormField(formFieldName, formFieldType, formFieldVal, opts);
-                  }}
-                  className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-700"
-                >
-                  Insert Field onto Page
-                </button>
+          ) : (
+            <div className="space-y-3">
+              <TextInput
+                aria-label="Your name"
+                placeholder="Type your full name"
+                value={typedSigText}
+                onChange={(e) => setTypedSigText(e.target.value)}
+                autoFocus
+              />
+              <div className="flex min-h-20 items-center justify-center rounded-lg border bg-white px-4 py-3">
+                <p style={{ fontFamily: "'Brush Script MT', 'Dancing Script', cursive, sans-serif" }} className="text-3xl text-slate-800 italic">
+                  {typedSigText || <span className="text-base text-slate-400 not-italic">Preview</span>}
+                </p>
               </div>
             </div>
-          </div>,
-          document.body
-        )}
+          )}
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setShowSignatureModal(false)}>
+              Cancel
+            </Button>
+            <Button type="button" onClick={sigMode === "draw" ? saveDrawnSignature : saveTypedSignature} disabled={sigMode === "type" && !typedSigText.trim()}>
+              Add signature
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Form field dialog */}
+      <Dialog open={showFormFieldModal} onOpenChange={setShowFormFieldModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add a form field</DialogTitle>
+            <DialogDescription>A real fillable field that works in Acrobat, Chrome, Preview and other PDF readers.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <Field label="Field name" htmlFor="pdf-field-name" hint="Used inside the PDF, e.g. full_name or invoice_date.">
+              <TextInput id="pdf-field-name" placeholder="full_name" value={formFieldName} onChange={(e) => setFormFieldName(e.target.value)} autoComplete="off" />
+            </Field>
+            <Field label="Type">
+              <Segmented
+                value={formFieldType}
+                onChange={setFormFieldType}
+                ariaLabel="Field type"
+                fill
+                options={[
+                  { value: "text", label: "Text" },
+                  { value: "checkbox", label: "Checkbox" },
+                  { value: "dropdown", label: "Dropdown" },
+                ]}
+              />
+            </Field>
+            {formFieldType === "dropdown" ? (
+              <Field label="Options" htmlFor="pdf-field-opts" hint="Separate options with commas.">
+                <TextInput id="pdf-field-opts" placeholder="Option 1, Option 2, Option 3" value={formFieldOpts} onChange={(e) => setFormFieldOpts(e.target.value)} />
+              </Field>
+            ) : formFieldType === "checkbox" ? (
+              <ToggleRow id="pdf-field-checked" label="Checked by default" checked={formFieldVal === "on"} onCheckedChange={(v) => setFormFieldVal(v ? "on" : "")} />
+            ) : (
+              <Field label="Default value" htmlFor="pdf-field-val" hint="Optional.">
+                <TextInput id="pdf-field-val" value={formFieldVal} onChange={(e) => setFormFieldVal(e.target.value)} />
+              </Field>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setShowFormFieldModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                const opts =
+                  formFieldType === "dropdown"
+                    ? formFieldOpts
+                        .split(",")
+                        .map((s: string) => s.trim())
+                        .filter(Boolean)
+                    : [];
+                insertFormField(formFieldName, formFieldType, formFieldVal, opts);
+              }}
+            >
+              Add to page
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

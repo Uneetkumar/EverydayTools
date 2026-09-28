@@ -2,116 +2,198 @@
 
 import React, { useState } from "react";
 import { PDFDocument } from "pdf-lib";
-import { Lock, Unlock, Upload, Download, CheckCircle2, AlertCircle } from "lucide-react";
-import confetti from "canvas-confetti";
-import { downloadDataUrl } from "@/lib/utils/download";
+import { Download, Info, LockOpen } from "lucide-react";
+import DropZone from "@/components/ui/DropZone";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { ToolErrorState, ToolLoadingState, ToolSuccessState } from "@/components/tool/tool-states";
+import { markToolCompleted, markToolError } from "@/lib/analytics";
+import { downloadBlob } from "@/lib/utils/download";
+import { loadPdfJs, pdfDocumentOptions } from "@/lib/pdf/loader";
 
+type Status =
+  | { kind: "idle" }
+  | { kind: "working"; message: string }
+  | { kind: "not-locked" }
+  | { kind: "needs-password"; wrong: boolean }
+  | { kind: "done"; blob: Blob; pages: number }
+  | { kind: "error"; message: string };
+
+/** Render scale: 2.5 × 72 DPI ≈ 180 DPI — sharp on screen and in print. */
+const RENDER_SCALE = 2.5;
+
+/**
+ * Unlock PDF.
+ *
+ * pdf-lib cannot decrypt, so the previous version re-saved the encrypted file
+ * and reported success: the copy kept its restrictions (and could come out
+ * corrupted). pdf.js can decrypt, with the password when one is needed, so an
+ * encrypted document is opened with pdf.js and each page is re-drawn into a
+ * new, unencrypted PDF. The copy looks and prints the same; the trade-off is
+ * that its pages are images, so text is no longer selectable — which the page
+ * says plainly.
+ */
 export default function UnlockPdf() {
   const [file, setFile] = useState<File | null>(null);
-  const [password, setPassword] = useState<string>("");
-  const [unlockedUrl, setUnlockedUrl] = useState<string | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [isUnlocking, setIsUnlocking] = useState<boolean>(false);
+  const [password, setPassword] = useState("");
+  const [status, setStatus] = useState<Status>({ kind: "idle" });
 
-  const handleUnlock = async () => {
-    if (!file) return;
-    setIsUnlocking(true);
-    setErrorMsg(null);
+  const reset = () => {
+    setFile(null);
+    setPassword("");
+    setStatus({ kind: "idle" });
+  };
+
+  const unlock = async (f: File, pwd: string) => {
+    setStatus({ kind: "working", message: "Checking the PDF…" });
+    const bytes = await f.arrayBuffer();
+
+    // 1. Not encrypted at all? pdf-lib refuses encrypted files by default.
     try {
-      const buffer = await file.arrayBuffer();
-      // Load and save cleanly without restrictions
-      const pdfDoc = await PDFDocument.load(buffer, { ignoreEncryption: true });
-      const unlockedBytes = await pdfDoc.save();
-
-      const blob = new Blob([new Uint8Array(unlockedBytes)], { type: "application/pdf" });
-      const url = URL.createObjectURL(blob);
-      setUnlockedUrl(url);
-      confetti({ particleCount: 35, spread: 50, origin: { y: 0.85 } });
-    } catch (e: unknown) {
-      if (e instanceof Error) {
-        setErrorMsg("Failed to unlock. If the file has a user password, please enter it.");
+      await PDFDocument.load(bytes.slice(0));
+      setStatus({ kind: "not-locked" });
+      return;
+    } catch (e) {
+      const encrypted = e instanceof Error && /encrypt/i.test(e.message);
+      if (!encrypted) {
+        markToolError("invalid_pdf");
+        setStatus({ kind: "error", message: "This file couldn't be read as a PDF. It may be damaged." });
+        return;
       }
+    }
+
+    // 2. Encrypted: open with pdf.js, which decrypts (using the password if
+    //    the document needs one to open).
+    let task: ReturnType<Awaited<ReturnType<typeof loadPdfJs>>["getDocument"]> | null = null;
+    try {
+      const pdfjs = await loadPdfJs();
+      task = pdfjs.getDocument({ ...pdfDocumentOptions(bytes.slice(0)), password: pwd || undefined });
+      const doc = await task.promise;
+
+      const out = await PDFDocument.create();
+      for (let i = 1; i <= doc.numPages; i++) {
+        setStatus({ kind: "working", message: `Unlocking page ${i} of ${doc.numPages}…` });
+        const page = await doc.getPage(i);
+        const size = page.getViewport({ scale: 1 });
+        const viewport = page.getViewport({ scale: RENDER_SCALE });
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.floor(viewport.width);
+        canvas.height = Math.floor(viewport.height);
+        await page.render({ canvas, viewport, background: "#ffffff" }).promise;
+        const jpg: Blob = await new Promise((res, rej) =>
+          canvas.toBlob((b) => (b ? res(b) : rej(new Error("encode"))), "image/jpeg", 0.9)
+        );
+        const image = await out.embedJpg(await jpg.arrayBuffer());
+        out.addPage([size.width, size.height]).drawImage(image, { x: 0, y: 0, width: size.width, height: size.height });
+        page.cleanup();
+        canvas.width = canvas.height = 0;
+      }
+      const saved = await out.save();
+      setStatus({ kind: "done", blob: new Blob([new Uint8Array(saved)], { type: "application/pdf" }), pages: doc.numPages });
+      markToolCompleted();
+    } catch (e) {
+      const name = (e as { name?: string })?.name;
+      const code = (e as { code?: number })?.code;
+      if (name === "PasswordException") {
+        // code 1: a password is required; code 2: the one given is wrong.
+        setStatus({ kind: "needs-password", wrong: code === 2 });
+        return;
+      }
+      console.error(e);
+      markToolError("unlock_failed");
+      setStatus({
+        kind: "error",
+        message: "This PDF couldn't be unlocked. It may use an encryption method the browser can't open, or be damaged.",
+      });
     } finally {
-      setIsUnlocking(false);
+      await task?.destroy().catch(() => {});
     }
   };
 
+  const base = file?.name.replace(/\.pdf$/i, "") ?? "document";
+  const busy = status.kind === "working";
+
   return (
     <div className="space-y-6">
-      {/* Upload */}
-      <div className="p-8 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/40 hover:bg-blue-50/30 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-2 relative">
-        <Lock className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-        <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
-          Upload locked or restricted PDF document
-        </div>
-        <p className="text-xs text-slate-500">
-          Removes printing, copying, and modification restrictions client-side.
-        </p>
-        <input
-          type="file"
-          accept="application/pdf"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) {
-              setFile(f);
-              setUnlockedUrl(null);
-              setErrorMsg(null);
-            }
+      <DropZone
+        accept="application/pdf,.pdf"
+        maxSizeMB={100}
+        title="Drop a locked PDF here or choose one"
+        subtitle="Unlocked in your browser. The file and its password are never uploaded."
+        supportedFormatsText="PDF"
+        selectedFile={file}
+        onClear={busy ? undefined : reset}
+        onFileSelect={(f) => {
+          setFile(f);
+          setPassword("");
+          void unlock(f, "");
+        }}
+      />
+
+      {status.kind === "working" && <ToolLoadingState label={status.message} />}
+
+      {status.kind === "not-locked" && (
+        <ToolSuccessState title="This PDF isn't locked">
+          <p>
+            It has no password and no printing or copying restrictions, so there is nothing to remove. You can use
+            it as it is.
+          </p>
+        </ToolSuccessState>
+      )}
+
+      {status.kind === "needs-password" && file && (
+        <form
+          className="space-y-3 rounded-xl border bg-card p-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (password) void unlock(file, password);
           }}
-          className="absolute inset-0 opacity-0 cursor-pointer"
-        />
-      </div>
-
-      {file && (
-        <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-bold text-slate-900 dark:text-white">Selected PDF:</span>
-            <span className="text-slate-500 font-mono">{file.name}</span>
-          </div>
-
-          <div>
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Document Password (if password-protected):
-            </label>
-            <input
+        >
+          <Label htmlFor="unlock-password">
+            {status.wrong ? "That password didn't work. Try again:" : "This PDF needs a password to open:"}
+          </Label>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              id="unlock-password"
               type="password"
+              autoComplete="off"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password if required (leave blank for permission locks)"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs text-slate-900 dark:text-white"
+              aria-invalid={status.wrong || undefined}
+              className="h-10 sm:max-w-xs"
+              autoFocus
             />
+            <Button type="submit" size="lg" disabled={!password}>
+              <LockOpen aria-hidden="true" />
+              Unlock
+            </Button>
           </div>
+          <p className="text-xs text-muted-foreground">
+            The password is used only in this tab to open the file. Without it the document can&apos;t be opened —
+            no tool can recover a forgotten password.
+          </p>
+        </form>
+      )}
 
-          {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-700 dark:text-rose-300 flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errorMsg}</span>
-            </div>
-          )}
+      {status.kind === "error" && <ToolErrorState title="Couldn't unlock this PDF" description={status.message} onRetry={reset} />}
 
-          <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
-            <button
-              onClick={handleUnlock}
-              disabled={isUnlocking}
-              className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition"
-            >
-              <Unlock className="w-4 h-4" />
-              <span>{isUnlocking ? "Unlocking PDF..." : "Unlock PDF Document"}</span>
-            </button>
-
-            {unlockedUrl && (
-              <button
-                onClick={() => {
-                  downloadDataUrl(unlockedUrl, `unlocked-${file.name}`);
-                  confetti({ particleCount: 35, spread: 50, origin: { y: 0.85 } });
-                }}
-                className="w-full sm:w-auto flex items-center justify-center space-x-2 px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition"
-              >
-                <Download className="w-4 h-4" />
-                <span>Download Unlocked PDF</span>
-              </button>
-            )}
-          </div>
+      {status.kind === "done" && (
+        <div className="space-y-4">
+          <ToolSuccessState title={`Unlocked — ${status.pages} ${status.pages === 1 ? "page" : "pages"}`}>
+            <p>The copy has no password and no printing or copying restrictions. Your original file is unchanged.</p>
+          </ToolSuccessState>
+          <Button size="lg" onClick={() => downloadBlob(status.blob, `${base}-unlocked.pdf`, "unlock-pdf")}>
+            <Download aria-hidden="true" />
+            Download unlocked PDF
+          </Button>
+          <p className="flex gap-1.5 text-xs text-muted-foreground">
+            <Info className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+            <span>
+              Each page is saved as a high-resolution image, so the copy looks and prints the same but its text
+              can&apos;t be selected or searched. Unlock only documents you&apos;re entitled to.
+            </span>
+          </p>
         </div>
       )}
     </div>

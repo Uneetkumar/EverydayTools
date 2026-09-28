@@ -1,12 +1,16 @@
 "use client";
 
-import React from "react";
+import React, { useMemo, useState } from "react";
 import ModelStatus from "./ModelStatus";
 import CopyDownloadActions from "./CopyDownloadActions";
+import Markdown from "./Markdown";
+import { Segmented } from "@/components/tool/kit";
 import { AIProviderType } from "@/lib/ai/types";
+import { countWords, diffWords } from "@/lib/ai/nlp/text";
 
 interface AIOutputProps {
   title?: string;
+  /** The text copied and saved. Also rendered, unless `children` is given. */
   result: string;
   provider: AIProviderType;
   modelUsed?: string;
@@ -14,11 +18,43 @@ interface AIOutputProps {
   filename?: string;
   toolName?: string;
   onRegenerate?: () => void;
-  isJson?: boolean;
+  /** Render `result` as Markdown (model output) or as plain text. */
+  format?: "markdown" | "text";
+  /** Key numbers shown above the result. */
+  stats?: React.ReactNode;
+  /** Shown instead of the rendered `result`. */
+  children?: React.ReactNode;
+  /** When given, offers a "Changes" view: a word diff against this text. */
+  compareWith?: string;
+  /** Extra buttons next to Copy and Save. */
+  extraActions?: React.ReactNode;
+}
+
+function DiffView({ before, after }: { before: string; after: string }) {
+  const parts = useMemo(() => diffWords(before, after), [before, after]);
+  const changed = parts.some((p) => p.type !== "same");
+  if (!changed) return <p className="text-sm text-muted-foreground">No changes: the result is identical to your text.</p>;
+  return (
+    <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground">
+      {parts.map((p, i) =>
+        p.type === "same" ? (
+          <React.Fragment key={i}>{p.text}</React.Fragment>
+        ) : p.type === "removed" ? (
+          <del key={i} className="rounded-sm bg-destructive/10 text-muted-foreground decoration-destructive/60">
+            {p.text}
+          </del>
+        ) : (
+          <ins key={i} className="rounded-sm bg-success/15 text-foreground no-underline">
+            {p.text}
+          </ins>
+        )
+      )}
+    </p>
+  );
 }
 
 export default function AIOutput({
-  title = "AI Result",
+  title = "Result",
   result,
   provider,
   modelUsed,
@@ -26,53 +62,61 @@ export default function AIOutput({
   filename,
   toolName,
   onRegenerate,
-  isJson = false,
+  format = "markdown",
+  stats,
+  children,
+  compareWith,
+  extraActions,
 }: AIOutputProps) {
-  if (!result) return null;
+  const [view, setView] = useState<"result" | "changes">("result");
+  if (!result && !children) return null;
 
-  const wordCount = result.trim().split(/\s+/).filter(Boolean).length;
-  const charCount = result.length;
+  const words = countWords(result);
 
   return (
-    <div className="space-y-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs animate-in fade-in slide-in-from-bottom-2 duration-200">
-      {/* Top Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
+    <section aria-label={title} className="space-y-4 rounded-xl border bg-background p-4 sm:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-            {title}
-          </h3>
-          <div className="text-[11px] text-slate-400 mt-0.5">
-            {wordCount} words &bull; {charCount} characters
-          </div>
+          <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+          <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
+            {words.toLocaleString()} words · {result.length.toLocaleString()} characters
+          </p>
         </div>
-
-        <CopyDownloadActions
-          content={result}
-          filename={filename}
-          toolName={toolName}
-          onRegenerate={onRegenerate}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          {extraActions}
+          <CopyDownloadActions content={result} filename={filename} toolName={toolName} onRegenerate={onRegenerate} />
+        </div>
       </div>
 
-      {/* Result Display */}
-      {isJson ? (
-        <pre className="p-4 rounded-xl bg-slate-950 text-emerald-400 font-mono text-xs overflow-x-auto leading-relaxed border border-slate-800">
-          <code>{result}</code>
-        </pre>
-      ) : (
-        <div className="p-4 rounded-xl bg-slate-50/70 dark:bg-slate-950/70 border border-slate-200/60 dark:border-slate-800/80 text-sm leading-relaxed text-slate-900 dark:text-slate-100 whitespace-pre-wrap font-sans">
-          {result}
-        </div>
+      {stats}
+
+      {compareWith !== undefined && !children && (
+        <Segmented
+          size="sm"
+          ariaLabel="Result view"
+          value={view}
+          onChange={setView}
+          options={[
+            { value: "result", label: "Result" },
+            { value: "changes", label: "Show changes" },
+          ]}
+        />
       )}
 
-      {/* Status / Privacy Footer */}
-      <div className="pt-2">
-        <ModelStatus
-          provider={provider}
-          modelUsed={modelUsed}
-          elapsedMs={elapsedMs}
-        />
+      <div className="border-t pt-4">
+        {children ??
+          (view === "changes" && compareWith !== undefined ? (
+            <DiffView before={compareWith} after={result} />
+          ) : format === "markdown" ? (
+            <Markdown text={result} />
+          ) : (
+            <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground">{result}</p>
+          ))}
       </div>
-    </div>
+
+      <div className="border-t pt-3">
+        <ModelStatus provider={provider} modelUsed={modelUsed} elapsedMs={elapsedMs} />
+      </div>
+    </section>
   );
 }

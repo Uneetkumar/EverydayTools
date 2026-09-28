@@ -24,14 +24,18 @@ export default function CompoundInterestCalculator() {
   const principalFV = P * Math.pow(1 + r / n, n * t);
 
   // Future value of monthly contributions:
-  // PMT * [((1 + r/n)^(n*t) - 1) / (r/12)] (assuming monthly contributions)
+  // Monthly contributions at the end of each month, compounded at the
+  // chosen frequency.
   let contribFV = 0;
-  let totalContributions = PMT * t * 12;
+  const totalContributions = PMT * t * 12;
 
   if (PMT > 0 && t > 0) {
     if (r > 0) {
-      // Periodic rate per month = r / 12
-      const monthlyRate = r / 12;
+      // Monthly contributions earn the same compounding as the principal:
+      // the monthly rate equivalent to r compounded n times a year. Using
+      // r / 12 here (as before) silently switched contributions to monthly
+      // compounding whatever frequency was chosen.
+      const monthlyRate = Math.pow(1 + r / n, n / 12) - 1;
       contribFV = PMT * ((Math.pow(1 + monthlyRate, t * 12) - 1) / monthlyRate);
     } else {
       contribFV = totalContributions;
@@ -54,10 +58,10 @@ export default function CompoundInterestCalculator() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Form Inputs */}
-        <div className="lg:col-span-6 space-y-4 p-5 sm:p-6 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80">
+        <div className="lg:col-span-6 space-y-4 p-5 sm:p-6 rounded-xl border bg-muted/30">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Calculator className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <Calculator className="w-4 h-4 text-muted-foreground" />
               Deposit & Growth Settings
             </h2>
             <div className="flex items-center gap-1 bg-slate-200/80 dark:bg-slate-800 p-0.5 rounded-lg text-xs font-semibold">
@@ -79,11 +83,11 @@ export default function CompoundInterestCalculator() {
 
           {/* Initial Principal */}
           <div className="space-y-1.5">
-            <label htmlFor="ci-principal-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <label htmlFor="ci-principal-input" className="text-sm font-medium text-foreground">
               Initial Principal Deposit
             </label>
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-500 dark:text-slate-400">
                 {currencySymbol}
               </span>
               <input
@@ -93,7 +97,7 @@ export default function CompoundInterestCalculator() {
                 step="1000"
                 value={principal}
                 onChange={(e) => setPrincipal(e.target.value)}
-                className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full pl-8 pr-4 py-2.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 placeholder="50000"
               />
             </div>
@@ -101,11 +105,11 @@ export default function CompoundInterestCalculator() {
 
           {/* Regular Monthly Contribution */}
           <div className="space-y-1.5">
-            <label htmlFor="ci-contrib-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <label htmlFor="ci-contrib-input" className="text-sm font-medium text-foreground">
               Monthly Contribution (Optional)
             </label>
             <div className="relative">
-              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-400">
+              <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-slate-500 dark:text-slate-400">
                 {currencySymbol}
               </span>
               <input
@@ -115,7 +119,7 @@ export default function CompoundInterestCalculator() {
                 step="500"
                 value={monthlyContribution}
                 onChange={(e) => setMonthlyContribution(e.target.value)}
-                className="w-full pl-8 pr-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full pl-8 pr-4 py-2.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 placeholder="2000"
               />
             </div>
@@ -124,7 +128,7 @@ export default function CompoundInterestCalculator() {
           <div className="grid grid-cols-2 gap-3">
             {/* Interest Rate */}
             <div className="space-y-1.5">
-              <label htmlFor="ci-rate-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label htmlFor="ci-rate-input" className="text-sm font-medium text-foreground">
                 Annual Interest Rate
               </label>
               <div className="relative">
@@ -136,10 +140,10 @@ export default function CompoundInterestCalculator() {
                   step="0.1"
                   value={rate}
                   onChange={(e) => setRate(e.target.value)}
-                  className="w-full pl-3 pr-7 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full pl-3 pr-7 py-2 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   placeholder="8"
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-400">
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                   %
                 </span>
               </div>
@@ -147,7 +151,7 @@ export default function CompoundInterestCalculator() {
 
             {/* Time Period */}
             <div className="space-y-1.5">
-              <label htmlFor="ci-years-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label htmlFor="ci-years-input" className="text-sm font-medium text-foreground">
                 Time Period (Years)
               </label>
               <input
@@ -158,7 +162,7 @@ export default function CompoundInterestCalculator() {
                 step="1"
                 value={years}
                 onChange={(e) => setYears(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full px-3 py-2 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 placeholder="5"
               />
             </div>
@@ -166,14 +170,14 @@ export default function CompoundInterestCalculator() {
 
           {/* Compounding Frequency */}
           <div className="space-y-1.5">
-            <label htmlFor="ci-freq-select" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <label htmlFor="ci-freq-select" className="text-sm font-medium text-foreground">
               Compounding Frequency
             </label>
             <select
               id="ci-freq-select"
               value={compoundingFreq}
               onChange={(e) => setCompoundingFreq(e.target.value)}
-              className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              className="w-full px-3 py-2.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             >
               {Object.entries(freqLabels).map(([val, label]) => (
                 <option key={val} value={val}>
@@ -194,29 +198,29 @@ export default function CompoundInterestCalculator() {
           />
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80">
+            <div className="p-4 rounded-xl border bg-muted/30">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Principal Deposited</span>
-              <p className="text-lg font-bold text-slate-900 dark:text-white mt-1">
+              <p className="text-lg font-semibold text-slate-900 dark:text-white mt-1">
                 {currencySymbol} {formatNumber(Math.round(totalPrincipalInvested))}
               </p>
-              <span className="text-[11px] text-slate-400">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
                 Initial ({currencySymbol}{formatNumber(P)}) + Monthly ({currencySymbol}{formatNumber(totalContributions)})
               </span>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80">
+            <div className="p-4 rounded-xl border bg-muted/30">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Interest Accrued</span>
-              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+              <p className="text-lg font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
                 +{currencySymbol} {formatNumber(Math.round(totalInterestEarned))}
               </p>
-              <span className="text-[11px] text-emerald-500 font-medium">
+              <span className="text-xs text-emerald-500 font-medium">
                 {totalPrincipalInvested > 0 ? ((totalInterestEarned / totalPrincipalInvested) * 100).toFixed(1) : 0}% total interest gain
               </span>
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2">
-            <div className="flex justify-between text-xs font-semibold text-slate-600 dark:text-slate-400">
+          <div className="p-4 rounded-xl border space-y-2 bg-muted/30">
+            <div className="flex justify-between text-sm font-medium text-foreground">
               <span>Principal vs Interest</span>
               <span>Effective Annual Rate: {((Math.pow(1 + r / n, n) - 1) * 100).toFixed(2)}%</span>
             </div>

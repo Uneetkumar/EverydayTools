@@ -8,7 +8,6 @@ import { constructPageMetadata, SITE_CONFIG } from "@/lib/seo/metadata";
 import { generateBreadcrumbJsonLd, generateFaqJsonLd } from "@/lib/seo/jsonld";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import CurrencyConverter from "@/components/tools/CurrencyConverter";
-import AdSlot from "@/components/AdSlot";
 import FaqSection from "@/components/FaqSection";
 import { ArrowRight, Wifi } from "lucide-react";
 
@@ -104,7 +103,7 @@ export default async function CurrencyPairPage({ params }: PairPageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="page-container py-5 md:py-8">
         <Breadcrumbs
           items={[
             { name: "Currency Converter", url: "/tools/currency-converter" },
@@ -112,66 +111,68 @@ export default async function CurrencyPairPage({ params }: PairPageProps) {
           ]}
         />
 
-        <header className="space-y-3 max-w-3xl">
-          <span className="inline-flex items-center gap-1.5 rounded-md bg-sky-50 dark:bg-sky-950/40 px-2 py-0.5 text-[11px] font-medium text-sky-700 dark:text-sky-300">
-            <Wifi className="w-3 h-3" />
-            Live data · needs internet
-          </span>
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
+        <header className="mt-4 max-w-3xl md:mt-5">
+          <h1 className="type-h1 text-foreground">
             {def.common} — {def.from} to {def.to}
           </h1>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+          <p className="mt-2 type-body text-muted-foreground">
             Convert {fromName} ({def.from}) to {toName} ({def.to}) at today&rsquo;s
             live mid-market exchange rate. Enter any amount, or swap the
             direction to convert back.
           </p>
+          <p className="mt-2.5 flex items-start gap-2 text-sm text-muted-foreground">
+            <Wifi className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+            Fetches live exchange rates. The amounts you type are never sent.
+          </p>
         </header>
 
-        <div className="@container rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-xs">
+        <div className="@container mt-6 rounded-2xl border bg-card p-4 text-card-foreground shadow-soft sm:p-6">
           <CurrencyConverter initialFrom={def.from} initialTo={def.to} />
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <div className="lg:col-span-8 space-y-6">
-            <section className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-sm space-y-4">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
+        <div className="mt-12 grid items-start gap-x-12 gap-y-10 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <div className="min-w-0 space-y-12">
+            <section aria-labelledby="about-rate">
+              <h2 id="about-rate" className="type-h2 text-foreground">
                 About the {def.common.toLowerCase()} rate
               </h2>
-              {def.body.map((para, i) => (
-                <p key={i} className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                  {para}
-                </p>
-              ))}
+              <div className="mt-4 space-y-4">
+                {def.body.map((para, i) => (
+                  <p key={i} className="type-body text-muted-foreground">
+                    {para}
+                  </p>
+                ))}
+              </div>
             </section>
 
-            <div className="py-2">
-              <AdSlot placement="toolInArticle" format="in-article" />
-            </div>
+            {/* No ad on currency-pair pages: they share a template (about a
+                third of their text is common to every pair), which is the
+                pattern AdSense's low-value-content review penalises when
+                monetised. The converter tool page carries the ads. */}
 
             <FaqSection faqs={faqs} />
           </div>
 
-          <aside className="lg:col-span-4 space-y-6">
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
-                Other currency pairs
-              </h2>
-              <div className="space-y-1.5 pt-1">
+          <aside aria-label="Other currency pairs" className="lg:sticky lg:top-24">
+            <nav aria-labelledby="other-pairs" className="rounded-xl border bg-card p-4 shadow-soft">
+              <h2 id="other-pairs" className="type-h4 text-foreground">Other currency pairs</h2>
+              <ul className="mt-3 space-y-0.5">
                 {others.map((p) => (
-                  <Link key={p.slug} href={`/convert/${p.slug}`}
-                    className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200 transition group">
-                    <span className="group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
-                      {p.common}
-                    </span>
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0 ml-2" />
-                  </Link>
+                  <li key={p.slug}>
+                    <Link
+                      href={`/convert/${p.slug}`}
+                      className="flex items-center justify-between gap-2 rounded-md px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    >
+                      <span className="truncate">{p.common}</span>
+                      <span className="shrink-0 text-xs tabular-nums">{p.from} → {p.to}</span>
+                    </Link>
+                  </li>
                 ))}
-              </div>
-              <Link href="/tools/currency-converter"
-                className="block pt-2 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-                Convert any currency →
+              </ul>
+              <Link href="/tools/currency-converter" className="mt-3 inline-flex items-center gap-1 px-2 text-sm text-link hover:underline">
+                Convert any currency <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
-            </div>
+            </nav>
           </aside>
         </div>
       </div>

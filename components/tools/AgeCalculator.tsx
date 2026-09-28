@@ -3,16 +3,20 @@
 import React, { useState } from "react";
 import ResultCard from "@/components/ResultCard";
 import { formatNumber } from "@/lib/utils";
+import { daysBetween, parseISODate, useTodayISO } from "@/lib/utils/date";
 import { Cake, Calendar, Heart, Clock, Sparkles } from "lucide-react";
 
 export default function AgeCalculator() {
   const [birthDate, setBirthDate] = useState<string>("2000-01-15");
-  const [targetDate, setTargetDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
-  );
+  // null = "today", resolved after mount so the prerendered page does not
+  // carry the build date.
+  const [targetOverride, setTargetDate] = useState<string | null>(null);
+  const today = useTodayISO();
+  const targetDate = targetOverride ?? today;
 
-  const b = new Date(birthDate);
-  const t = new Date(targetDate);
+  const b = parseISODate(birthDate);
+  const t = parseISODate(targetDate);
+  const beforeBirth = !!(b && t && t < b);
 
   let years = 0;
   let months = 0;
@@ -21,8 +25,8 @@ export default function AgeCalculator() {
   let daysToNextBday = 0;
   let nextBdayDayOfWeek = "";
 
-  if (!isNaN(b.getTime()) && !isNaN(t.getTime()) && t >= b) {
-    totalDays = Math.floor((t.getTime() - b.getTime()) / (1000 * 60 * 60 * 24));
+  if (b && t && t >= b) {
+    totalDays = daysBetween(b, t);
 
     years = t.getFullYear() - b.getFullYear();
     months = t.getMonth() - b.getMonth();
@@ -38,12 +42,12 @@ export default function AgeCalculator() {
       months += 12;
     }
 
-    // Next Birthday calculation
+    // Next birthday. A 29 February birthday falls on 1 March in other years.
     const nextBday = new Date(t.getFullYear(), b.getMonth(), b.getDate());
     if (nextBday < t) {
       nextBday.setFullYear(t.getFullYear() + 1);
     }
-    daysToNextBday = Math.ceil((nextBday.getTime() - t.getTime()) / (1000 * 60 * 60 * 24));
+    daysToNextBday = daysBetween(t, nextBday);
     nextBdayDayOfWeek = nextBday.toLocaleDateString("en-US", { weekday: "long" });
   }
 
@@ -54,28 +58,31 @@ export default function AgeCalculator() {
   return (
     <div className="space-y-6">
       {/* Date Selectors */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 rounded-xl border bg-muted/30">
         <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+          <label htmlFor="age-dob" className="block text-sm mb-1.5 font-medium text-foreground">
             Date of Birth
           </label>
           <input
+            id="age-dob"
             type="date"
             value={birthDate}
             onChange={(e) => setBirthDate(e.target.value)}
-            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-900 dark:text-white"
+            className="w-full px-3.5 py-2.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           />
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+          <label htmlFor="age-on-date" className="block text-sm mb-1.5 font-medium text-foreground">
             Age on Date
           </label>
           <input
+            id="age-on-date"
             type="date"
             value={targetDate}
+            max="9999-12-31"
             onChange={(e) => setTargetDate(e.target.value)}
-            className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-900 dark:text-white"
+            className="w-full px-3.5 py-2.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           />
         </div>
       </div>
@@ -83,17 +90,31 @@ export default function AgeCalculator() {
       {/* Main Age Result */}
       <ResultCard
         title="Exact Age"
-        value={`${years} Years`}
-        subtitle={`${months} Months, ${days} Days old`}
-        details={[
-          { label: "Total Days Lived", value: formatNumber(totalDays, 0) },
-          { label: "Total Hours", value: `${formatNumber(hoursLived, 0)} hrs` },
-          { label: "Next Birthday In", value: `${daysToNextBday} days (${nextBdayDayOfWeek})` },
-          { label: "Approx. Heartbeats", value: `~${(approxHeartbeats / 1e6).toFixed(1)} Million` },
-          { label: "Born On", value: !isNaN(b.getTime()) ? b.toLocaleDateString("en-US", { weekday: "long" }) : "" },
-        ]}
+        value={!b || !t ? "—" : beforeBirth ? "Not born yet" : `${years} ${years === 1 ? "year" : "years"}`}
+        subtitle={
+          !b
+            ? "Enter a date of birth."
+            : !t
+              ? "Enter the date to calculate the age on."
+              : beforeBirth
+                ? "The date you chose is before the date of birth."
+                : `${months} ${months === 1 ? "month" : "months"}, ${days} ${days === 1 ? "day" : "days"}`
+        }
+        details={
+          b && t && !beforeBirth
+            ? [
+                { label: "Total days lived", value: formatNumber(totalDays, 0) },
+                { label: "Total hours", value: `${formatNumber(hoursLived, 0)} hrs` },
+                {
+                  label: "Next birthday",
+                  value: daysToNextBday === 0 ? "Today!" : `In ${daysToNextBday} days (${nextBdayDayOfWeek})`,
+                },
+                { label: "Approx. heartbeats", value: `~${(approxHeartbeats / 1e6).toFixed(1)} million` },
+                { label: "Born on a", value: b.toLocaleDateString("en-US", { weekday: "long" }) },
+              ]
+            : []
+        }
         highlightColor="indigo"
-        showConfetti={daysToNextBday === 0}
       />
     </div>
   );

@@ -4,11 +4,18 @@ import React, { useState, useMemo } from "react";
 import ResultCard from "@/components/ResultCard";
 import { formatNumber } from "@/lib/utils";
 import { usePersistentState } from "@/lib/hooks/usePersistentState";
+import { addDays, parseISODate, toISODate, useTodayISO } from "@/lib/utils/date";
 import { Calendar, Plus } from "lucide-react";
 
 export default function WorkingDaysCalculator() {
-  const [startDate, setStartDate] = usePersistentState<string>("wd_start", "2026-09-01");
-  const [endDate, setEndDate] = usePersistentState<string>("wd_end", "2026-09-30");
+  // Empty means "this month", resolved after mount (the page is prerendered).
+  const [startSaved, setStartDate] = usePersistentState<string>("wd_start", "");
+  const [endSaved, setEndDate] = usePersistentState<string>("wd_end", "");
+  const todayDate = parseISODate(useTodayISO());
+  const startDate =
+    startSaved || (todayDate ? toISODate(new Date(todayDate.getFullYear(), todayDate.getMonth(), 1)) : "");
+  const endDate =
+    endSaved || (todayDate ? toISODate(new Date(todayDate.getFullYear(), todayDate.getMonth() + 1, 0)) : "");
   const [weekendType, setWeekendType] = usePersistentState<string>("wd_weekend", "sat_sun"); // "sat_sun" | "sun_only" | "fri_sat"
   const [hoursPerDay, setHoursPerDay] = usePersistentState<string>("wd_hours", "8");
   const [holidays, setHolidays] = useState<string[]>([]);
@@ -19,15 +26,15 @@ export default function WorkingDaysCalculator() {
       return { totalCalendarDays: 0, workingDays: 0, weekendDays: 0, holidayCount: 0, workingHours: 0 };
     }
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const start = parseISODate(startDate);
+    const end = parseISODate(endDate);
 
-    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start > end) {
+    if (!start || !end || start > end) {
       return { totalCalendarDays: 0, workingDays: 0, weekendDays: 0, holidayCount: 0, workingHours: 0 };
     }
 
     const holidaySet = new Set(holidays);
-    const current = new Date(start);
+    let current = start;
     let totalDays = 0;
     let workDays = 0;
     let weekends = 0;
@@ -36,7 +43,7 @@ export default function WorkingDaysCalculator() {
     while (current <= end) {
       totalDays++;
       const dayOfWeek = current.getDay(); // 0 = Sun, 6 = Sat, 5 = Fri
-      const dateStr = current.toISOString().split("T")[0];
+      const dateStr = toISODate(current);
 
       let isWeekend = false;
       if (weekendType === "sat_sun") {
@@ -55,7 +62,7 @@ export default function WorkingDaysCalculator() {
         workDays++;
       }
 
-      current.setDate(current.getDate() + 1);
+      current = addDays(current, 1);
     }
 
     const hrs = parseFloat(hoursPerDay) || 8;
@@ -68,6 +75,10 @@ export default function WorkingDaysCalculator() {
       workingHours: workDays * hrs,
     };
   }, [startDate, endDate, weekendType, holidays, hoursPerDay]);
+
+  const ps = parseISODate(startDate);
+  const pe = parseISODate(endDate);
+  const rangeReversed = !!(ps && pe && ps > pe);
 
   const addHoliday = () => {
     if (newHoliday && !holidays.includes(newHoliday)) {
@@ -84,15 +95,15 @@ export default function WorkingDaysCalculator() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Date Inputs & Options */}
-        <div className="lg:col-span-6 space-y-4 p-5 sm:p-6 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80">
-          <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+        <div className="lg:col-span-6 space-y-4 p-5 sm:p-6 rounded-xl border bg-muted/30">
+          <h2 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+            <Calendar className="w-4 h-4 text-muted-foreground" />
             Date Range & Working Schedule
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label htmlFor="wd-start-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label htmlFor="wd-start-input" className="text-sm font-medium text-foreground">
                 Start Date
               </label>
               <input
@@ -100,12 +111,12 @@ export default function WorkingDaysCalculator() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full px-3.5 py-2.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="wd-end-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label htmlFor="wd-end-input" className="text-sm font-medium text-foreground">
                 End Date (Inclusive)
               </label>
               <input
@@ -113,21 +124,21 @@ export default function WorkingDaysCalculator() {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full px-3.5 py-2.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <label htmlFor="wd-weekend-select" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label htmlFor="wd-weekend-select" className="text-sm font-medium text-foreground">
                 Weekend Days
               </label>
               <select
                 id="wd-weekend-select"
                 value={weekendType}
                 onChange={(e) => setWeekendType(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-900 dark:text-white"
+                className="w-full px-3 py-2.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               >
                 <option value="sat_sun">Saturday & Sunday (Standard)</option>
                 <option value="sun_only">Sunday Only (6-Day Week)</option>
@@ -136,7 +147,7 @@ export default function WorkingDaysCalculator() {
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="wd-hours-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label htmlFor="wd-hours-input" className="text-sm font-medium text-foreground">
                 Work Hours / Day
               </label>
               <input
@@ -146,7 +157,7 @@ export default function WorkingDaysCalculator() {
                 max="24"
                 value={hoursPerDay}
                 onChange={(e) => setHoursPerDay(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full px-3 py-2.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 placeholder="8"
               />
             </div>
@@ -154,21 +165,21 @@ export default function WorkingDaysCalculator() {
 
           {/* Custom Holidays List */}
           <div className="space-y-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <label className="text-sm font-medium text-foreground">
               Exclude Custom Public Holidays
             </label>
             <div className="flex gap-2">
-              <input
+              <input aria-label="Holiday date to exclude"
                 type="date"
                 value={newHoliday}
                 onChange={(e) => setNewHoliday(e.target.value)}
-                className="flex-1 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-900 dark:text-white"
+                className="flex-1 px-3 py-2 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               />
               <button
                 type="button"
                 onClick={addHoliday}
                 disabled={!newHoliday}
-                className="flex items-center gap-1 px-3 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-semibold shadow-xs transition-colors"
+                className="flex items-center gap-1 px-3 py-2 rounded-lg disabled:opacity-50 text-xs transition-colors bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
               >
                 <Plus className="w-3.5 h-3.5" /> Add
               </button>
@@ -184,7 +195,7 @@ export default function WorkingDaysCalculator() {
                     {h}
                     <button
                       onClick={() => removeHoliday(h)}
-                      className="text-slate-400 hover:text-rose-500 transition-colors ml-1"
+                      className="text-slate-500 dark:text-slate-400 hover:text-rose-500 transition-colors ml-1"
                     >
                       ×
                     </button>
@@ -199,37 +210,41 @@ export default function WorkingDaysCalculator() {
         <div className="lg:col-span-6 space-y-4">
           <ResultCard
             title="Total Business / Working Days"
-            value={`${workingDays} Days`}
-            subtitle={`${totalCalendarDays} Total Days - ${weekendDays} Weekend Days - ${holidayCount} Public Holidays`}
+            value={rangeReversed ? "—" : `${workingDays} ${workingDays === 1 ? "day" : "days"}`}
+            subtitle={
+              rangeReversed
+                ? "The end date is before the start date. Swap them to count the working days."
+                : `${totalCalendarDays} calendar days − ${weekendDays} weekend days − ${holidayCount} holidays (both dates included)`
+            }
             highlightColor="emerald"
           />
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80">
+            <div className="p-4 rounded-xl border bg-muted/30">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Total Working Hours</span>
-              <p className="text-xl font-bold text-blue-600 dark:text-blue-400 mt-1 font-mono">
+              <p className="text-xl font-semibold mt-1 font-mono text-foreground">
                 {formatNumber(workingHours)} hrs
               </p>
-              <span className="text-[11px] text-slate-400">At {hoursPerDay}h per working day</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">At {hoursPerDay}h per working day</span>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/80 border border-slate-200/80 dark:border-slate-800/80">
+            <div className="p-4 rounded-xl border bg-muted/30">
               <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Calendar Duration</span>
-              <p className="text-xl font-bold text-slate-900 dark:text-white mt-1 font-mono">
+              <p className="text-xl font-semibold text-slate-900 dark:text-white mt-1 font-mono">
                 {totalCalendarDays} Days
               </p>
-              <span className="text-[11px] text-slate-400">{(totalCalendarDays / 7).toFixed(1)} Weeks</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{(totalCalendarDays / 7).toFixed(1)} Weeks</span>
             </div>
           </div>
 
-          <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
-            <span className="font-bold text-slate-900 dark:text-white uppercase text-[11px] tracking-wider">
+          <div className="p-4 rounded-xl border space-y-2 text-xs bg-muted/30">
+            <span className="text-slate-900 dark:text-white text-sm font-semibold">
               Days Distribution Summary
             </span>
             <div className="space-y-1.5 divide-y divide-slate-100 dark:divide-slate-800 pt-1">
               <div className="flex justify-between py-1 text-slate-600 dark:text-slate-400">
                 <span>Working Days</span>
-                <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{workingDays} days ({totalCalendarDays > 0 ? ((workingDays / totalCalendarDays) * 100).toFixed(0) : 0}%)</span>
+                <span className="font-mono font-semibold text-foreground">{workingDays} days ({totalCalendarDays > 0 ? ((workingDays / totalCalendarDays) * 100).toFixed(0) : 0}%)</span>
               </div>
               <div className="flex justify-between py-1 text-slate-600 dark:text-slate-400">
                 <span>Weekend Days Off</span>

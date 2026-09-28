@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { PDFDocument } from "pdf-lib";
 import { Download, Scissors, RefreshCw, AlertTriangle } from "lucide-react";
-import confetti from "canvas-confetti";
+import { markToolCompleted } from "@/lib/analytics";
 import { downloadBlob } from "@/lib/utils/download";
 
 /** Parses "1-3, 5, 8-10" into zero-based page indices, clamped to the document. */
@@ -65,7 +65,7 @@ export default function SplitPdf() {
         new Blob([bytes as BlobPart], { type: "application/pdf" }),
         `${file.name.replace(/\.pdf$/i, "")}-pages.pdf`
       );
-      confetti({ particleCount: 35, spread: 50, origin: { y: 0.85 } });
+      markToolCompleted();
     } catch {
       setError("Extraction failed. The PDF may be corrupt.");
     } finally {
@@ -75,32 +75,32 @@ export default function SplitPdf() {
 
   return (
     <div className="space-y-5">
-      <div className="p-8 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/40 hover:bg-blue-50/30 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-2 relative">
-        <Scissors className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-        <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+      <div className="p-8 rounded-xl border-dashed text-center cursor-pointer flex flex-col items-center justify-center space-y-2 relative border-2 border-input bg-muted/30 transition-colors hover:border-primary/50 hover:bg-muted/60">
+        <Scissors className="w-8 h-8 text-muted-foreground" />
+        <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
           Upload a PDF to split or extract pages
         </div>
         <p className="text-xs text-slate-500">Nothing is uploaded — it is read in your browser.</p>
-        <input type="file" accept="application/pdf,.pdf" onChange={onFile}
+        <input aria-label="Choose a PDF file" type="file" accept="application/pdf,.pdf" onChange={onFile}
           className="absolute inset-0 opacity-0 cursor-pointer" />
       </div>
 
       {error && (
-        <div className="flex gap-2.5 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-          <p className="text-xs text-amber-800 dark:text-amber-200">{error}</p>
+        <div className="flex gap-2.5 p-4 rounded-xl border bg-muted/30">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-muted-foreground" />
+          <p className="text-xs text-muted-foreground">{error}</p>
         </div>
       )}
 
       {file && pageCount > 0 && (
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4">
+        <div className="p-5 rounded-xl border space-y-4 bg-muted/30">
           <div className="text-xs text-slate-600 dark:text-slate-400">
             <span className="font-semibold text-slate-900 dark:text-white">{file.name}</span>
             {" — "}{pageCount} page{pageCount === 1 ? "" : "s"}
           </div>
 
           <div className="space-y-1.5">
-            <label htmlFor="ranges" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <label htmlFor="ranges" className="block text-sm font-medium text-foreground">
               Pages to extract
             </label>
             <input
@@ -109,9 +109,9 @@ export default function SplitPdf() {
               value={ranges}
               onChange={(e) => setRanges(e.target.value)}
               placeholder="e.g. 1-3, 5, 8-10"
-              className="w-full text-sm font-mono bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-xl text-slate-900 dark:text-white"
+              className="w-full font-mono px-3 py-2 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
-            <p className="text-[11px] text-slate-500">
+            <p className="text-xs text-slate-500">
               Ranges and single pages, comma separated. {selected.length} page
               {selected.length === 1 ? "" : "s"} selected.
             </p>
@@ -120,7 +120,7 @@ export default function SplitPdf() {
           <button
             onClick={extract}
             disabled={busy || selected.length === 0}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-semibold transition"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg disabled:opacity-40 text-xs transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
           >
             {busy ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             <span>Extract {selected.length} page{selected.length === 1 ? "" : "s"}</span>

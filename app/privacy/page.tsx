@@ -1,8 +1,10 @@
 import React from "react";
+import Link from "next/link";
 import { constructPageMetadata } from "@/lib/seo/metadata";
 import { generateBreadcrumbJsonLd } from "@/lib/seo/jsonld";
-import Breadcrumbs from "@/components/Breadcrumbs";
+import { ProsePage } from "@/components/layout/prose-page";
 import ClearLocalData from "@/components/ClearLocalData";
+import { getAllTools } from "@/lib/tools/registry";
 
 export const metadata = constructPageMetadata({
   title: "Privacy Policy - What We Store & What We Never See",
@@ -16,97 +18,168 @@ export default function PrivacyPage() {
     { name: "Privacy Policy", path: "/privacy" },
   ]);
 
+  const tools = getAllTools();
+  const cloud = tools.filter((t) => t.privacy === "cloud-optional");
+
   return (
     <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      <Breadcrumbs items={[{ name: "Privacy Policy" }]} />
+      <ProsePage
+        breadcrumb="Privacy Policy"
+        title="Privacy Policy"
+        updated="September 28, 2026"
+        lead="Most TabBench tools never see your data: the file you open or the text you type is processed in your own browser. This page lists the exceptions, everything the site stores on your device, and what the analytics and advertising services receive."
+      >
+        <h2 id="processing">1. Your files and text</h2>
+        <p>
+          Calculators, converters, text tools, developer tools, and the image, PDF and media tools run in your web
+          browser using JavaScript and WebAssembly. What you enter or open is processed on your device. It is not
+          uploaded to TabBench, and we have no server that could receive it.
+        </p>
+        <p>These features are the exceptions, and each says so on its own page:</p>
+        <ul>
+          <li>
+            <strong>Cloud AI mode ({cloud.length} tools).</strong> {cloud.map((t) => t.name).join(", ")} run on
+            your device by default. If you switch to the cloud mode, the text or image you submit is sent to
+            Google&apos;s Gemini service through Firebase to generate the result. To protect that service from
+            abuse, Firebase App Check with Google reCAPTCHA Enterprise runs when cloud mode is used; reCAPTCHA
+            collects hardware and software information and is subject to Google&apos;s{" "}
+            <a href="https://policies.google.com/privacy" rel="noopener noreferrer" target="_blank">
+              Privacy Policy
+            </a>{" "}
+            and{" "}
+            <a href="https://policies.google.com/terms" rel="noopener noreferrer" target="_blank">
+              Terms
+            </a>
+            .
+          </li>
+          <li>
+            <strong>Currency converter.</strong> Fetches current exchange rates from public rate services
+            (open.er-api.com, with api.frankfurter.dev as a fallback). The request names the base currency. The
+            amounts you type are never sent.
+          </li>
+          <li>
+            <strong>Speech to text.</strong> Uses your browser&apos;s built-in speech recognition. Some browsers,
+            including Chrome, send the audio to the browser vendor&apos;s servers to transcribe it.
+          </li>
+        </ul>
 
-      <div className="space-y-3">
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-          Privacy Policy
-        </h1>
-        <p className="text-xs text-slate-500">Last updated: August 16, 2026</p>
-      </div>
+        <h2 id="device">2. What is stored on your device</h2>
+        <p>
+          Some features save data in your own browser so the site remembers things between visits. It is written to
+          your device and stays there; none of it is sent to us.
+        </p>
+        <ul>
+          <li>
+            <strong>Favorites</strong> — the tools you star, up to 50. Kept until you remove them.
+          </li>
+          <li>
+            <strong>Recently used tools</strong> — the last eight tools you opened. Kept until you clear them.
+          </li>
+          <li>
+            <strong>Recent searches</strong> — the last five things you searched for on TabBench, so you can repeat
+            a search. They stay in your browser; analytics records only how long a search was, never its words.
+          </li>
+          <li>
+            <strong>Saved tool inputs</strong> — some tools remember what you last entered so a refresh does not
+            lose your work. These expire after three days.
+          </li>
+          <li>
+            <strong>Recent output files</strong> — the last three files each tool produced for you, kept in your
+            browser&apos;s IndexedDB so you can download them again. <strong>They are deleted automatically after
+            seven days</strong>, and files over 25&nbsp;MB are never saved.
+          </li>
+          <li>
+            <strong>Preferences</strong> — your light or dark theme, per-tool settings such as QR code options,
+            notes you write in the notepad, cached exchange rates, and whether you dismissed the install prompt.
+          </li>
+        </ul>
+        <p>
+          The recent-files item is worth being explicit about: if you crop an identity document or split a bank
+          statement, the resulting file sits in this browser&apos;s storage for up to a week. It is never uploaded,
+          but it is on your disk. Every tool that saves files shows a &ldquo;Your recent files&rdquo; panel with a
+          delete button for each file, and you can erase everything at once below.
+        </p>
 
-      <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 sm:p-8 space-y-6 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-        <section className="space-y-2">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">1. Client-Side Execution Guarantee</h2>
-          <p>
-            At TabBench, we believe in radical privacy. The core utilities—including calculators, text formatting, code formatters, and date utilities—execute exclusively in your web browser&apos;s memory using client-side JavaScript.
-          </p>
-          <p>
-            We do not transmit, intercept, log, or store the contents of your calculations, text documents, or JSON payloads on any remote servers.
-          </p>
-        </section>
+        <h2 id="analytics">3. Analytics</h2>
+        <p>
+          We use Google Analytics 4 (through Firebase) to understand which tools are used and where they fail. It
+          collects page views, device and browser type, approximate location derived from your IP address, and these
+          product events:
+        </p>
+        <ul>
+          <li>which tool was opened, started, completed, or showed an error (as a fixed code);</li>
+          <li>that a search was made, with the length of the query and the number of results — not the query;</li>
+          <li>which search result or related tool was clicked, and favorites added or removed;</li>
+          <li>downloads, recorded as the file type and a size range such as &ldquo;1–10 MB&rdquo;.</li>
+        </ul>
+        <p>
+          Analytics never receives the text you type, the numbers you enter, file names, or file contents. The
+          analytics code loads on your first interaction or a few seconds after the page opens, so it never delays a
+          tool.
+        </p>
 
-        <section className="space-y-2">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">2. Analytics & Performance Measurement</h2>
-          <p>
-            To understand overall platform health and page popularity, we use aggregated, privacy-focused analytics (such as Google Search Console and Google Analytics 4). These tools collect non-personally identifiable telemetry such as device category, browser version, country of origin, and pageviews.
-          </p>
-        </section>
+        <h2 id="ads">4. Advertising and cookies</h2>
+        <p>
+          TabBench is free because it shows ads served by Google AdSense. Third-party vendors, including Google,
+          use cookies to serve ads based on your prior visits to this website or other websites. Google&apos;s use
+          of advertising cookies enables it and its partners to serve ads to you based on those visits.
+        </p>
+        <ul>
+          <li>
+            You can opt out of personalised advertising in{" "}
+            <a href="https://adssettings.google.com" rel="noopener noreferrer" target="_blank">
+              Google&apos;s Ads Settings
+            </a>
+            , or opt out of some third-party vendors&apos; cookies at{" "}
+            <a href="https://www.aboutads.info/choices/" rel="noopener noreferrer" target="_blank">
+              aboutads.info
+            </a>
+            .
+          </li>
+          <li>
+            Where the law requires it — for example in the EEA, the UK and Switzerland — a consent message lets you
+            choose whether cookies are used for personalised ads and measurement before they are set.
+          </li>
+          <li>
+            Google explains how it uses information from sites like this one in{" "}
+            <a
+              href="https://policies.google.com/technologies/partner-sites"
+              rel="noopener noreferrer"
+              target="_blank"
+            >
+              How Google uses information from sites or apps that use its services
+            </a>
+            .
+          </li>
+        </ul>
 
-        <section className="space-y-2">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">3. Advertising & Cookies</h2>
-          <p>
-            We may partner with third-party advertising networks (e.g., Google AdSense, Journey, Raptive, Mediavine) to display non-intrusive advertisements that fund the free availability of our utilities. These partners may use cookies or web beacons to serve ads based on prior visits to this or other websites.
-          </p>
-          <p>
-            Users can opt out of personalized advertising by visiting Google&apos;s Ads Settings or YourAdChoices.
-          </p>
-        </section>
+        <h2 id="hosting">5. Hosting</h2>
+        <p>
+          The site is served by Firebase Hosting (Google). Like any web server, it receives the technical details
+          of each request — your IP address, browser and the page requested — to deliver the page.
+        </p>
 
-        <section className="space-y-3">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">
-            4. What is stored on your device
-          </h2>
-          <p>
-            Some features save data in your own browser so that the site
-            remembers your work between visits. None of it is transmitted to us
-            or to anyone else &mdash; it is written to your device and stays
-            there. We cannot read any of it.
-          </p>
-          <ul className="list-disc pl-5 space-y-1.5">
-            <li>
-              <strong>Interface preferences</strong> &mdash; theme choice and
-              per-tool settings such as your preferred QR margin or error
-              correction level. Kept until you clear them.
-            </li>
-            <li>
-              <strong>Recently used tools</strong> &mdash; the names of the last
-              four tools you opened, so they are quick to return to. Kept until
-              you clear them.
-            </li>
-            <li>
-              <strong>Recent output files</strong> &mdash; the last three files
-              each tool produced for you, stored in your browser&apos;s
-              IndexedDB so you can download them again without redoing the
-              work. <strong>These are deleted automatically after seven
-              days.</strong> Files over 25&nbsp;MB are never saved.
-            </li>
-          </ul>
-          <p>
-            That last item is worth being explicit about: if you crop an
-            identity document or split a bank statement, the resulting file sits
-            in this browser&apos;s storage for up to a week. It is never
-            uploaded, but it is on your disk. Every tool that saves files shows
-            a &ldquo;Your recent files&rdquo; panel with per-file delete, and
-            you can erase everything at once below.
-          </p>
-        </section>
+        <h2 id="contact-messages">6. Messages you send us</h2>
+        <p>
+          The <Link href="/contact">contact page</Link> opens a pre-filled email in your own mail app. We receive
+          only what you choose to send, and use it only to reply and to fix what you reported.
+        </p>
 
-        <section className="space-y-2">
-          <h2 className="text-base font-bold text-slate-900 dark:text-white">
-            5. Erasing your local data
-          </h2>
-          <ClearLocalData />
-        </section>
-      </div>
-      </div>
+        <h2 id="children">7. Children</h2>
+        <p>TabBench is a general-audience site and is not directed at children under 13.</p>
+
+        <h2 id="changes">8. Changes to this policy</h2>
+        <p>
+          When what the site collects changes, this page is updated and the date at the top changes with it.
+        </p>
+
+        <h2 id="erase">9. Erasing your local data</h2>
+        <ClearLocalData />
+      </ProsePage>
     </>
   );
 }

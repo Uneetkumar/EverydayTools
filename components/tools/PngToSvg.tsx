@@ -20,8 +20,9 @@ import {
   Eye,
   ArrowRightLeft,
 } from "lucide-react";
-import confetti from "canvas-confetti";
+import { markToolCompleted } from "@/lib/analytics";
 import { downloadDataUrl } from "@/lib/utils/download";
+import { copyText } from "@/lib/utils/clipboard";
 
 export type VectorMode = "color" | "monochrome" | "pixel" | "embed";
 
@@ -252,7 +253,7 @@ export default function PngToSvg() {
       // MODE 2: Pixel Art / Crisp Vector Blocks
       if (mode === "pixel") {
         const step = Math.max(1, Math.floor(Math.max(w, h) / 100)); // Sample step for clean pixels
-        let pathsByColor: Record<string, string> = {};
+        const pathsByColor: Record<string, string> = {};
 
         for (let y = 0; y < h; y += step) {
           for (let x = 0; x < w; x += step) {
@@ -379,7 +380,7 @@ ${pathTags}
 
       // Generate vector paths using Horizontal Run-Length Contours
       // This produces extremely crisp, smooth, and compact vector paths
-      let svgPaths: string[] = [];
+      const svgPaths: string[] = [];
 
       for (let palIdx = 0; palIdx < palette.length; palIdx++) {
         const color = palette[palIdx];
@@ -452,16 +453,16 @@ ${svgPaths.join("\n")}
     const url = URL.createObjectURL(blob);
     const fileName = file ? file.name.replace(/\.[^.]+$/, "") : "vectorized-graphic";
     downloadDataUrl(url, `${fileName}-${mode}.svg`);
-    confetti({ particleCount: 35, spread: 55, origin: { y: 0.85 } });
+    markToolCompleted();
   };
 
   // Copy SVG Code
   const handleCopyCode = () => {
     if (!svgMarkup) return;
-    navigator.clipboard.writeText(svgMarkup);
+    copyText(svgMarkup);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
-    confetti({ particleCount: 20, spread: 45, origin: { y: 0.85 } });
+    markToolCompleted();
   };
 
   // Load Preset Sample
@@ -486,10 +487,10 @@ ${svgPaths.join("\n")}
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Sample Quick Loader Header */}
-      <div className="p-3 sm:p-4 rounded-3xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
+      <div className="p-3 sm:p-4 rounded-xl border flex flex-wrap items-center justify-between gap-3 bg-muted/30">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-          <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+          <Sparkles className="w-4 h-4 text-muted-foreground" />
+          <span className="text-sm text-slate-700 dark:text-slate-300 font-semibold">
             Quick Test Samples
           </span>
         </div>
@@ -498,21 +499,21 @@ ${svgPaths.join("\n")}
           <button
             type="button"
             onClick={() => loadSample("logo")}
-            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
+            className="px-3 py-1.5 rounded-xl border text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition bg-muted/30"
           >
             Tech Logo
           </button>
           <button
             type="button"
             onClick={() => loadSample("silhouette")}
-            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
+            className="px-3 py-1.5 rounded-xl border text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition bg-muted/30"
           >
             Rocket Stencil
           </button>
           <button
             type="button"
             onClick={() => loadSample("badge")}
-            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition"
+            className="px-3 py-1.5 rounded-xl border text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition bg-muted/30"
           >
             Color Shield
           </button>
@@ -524,9 +525,9 @@ ${svgPaths.join("\n")}
         {/* Left Column: Upload & Vector Settings */}
         <div className="lg:col-span-5 space-y-5">
           {/* Upload Area */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
-            <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-              <Upload className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          <div className="p-6 rounded-xl border space-y-4 bg-muted/30">
+            <div className="text-sm text-slate-900 dark:text-white flex items-center space-x-2 font-semibold">
+              <Upload className="w-4 h-4 text-muted-foreground" />
               <span>Source Raster PNG</span>
             </div>
 
@@ -546,29 +547,29 @@ ${svgPaths.join("\n")}
                 const dropped = e.dataTransfer.files?.[0];
                 if (dropped) processUploadedFile(dropped);
               }}
-              className="p-6 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-blue-500/50 bg-slate-50/60 dark:bg-slate-950/50 cursor-pointer text-center space-y-2 transition group"
+              className="p-6 rounded-xl border-dashed cursor-pointer text-center space-y-2 group border-2 border-input bg-muted/30 transition-colors hover:border-primary/50 hover:bg-muted/60"
             >
               <div className="w-10 h-10 mx-auto rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center group-hover:scale-110 transition">
                 <ImageIcon className="w-5 h-5" />
               </div>
-              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
                 Click to browse or drop PNG image
               </p>
-              <p className="text-[11px] text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Supports PNG, JPG, WebP • Paste (<kbd className="px-1 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-mono">Ctrl+V</kbd>) anywhere
               </p>
             </div>
           </div>
 
           {/* Mode & Vectorization Settings */}
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-5">
-            <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-              <Sliders className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+          <div className="p-6 rounded-xl border space-y-5 bg-muted/30">
+            <div className="text-sm text-slate-900 dark:text-white flex items-center space-x-2 font-semibold">
+              <Sliders className="w-4 h-4 text-muted-foreground" />
               <span>Tracing Parameters</span>
             </div>
 
             {/* Mode Tabs */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 border rounded-lg bg-muted/60">
               {[
                 { id: "color", label: "Color Layers" },
                 { id: "monochrome", label: "Monochrome" },
@@ -579,9 +580,9 @@ ${svgPaths.join("\n")}
                   key={m.id}
                   type="button"
                   onClick={() => setMode(m.id as VectorMode)}
-                  className={`py-2 px-1 text-[11px] font-bold rounded-xl transition ${
+                  className={`py-2 px-1 text-xs font-semibold rounded-xl transition ${
                     mode === m.id
-                      ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                      ? "bg-background text-foreground shadow-xs dark:bg-input/50"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
                   }`}
                 >
@@ -593,9 +594,9 @@ ${svgPaths.join("\n")}
             {/* Mode-specific Sliders */}
             {mode === "color" && (
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  <span>Color Palette Depth:</span>
-                  <span className="font-mono font-bold text-blue-600">{colorCount} colors</span>
+                <div className="flex items-center justify-between text-sm font-medium text-foreground">
+                  <span>Color palette depth</span>
+                  <span className="font-mono font-semibold text-blue-600">{colorCount} colors</span>
                 </div>
                 <div className="grid grid-cols-5 gap-1.5">
                   {[2, 4, 8, 16, 32].map((num) => (
@@ -603,9 +604,9 @@ ${svgPaths.join("\n")}
                       key={num}
                       type="button"
                       onClick={() => setColorCount(num)}
-                      className={`py-1.5 text-xs font-bold rounded-xl border transition ${
+                      className={`py-1.5 text-xs font-semibold rounded-xl border transition ${
                         colorCount === num
-                          ? "bg-blue-600 text-white border-blue-600"
+                          ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                           : "bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400"
                       }`}
                     >
@@ -618,11 +619,11 @@ ${svgPaths.join("\n")}
 
             {mode === "monochrome" && (
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  <span>Threshold Cutoff:</span>
-                  <span className="font-mono font-bold text-blue-600">{threshold}</span>
+                <div className="flex items-center justify-between text-sm font-medium text-foreground">
+                  <span>Threshold cutoff</span>
+                  <span className="font-mono font-semibold text-blue-600">{threshold}</span>
                 </div>
-                <input
+                <input aria-label="Threshold"
                   type="range"
                   min={10}
                   max={245}
@@ -630,7 +631,7 @@ ${svgPaths.join("\n")}
                   onChange={(e) => setThreshold(Number(e.target.value))}
                   className="w-full h-2 rounded-lg bg-slate-200 dark:bg-slate-800 accent-blue-600 cursor-pointer"
                 />
-                <div className="flex items-center justify-between text-[10px] text-slate-400">
+                <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                   <span>Light / Thin Lines</span>
                   <span>Heavy / Solid</span>
                 </div>
@@ -641,19 +642,19 @@ ${svgPaths.join("\n")}
               <>
                 {/* Speckle Noise Filter */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    <span>Noise / Speckle Filter:</span>
-                    <span className="font-mono font-bold text-slate-900 dark:text-white">
+                  <div className="flex items-center justify-between text-sm font-medium text-foreground">
+                    <span>Noise / speckle filter</span>
+                    <span className="font-mono font-semibold text-slate-900 dark:text-white">
                       {filterSpeckle === 1 ? "None (Preserve 1px)" : `${filterSpeckle}px`}
                     </span>
                   </div>
-                  <input
+                  <input aria-label="Speckle filter"
                     type="range"
                     min={1}
                     max={12}
                     value={filterSpeckle}
                     onChange={(e) => setFilterSpeckle(Number(e.target.value))}
-                    className="w-full h-2 rounded-lg bg-slate-200 dark:bg-slate-800 accent-indigo-600 cursor-pointer"
+                    className="w-full h-2 rounded-lg bg-slate-200 dark:bg-slate-800 accent-blue-600 cursor-pointer"
                   />
                 </div>
 
@@ -690,7 +691,7 @@ ${svgPaths.join("\n")}
                 type="button"
                 onClick={handleDownloadSvg}
                 disabled={!svgMarkup || isProcessing}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-600/30 disabled:opacity-50 transition active:scale-95"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-xs disabled:opacity-50 transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
               >
                 <Download className="w-4 h-4" />
                 <span>Download Vector SVG</span>
@@ -700,7 +701,7 @@ ${svgPaths.join("\n")}
                 type="button"
                 onClick={handleCopyCode}
                 disabled={!svgMarkup || isProcessing}
-                className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-semibold text-xs border border-slate-200 dark:border-slate-700 disabled:opacity-50 transition"
+                className="flex items-center justify-center gap-1.5 px-4 py-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-semibold text-xs border border-slate-200 dark:border-slate-700 disabled:opacity-50 transition"
               >
                 {copiedCode ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
                 <span>{copiedCode ? "Copied!" : "Copy SVG"}</span>
@@ -711,14 +712,14 @@ ${svgPaths.join("\n")}
 
         {/* Right Column: Interactive Vector Preview & Inspection */}
         <div className="lg:col-span-7 space-y-5">
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+          <div className="p-6 rounded-xl border space-y-4 bg-muted/30">
             {/* View Switcher & Zoom Toolbar */}
             <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => setActiveTab("preview")}
-                  className={`px-3 py-1.5 text-xs font-bold rounded-xl transition flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 ${
                     activeTab === "preview"
                       ? "bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400"
                       : "text-slate-500 hover:text-slate-800 dark:hover:text-white"
@@ -730,7 +731,7 @@ ${svgPaths.join("\n")}
                 <button
                   type="button"
                   onClick={() => setActiveTab("code")}
-                  className={`px-3 py-1.5 text-xs font-bold rounded-xl transition flex items-center gap-1.5 ${
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition flex items-center gap-1.5 ${
                     activeTab === "code"
                       ? "bg-slate-100 dark:bg-slate-800 text-blue-600 dark:text-blue-400"
                       : "text-slate-500 hover:text-slate-800 dark:hover:text-white"
@@ -743,15 +744,15 @@ ${svgPaths.join("\n")}
 
               {activeTab === "preview" && (
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] text-slate-400 mr-1">Zoom:</span>
+                  <span className="text-xs text-slate-500 dark:text-slate-400 mr-1">Zoom</span>
                   {[100, 200, 400].map((z) => (
                     <button
                       key={z}
                       type="button"
                       onClick={() => setZoomLevel(z)}
-                      className={`px-2 py-1 text-[10px] font-bold rounded-lg border transition ${
+                      className={`px-2 py-1 text-xs font-semibold rounded-lg border transition ${
                         zoomLevel === z
-                          ? "bg-blue-600 text-white border-blue-600"
+                          ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                           : "bg-slate-50 dark:bg-slate-950 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800"
                       }`}
                     >
@@ -767,7 +768,7 @@ ${svgPaths.join("\n")}
               <div className="space-y-4">
                 {/* Checkerboard Backdrop for Vector Display */}
                 <div
-                  className="w-full min-h-[380px] rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-center p-6 overflow-auto relative select-none"
+                  className="w-full min-h-[380px] rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-center p-6 overflow-auto relative select-none"
                   style={{
                     backgroundImage:
                       "linear-gradient(45deg, #f1f5f9 25%, transparent 25%), linear-gradient(-45deg, #f1f5f9 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f1f5f9 75%), linear-gradient(-45deg, transparent 75%, #f1f5f9 75%)",
@@ -791,35 +792,35 @@ ${svgPaths.join("\n")}
                       dangerouslySetInnerHTML={{ __html: svgMarkup }}
                     />
                   ) : (
-                    <div className="text-xs text-slate-400 text-center">
+                    <div className="text-xs text-slate-500 dark:text-slate-400 text-center">
                       No vector preview generated yet.
                     </div>
                   )}
                 </div>
 
                 {/* Metrics Comparison Footer */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl border text-xs bg-muted/30">
                   <div>
-                    <span className="text-[10px] text-slate-400 block">Raster Dimensions</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 block">Raster Dimensions</span>
                     <strong className="font-mono text-slate-900 dark:text-white">
                       {imageDimensions.width} × {imageDimensions.height} px
                     </strong>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block">Original PNG Size</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 block">Original PNG Size</span>
                     <strong className="font-mono text-slate-900 dark:text-white">
                       {(originalBytes / 1024).toFixed(1)} KB
                     </strong>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block">Generated SVG Size</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400 block">Generated SVG Size</span>
                     <strong className="font-mono text-blue-600 dark:text-blue-400">
                       {(svgBytes / 1024).toFixed(1)} KB
                     </strong>
                   </div>
                   <div>
-                    <span className="text-[10px] text-slate-400 block">Scalability</span>
-                    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="text-xs text-slate-500 dark:text-slate-400 block">Scalability</span>
+                    <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-semibold">
                       <CheckCircle2 className="w-3.5 h-3.5" />
                       <span>Infinite 4K+</span>
                     </span>
@@ -842,11 +843,11 @@ ${svgPaths.join("\n")}
                     <span>{copiedCode ? "Copied!" : "Copy Code"}</span>
                   </button>
                 </div>
-                <textarea
+                <textarea aria-label="SVG markup"
                   readOnly
                   rows={14}
                   value={svgMarkup}
-                  className="w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-950 text-slate-200 font-mono text-[11px] leading-relaxed focus:outline-none select-all"
+                  className="w-full p-4 font-mono leading-relaxed select-all text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 />
               </div>
             )}

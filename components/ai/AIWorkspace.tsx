@@ -4,7 +4,10 @@ import React from "react";
 import AIProviderSelector from "./AIProviderSelector";
 import AIError from "./AIError";
 import { AIProviderType } from "@/lib/ai/types";
-import { Sparkles, RefreshCw } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Kbd } from "@/components/ui/kbd";
+import { Spinner } from "@/components/ui/spinner";
 import { warmCloudAI } from "@/lib/ai/warm";
 
 interface AIWorkspaceProps {
@@ -18,9 +21,12 @@ interface AIWorkspaceProps {
   disabled?: boolean;
   /**
    * Text as it streams in, before the final result lands. Rendered here rather
-   * than in each tool so all five share one appearance and one set of rules.
+   * than in each tool so they share one appearance and one set of rules.
    */
   streamingText?: string;
+  /** What each engine does for this tool (shown in the engine choice). */
+  localHint?: string;
+  cloudHint?: string;
   children: React.ReactNode;
 }
 
@@ -29,83 +35,75 @@ export default function AIWorkspace({
   onProviderChange,
   busy,
   onRun,
-  runLabel = "Run AI",
+  runLabel = "Run",
   error,
-  onClearError,
   disabled,
   streamingText,
+  localHint,
+  cloudHint,
   children,
 }: AIWorkspaceProps) {
+  // Ctrl/⌘ + Enter runs the tool from anywhere inside it.
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !busy && !disabled) {
+      e.preventDefault();
+      onRun();
+    }
+  };
+
   return (
-    <div className="space-y-5 rounded-3xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/50 backdrop-blur-sm p-5 sm:p-7 shadow-xs">
-      {/* Engine Switcher */}
+    <div className="space-y-5" onKeyDown={onKeyDown}>
       <AIProviderSelector
         provider={provider}
         onChange={(p) => {
           // Selecting the cloud engine starts loading the Firebase AI chunk and
           // the App Check token immediately, so that fixed setup cost overlaps
-          // with the user typing rather than landing after they hit submit.
+          // with the user typing rather than landing after they press Run.
           if (p === "gemini") warmCloudAI();
           onProviderChange(p);
         }}
         disabled={busy}
+        localHint={localHint}
+        cloudHint={cloudHint}
       />
 
-      {/* Inputs and custom controls */}
       {children}
 
       {/* Live stream. Shown only while running and only once text exists, so a
           request that fails before its first token does not flash an empty
-          panel. It disappears when `busy` clears and the finished AIOutput —
-          with its copy, download and regenerate actions — takes its place. */}
+          panel. The finished result replaces it. */}
       {busy && streamingText && (
-        <div
-          aria-live="polite"
-          aria-atomic="false"
-          className="space-y-2 rounded-2xl border border-blue-200/80 dark:border-blue-900/50 bg-blue-50/50 dark:bg-blue-950/20 p-4"
-        >
-          <span className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300">
-            <RefreshCw className="h-3 w-3 animate-spin" />
-            Generating
+        <div aria-live="polite" aria-atomic="false" className="space-y-2 rounded-lg border bg-muted/40 p-4">
+          <span className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Spinner className="size-3" />
+            Writing…
           </span>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+          <p className="text-sm leading-relaxed whitespace-pre-wrap text-foreground">
             {streamingText}
-            {/* Caret: makes it obvious more is coming rather than that the
-                model stopped mid-sentence. */}
-            <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-pulse bg-blue-500" />
+            <span aria-hidden="true" className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-pulse bg-primary" />
           </p>
         </div>
       )}
 
-      {/* Error Alert if any */}
-      {error && (
-        <AIError
-          error={error}
-          onRetry={onRun}
-          onSwitchToLocal={() => onProviderChange("local")}
-        />
-      )}
+      {error && <AIError error={error} onRetry={onRun} onSwitchToLocal={provider === "gemini" ? () => onProviderChange("local") : undefined} />}
 
-      {/* Main Trigger Button */}
-      <div className="pt-2">
-        <button
-          type="button"
-          onClick={onRun}
-          disabled={busy || disabled}
-          className="w-full sm:w-auto min-w-[180px] flex items-center justify-center space-x-2 px-7 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white text-xs font-bold shadow-md shadow-blue-600/20 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-        >
+      <div className="flex flex-wrap items-center gap-3">
+        <Button type="button" size="lg" onClick={onRun} disabled={busy || disabled} className="w-full px-5 sm:w-auto sm:min-w-44">
           {busy ? (
             <>
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              <span>Processing AI...</span>
+              <Spinner />
+              Working…
             </>
           ) : (
             <>
-              <Sparkles className="w-4 h-4" />
-              <span>{runLabel}</span>
+              <Sparkles aria-hidden="true" />
+              {runLabel}
             </>
           )}
-        </button>
+        </Button>
+        <span className="hidden text-xs text-muted-foreground sm:inline">
+          <Kbd>Ctrl</Kbd> + <Kbd>Enter</Kbd>
+        </span>
       </div>
     </div>
   );

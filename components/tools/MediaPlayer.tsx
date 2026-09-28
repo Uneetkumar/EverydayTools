@@ -163,10 +163,10 @@ export default function MediaPlayer({ mode = "video" }: MediaPlayerProps) {
       <div
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => { e.preventDefault(); addFiles(e.dataTransfer.files); }}
-        className="relative flex flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/40 p-6 text-center transition hover:bg-blue-50/30"
+        className="relative flex flex-col items-center justify-center gap-2 rounded-xl border-dashed p-6 text-center border-2 border-input bg-muted/30 transition-colors hover:border-primary/50 hover:bg-muted/60"
       >
-        <Upload className="h-7 w-7 text-blue-600 dark:text-blue-400" />
-        <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+        <Upload className="h-7 w-7 text-muted-foreground" />
+        <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
           Drop {isAudio ? "audio" : "video"} files here, or click to choose
         </p>
         <p className="text-xs text-slate-500">
@@ -183,7 +183,7 @@ export default function MediaPlayer({ mode = "video" }: MediaPlayerProps) {
       </div>
 
       {error && (
-        <p className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
+        <p className="rounded-xl border p-3 text-xs text-amber-800 dark:text-amber-200 bg-muted/30">
           {error}
         </p>
       )}
@@ -193,16 +193,16 @@ export default function MediaPlayer({ mode = "video" }: MediaPlayerProps) {
           ref={wrapRef}
           tabIndex={0}
           onKeyDown={onKeyDown}
-          className="overflow-hidden rounded-2xl border border-slate-200 bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-800 dark:bg-slate-900"
+          className="overflow-hidden rounded-xl border border-slate-200 bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 dark:border-slate-800 dark:bg-slate-900"
         >
           {isAudio ? (
             <div className="flex items-center gap-4 bg-gradient-to-br from-slate-900 to-blue-950 p-6">
-              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl bg-white/10">
-                <Music className="h-7 w-7 text-blue-300" />
+              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-white/10">
+                <Music className="h-7 w-7 text-muted-foreground" />
               </span>
               <span className="min-w-0">
                 <span className="block truncate text-sm font-semibold text-white">{active.name}</span>
-                <span className="block text-xs text-slate-400">{humanSize(active.size)}</span>
+                <span className="block text-xs text-slate-500 dark:text-slate-400">{humanSize(active.size)}</span>
               </span>
               <audio ref={mediaRef} src={active.url} className="hidden" />
             </div>
@@ -248,7 +248,7 @@ export default function MediaPlayer({ mode = "video" }: MediaPlayerProps) {
                 </button>
               )}
               <button onClick={togglePlay} aria-label={playing ? "Pause" : "Play"}
-                className="grid h-9 w-9 place-items-center rounded-full bg-blue-600 text-white transition hover:bg-blue-700">
+                className="grid h-9 w-9 place-items-center rounded-full transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium">
                 {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 translate-x-px" />}
               </button>
               {tracks.length > 1 && (
@@ -257,18 +257,18 @@ export default function MediaPlayer({ mode = "video" }: MediaPlayerProps) {
                 </button>
               )}
 
-              <span className="font-mono text-[11px] tabular-nums text-slate-500">
+              <span className="font-mono text-xs tabular-nums text-slate-500">
                 {fmt(current)} / {fmt(duration)}
               </span>
 
               <div className="ml-auto flex items-center gap-2">
-                <label className="flex items-center gap-1 text-[11px] text-slate-500">
+                <label className="flex items-center gap-1 text-xs text-slate-500">
                   <Gauge className="h-3.5 w-3.5" />
                   <select
                     value={speed}
                     onChange={(e) => setSpeed(parseFloat(e.target.value))}
                     aria-label="Playback speed"
-                    className="cursor-pointer rounded bg-transparent text-[11px] font-semibold text-slate-700 dark:text-slate-200"
+                    className="cursor-pointer rounded bg-transparent text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   >
                     {SPEEDS.map((s) => <option key={s} value={s}>{s}x</option>)}
                   </select>
@@ -322,9 +322,9 @@ export default function MediaPlayer({ mode = "video" }: MediaPlayerProps) {
                   t.id === activeId ? "bg-blue-50 dark:bg-blue-950/40" : "hover:bg-slate-100 dark:hover:bg-slate-800"
                 }`}
               >
-                <Icon className="h-3.5 w-3.5 shrink-0 text-slate-400" />
+                <Icon className="h-3.5 w-3.5 shrink-0 text-slate-500 dark:text-slate-400" />
                 <span className="min-w-0 flex-1 truncate font-medium text-slate-800 dark:text-slate-200">{t.name}</span>
-                <span className="shrink-0 text-[10px] text-slate-400">{humanSize(t.size)}</span>
+                <span className="shrink-0 text-xs text-slate-500 dark:text-slate-400">{humanSize(t.size)}</span>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -333,7 +333,7 @@ export default function MediaPlayer({ mode = "video" }: MediaPlayerProps) {
                     if (activeId === t.id) setActiveId(tracks.find((x) => x.id !== t.id)?.id ?? null);
                   }}
                   aria-label={`Remove ${t.name}`}
-                  className="shrink-0 rounded p-1 text-slate-400 opacity-0 transition hover:text-red-500 group-hover:opacity-100"
+                  className="shrink-0 rounded p-1 text-slate-500 dark:text-slate-400 opacity-0 transition hover:text-red-500 group-hover:opacity-100"
                 >
                   <X className="h-3 w-3" />
                 </button>
@@ -344,7 +344,7 @@ export default function MediaPlayer({ mode = "video" }: MediaPlayerProps) {
       )}
 
       {active && (
-        <p className="text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+        <p className="text-xs leading-relaxed text-slate-500 dark:text-slate-400">
           Space plays and pauses, arrow keys seek 5 seconds, M mutes. Files never
           leave your device, so this works offline once the page has loaded.
         </p>

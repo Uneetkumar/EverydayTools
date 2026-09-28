@@ -73,7 +73,7 @@ export default function JwtDecoder() {
     <div className="space-y-6">
       {/* Input JWT */}
       <div className="space-y-2">
-        <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
+        <div className="flex justify-between text-sm font-medium text-foreground">
           <span>Encoded JSON Web Token</span>
           <button
             onClick={() => setToken(SAMPLE_JWT)}
@@ -82,12 +82,12 @@ export default function JwtDecoder() {
             Load Sample Token
           </button>
         </div>
-        <textarea
+        <textarea aria-label="Encoded JSON Web Token"
           rows={4}
           value={token}
           onChange={(e) => setToken(e.target.value)}
           placeholder="Paste JWT here (e.g. eyJhbGciOi...)..."
-          className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 break-all"
+          className="w-full p-3.5 font-mono break-all text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         />
       </div>
 
@@ -111,7 +111,7 @@ export default function JwtDecoder() {
             <Clock className="w-4 h-4" />
             <span>Token Status: <strong>{isExpired ? "Expired" : "Active / Valid"}</strong></span>
           </div>
-          <span className="font-mono text-[11px]">{expiryDateStr}</span>
+          <span className="font-mono text-xs">{expiryDateStr}</span>
         </div>
       )}
 
@@ -119,36 +119,36 @@ export default function JwtDecoder() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Header */}
         <div className="space-y-2">
-          <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <div className="flex justify-between text-sm font-medium text-foreground">
             <span className="text-rose-600 dark:text-rose-400">Header: Algorithm & Token Type</span>
             {headerObj && (
               <button
                 onClick={() => handleCopy(headerObj)}
-                className="text-slate-400 hover:text-slate-600 text-[11px] flex items-center gap-1"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-600 text-xs flex items-center gap-1"
               >
                 <Copy className="w-3 h-3" /> Copy
               </button>
             )}
           </div>
-          <pre className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-mono text-slate-900 dark:text-rose-400 overflow-x-auto min-h-[160px]">
+          <pre className="p-4 rounded-xl border text-xs font-mono text-slate-900 dark:text-rose-400 overflow-x-auto min-h-[160px] bg-muted/30">
             {headerObj ? JSON.stringify(headerObj, null, 2) : "// Decoded header will appear here"}
           </pre>
         </div>
 
         {/* Payload */}
         <div className="space-y-2">
-          <div className="flex justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <div className="flex justify-between text-sm font-medium text-foreground">
             <span className="text-blue-600 dark:text-blue-400">Payload: Data Claims</span>
             {payloadObj && (
               <button
                 onClick={() => handleCopy(payloadObj)}
-                className="text-slate-400 hover:text-slate-600 text-[11px] flex items-center gap-1"
+                className="text-slate-500 dark:text-slate-400 hover:text-slate-600 text-xs flex items-center gap-1"
               >
                 <Copy className="w-3 h-3" /> Copy
               </button>
             )}
           </div>
-          <pre className="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-xs font-mono text-slate-900 dark:text-blue-400 overflow-x-auto min-h-[160px]">
+          <pre className="p-4 rounded-xl border text-xs font-mono text-slate-900 dark:text-blue-400 overflow-x-auto min-h-[160px] bg-muted/30">
             {payloadObj ? JSON.stringify(payloadObj, null, 2) : "// Decoded payload claims will appear here"}
           </pre>
         </div>

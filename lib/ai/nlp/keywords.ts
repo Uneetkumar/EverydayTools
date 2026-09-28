@@ -1,109 +1,164 @@
 /**
- * Zero-Download Client-Side Keyword & Keyphrase Extractor.
- * Extracts ranked unigrams, bigrams, and trigrams using term frequency & lexical position.
+ * On-device keyword and key-phrase extraction.
+ *
+ * Single keywords are ranked by how often they occur (plurals folded into
+ * their singular), key phrases by RAKE: candidate phrases are the runs of
+ * words between stopwords and punctuation, and each word scores by how often
+ * it appears inside longer phrases relative to how often it appears at all.
  */
 
-const STOPWORDS = new Set([
-  "a", "about", "above", "after", "again", "against", "all", "am", "an", "and",
-  "any", "are", "aren't", "as", "at", "be", "because", "been", "before", "being",
-  "below", "between", "both", "but", "by", "can't", "cannot", "could", "couldn't",
-  "did", "didn't", "do", "does", "doesn't", "doing", "don't", "down", "during",
-  "each", "few", "for", "from", "further", "had", "hadn't", "has", "hasn't",
-  "have", "haven't", "having", "he", "he'd", "he'll", "he's", "her", "here",
-  "here's", "hers", "herself", "him", "himself", "his", "how", "how's", "i",
-  "i'd", "i'll", "i'm", "i've", "if", "in", "into", "is", "isn't", "it", "it's",
-  "its", "itself", "let's", "me", "more", "most", "mustn't", "my", "myself",
-  "no", "nor", "not", "of", "off", "on", "once", "only", "or", "other", "ought",
-  "our", "ours", "ourselves", "out", "over", "own", "same", "shan't", "she",
-  "she'd", "she'll", "she's", "should", "shouldn't", "so", "some", "such",
-  "than", "that", "that's", "the", "their", "theirs", "them", "themselves",
-  "then", "there", "there's", "these", "they", "they'd", "they'll", "they're",
-  "they've", "this", "those", "through", "to", "too", "under", "until", "up",
-  "very", "was", "wasn't", "we", "we'd", "we'll", "we're", "we've", "were",
-  "weren't", "what", "what's", "when", "when's", "where", "where's", "which",
-  "while", "who", "who's", "whom", "why", "why's", "with", "won't", "would",
-  "wouldn't", "you", "you'd", "you'll", "you're", "you've", "your", "yours",
-  "yourself", "yourselves", "also", "just", "like", "using", "make", "get"
+import { STOPWORDS } from "./text";
+
+const EXTRA_STOPWORDS = new Set([
+  "able", "across", "actually", "along", "already", "always", "back", "come", "comes", "day", "days", "different", "does",
+  "done", "etc", "even", "find", "first", "give", "given", "going", "good", "great", "help", "helps", "keep", "know",
+  "last", "let", "lot", "lots", "need", "needs", "new", "next", "part", "put", "said", "say", "says", "see", "seem",
+  "set", "show", "shows", "take", "takes", "thing", "things", "think", "time", "times", "today", "try", "two", "want",
+  "wants", "way", "ways", "work", "works", "year", "years", "yes", "one", "three", "every", "like", "many", "much",
 ]);
+
+const isStop = (w: string) => STOPWORDS.has(w) || EXTRA_STOPWORDS.has(w) || w.length < 3 || /^\d+$/.test(w);
+
+const singular = (w: string) =>
+  w.length > 4 && w.endsWith("ies")
+    ? `${w.slice(0, -3)}y`
+    : w.length > 4 && /(?:ches|shes|xes|sses)$/.test(w)
+      ? w.slice(0, -2)
+      : w.length > 3 && w.endsWith("s") && !/(?:ss|us|is)$/.test(w)
+        ? w.slice(0, -1)
+        : w;
 
 export interface KeywordItem {
   keyword: string;
+  count: number;
+  /** Share of all words, in percent. */
+  density: number;
+  score: number;
+}
+
+export interface PhraseItem {
+  phrase: string;
   count: number;
   score: number;
 }
 
 export interface KeywordExtractionResult {
+  keywords: KeywordItem[];
+  phrases: PhraseItem[];
+  totalWords: number;
+  /** Kept for callers that read the old shape. */
   primaryKeywords: KeywordItem[];
   secondaryKeywords: KeywordItem[];
   keyPhrases: string[];
 }
 
-export function extractKeywordsLocally(
-  text: string,
-  topN: number = 10
-): KeywordExtractionResult {
+export function extractKeywordsLocally(text: string, topN = 10): KeywordExtractionResult {
+  const empty: KeywordExtractionResult = {
+    keywords: [],
+    phrases: [],
+    totalWords: 0,
+    primaryKeywords: [],
+    secondaryKeywords: [],
+    keyPhrases: [],
+  };
   const clean = text.trim();
-  if (!clean) {
-    return { primaryKeywords: [], secondaryKeywords: [], keyPhrases: [] };
-  }
+  if (!clean) return empty;
 
-  // Tokenize words
-  const words = clean
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, " ")
-    .split(/\s+/)
-    .filter((w) => w.length > 2);
-
+  // Tokens with their original spelling, and sentence/punctuation breaks.
+  const tokens = clean.match(/[\p{L}\p{N}]+(?:['’.+#-][\p{L}\p{N}]+)*[+#]*|[.,;:!?()[\]{}"“”\n]/gu) ?? [];
+  const words = tokens.filter((t) => /[\p{L}\p{N}]/u.test(t));
   const totalWords = words.length;
-  const wordFreq: Record<string, number> = {};
 
-  // 1. Unigram frequency
-  for (const word of words) {
-    if (!STOPWORDS.has(word) && !/^\d+$/.test(word)) {
-      wordFreq[word] = (wordFreq[word] || 0) + 1;
+  // Count keywords under their singular form, remembering the most common
+  // surface spelling to display ("APIs" and "API" → shown as "API").
+  const counts = new Map<string, number>();
+  const surface = new Map<string, Map<string, number>>();
+  for (const w of words) {
+    const lower = w.toLowerCase();
+    if (isStop(lower)) continue;
+    const key = singular(lower);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+    const forms = surface.get(key) ?? new Map<string, number>();
+    const display = singular(w).toLowerCase() === key ? singular(w) : w;
+    forms.set(display, (forms.get(display) ?? 0) + 1);
+    surface.set(key, forms);
+  }
+  const displayOf = (key: string) => {
+    const forms = surface.get(key);
+    if (!forms) return key;
+    return [...forms.entries()].sort((a, b) => b[1] - a[1] || (a[0] === key ? -1 : 1))[0][0];
+  };
+
+  // RAKE candidate phrases.
+  // Each candidate keeps its words as typed, so a phrase is shown the way it
+  // appears in the text ("delivers", not the folded "deliver").
+  const candidates: string[][] = [];
+  const surfaces: string[] = [];
+  let current: string[] = [];
+  let currentSurface: string[] = [];
+  const flush = () => {
+    if (current.length) {
+      candidates.push(current);
+      surfaces.push(currentSurface.join(" "));
+    }
+    current = [];
+    currentSurface = [];
+  };
+  for (const t of tokens) {
+    const lower = t.toLowerCase();
+    if (!/[\p{L}\p{N}]/u.test(t) || isStop(lower)) flush();
+    else {
+      current.push(singular(lower));
+      currentSurface.push(t);
+      if (current.length === 3) flush();
     }
   }
+  flush();
 
-  // 2. Bigrams & Trigrams for key phrases
-  const phraseFreq: Record<string, number> = {};
-  for (let i = 0; i < words.length - 1; i++) {
-    const w1 = words[i];
-    const w2 = words[i + 1];
-
-    if (!STOPWORDS.has(w1) && !STOPWORDS.has(w2)) {
-      const bigram = `${w1} ${w2}`;
-      phraseFreq[bigram] = (phraseFreq[bigram] || 0) + 1;
-    }
-
-    if (i < words.length - 2) {
-      const w3 = words[i + 2];
-      if (!STOPWORDS.has(w1) && !STOPWORDS.has(w3)) {
-        const trigram = `${w1} ${w2} ${w3}`;
-        phraseFreq[trigram] = (phraseFreq[trigram] || 0) + 1;
-      }
+  const freq = new Map<string, number>();
+  const degree = new Map<string, number>();
+  for (const c of candidates) {
+    for (const w of c) {
+      freq.set(w, (freq.get(w) ?? 0) + 1);
+      degree.set(w, (degree.get(w) ?? 0) + c.length);
     }
   }
+  const wordScore = (w: string) => (degree.get(w) ?? 0) / (freq.get(w) ?? 1);
 
-  // Rank keywords by TF-IDF proxy
-  const rankedKeywords: KeywordItem[] = Object.entries(wordFreq)
-    .map(([keyword, count]) => {
-      const tf = count / Math.max(totalWords, 1);
-      const score = Math.round(tf * 100 * Math.log(count + 1) * 10) / 10;
-      return { keyword, count, score };
-    })
-    .sort((a, b) => b.count - a.count || b.score - a.score);
+  const phraseMap = new Map<string, { words: string[]; count: number; surface: string }>();
+  candidates.forEach((c, i) => {
+    if (c.length < 2) return;
+    const k = c.join(" ");
+    const entry = phraseMap.get(k) ?? { words: c, count: 0, surface: surfaces[i] };
+    entry.count++;
+    phraseMap.set(k, entry);
+  });
+  const phrases: PhraseItem[] = [...phraseMap.values()]
+    .map(({ words: ws, count, surface: shown }) => ({
+      phrase: shown,
+      count,
+      score: Math.round((ws.reduce((n, w) => n + wordScore(w), 0) + (count - 1) * 2) * 10) / 10,
+    }))
+    .sort((a, b) => b.score - a.score || b.count - a.count)
+    .slice(0, 8);
 
-  const primary = rankedKeywords.slice(0, Math.ceil(topN / 2));
-  const secondary = rankedKeywords.slice(Math.ceil(topN / 2), topN);
+  const keywords: KeywordItem[] = [...counts.entries()]
+    .map(([key, count]) => ({
+      keyword: displayOf(key),
+      count,
+      density: Math.round((count / Math.max(totalWords, 1)) * 1000) / 10,
+      score: Math.round((count + wordScore(key) / 4) * 10) / 10,
+    }))
+    .sort((a, b) => b.count - a.count || b.score - a.score)
+    .slice(0, topN);
 
-  const keyPhrases = Object.entries(phraseFreq)
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 6)
-    .map(([phrase]) => phrase);
-
+  const half = Math.ceil(keywords.length / 2);
   return {
-    primaryKeywords: primary,
-    secondaryKeywords: secondary,
-    keyPhrases,
+    keywords,
+    phrases,
+    totalWords,
+    primaryKeywords: keywords.slice(0, half),
+    secondaryKeywords: keywords.slice(half),
+    keyPhrases: phrases.map((p) => p.phrase),
   };
 }

@@ -20,7 +20,8 @@ import {
   Bell,
   Trash2,
 } from "lucide-react";
-import confetti from "canvas-confetti";
+import { markToolCompleted } from "@/lib/analytics";
+import { copyText } from "@/lib/utils/clipboard";
 
 interface LapItem {
   id: number;
@@ -107,7 +108,7 @@ export default function StopwatchTimer() {
             setTimerRunning(false);
             setTimerFinished(true);
             playChime();
-            confetti({ particleCount: 40, spread: 60, origin: { y: 0.8 } });
+            markToolCompleted();
             return 0;
           }
           return prev - 1;
@@ -169,7 +170,7 @@ export default function StopwatchTimer() {
       })
       .join("\n");
 
-    navigator.clipboard.writeText(text);
+    copyText(text);
     setCopiedLaps(true);
     setTimeout(() => setCopiedLaps(false), 2000);
   };
@@ -202,14 +203,14 @@ export default function StopwatchTimer() {
   return (
     <div className={`space-y-6 max-w-4xl mx-auto ${isFullscreen ? "fixed inset-0 z-50 bg-slate-900 p-8 flex flex-col justify-center max-w-none" : ""}`}>
       {/* Header Tabs & Sound Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-1.5 border rounded-lg bg-muted/60">
         <div className="flex items-center gap-1.5">
           <button
             type="button"
             onClick={() => setTab("stopwatch")}
-            className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-bold rounded-xl transition ${
+            className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition ${
               tab === "stopwatch"
-                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                ? "bg-background text-foreground shadow-xs dark:bg-input/50"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
@@ -219,9 +220,9 @@ export default function StopwatchTimer() {
           <button
             type="button"
             onClick={() => setTab("timer")}
-            className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-bold rounded-xl transition ${
+            className={`flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold rounded-xl transition ${
               tab === "timer"
-                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                ? "bg-background text-foreground shadow-xs dark:bg-input/50"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
@@ -237,7 +238,7 @@ export default function StopwatchTimer() {
             className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 text-xs font-semibold text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
             title={soundEnabled ? "Audio Alarm Chime ON" : "Audio Chime Muted"}
           >
-            {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-blue-600" /> : <VolumeX className="w-3.5 h-3.5" />}
+            {soundEnabled ? <Volume2 className="w-3.5 h-3.5 text-muted-foreground" /> : <VolumeX className="w-3.5 h-3.5" />}
           </button>
 
           <button
@@ -259,11 +260,11 @@ export default function StopwatchTimer() {
             <div className="absolute inset-0 bg-radial from-blue-500/5 via-transparent to-transparent pointer-events-none" />
 
             {/* Stopwatch Large Digits */}
-            <div className="font-mono font-bold tracking-tight text-slate-900 dark:text-white select-none">
+            <div className="font-mono font-semibold tracking-tight text-slate-900 dark:text-white select-none">
               <span className="text-5xl sm:text-7xl lg:text-8xl">
                 {swFormatted.minutes}:{swFormatted.seconds}
               </span>
-              <span className="text-3xl sm:text-4xl lg:text-5xl text-blue-600 dark:text-blue-400 ml-2">
+              <span className="text-3xl sm:text-4xl lg:text-5xl ml-2 text-foreground">
                 .{swFormatted.centiseconds}
               </span>
             </div>
@@ -274,7 +275,7 @@ export default function StopwatchTimer() {
                 <button
                   type="button"
                   onClick={() => setSwRunning(true)}
-                  className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-base shadow-lg shadow-blue-600/30 active:scale-95 transition"
+                  className="flex items-center gap-2 px-8 py-4 rounded-lg text-base transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
                 >
                   <Play className="w-5 h-5 fill-current" />
                   <span>Start</span>
@@ -283,7 +284,7 @@ export default function StopwatchTimer() {
                 <button
                   type="button"
                   onClick={() => setSwRunning(false)}
-                  className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-base shadow-lg shadow-amber-500/30 active:scale-95 transition"
+                  className="flex items-center gap-2 px-8 py-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-base shadow-lg active:scale-95 transition"
                 >
                   <Pause className="w-5 h-5 fill-current" />
                   <span>Pause</span>
@@ -294,7 +295,7 @@ export default function StopwatchTimer() {
                 type="button"
                 onClick={handleLap}
                 disabled={!swRunning}
-                className="flex items-center gap-2 px-6 py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-bold text-base border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition active:scale-95"
+                className="flex items-center gap-2 px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-semibold text-base border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition active:scale-95"
               >
                 <Flag className="w-4 h-4" />
                 <span>Lap</span>
@@ -304,7 +305,7 @@ export default function StopwatchTimer() {
                 type="button"
                 onClick={handleResetStopwatch}
                 disabled={swTimeMs === 0 && laps.length === 0}
-                className="flex items-center gap-2 px-6 py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-bold text-base border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition active:scale-95"
+                className="flex items-center gap-2 px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-semibold text-base border border-slate-200 dark:border-slate-700 disabled:opacity-40 transition active:scale-95"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Reset</span>
@@ -314,9 +315,9 @@ export default function StopwatchTimer() {
 
           {/* Laps List Table */}
           {laps.length > 0 && (
-            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+            <div className="p-6 rounded-xl border space-y-4 bg-muted/30">
               <div className="flex items-center justify-between">
-                <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                <h3 className="text-sm text-slate-900 dark:text-white font-semibold">
                   Recorded Laps ({laps.length})
                 </h3>
                 <button
@@ -342,24 +343,24 @@ export default function StopwatchTimer() {
                       className="py-3 px-2 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/40 rounded-xl transition"
                     >
                       <div className="flex items-center gap-3">
-                        <span className="font-bold text-slate-400 w-12">Lap {lap.id}</span>
+                        <span className="font-semibold text-slate-500 dark:text-slate-400 w-12">Lap {lap.id}</span>
                         {isFastest && (
-                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-[10px] font-bold">
+                          <span className="px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 text-xs font-semibold">
                             Fastest
                           </span>
                         )}
                         {isSlowest && (
-                          <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 text-[10px] font-bold">
+                          <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 text-xs font-semibold">
                             Slowest
                           </span>
                         )}
                       </div>
 
                       <div className="flex items-center gap-6">
-                        <span className="font-bold text-slate-900 dark:text-white text-sm">
+                        <span className="font-semibold text-slate-900 dark:text-white text-sm">
                           +{lapT.minutes}:{lapT.seconds}.{lapT.centiseconds}
                         </span>
-                        <span className="text-slate-400 text-[11px] w-24 text-right">
+                        <span className="text-slate-500 dark:text-slate-400 text-xs w-24 text-right">
                           {ovT.minutes}:{ovT.seconds}.{ovT.centiseconds}
                         </span>
                       </div>
@@ -405,10 +406,10 @@ export default function StopwatchTimer() {
                   {timerFinished ? (
                     <div className="flex flex-col items-center animate-bounce text-emerald-500">
                       <Bell className="w-8 h-8 mb-1" />
-                      <span className="text-xl font-bold font-sans">Time&apos;s Up!</span>
+                      <span className="text-xl font-semibold font-sans">Time&apos;s Up!</span>
                     </div>
                   ) : (
-                    <div className="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white">
+                    <div className="text-4xl sm:text-5xl font-semibold text-slate-900 dark:text-white">
                       {String(timerMins).padStart(2, "0")}:{String(timerSecs).padStart(2, "0")}
                     </div>
                   )}
@@ -428,7 +429,7 @@ export default function StopwatchTimer() {
                     }
                     setTimerRunning(true);
                   }}
-                  className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-base shadow-lg shadow-blue-600/30 active:scale-95 transition"
+                  className="flex items-center gap-2 px-8 py-4 rounded-lg text-base transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
                 >
                   <Play className="w-5 h-5 fill-current" />
                   <span>Start</span>
@@ -437,7 +438,7 @@ export default function StopwatchTimer() {
                 <button
                   type="button"
                   onClick={() => setTimerRunning(false)}
-                  className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-base shadow-lg shadow-amber-500/30 active:scale-95 transition"
+                  className="flex items-center gap-2 px-8 py-4 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-semibold text-base shadow-lg active:scale-95 transition"
                 >
                   <Pause className="w-5 h-5 fill-current" />
                   <span>Pause</span>
@@ -447,7 +448,7 @@ export default function StopwatchTimer() {
               <button
                 type="button"
                 onClick={handleResetTimer}
-                className="flex items-center gap-2 px-6 py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-bold text-base border border-slate-200 dark:border-slate-700 transition active:scale-95"
+                className="flex items-center gap-2 px-6 py-4 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-200 font-semibold text-base border border-slate-200 dark:border-slate-700 transition active:scale-95"
               >
                 <RotateCcw className="w-4 h-4" />
                 <span>Reset</span>
@@ -456,7 +457,7 @@ export default function StopwatchTimer() {
 
             {/* Quick Timer Presets */}
             <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-3">
+              <span className="text-xs text-slate-500 dark:text-slate-400 block mb-3 font-medium">
                 Quick Presets
               </span>
               <div className="flex flex-wrap items-center justify-center gap-2">

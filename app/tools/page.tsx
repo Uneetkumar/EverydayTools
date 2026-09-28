@@ -1,5 +1,4 @@
 import React from "react";
-import Link from "next/link";
 import type { Metadata } from "next";
 import {
   getAllTools,
@@ -12,9 +11,8 @@ import {
   generateBreadcrumbJsonLd,
 } from "@/lib/seo/jsonld";
 import Breadcrumbs from "@/components/Breadcrumbs";
-import AdSlot from "@/components/AdSlot";
-import DownloadServicesCsvButton from "@/components/DownloadServicesCsvButton";
-import { ArrowRight, ShieldCheck, Zap, Wallet } from "lucide-react";
+import { FileSpreadsheet } from "lucide-react";
+import { ToolDirectory } from "@/components/tool/tool-directory";
 
 export const metadata: Metadata = constructPageMetadata({
   title: "All Free Online Tools - Full Directory",
@@ -63,107 +61,52 @@ export default function ToolsIndexPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-8">
-        <Breadcrumbs items={[{ name: "All Tools" }]} />
+      <div className="page-container py-6 md:py-10">
+        <Breadcrumbs items={[{ name: "All tools" }]} />
 
-        <header className="space-y-4 max-w-3xl">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            All free online tools
-          </h1>
-          <p className="text-base leading-relaxed text-slate-600 dark:text-slate-400">
-            Every tool on TabBench runs entirely inside your browser. Files
-            you open are never uploaded, calculations never reach a server, and
-            nothing requires an account. That makes these tools usable for
-            documents you would not paste into an unknown website — scanned
-            identity papers, contracts, API tokens, and unpublished drafts.
-          </p>
-          <p className="text-base leading-relaxed text-slate-600 dark:text-slate-400">
-            There are {allTools.length} tools across{" "}
-            {populatedCategories.length} categories. Browse by category below,
-            or jump straight to the one you need.
-          </p>
-
-          <div className="flex flex-wrap items-center justify-between gap-4 pt-1">
-            <div className="flex flex-wrap gap-2.5">
-              {[
-                { icon: ShieldCheck, label: "Nothing is uploaded" },
-                { icon: Zap, label: "Instant, no page reloads" },
-                { icon: Wallet, label: "Free with no account" },
-              ].map(({ icon: Icon, label }) => (
-                <span
-                  key={label}
-                  className="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/70 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300"
-                >
-                  <Icon className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                  {label}
-                </span>
-              ))}
-            </div>
-
-            <DownloadServicesCsvButton />
+        <header className="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-3xl">
+            <h1 className="type-h1 text-foreground">All free online tools</h1>
+            <p className="mt-3 type-body text-muted-foreground">
+              {allTools.length} tools across {populatedCategories.length} categories.
+              Most run entirely inside your browser: files you open are not
+              uploaded, calculations never reach a server, and nothing requires
+              an account. Tools that need the internet — live exchange rates,
+              speech recognition, the optional cloud AI mode — say so on the page.
+            </p>
           </div>
+          <a
+            href="/tools.csv"
+            download="tabbench-tools.csv"
+            className="inline-flex w-fit shrink-0 items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm font-medium shadow-soft transition-colors hover:bg-accent"
+          >
+            <FileSpreadsheet aria-hidden="true" className="size-4 text-muted-foreground" />
+            Download the list (CSV)
+          </a>
         </header>
 
-        <div className="space-y-10">
-          {populatedCategories.map((cat, catIndex) => (
-            <React.Fragment key={cat.id}>
-              <section aria-labelledby={`cat-${cat.id}`} className="space-y-4">
-                <div className="flex flex-wrap items-baseline justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-3">
-                  <div>
-                    <h2
-                      id={`cat-${cat.id}`}
-                      className="text-xl font-bold text-slate-900 dark:text-white"
-                    >
-                      <Link
-                        href={`/categories/${cat.id}`}
-                        className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
-                      >
-                        {cat.name}
-                      </Link>
-                    </h2>
-                    <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                      {cat.description}
-                    </p>
-                  </div>
-                  <Link
-                    href={`/categories/${cat.id}`}
-                    className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline shrink-0"
-                  >
-                    View category →
-                  </Link>
-                </div>
-
-                <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {cat.tools.map((tool) => (
-                    <li key={tool.slug}>
-                      <Link
-                        href={`/tools/${tool.slug}`}
-                        className="group flex h-full flex-col rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 transition hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-md"
-                      >
-                        <span className="flex items-center justify-between gap-2">
-                          <h3 className="text-sm font-semibold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                            {tool.name}
-                          </h3>
-                          <ArrowRight className="h-3.5 w-3.5 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-blue-600" />
-                        </span>
-                        <p className="mt-1.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
-                          {tool.description}
-                        </p>
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-
-              {/* One in-feed ad partway down a long listing, never between
-                  cards within a group. */}
-              {catIndex === 1 && (
-                <div className="py-2">
-                  <AdSlot placement="listingFooter" format="leaderboard" />
-                </div>
-              )}
-            </React.Fragment>
-          ))}
+        <div className="mt-8">
+          <ToolDirectory
+            tools={allTools.map((t) => ({
+              slug: t.slug,
+              name: t.name,
+              shortName: t.shortName,
+              tagline: t.tagline,
+              description: t.description,
+              category: t.category,
+              categoryName: t.categoryName,
+              keywords: t.keywords,
+              aliases: t.aliases,
+              iconName: t.iconName,
+              isPopular: t.isPopular,
+            }))}
+            categories={populatedCategories.map((c) => ({
+              id: c.id,
+              name: c.name,
+              shortName: c.shortName,
+              description: c.description,
+            }))}
+          />
         </div>
       </div>
     </>

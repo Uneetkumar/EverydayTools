@@ -1,8 +1,9 @@
 import React from "react";
+import Link from "next/link";
 import { constructPageMetadata } from "@/lib/seo/metadata";
 import { generateBreadcrumbJsonLd } from "@/lib/seo/jsonld";
-import Breadcrumbs from "@/components/Breadcrumbs";
-import { CheckCircle2, BookOpen, ShieldAlert, Cpu } from "lucide-react";
+import { ProsePage } from "@/components/layout/prose-page";
+import { EDITORIAL_EMAIL } from "@/lib/contact";
 
 export const metadata = constructPageMetadata({
   title: "Editorial & Mathematical Accuracy Policy",
@@ -22,70 +23,68 @@ export default function EditorialPolicyPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-8">
-      <Breadcrumbs items={[{ name: "Editorial & Accuracy Policy" }]} />
-
-      <div className="space-y-3">
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-          Editorial & Mathematical Accuracy Policy
-        </h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-          Our standards for formula verification, continuous testing, AI assistance ethics, and people-first technical accuracy.
+      <ProsePage
+        breadcrumb="Editorial & Accuracy Policy"
+        title="Editorial & Accuracy Policy"
+        updated="September 28, 2026"
+        lead="How the tools and the writing around them are produced, what they are checked against, and what happens when something is wrong."
+      >
+        <h2 id="formulas">1. Formulas are shown, not hidden</h2>
+        <p>
+          Every calculator applies a standard, published definition — the reducing-balance formula for loan EMIs,
+          compound interest with a stated compounding frequency, GST added to or removed from a price at the chosen
+          rate. The formula is printed on the tool&apos;s page with a worked example, so you can check any result by
+          hand rather than taking it on trust.
         </p>
-      </div>
+        <p>The reference points used are:</p>
+        <ul>
+          <li>
+            <strong>Loans and investments</strong> — the standard amortisation and future-value formulas used by
+            banks, with the compounding assumption stated on each page.
+          </li>
+          <li>
+            <strong>Tax calculators</strong> — the rates you choose, or the published rates they name. Tax rules
+            change, so check the rate against your tax authority before filing.
+          </li>
+          <li>
+            <strong>Units</strong> — the international definitions (for example, 1 inch = 25.4 mm exactly, from the
+            1959 international yard and pound agreement).
+          </li>
+        </ul>
 
-      <div className="space-y-6">
-        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 sm:p-8 space-y-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
-              <BookOpen className="w-5 h-5" />
-            </div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">1. Formula Verification & Mathematical Precision</h2>
-          </div>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-            Every calculator formula published on TabBench is cross-verified against standard academic, financial, and mathematical definitions. We document the explicit formulas, assumptions, step-by-step examples, and edge-case boundaries (e.g., division by zero, leap years, negative percentages) on every tool page so users can verify our working logic.
-          </p>
-        </div>
+        <h2 id="limits">2. Limits are stated</h2>
+        <p>
+          When a tool can&apos;t do something well, its page says so plainly instead of implying otherwise. The{" "}
+          <Link href="/tools/pdf-compressor">PDF inspector</Link> explains that it does not re-compress images, the{" "}
+          <Link href="/tools/video-cutter">video cutter</Link> explains why cuts land on keyframes, and tools that
+          send anything over the network say what and to whom.
+        </p>
 
-        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 sm:p-8 space-y-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-              <Cpu className="w-5 h-5" />
-            </div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">2. Responsible AI & Editorial Workflow</h2>
-          </div>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-            In accordance with Google Search quality standards and modern publishing best practices, we do not publish low-quality, mass-generated AI text. Where AI tooling is used for research and drafting assistance, every piece of content undergoes rigorous human review, empirical testing, and original structuring with real code examples and diagrammatic illustrations.
-          </p>
-        </div>
+        <h2 id="writing">3. How the explanations are written</h2>
+        <p>
+          The explanations, use cases, tips and guides on each page are written for the task the tool performs: what
+          people are actually trying to do, where it usually goes wrong, and what to do instead. AI assistance is used
+          while drafting and coding, and everything is reviewed and tested before it is published. Pages are not
+          generated in bulk from a template.
+        </p>
 
-        <div className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 sm:p-8 space-y-4">
-          <div className="flex items-center space-x-3">
-            <div className="w-9 h-9 rounded-xl bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-              <ShieldAlert className="w-5 h-5" />
-            </div>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white">3. Correction & Verification Protocol</h2>
-          </div>
-          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-            If an inaccuracy, edge-case failure, or formula discrepancy is detected or reported by our community, our technical accuracy board immediately audits the calculator logic and issues a revision with regression tests.
-          </p>
-          <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 space-y-2 text-xs text-slate-600 dark:text-slate-400">
-            <p className="font-semibold text-slate-800 dark:text-slate-200">Official Formula Benchmarks:</p>
-            <ul className="list-disc pl-5 space-y-1">
-              <li><strong>Financial Calculations:</strong> Standard reducing-balance formulas aligned with Federal Reserve and Reserve Bank of India amortization guidelines.</li>
-              <li><strong>Floating-Point Math:</strong> IEEE 754 precision safeguards preventing binary floating-point rounding errors (e.g. 0.1 + 0.2 = 0.30000000000000004).</li>
-              <li><strong>Unit Conversions:</strong> 1959 International Yard & Pound Agreement and National Institute of Standards and Technology (NIST) constants.</li>
-            </ul>
-            <p className="pt-2">
-              To report a calculation bug or formula correction, email our verification team directly at{" "}
-              <a href="mailto:editorial@tabbench.com" className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline">
-                editorial@tabbench.com
-              </a>. Corrections are investigated within 48 business hours.
-            </p>
-          </div>
-        </div>
-      </div>
-      </div>
+        <h2 id="corrections">4. Corrections</h2>
+        <p>
+          If a result looks wrong, email{" "}
+          <a href={`mailto:${EDITORIAL_EMAIL}`}>{EDITORIAL_EMAIL}</a> or use the{" "}
+          <Link href="/contact">contact page</Link> with the values you entered, the result you got and the result you
+          expected. Each report is reproduced first. If it is a real error, the tool and any affected explanation are
+          corrected; if it comes from a different convention (for example, GST-inclusive versus GST-exclusive
+          prices), the page is updated to make that convention clearer.
+        </p>
+
+        <h2 id="independence">5. Advertising is kept separate</h2>
+        <p>
+          TabBench is funded by ads served by Google AdSense. Advertisers do not influence which tools exist or what
+          the pages say, and ads are never placed between a tool&apos;s heading and its controls or beside a download
+          button.
+        </p>
+      </ProsePage>
     </>
   );
 }

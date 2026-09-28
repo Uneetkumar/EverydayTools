@@ -2,32 +2,27 @@
 
 import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
-import { initAnalytics } from "@/lib/firebase";
-import { logEvent } from "firebase/analytics";
+import { track } from "@/lib/analytics";
 
+/**
+ * Page views. The Firebase SDK is loaded lazily by lib/analytics.ts, so it is
+ * no longer part of every page's initial JavaScript; the event still fires on
+ * first interaction or after 2.5s idle, as before.
+ */
 export default function FirebaseAnalytics() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
-
-    const trackPageView = async () => {
-      try {
-        const analytics = await initAnalytics();
-        if (analytics) {
-          const url =
-            pathname +
-            (searchParams?.toString() ? `?${searchParams.toString()}` : "");
-          logEvent(analytics, "page_view", {
-            page_path: url,
-            page_location: window.location.href,
-            page_title: document.title,
-          });
-        }
-      } catch {
-        // Safe fallback
-      }
+    const trackPageView = () => {
+      const url =
+        pathname +
+        (searchParams?.toString() ? `?${searchParams.toString()}` : "");
+      track("page_view", {
+        page_path: url,
+        page_location: window.location.href,
+        page_title: document.title,
+      });
     };
 
     // On user interaction or after 2.5s idle, trigger analytics tracking
@@ -35,6 +30,9 @@ export default function FirebaseAnalytics() {
       cleanup();
       trackPageView();
     };
+
+    // Fallback idle timer. Declared before cleanup reads it.
+    const timeoutId = setTimeout(() => onUserInteract(), 2500);
 
     const cleanup = () => {
       clearTimeout(timeoutId);
@@ -48,9 +46,6 @@ export default function FirebaseAnalytics() {
     window.addEventListener("pointerdown", onUserInteract, { once: true, passive: true });
     window.addEventListener("touchstart", onUserInteract, { once: true, passive: true });
     window.addEventListener("keydown", onUserInteract, { once: true, passive: true });
-
-    // Fallback idle timer
-    timeoutId = setTimeout(onUserInteract, 2500);
 
     return cleanup;
   }, [pathname, searchParams]);

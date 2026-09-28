@@ -2,9 +2,11 @@ import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import FloatingToolsBackground from "@/components/FloatingToolsBackground";
+import { Header } from "@/components/layout/header";
+import { SiteFooter } from "@/components/layout/site-footer";
+import { SearchProvider } from "@/components/search/search-provider";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { Toaster } from "@/components/ui/sonner";
 import ThemeProvider from "@/components/ThemeProvider";
 import FirebaseAnalytics from "@/components/FirebaseAnalytics";
 import PwaManager from "@/components/PwaManager";
@@ -144,32 +146,27 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
         <meta name="apple-mobile-web-app-title" content="TabBench" />
+        <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="anonymous" />
         <link rel="apple-touch-icon" href="/icon.svg" />
         <link rel="manifest" href="/manifest.webmanifest" />
 
-        {/* Google AdSense */}
+        {/* reCAPTCHA Enterprise is no longer loaded here. It was a
+            synchronous, render-blocking script on every page for a check only
+            the contact form runs; lib/recaptcha.ts now loads it on demand, and
+            Firebase App Check injects it itself for the cloud AI path. */}
+
+        {/* Google AdSense. The loader inserts its own <script> into <head>
+            before React hydrates, so <head> deliberately holds no inline
+            scripts for that insertion to displace (they live at the top of
+            <body>). A raw tag rather than next/script so it is in the static
+            HTML, where AdSense's site verification looks for it. */}
         <script
           async
           src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5552044975820319"
           crossOrigin="anonymous"
         ></script>
-
-        {/* Google reCAPTCHA Enterprise */}
-        <script
-          src="https://www.google.com/recaptcha/enterprise.js?render=6LfFkqgtAAAAAIESThxZ7ie3rcfMI3dmcC-fffBq"
-        ></script>
-        <script
-          id="recaptcha-enterprise-handler"
-          dangerouslySetInnerHTML={{
-            __html: `function onClick(e) {
-  e.preventDefault();
-  grecaptcha.enterprise.ready(async () => {
-    const token = await grecaptcha.enterprise.execute('6LfFkqgtAAAAAIESThxZ7ie3rcfMI3dmcC-fffBq', {action: 'LOGIN'});
-  });
-}`,
-          }}
-        />
-
+      </head>
+      <body className="min-h-full bg-background font-sans text-foreground antialiased">
         {/* Firebase always serves the project's *.web.app hostname and it
             cannot be switched off, so the whole site is reachable on two
             domains — BOTH *.web.app and *.firebaseapp.com, neither of which
@@ -185,7 +182,14 @@ export default function RootLayout({
             should fire before anything renders, that difference matters.
 
             See lib/seo/canonical-host.ts for why the hostname test is a
-            suffix match and why it cannot fire on production. */}
+            suffix match and why it cannot fire on production.
+
+            It sits at the very top of <body> rather than in <head>: the
+            AdSense loader inserts a <script> before the first script in
+            <head> ahead of hydration, which shifted these inline scripts and
+            produced a hydration mismatch. As the first thing in <body> it
+            still runs before any content is parsed or painted, and
+            document.head (where it writes the robots meta) is complete. */}
         <script
           id="canonical-host"
           dangerouslySetInnerHTML={{
@@ -197,31 +201,40 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSchema) }}
         />
-      </head>
-      <body className="min-h-full flex flex-col font-sans transition-colors relative overflow-x-hidden antialiased">
+
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
           enableSystem
-          disableTransitionOnChange={false}
+          disableTransitionOnChange
         >
-          {/* Firebase Client Analytics */}
-          <Suspense fallback={null}>
-            <FirebaseAnalytics />
-          </Suspense>
+          <TooltipProvider delayDuration={300}>
+            <SearchProvider>
+              {/* Firebase Client Analytics */}
+              <Suspense fallback={null}>
+                <FirebaseAnalytics />
+              </Suspense>
 
-          {/* PWA Service Worker & Install Prompts */}
-          <PwaManager />
+              {/* PWA Service Worker & Install Prompts */}
+              <PwaManager />
 
-          {/* Floating Animated Background */}
-          <FloatingToolsBackground />
+              <a
+                href="#main"
+                className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-md focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-raised"
+              >
+                Skip to content
+              </a>
 
-          {/* Content Wrapper */}
-          <div className="relative z-10 flex flex-col min-h-screen">
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-          </div>
+              <div className="flex min-h-screen flex-col">
+                <Header />
+                <main id="main" className="flex-1">
+                  {children}
+                </main>
+                <SiteFooter />
+              </div>
+              <Toaster position="bottom-center" />
+            </SearchProvider>
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

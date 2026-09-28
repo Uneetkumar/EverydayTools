@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { RefreshCw, Copy, Check, Hash } from "lucide-react";
-import confetti from "canvas-confetti";
+import { markToolCompleted } from "@/lib/analytics";
 
 export default function UuidGenerator() {
   const [count, setCount] = useState<number>(5);
@@ -26,7 +26,11 @@ export default function UuidGenerator() {
   };
 
   useEffect(() => {
-    generateUuids();
+    // Deferred: generating synchronously inside the effect cascades renders.
+    const id = setTimeout(generateUuids, 0);
+    return () => clearTimeout(id);
+    // generateUuids reads exactly these settings.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [count, uppercase, removeHyphens, wrapQuotes]);
 
   const copySingle = async (val: string, index: number) => {
@@ -43,7 +47,7 @@ export default function UuidGenerator() {
     try {
       await navigator.clipboard.writeText(uuids.join("\n"));
       setCopiedAll(true);
-      confetti({ particleCount: 30, spread: 50, origin: { y: 0.85 } });
+      markToolCompleted();
       setTimeout(() => setCopiedAll(false), 2000);
     } catch (e) {
       console.error(e);
@@ -53,15 +57,15 @@ export default function UuidGenerator() {
   return (
     <div className="space-y-6">
       {/* Settings Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl border bg-muted/30">
         <div className="flex items-center space-x-3">
-          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <label className="text-sm font-medium text-foreground">
             Quantity:
           </label>
-          <select
+          <select aria-label="Quantity"
             value={count}
             onChange={(e) => setCount(parseInt(e.target.value, 10))}
-            className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-semibold text-slate-900 dark:text-white"
+            className="px-3 py-1.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             <option value={1}>1 UUID</option>
             <option value={5}>5 UUIDs</option>
@@ -71,7 +75,7 @@ export default function UuidGenerator() {
           </select>
         </div>
 
-        <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-slate-700 dark:text-slate-300">
+        <div className="flex flex-wrap items-center gap-4 text-sm font-medium text-foreground">
           <label className="flex items-center space-x-2 cursor-pointer">
             <input
               type="checkbox"
@@ -113,7 +117,7 @@ export default function UuidGenerator() {
           </button>
           <button
             onClick={copyAll}
-            className="flex items-center space-x-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition"
+            className="flex items-center space-x-1.5 px-3.5 py-2 text-xs rounded-lg transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
           >
             {copiedAll ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             <span>{copiedAll ? "Copied All!" : "Copy All"}</span>

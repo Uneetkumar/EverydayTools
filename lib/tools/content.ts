@@ -1147,7 +1147,7 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
       steps: [
         "Upload the protected PDF.",
         "Enter the password if the document requires one to open. Permission-only restrictions may not need a password at all.",
-        "Let the tool decrypt and rewrite the document without its restrictions.",
+        "The tool opens the document and redraws every page into a new PDF with no password or restrictions. If the file was never locked, it says so instead.",
         "Download the unlocked copy. Your original file is unchanged.",
       ],
     },
@@ -1163,15 +1163,16 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
           "Merge and split tools cannot process an encrypted PDF. Unlocking first is a prerequisite for almost any further editing.",
       },
       {
-        title: "Making a document accessible",
+        title: "Sharing a document without its password",
         body:
-          "Copy restrictions also block screen readers from extracting text. Removing them is often what makes a document usable for someone relying on assistive technology.",
+          "A statement protected with your date of birth is awkward to forward to an accountant. An unlocked copy can be shared without also sending the password.",
       },
     ],
     tips: [
       "If you do not know the user password, no tool can open the document — it is genuinely encrypted, and that is the point.",
       "Keep the original protected file. Unlocking produces a new copy rather than modifying the source.",
       "An unlocked PDF has no restrictions at all, so be deliberate about where you store and send it.",
+      "The unlocked copy stores pages as images, so its text cannot be selected or searched. If you need the text, copy it from the original in a PDF reader after opening it with the password.",
       "Only unlock documents you own or have permission to unlock.",
     ],
     extraFaqs: [
@@ -1333,12 +1334,12 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "pdf-compressor": {
     intro:
-      "This tool inspects a PDF rather than re-compressing it: it reports the page count, file size, title, and author so you can see what you are dealing with before deciding how to shrink it. It does not re-encode the images inside the file, because doing that properly needs image codecs that pdf-lib does not provide. What follows is the approach that actually works, using the tools available here.",
+      "This tool inspects a PDF rather than re-compressing it: it reports the page count and paper sizes, the document properties, whether it is encrypted, and how much of the file is images and embedded fonts, so you can see what you are dealing with before deciding how to shrink it. It does not re-encode the images inside the file, because doing that properly needs image codecs that pdf-lib does not provide. What follows is the approach that actually works, using the tools available here.",
     howTo: {
       title: "How to inspect a PDF and reduce its size",
       steps: [
         "Upload the PDF to see its page count, size, and metadata.",
-        "Work out where the weight is: if the page count is low but the file is large, the pages are scans or contain high-resolution images.",
+        "Read the note under “What makes it this size”: it tells you whether scanned pages, images or embedded fonts carry the weight.",
         "Remove what you do not need. Use the Split PDF tool to extract only the pages you actually have to submit — this is usually the single biggest reduction available.",
         "If the file is a scan and still too large, rescan the original at 150–200 DPI rather than 600. Reducing the source resolution beats any post-processing.",
         "For a document you generated yourself, re-export it from the original application with image quality set lower.",
@@ -1461,7 +1462,7 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
       title: "How to calculate GST",
       steps: [
         "Choose the direction: add GST to an exclusive amount, or remove GST from an inclusive amount.",
-        "Enter the amount and select the GST rate — commonly 5%, 12%, 18%, or 28%.",
+        "Enter the amount and select the GST rate — 5%, 18% or 40% since 22 September 2025, or type another rate.",
         "Read the tax amount and the net and gross totals.",
         "For intra-state supply, use the CGST and SGST split, each being half the total rate.",
       ],
@@ -1503,7 +1504,7 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
       {
         question: "Which GST rate applies to my product?",
         answer:
-          "That is determined by the HSN code for goods or the SAC code for services, as published by the GST Council. Common slabs are 5%, 12%, 18%, and 28%, with some items zero-rated or exempt. This calculator applies whichever rate you select — it cannot determine the correct classification for you, and misclassification is a compliance matter worth confirming with your accountant.",
+          "That is determined by the HSN code for goods or the SAC code for services, as published by the GST Council. Since 22 September 2025 the main slabs are 5% and 18%, with 40% on luxury and sin goods, 3% on gold, and some items zero-rated or exempt. This calculator applies whichever rate you select — it cannot determine the correct classification for you, and misclassification is a compliance matter worth confirming with your accountant.",
       },
       {
         question: "Is GST calculated on the discounted price?",
@@ -3603,9 +3604,10 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
       steps: [
         "Enter your total annual Cost to Company (CTC) figure.",
         "Set your variable performance bonus percentage (if applicable).",
-        "Select your preferred tax regime (New Tax Regime vs Old Tax Regime).",
-        "Toggle whether Employee Provident Fund (PF) is deducted.",
-        "Review your estimated monthly in-hand take-home pay and annual deduction summary.",
+        "Select the tax regime you file under — the new regime is the default unless you opt out.",
+        "Choose how your employer calculates PF: 12% of basic, the ₹1,800-a-month cap, or no PF.",
+        "Enter your state's professional tax (₹0 if your state does not levy it).",
+        "Read your monthly in-hand pay, then the annual breakdown underneath to see where the rest of the CTC goes.",
       ],
     },
     useCases: [
@@ -3621,7 +3623,9 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
       },
     ],
     tips: [
-      "Under the New Tax Regime, taxable income up to ₹7,00,000 qualifies for full tax rebate under Section 87A.",
+      "From FY 2025-26, the new regime charges no tax on taxable income up to ₹12 lakh (section 87A rebate). With the ₹75,000 standard deduction, that means salary up to ₹12.75 lakh is tax-free.",
+      "Just above ₹12 lakh, marginal relief applies: the tax can never be more than the income above ₹12 lakh, so a small raise never leaves you worse off.",
+      "Employer PF is inside your CTC but paid into your PF account, which is why it never appears in your bank balance.",
       "Employee PF contributions earn statutory compound interest and provide tax-advantaged retirement savings.",
     ],
     extraFaqs: [
@@ -4209,50 +4213,51 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "calculator": {
     intro:
-      "Most online calculators feel like sterile form inputs rather than real mathematical instruments. This calculator was engineered from the ground up to look, sound, and feel like an authentic desktop calculator, combining physical skeuomorphic hardware aesthetics with digital convenience. It features an ambient solar panel strip, recessed high-contrast dual-line LCD readout, 3D tactile contoured buttons with physical click audio, an audit paper tape drawer, and an instant switch between Standard and Scientific modes. Every calculation is performed 100% client-side with zero telemetry or network latency.",
+      "A calculator should get out of the way. This one has a clear display that shows the whole expression as you type, large keys laid out like the calculators on Windows and phones, and a Scientific mode for trigonometry, logarithms, powers and brackets when you need more. Results go into a history list you can reuse, memory keys hold sub-totals, and everything works from the keyboard. All calculations run in your browser.",
     howTo: {
       title: "How to use the online calculator",
       steps: [
-        "Click the on-screen tactile buttons or type directly with your computer keyboard or numpad.",
-        "Enter your numbers and mathematical operators (+, −, ×, ÷). The active calculation trail displays in the top sub-readout as you type.",
-        "Press Enter or the = button to evaluate the expression. Answers are automatically cleaned to avoid floating-point inaccuracies.",
-        "Toggle the Scientific mode at the top to unlock trigonometry (sin, cos, tan), natural logarithms (ln, log), powers (xʸ), square roots, factorials, and constants (π, e).",
-        "Open the Paper Tape Audit Drawer to review past calculations, copy records, or click any previous answer to reuse it.",
-        "Use memory registers (MC, MR, M+, M-, MS) to store sub-totals across multi-step financial or engineering calculations.",
+        "Click the keys or type with your keyboard or numpad.",
+        "Enter numbers and operators (+, −, ×, ÷). The line above the result shows the expression so far.",
+        "Press Enter or = to get the result. Answers are rounded to 12 decimal places, so 0.1 + 0.2 shows 0.3.",
+        "Switch to Scientific for sin, cos, tan (in degrees or radians), ln, log, powers (xʸ), cubes and cube roots, factorials, brackets, π and e. Press 2nd for the inverse functions.",
+        "Open History to see past results; select one to use it again.",
+        "Use the memory keys (MC, MR, M+, M−, MS) to keep a running sub-total across calculations.",
       ],
     },
     useCases: [
       {
-        title: "Daily business & office bookkeeping",
+        title: "Everyday sums and bills",
         body:
-          "Tally up invoices, receipts, and expense reports with the confidence of an audit paper tape that tracks every line item you key in.",
+          "Add up invoices, receipts and expenses; the history keeps each total so you can check your work or carry a result into the next sum.",
       },
       {
-        title: "Engineering & scientific homework",
+        title: "Percentages the way a desk calculator does them",
         body:
-          "Solve complex scientific equations with trigonometric functions in both Degrees and Radians, roots, exponentials, and factorials without needing a physical handheld device.",
+          "200 + 10 % gives 220 and 200 − 10 % gives 180, because after + or − the percent is taken of the first number. After × or ÷ it simply divides by 100.",
       },
       {
-        title: "Touch-friendly mobile arithmetic",
+        title: "Homework and engineering",
         body:
-          "Enjoy high-precision buttons with haptic vibration feedback on smartphones and tablets, making on-the-go calculations effortless and tactile.",
+          "Trigonometry in degrees or radians, logarithms, powers, roots and factorials, without a handheld scientific calculator.",
       },
     ],
     tips: [
-      "Press Esc on your keyboard to instantly clear the display, or Backspace to delete the last entered digit.",
-      "Click 'Copy' in the display header or press Ctrl+C / Cmd+C to copy the current result to your clipboard.",
-      "Toggle the sound icon in the header if you prefer a completely silent working environment.",
+      "Press Esc to clear everything, Delete to clear the current entry, and Backspace to remove the last digit.",
+      "Press Ctrl+C (Cmd+C on a Mac) with nothing selected to copy the current result.",
+      "Pressing a second operator replaces the first, so a mistyped + can be corrected by pressing − straight away.",
+      "Key sounds are off by default; turn them on with the Sound button if you like audible feedback.",
     ],
     extraFaqs: [
       {
         question: "How does the calculator handle order of operations?",
         answer:
-          "Standard algebraic operator precedence (PEMDAS / BODMAS) is strictly respected. Multiplications and divisions are evaluated before additions and subtractions.",
+          "It follows standard precedence (BODMAS / PEMDAS): brackets first, then powers, then multiplication and division, then addition and subtraction. So 2 + 3 × 4 is 14, and (2 + 3) × 4 is 20.",
       },
       {
-        question: "Does the paper tape persist when I refresh the page?",
+        question: "Is my history saved when I refresh the page?",
         answer:
-          "Yes. Your calculation history and memory registers are securely saved in your browser's local storage so you never lose your train of thought.",
+          "Yes. The history and memory are kept in this browser's local storage for three days, then cleared automatically. They never leave your device.",
       },
     ],
   },

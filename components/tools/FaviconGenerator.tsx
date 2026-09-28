@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import JSZip from "jszip";
 import { Download, Star } from "lucide-react";
-import confetti from "canvas-confetti";
+import { markToolCompleted } from "@/lib/analytics";
 import { downloadBlob } from "@/lib/utils/download";
 
 /** Sizes browsers and platforms actually request. */
@@ -99,35 +99,35 @@ export default function FaviconGenerator() {
       ].join("\n")
     );
     downloadBlob(await zip.generateAsync({ type: "blob" }), "favicons.zip");
-    confetti({ particleCount: 35, spread: 50, origin: { y: 0.85 } });
+    markToolCompleted();
   };
 
   return (
     <div className="space-y-5">
-      <div className="p-8 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/40 hover:bg-blue-50/30 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-2 relative">
-        <Star className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-        <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+      <div className="p-8 rounded-xl border-dashed text-center cursor-pointer flex flex-col items-center justify-center space-y-2 relative border-2 border-input bg-muted/30 transition-colors hover:border-primary/50 hover:bg-muted/60">
+        <Star className="w-8 h-8 text-muted-foreground" />
+        <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
           Upload a square logo to generate favicons
         </div>
         <p className="text-xs text-slate-500">
           A square PNG or SVG of at least 512×512 gives the best result.
         </p>
-        <input type="file" accept="image/*" onChange={onFile}
+        <input aria-label="Choose an image" type="file" accept="image/*" onChange={onFile}
           className="absolute inset-0 opacity-0 cursor-pointer" />
       </div>
 
       {src && (
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+          <div className="flex flex-wrap items-center gap-3 p-4 rounded-xl border bg-muted/30">
             <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">Background</span>
             {[["transparent", "Transparent"], ["#ffffff", "White"], ["#0f172a", "Dark"]].map(([v, l]) => (
               <button key={v} onClick={() => changeBg(v)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                  background === v ? "bg-blue-600 text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                  background === v ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium" : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
                 }`}>{l}</button>
             ))}
             <button onClick={downloadZip}
-              className="ml-auto flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition">
+              className="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg text-xs transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium">
               <Download className="w-4 h-4" />
               <span>Download all as ZIP</span>
             </button>
@@ -136,12 +136,12 @@ export default function FaviconGenerator() {
           <div className="grid grid-cols-3 @md:grid-cols-5 @2xl:grid-cols-9 gap-3">
             {previews.map((p) => (
               <a key={p.size} href={p.url} download={`favicon-${p.size}x${p.size}.png`}
-                className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-blue-400 transition">
+                className="flex flex-col items-center gap-1.5 p-3 rounded-xl border hover:border-blue-400 transition bg-muted/30">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p.url} alt={`${p.size} by ${p.size} favicon preview`}
                   width={Math.min(p.size, 48)} height={Math.min(p.size, 48)}
                   style={{ imageRendering: p.size <= 32 ? "pixelated" : "auto" }} />
-                <span className="text-[10px] font-mono text-slate-500">{p.size}px</span>
+                <span className="text-xs font-mono text-slate-500">{p.size}px</span>
               </a>
             ))}
           </div>

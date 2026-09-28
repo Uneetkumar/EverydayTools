@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { Copy, Check, Clock, Calendar, Sparkles, BookOpen } from "lucide-react";
+import { copyText } from "@/lib/utils/clipboard";
 
 const CRON_PRESETS = [
   { label: "Every Minute", cron: "* * * * *" },
@@ -97,7 +98,7 @@ export default function CronExplainer() {
   const explanation = useMemo(() => explainFullCron(cron), [cron]);
 
   const handleCopy = () => {
-    navigator.clipboard.writeText(cron);
+    copyText(cron);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -105,16 +106,16 @@ export default function CronExplainer() {
   return (
     <div className="space-y-6">
       {/* Cron Expression Input & Breakdown */}
-      <div className="p-6 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 space-y-5">
+      <div className="p-6 rounded-xl border space-y-5 bg-muted/30">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <label htmlFor="cron-input" className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
-            <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          <label htmlFor="cron-input" className="text-sm text-slate-900 dark:text-white flex items-center gap-2 font-semibold">
+            <Clock className="w-4 h-4 text-muted-foreground" />
             Cron Schedule Expression
           </label>
 
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
           >
             {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             {copied ? "Copied!" : "Copy Cron"}
@@ -127,7 +128,7 @@ export default function CronExplainer() {
           value={cron}
           onChange={(e) => setCron(e.target.value)}
           placeholder="0 9 * * 1-5"
-          className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-mono text-lg font-bold text-slate-900 dark:text-white text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          className="w-full px-4 py-3 font-mono text-lg text-center tracking-widest rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         />
 
         {/* 5-Field Breakdown Badges */}
@@ -143,18 +144,18 @@ export default function CronExplainer() {
               key={idx}
               className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-0.5"
             >
-              <span className="font-mono text-sm font-bold text-blue-600 dark:text-blue-400">{field.val}</span>
-              <p className="text-[11px] font-semibold text-slate-700 dark:text-slate-300">{field.label}</p>
-              <span className="text-[10px] text-slate-400 font-mono">{field.range}</span>
+              <span className="font-mono text-sm font-semibold text-blue-600 dark:text-blue-400">{field.val}</span>
+              <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">{field.label}</p>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">{field.range}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* Human Explanation Output Card */}
-      <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-3">
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-          <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+      <div className="p-6 rounded-xl border space-y-3 bg-muted/30">
+        <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1.5 font-medium">
+          <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
           Plain English Schedule Explanation
         </span>
         <p className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white leading-relaxed">
@@ -163,9 +164,9 @@ export default function CronExplainer() {
       </div>
 
       {/* Common Presets Selector */}
-      <div className="p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 space-y-3">
-        <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
-          <BookOpen className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+      <div className="p-5 rounded-xl border space-y-3 bg-muted/30">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-white">
+          <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
           Common Schedule Presets
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
@@ -173,12 +174,12 @@ export default function CronExplainer() {
             <button
               key={i}
               onClick={() => setCron(p.cron)}
-              className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 text-left transition-all group"
+              className="p-3 rounded-xl border hover:border-blue-500 dark:hover:border-blue-500 text-left transition-all group bg-muted/30"
             >
               <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 block group-hover:text-blue-600 dark:group-hover:text-blue-400">
                 {p.label}
               </span>
-              <code className="text-[11px] font-mono text-slate-400 font-bold mt-1 block">{p.cron}</code>
+              <code className="text-xs font-mono text-slate-500 dark:text-slate-400 font-semibold mt-1 block">{p.cron}</code>
             </button>
           ))}
         </div>

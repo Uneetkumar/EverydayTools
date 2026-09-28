@@ -1,112 +1,120 @@
 "use client";
 
-import React, { useRef } from "react";
-import { Trash2, Copy, Sparkles, Upload } from "lucide-react";
+import React, { useId, useRef } from "react";
+import { FileText, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { TextArea } from "@/components/tool/kit";
+import { countWords } from "@/lib/ai/nlp/text";
+import { cn } from "@/lib/utils";
 
 interface AIInputProps {
   value: string;
   onChange: (val: string) => void;
+  label?: string;
   placeholder?: string;
   sampleText?: string;
   sampleLabel?: string;
   maxChars?: number;
   disabled?: boolean;
   minRows?: number;
+  /** Monospace, for code and JSON. */
+  mono?: boolean;
+  accept?: string;
+  invalid?: boolean;
 }
+
+/** Text files larger than this are almost certainly not what the user meant. */
+const MAX_FILE_BYTES = 2 * 1024 * 1024;
 
 export default function AIInput({
   value,
   onChange,
-  placeholder = "Paste or type your text here...",
+  label = "Your text",
+  placeholder = "Paste or type your text here…",
   sampleText,
-  sampleLabel = "Load Sample",
-  maxChars = 4000,
+  sampleLabel = "Try an example",
+  maxChars = 8000,
   disabled,
-  minRows = 6,
+  minRows = 8,
+  mono = false,
+  accept = ".txt,.md,.json,.csv,.html,.xml,.log",
+  invalid,
 }: AIInputProps) {
+  const id = useId();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const words = countWords(value);
+  const over = value.length > maxChars;
 
-  const wordCount = value.trim() ? value.trim().split(/\s+/).filter(Boolean).length : 0;
-  const charCount = value.length;
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        onChange(reader.result);
-      }
-    };
-    reader.readAsText(file);
+    if (file.size > MAX_FILE_BYTES) {
+      toast.error("That file is too large", { description: "Open a text file under 2 MB." });
+      return;
+    }
+    file
+      .text()
+      .then(onChange)
+      .catch(() => toast.error("Couldn't read that file as text."));
   };
 
   return (
     <div className="space-y-2">
-      {/* Input Header & Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-        <div className="flex items-center space-x-2 text-slate-500 dark:text-slate-400 font-medium">
-          <span>{wordCount} words</span>
-          <span>&bull;</span>
-          <span className={charCount > maxChars ? "text-rose-500 font-bold" : ""}>
-            {charCount} / {maxChars} chars
-          </span>
-        </div>
-
-        <div className="flex items-center space-x-2">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <label htmlFor={id} className="text-sm font-medium text-foreground">
+          {label}
+        </label>
+        <div className="flex flex-wrap items-center gap-1">
           {sampleText && (
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={() => onChange(sampleText)}
-              className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 hover:bg-blue-100 transition cursor-pointer disabled:opacity-50"
-            >
+            <Button type="button" variant="ghost" size="xs" disabled={disabled} onClick={() => onChange(sampleText)}>
               {sampleLabel}
-            </button>
+            </Button>
           )}
-
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center space-x-1 px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 transition cursor-pointer disabled:opacity-50"
-            title="Upload text file (.txt, .md, .json)"
-          >
-            <Upload className="w-3.5 h-3.5" />
-            <span>Upload File</span>
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".txt,.md,.json,.csv,.js,.ts"
-            onChange={handleFileUpload}
-            className="hidden"
-          />
-
+          <Button type="button" variant="ghost" size="xs" disabled={disabled} onClick={() => fileInputRef.current?.click()}>
+            <FileText aria-hidden="true" />
+            Open file
+          </Button>
+          <input ref={fileInputRef} type="file" accept={accept} onChange={handleFile} className="hidden" tabIndex={-1} aria-hidden="true" />
           {value && (
-            <button
+            <Button
               type="button"
+              variant="ghost"
+              size="xs"
               disabled={disabled}
               onClick={() => onChange("")}
-              className="flex items-center space-x-1 px-2.5 py-1 text-xs font-semibold rounded-lg text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition cursor-pointer disabled:opacity-50"
+              className="text-muted-foreground hover:text-destructive"
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Clear</span>
-            </button>
+              <Trash2 aria-hidden="true" />
+              Clear
+            </Button>
           )}
         </div>
       </div>
 
-      {/* Textarea */}
-      <textarea
+      <TextArea
+        id={id}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         disabled={disabled}
         rows={minRows}
-        className="w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 text-slate-900 dark:text-slate-100 text-sm leading-relaxed placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition resize-y font-sans disabled:opacity-60"
+        spellCheck={!mono}
+        aria-invalid={invalid || undefined}
+        className={cn("resize-y", mono && "font-mono text-sm md:text-xs")}
       />
+
+      <p className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground tabular-nums" aria-live="polite">
+        <span>
+          {words.toLocaleString()} words · {value.length.toLocaleString()} characters
+        </span>
+        {over && (
+          <span className="text-warning">
+            Over {maxChars.toLocaleString()} characters: long text is slower and gives a less focused result.
+          </span>
+        )}
+      </p>
     </div>
   );
 }

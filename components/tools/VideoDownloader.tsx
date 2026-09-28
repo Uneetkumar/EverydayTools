@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef } from "react";
-import confetti from "canvas-confetti";
+import { markToolCompleted } from "@/lib/analytics";
 import { AlertTriangle } from "lucide-react";
 import VideoUrlInput, { SupportedPlatform } from "@/components/video-downloader/VideoUrlInput";
 import VideoPreview from "@/components/video-downloader/VideoPreview";
@@ -208,7 +208,7 @@ export default function VideoDownloader({ platform = "general" }: VideoDownloade
       a.click();
       document.body.removeChild(a);
       setIsSuccess(true);
-      confetti({ particleCount: 30, spread: 50, origin: { y: 0.85 } });
+      markToolCompleted();
       return;
     }
 
@@ -232,7 +232,7 @@ export default function VideoDownloader({ platform = "general" }: VideoDownloade
           if (info.stage === "completed") {
             setIsDownloading(false);
             setIsSuccess(true);
-            confetti({ particleCount: 50, spread: 65, origin: { y: 0.85 } });
+            markToolCompleted();
           } else if (info.stage === "error") {
             setIsDownloading(false);
           }
@@ -286,24 +286,24 @@ export default function VideoDownloader({ platform = "general" }: VideoDownloade
       {/* Explains, specifically, why a given link cannot be served — instead of
           a spinner that ends in a generic failure. */}
       {blocked && (
-        <div className="rounded-2xl border border-amber-200 dark:border-amber-900/40 bg-amber-50 dark:bg-amber-950/25 p-5 space-y-3">
+        <div className="rounded-xl border p-5 space-y-3 bg-muted/30">
           <div className="flex items-start gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-muted-foreground" />
             <div className="space-y-2">
               <p className="text-sm font-semibold text-amber-900 dark:text-amber-100">
                 This link can&rsquo;t be downloaded here
               </p>
-              <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-200">
+              <p className="text-xs leading-relaxed text-muted-foreground">
                 {blocked.reason}
               </p>
               {blocked.suggestion && (
-                <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-200">
+                <p className="text-xs leading-relaxed text-muted-foreground">
                   <strong>What works instead:</strong> {blocked.suggestion}
                 </p>
               )}
             </div>
           </div>
-          <p className="text-[11px] leading-relaxed text-amber-700/90 dark:text-amber-300/80 border-t border-amber-200/70 dark:border-amber-900/40 pt-2.5">
+          <p className="text-xs leading-relaxed text-amber-700/90 dark:text-amber-300/80 border-t border-amber-200/70 dark:border-amber-900/40 pt-2.5">
             This tool works with <strong>direct media links</strong> — a URL
             ending in .mp4, .webm, .mov or .mp3. In most browsers you can
             right-click a playing video and choose &ldquo;Copy video

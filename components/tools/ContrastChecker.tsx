@@ -99,9 +99,9 @@ export default function ContrastChecker() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Color Pickers & Preview */}
         <div className="lg:col-span-6 space-y-4">
-          <div className="p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 space-y-4">
+          <div className="p-5 rounded-xl border space-y-4 bg-muted/30">
             <div className="flex items-center justify-between">
-              <h2 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+              <h2 className="text-sm text-slate-900 dark:text-white font-semibold">
                 Foreground & Background Colors
               </h2>
               <button
@@ -114,11 +114,11 @@ export default function ContrastChecker() {
 
             {/* Text / Foreground */}
             <div className="space-y-1.5">
-              <label htmlFor="fg-color-text" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label htmlFor="fg-color-text" className="text-sm font-medium text-foreground">
                 Text / Foreground Color
               </label>
               <div className="flex items-center gap-3">
-                <input
+                <input aria-label="Text colour picker"
                   type="color"
                   value={fgHex}
                   onChange={(e) => setFgHex(e.target.value.toUpperCase())}
@@ -129,18 +129,18 @@ export default function ContrastChecker() {
                   type="text"
                   value={fgHex}
                   onChange={(e) => setFgHex(e.target.value.toUpperCase())}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-mono text-xs font-bold text-slate-900 dark:text-white"
+                  className="w-full px-3 py-2 font-mono text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 />
               </div>
             </div>
 
             {/* Background */}
             <div className="space-y-1.5">
-              <label htmlFor="bg-color-text" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label htmlFor="bg-color-text" className="text-sm font-medium text-foreground">
                 Background Color
               </label>
               <div className="flex items-center gap-3">
-                <input
+                <input aria-label="Background colour picker"
                   type="color"
                   value={bgHex}
                   onChange={(e) => setBgHex(e.target.value.toUpperCase())}
@@ -151,7 +151,7 @@ export default function ContrastChecker() {
                   type="text"
                   value={bgHex}
                   onChange={(e) => setBgHex(e.target.value.toUpperCase())}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-mono text-xs font-bold text-slate-900 dark:text-white"
+                  className="w-full px-3 py-2 font-mono text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 />
               </div>
             </div>
@@ -159,10 +159,10 @@ export default function ContrastChecker() {
 
           {/* Live Preview Box */}
           <div
-            className="w-full p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-inner flex flex-col justify-center space-y-2 transition-colors min-h-[140px]"
+            className="w-full p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col justify-center space-y-2 transition-colors min-h-[140px]"
             style={{ backgroundColor: bgHex, color: fgHex }}
           >
-            <h3 className="text-lg font-bold tracking-tight">
+            <h3 className="text-lg font-semibold tracking-tight">
               Sample Heading Text (Large Text)
             </h3>
             <p className="text-sm leading-relaxed">
@@ -173,13 +173,13 @@ export default function ContrastChecker() {
 
         {/* Contrast Score & Compliance Badges */}
         <div className="lg:col-span-6 space-y-4">
-          <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-4">
+          <div className="p-6 rounded-xl border space-y-4 bg-muted/30">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                 Calculated Contrast Ratio
               </span>
               <span
-                className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                className={`px-3 py-1 rounded-full text-xs font-semibold border ${
                   passAANormal
                     ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
                     : "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800"
@@ -190,7 +190,7 @@ export default function ContrastChecker() {
             </div>
 
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white font-mono">
+              <span className="text-4xl sm:text-5xl font-semibold tracking-tight text-slate-900 dark:text-white font-mono">
                 {ratio.toFixed(2)}:1
               </span>
             </div>
@@ -208,11 +208,11 @@ export default function ContrastChecker() {
                   key={idx}
                   className="p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 flex flex-col justify-between"
                 >
-                  <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">{item.label}</span>
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{item.label}</span>
                   <div className="flex items-center justify-between mt-1.5">
-                    <span className="text-[10px] font-mono text-slate-400">{item.req}</span>
+                    <span className="text-xs font-mono text-slate-500 dark:text-slate-400">{item.req}</span>
                     <span
-                      className={`inline-flex items-center gap-0.5 text-xs font-bold ${
+                      className={`inline-flex items-center gap-0.5 text-xs font-semibold ${
                         item.pass ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
                       }`}
                     >
@@ -226,9 +226,9 @@ export default function ContrastChecker() {
           </div>
 
           {/* Color Blindness Simulation Previews */}
-          <div className="p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 space-y-2.5">
-            <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-              <Eye className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+          <div className="p-4 rounded-xl border space-y-2.5 bg-muted/30">
+            <span className="text-sm text-slate-900 dark:text-white flex items-center gap-1.5 font-semibold">
+              <Eye className="w-3.5 h-3.5 text-muted-foreground" />
               Color Blindness Previews
             </span>
             <div className="grid grid-cols-2 gap-2">
@@ -247,7 +247,7 @@ export default function ContrastChecker() {
                   }}
                 >
                   <span className="truncate">{label}</span>
-                  <span className="text-[10px] uppercase font-mono px-1 rounded bg-black/20">Preview</span>
+                  <span className="text-xs uppercase font-mono px-1 rounded bg-black/20">Preview</span>
                 </div>
               ))}
             </div>

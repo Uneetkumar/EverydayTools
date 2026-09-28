@@ -1,3 +1,14 @@
+/**
+ * The tool database — the single source of truth for every tool's name,
+ * copy, category, search terms and relationships. Search, navigation, the
+ * homepage, category pages, related tools, SEO metadata, structured data and
+ * the sitemap all read from here, so a rename happens in exactly one place.
+ *
+ * Adding a tool: add an entry to TOOL_SOURCE, long-form copy in content.ts,
+ * a component in components/tools/, and a loader in
+ * components/tool/tool-loaders.tsx.
+ */
+
 export interface ToolFaq {
   question: string;
   answer: string;
@@ -10,101 +21,199 @@ export interface ToolFormula {
   example: string;
 }
 
+export type ToolCategoryId =
+  | "calculators"
+  | "business"
+  | "date-time"
+  | "text"
+  | "developer"
+  | "image-media"
+  | "pdf-docs"
+  | "security"
+  | "ai-tools";
+
+/**
+ * Where a tool's data goes. Drives the privacy line on the tool page, so it
+ * must be accurate — a privacy claim that is not true everywhere is worth
+ * less than no claim at all.
+ * - local: everything runs in the browser; nothing is sent anywhere.
+ * - cloud-optional: on-device by default, with an opt-in cloud AI mode that
+ *   sends the input to Google Gemini.
+ * - network: needs a network service to work (see privacyNote).
+ */
+export type ToolPrivacy = "local" | "cloud-optional" | "network";
+
 export interface ToolDefinition {
   slug: string;
+  /** Precise, natural name. Used for the H1, cards and search. */
   name: string;
+  /** Compact label for chips and tight lists. */
   shortName: string;
-  category:
-    | "calculators"
-    | "business"
-    | "date-time"
-    | "text"
-    | "developer"
-    | "image-media"
-    | "pdf-docs"
-    | "security"
-    | "ai-tools";
+  /** One line, under ~80 characters: what the tool does, in plain words. */
+  tagline: string;
+  category: ToolCategoryId;
+  /** Derived from TOOL_CATEGORIES — never set per tool. */
   categoryName: string;
   description: string;
   longDescription: string;
   iconName: string;
+  privacy: ToolPrivacy;
+  privacyNote?: string;
   metaTitle: string;
   metaDescription: string;
   keywords: string[];
+  /** Everyday phrasings people type ("reduce image size"), used by search only. */
+  aliases: string[];
   features: string[];
   formulas?: ToolFormula[];
   faqs: ToolFaq[];
+  /** Similar tools. */
   relatedToolSlugs: string[];
+  /** Workflow continuation: what people usually do after this tool. */
+  nextSteps: string[];
   isPopular?: boolean;
 }
 
-export const TOOL_CATEGORIES = [
+export type ToolSource = Omit<ToolDefinition, "categoryName" | "isPopular">;
+
+export interface ToolCategory {
+  id: ToolCategoryId;
+  name: string;
+  shortName: string;
+  /** What someone can get done here, in one sentence. */
+  description: string;
+  icon: string;
+  /** Hand-picked starting points shown first on the category page. */
+  popular: string[];
+}
+
+export const TOOL_CATEGORIES: ToolCategory[] = [
   {
-    "id": "calculators",
-    "name": "Calculators & Finance",
-    "description": "Percentage, discount, EMI, GST, SIP, and salary calculators",
-    "icon": "Calculator"
+    id: "calculators",
+    name: "Calculators & Finance",
+    shortName: "Calculators",
+    description: "Work out percentages, GST, loan EMIs, SIP returns, take-home pay and unit conversions.",
+    icon: "Calculator",
+    popular: ["percentage-calculator", "gst-calculator", "emi-calculator", "discount-calculator", "salary-calculator", "currency-converter"],
   },
   {
-    "id": "date-time",
-    "name": "Date & Time",
-    "description": "Age, date differences, business days, and timezone converters",
-    "icon": "Clock"
+    id: "date-time",
+    name: "Date & Time",
+    shortName: "Date & Time",
+    description: "Find your exact age, count days or business days between dates, convert timestamps and time things.",
+    icon: "CalendarClock",
+    popular: ["age-calculator", "date-difference-calculator", "working-days-calculator", "stopwatch-timer"],
   },
   {
-    "id": "text",
-    "name": "Text & Writing",
-    "description": "Word counters, case converters, cleaners, and diff checkers",
-    "icon": "Type"
+    id: "text",
+    name: "Text & Writing",
+    shortName: "Text",
+    description: "Count words, change case, compare, sort and clean text, or dictate and listen to it.",
+    icon: "Type",
+    popular: ["word-counter", "case-converter", "text-diff-checker", "text-sorter"],
   },
   {
-    "id": "developer",
-    "name": "Developer & Data",
-    "description": "JSON formatters, Base64, JWT, UUID, URL encoders, and regex",
-    "icon": "Code"
+    id: "developer",
+    name: "Developer & Data",
+    shortName: "Developer",
+    description: "Format and validate JSON, encode Base64 and URLs, decode JWTs, test regex and convert data.",
+    icon: "Code",
+    popular: ["json-formatter", "base64-converter", "jwt-decoder", "regex-tester", "json-to-csv", "uuid-generator"],
   },
   {
-    "id": "image-media",
-    "name": "Image & Media",
-    "description": "Client-side image compressor, QR code generator, and format converter",
-    "icon": "Image"
+    id: "image-media",
+    name: "Image & Media",
+    shortName: "Images & Media",
+    description: "Compress, resize, crop and convert images, make QR codes and barcodes, and trim video.",
+    icon: "Image",
+    popular: ["image-compressor", "image-resizer", "crop-image", "qr-code-generator", "png-to-jpg", "image-to-webp"],
   },
   {
-    "id": "pdf-docs",
-    "name": "PDF & Documents",
-    "description": "Client-side PDF merge, split, and document utilities",
-    "icon": "FileText"
+    id: "pdf-docs",
+    name: "PDF & Documents",
+    shortName: "PDF",
+    description: "Edit, merge, split, rotate and convert PDFs, including PDF to Word and images to PDF.",
+    icon: "FileText",
+    popular: ["pdf-editor", "pdf-merge", "pdf-to-word", "image-to-pdf", "split-pdf", "pdf-to-jpg"],
   },
   {
-    "id": "security",
-    "name": "Security & Generators",
-    "description": "Secure password generator, hash generation, and token tools",
-    "icon": "Shield"
+    id: "security",
+    name: "Security & Generators",
+    shortName: "Security",
+    description: "Generate strong passwords and cryptographic hashes without anything leaving your device.",
+    icon: "Shield",
+    popular: ["password-generator", "hash-generator"],
   },
   {
-    "id": "business",
-    "name": "Business & Marketing",
-    "description": "Profit margins, markup, break-even, and invoice calculations",
-    "icon": "TrendingUp"
+    id: "business",
+    name: "Business & Marketing",
+    shortName: "Business",
+    description: "Price with confidence: profit margins, break-even points, ROI and campaign tracking links.",
+    icon: "Briefcase",
+    popular: ["profit-margin-calculator", "break-even-calculator", "utm-builder"],
   },
   {
-    "id": "ai-tools",
-    "name": "AI-Powered Tools",
-    "description": "AI formula explainer, text summarizer, and regex generator",
-    "icon": "Sparkles"
-  }
+    id: "ai-tools",
+    name: "AI Tools",
+    shortName: "AI",
+    description: "Summarise, rewrite and simplify text, extract keywords, explain JSON and read text in images.",
+    icon: "Sparkles",
+    popular: ["ai-text-summarizer", "image-to-text", "ai-text-rewriter", "ai-text-simplifier"],
+  },
 ];
 
-export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
+/**
+ * Curated discovery lists. Hand-picked until there is enough usage data to
+ * rank by it; order is display order.
+ */
+export const POPULAR_TOOL_SLUGS = [
+  "image-compressor",
+  "pdf-editor",
+  "percentage-calculator",
+  "pdf-merge",
+  "json-formatter",
+  "qr-code-generator",
+  "pdf-to-word",
+  "word-counter",
+  "image-resizer",
+  "gst-calculator",
+  "age-calculator",
+  "ai-text-summarizer",
+];
+
+/** Recently added. */
+export const NEW_TOOL_SLUGS = [
+  "png-to-svg",
+  "text-sorter",
+  "unit-converter",
+  "stopwatch-timer",
+  "image-to-text",
+  "calculator",
+];
+
+/** Useful tools people rarely think to look for. */
+export const HIDDEN_GEM_SLUGS = [
+  "sample-file-generator",
+  "exif-viewer",
+  "contrast-checker",
+  "cron-explainer",
+  "favicon-generator",
+  "video-cutter",
+  "utm-builder",
+  "markdown-table-generator",
+];
+
+const TOOL_SOURCE: Record<string, ToolSource> = {
   "json-formatter": {
     "slug": "json-formatter",
     "name": "JSON Formatter",
     "shortName": "JSON Formatter",
+    "tagline": "Format, validate and minify JSON with exact error locations.",
     "category": "developer",
-    "categoryName": "Developer & Data",
     "description": "Format, validate, prettify, minify, and inspect JSON payloads with real-time error detection.",
     "longDescription": "A client-side developer utility to format unreadable JSON, detect syntax mistakes with exact line diagnostics, minify data, and inspect structures securely without data leaves your browser.",
-    "iconName": "Code",
+    "iconName": "Braces",
+    "privacy": "local",
     "metaTitle": "JSON Formatter | TabBench",
     "metaDescription": "Format, validate, prettify, and minify JSON payloads in your browser. Live syntax error diagnostics with zero server upload.",
     "keywords": [
@@ -119,6 +228,14 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "json viewer",
       "clean json",
       "json repair"
+    ],
+    "aliases": [
+      "json validator",
+      "json minifier",
+      "json beautifier",
+      "pretty print json",
+      "json lint",
+      "fix json"
     ],
     "features": [
       "Prettify with 2/4 spaces or tab",
@@ -137,17 +254,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "jwt-decoder",
       "uuid-generator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "json-to-csv",
+      "json-to-typescript",
+      "ai-json-explainer",
+      "base64-converter"
+    ]
   },
   "percentage-calculator": {
     "slug": "percentage-calculator",
     "name": "Percentage Calculator",
     "shortName": "Percentage Calculator",
+    "tagline": "Find X% of Y, percentage change and percentage difference.",
     "category": "calculators",
-    "categoryName": "Calculators & Finance",
     "description": "Calculate percentages, percentage increases, decreases, and differences with instant step-by-step formulas.",
     "longDescription": "Instant math tool for students, finance managers, shoppers, and researchers. Solve X% of Y, percentage increase/decrease, and percentage difference instantly.",
     "iconName": "Percent",
+    "privacy": "local",
     "metaTitle": "Percentage Calculator | TabBench",
     "metaDescription": "Calculate percentages, percentage increases, decreases, and differences with TabBench's free calculator. Includes formulas and instant calculations.",
     "keywords": [
@@ -161,6 +284,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "percent off calculator",
       "percentage ratio",
       "calculate percent online"
+    ],
+    "aliases": [
+      "percent",
+      "percentage increase",
+      "percentage decrease",
+      "marks percentage",
+      "percent change"
     ],
     "features": [
       "X% of Y calculation",
@@ -187,17 +317,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "gst-calculator",
       "emi-calculator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "discount-calculator",
+      "gst-calculator",
+      "profit-margin-calculator",
+      "calculator"
+    ]
   },
   "word-counter": {
     "slug": "word-counter",
     "name": "Word Counter",
     "shortName": "Word Counter",
+    "tagline": "Count words, characters, sentences and reading time as you type.",
     "category": "text",
-    "categoryName": "Text & Writing",
     "description": "Count words, characters, sentences, paragraphs, and estimate reading & speaking time in real-time.",
     "longDescription": "Essential writing utility for essayists, copywriters, and social media managers. Track character limits for Twitter/X, Instagram, LinkedIn, and calculate estimated reading duration.",
-    "iconName": "FileText",
+    "iconName": "LetterText",
+    "privacy": "local",
     "metaTitle": "Word Counter | TabBench",
     "metaDescription": "Count words, characters, sentences, paragraphs, and reading time in real time. Perfect for essays, social media posts, and editorial drafts.",
     "keywords": [
@@ -211,6 +347,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "paragraph counter",
       "sentence counter",
       "speaking time calculator"
+    ],
+    "aliases": [
+      "character count",
+      "letter count",
+      "essay length",
+      "reading time",
+      "character counter"
     ],
     "features": [
       "Live words and characters counter",
@@ -229,17 +372,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "text-diff-checker",
       "password-generator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "case-converter",
+      "ai-text-summarizer",
+      "text-diff-checker",
+      "ai-keyword-extractor"
+    ]
   },
   "password-generator": {
     "slug": "password-generator",
-    "name": "Random Password Generator",
+    "name": "Password Generator",
     "shortName": "Password Generator",
+    "tagline": "Create strong random passwords with your choice of length and symbols.",
     "category": "security",
-    "categoryName": "Security & Generators",
     "description": "Generate highly secure, cryptographically random passwords with customizable length, symbols, and memorability.",
     "longDescription": "Create uncrackable, cryptographically secure passwords using standard browser Crypto APIs. Customize length, uppercase, lowercase, numbers, and special symbols.",
-    "iconName": "Shield",
+    "iconName": "KeyRound",
+    "privacy": "local",
     "metaTitle": "Random Password Generator | TabBench",
     "metaDescription": "Generate strong, cryptographically secure passwords with custom length, symbols, numbers, and strength scoring. 100% private.",
     "keywords": [
@@ -253,6 +402,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "generate password online",
       "crypto password maker",
       "secure pin generator"
+    ],
+    "aliases": [
+      "random password",
+      "strong password",
+      "pin generator",
+      "passphrase"
     ],
     "features": [
       "Cryptographically secure (window.crypto)",
@@ -271,17 +426,21 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "hash-generator",
       "base64-converter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "hash-generator",
+      "uuid-generator"
+    ]
   },
   "base64-converter": {
     "slug": "base64-converter",
-    "name": "Base64 Converter",
-    "shortName": "Base64 Converter",
+    "name": "Base64 Encoder & Decoder",
+    "shortName": "Base64",
+    "tagline": "Encode text to Base64 or decode Base64 back to readable text.",
     "category": "developer",
-    "categoryName": "Developer & Data",
     "description": "Encode text or decode Base64 strings instantly with live UTF-8 support and URL-safe mode.",
     "longDescription": "Convert plain text to Base64 and decode Base64 strings to readable UTF-8 text with instant one-click copy and error detection.",
     "iconName": "Binary",
+    "privacy": "local",
     "metaTitle": "Base64 Converter | TabBench",
     "metaDescription": "Encode text to Base64 and decode Base64 strings to UTF-8 text instantly. Supports URL-safe format and real-time live conversion.",
     "keywords": [
@@ -294,6 +453,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "utf8 base64 converter",
       "url safe base64",
       "base64 translator"
+    ],
+    "aliases": [
+      "base64 encode",
+      "base64 decode",
+      "atob",
+      "btoa"
     ],
     "features": [
       "Encode text to Base64",
@@ -312,17 +477,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "url-encoder-decoder",
       "json-formatter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "url-encoder-decoder",
+      "jwt-decoder",
+      "html-entity-converter"
+    ]
   },
   "jwt-decoder": {
     "slug": "jwt-decoder",
     "name": "JWT Decoder",
     "shortName": "JWT Decoder",
+    "tagline": "Decode a JWT's header and payload and check when it expires.",
     "category": "developer",
-    "categoryName": "Developer & Data",
     "description": "Decode JSON Web Tokens (Header, Payload, Signature) and inspect expiration timestamps safely in your browser.",
     "longDescription": "Debug JWT authentication tokens client-side. Inspect user claims, issuer, algorithm, and check whether the token is expired or valid.",
-    "iconName": "Key",
+    "iconName": "KeySquare",
+    "privacy": "local",
     "metaTitle": "JWT Decoder | TabBench",
     "metaDescription": "Decode and inspect JSON Web Tokens (JWT) headers and payloads. Check token expiration status securely with zero network transmission.",
     "keywords": [
@@ -335,6 +505,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "jwt debugger",
       "auth token viewer",
       "bearer token decoder"
+    ],
+    "aliases": [
+      "json web token",
+      "bearer token",
+      "decode token"
     ],
     "features": [
       "Decodes Header and Payload",
@@ -353,17 +528,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "uuid-generator",
       "json-formatter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "base64-converter",
+      "json-formatter",
+      "unix-timestamp-converter"
+    ]
   },
   "uuid-generator": {
     "slug": "uuid-generator",
-    "name": "UUID & GUID Generator",
+    "name": "UUID Generator",
     "shortName": "UUID Generator",
+    "tagline": "Generate random v4 UUIDs one at a time or in bulk.",
     "category": "developer",
-    "categoryName": "Developer & Data",
     "description": "Generate cryptographically secure Version 4 UUIDs (GUIDs) in bulk with uppercase, hyphen, and quote formatting.",
     "longDescription": "Generate random v4 UUIDs for database primary keys, API tokens, and unique identifiers. Bulk generation up to 100 UUIDs at once.",
     "iconName": "Hash",
+    "privacy": "local",
     "metaTitle": "UUID & GUID Generator | TabBench",
     "metaDescription": "Generate cryptographically secure Version 4 UUIDs (GUIDs) individually or in bulk. Customize hyphens, uppercase, and quote formatting.",
     "keywords": [
@@ -377,6 +557,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "random guid",
       "generate uuid v4",
       "online guid maker"
+    ],
+    "aliases": [
+      "guid",
+      "unique id",
+      "random id"
     ],
     "features": [
       "RFC 4122 compliant v4 UUIDs",
@@ -395,17 +580,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "base64-converter",
       "json-formatter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "password-generator",
+      "hash-generator",
+      "sample-file-generator"
+    ]
   },
   "url-encoder-decoder": {
     "slug": "url-encoder-decoder",
     "name": "URL Encoder & Decoder",
     "shortName": "URL Encoder & Decoder",
+    "tagline": "Percent-encode text for URLs, or decode an encoded URL.",
     "category": "developer",
-    "categoryName": "Developer & Data",
     "description": "Encode query parameters and special characters into percent-encoded URL format, or decode URLs to plain text.",
     "longDescription": "Quickly percent-encode URL strings and decode encoded URLs. Supports full URL encode and encodeURIComponent modes.",
     "iconName": "Link",
+    "privacy": "local",
     "metaTitle": "URL Encoder & Decoder | TabBench",
     "metaDescription": "Encode and decode URLs and URI query parameters using standard percent-encoding. Inspect and modify query parameters in real time.",
     "keywords": [
@@ -418,6 +608,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "decode url string",
       "url parameter decoder",
       "percent decode online"
+    ],
+    "aliases": [
+      "url encode",
+      "url decode",
+      "percent encoding",
+      "query string",
+      "uri encode"
     ],
     "features": [
       "encodeURIComponent support",
@@ -436,17 +633,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "jwt-decoder",
       "json-formatter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "utm-builder",
+      "base64-converter",
+      "slug-generator"
+    ]
   },
   "qr-code-generator": {
     "slug": "qr-code-generator",
     "name": "QR Code Generator",
     "shortName": "QR Code Generator",
+    "tagline": "Make QR codes for links, Wi-Fi, contacts and more. PNG or SVG.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Generate high-resolution custom QR codes for URLs, vCards, Wi-Fi passwords, emails, phone calls, and events. Download as PNG or SVG.",
     "longDescription": "Create clean QR codes instantly in your browser. Customize colors, error correction level, frame templates, and size. Download high-res PNG or SVG vector for print or web.",
     "iconName": "QrCode",
+    "privacy": "local",
     "metaTitle": "QR Code Generator | Free Custom QR Maker | TabBench",
     "metaDescription": "Create custom QR codes for URLs, vCards, WiFi networks, phone calls, and calendar events. Customize colors, logos, frames, and download crisp PNGs.",
     "keywords": [
@@ -460,6 +662,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "wifi qr code generator",
       "link to qr code",
       "barcode qr maker"
+    ],
+    "aliases": [
+      "qr maker",
+      "wifi qr",
+      "vcard qr",
+      "qr code for link"
     ],
     "features": [
       "URL, vCard 3.0, Wi-Fi, Phone, SMS, and Event modes",
@@ -483,17 +691,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "barcode-generator",
       "barcode-scanner"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "qr-code-scanner",
+      "barcode-generator",
+      "utm-builder",
+      "favicon-generator"
+    ]
   },
   "qr-code-scanner": {
     "slug": "qr-code-scanner",
-    "name": "QR Code Scanner & Data Extractor",
+    "name": "QR Code Scanner",
     "shortName": "QR Scanner",
+    "tagline": "Read a QR code from your camera, an image or a screenshot.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Scan QR codes from camera or upload images. Extract URLs, vCard contact cards, Wi-Fi passwords, and calendar events instantly.",
     "longDescription": "Extract and decode data from any QR code completely client-side in your browser. Scan live using your device camera, drag and drop image files, or paste screenshots from your clipboard. Automatically parses vCards, Wi-Fi networks, links, events, and plain text with 1-click export.",
     "iconName": "ScanLine",
+    "privacy": "local",
     "metaTitle": "QR Code Scanner & Data Extractor | TabBench",
     "metaDescription": "Scan and decode QR codes from camera or images client-side. Extract vCards, Wi-Fi passwords, URLs, and events with zero uploads.",
     "keywords": [
@@ -506,6 +720,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "extract vcard from qr",
       "decode wifi qr code",
       "free qr scanner"
+    ],
+    "aliases": [
+      "qr reader",
+      "scan qr",
+      "decode qr"
     ],
     "features": [
       "Live camera scanner with rear/front camera and flashlight support",
@@ -530,17 +749,21 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "barcode-scanner",
       "barcode-generator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "qr-code-generator",
+      "barcode-scanner"
+    ]
   },
   "barcode-generator": {
     "slug": "barcode-generator",
     "name": "Barcode Generator",
     "shortName": "Barcode Generator",
+    "tagline": "Create EAN, UPC, Code 128 and other barcodes for print or web.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Generate custom barcodes in Code 128, EAN-13, UPC-A, Code 39, and ITF-14 formats. Download print-ready high-res PNG or vector SVG.",
     "longDescription": "Create industry-standard barcodes directly in your browser. Supports EAN-13, UPC-A, Code 128, Code 39, ITF-14, and Pharmacode with automatic checksum computation, custom dimensions, color customization, and instant print layout.",
     "iconName": "Barcode",
+    "privacy": "local",
     "metaTitle": "Barcode Generator | Free Online Barcode Maker | TabBench",
     "metaDescription": "Create free standard barcodes online in Code 128, EAN-13, UPC, Code 39, and ITF-14. Customize size and colors, then download high-res PNG or SVG.",
     "keywords": [
@@ -552,6 +775,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "ean 13 barcode generator",
       "upc generator",
       "printable barcode maker"
+    ],
+    "aliases": [
+      "ean 13",
+      "upc",
+      "code 128",
+      "product barcode"
     ],
     "features": [
       "Supports Code 128, EAN-13, UPC-A, Code 39, ITF-14, and Pharmacode",
@@ -576,17 +805,21 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "qr-code-generator",
       "qr-code-scanner"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "barcode-scanner",
+      "qr-code-generator"
+    ]
   },
   "barcode-scanner": {
     "slug": "barcode-scanner",
-    "name": "Barcode Scanner & Reader",
+    "name": "Barcode Scanner",
     "shortName": "Barcode Scanner",
+    "tagline": "Scan product and shipping barcodes with your camera or an image.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Scan and read 1D and 2D barcodes using your camera or image uploads. Recognizes EAN-13, UPC, Code 128, Code 39, and more.",
     "longDescription": "Scan retail, shipping, and industrial barcodes client-side in real-time. Use your web camera or mobile camera, upload barcode photos, or paste from clipboard. Includes instant product lookup, audio confirmation, and batch scanning export to CSV.",
-    "iconName": "Scan",
+    "iconName": "ScanBarcode",
+    "privacy": "local",
     "metaTitle": "Barcode Scanner & Reader Online | TabBench",
     "metaDescription": "Scan 1D and 2D barcodes online using your camera or image files. Fast, private reader for EAN, UPC, Code 128, and Code 39 with batch export.",
     "keywords": [
@@ -598,6 +831,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "upc barcode scanner",
       "free barcode reader",
       "batch barcode scanner"
+    ],
+    "aliases": [
+      "barcode reader",
+      "scan barcode",
+      "ean scanner"
     ],
     "features": [
       "Live camera scanner with instant barcode symbology detection",
@@ -622,17 +860,21 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "qr-code-scanner",
       "qr-code-generator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "barcode-generator",
+      "qr-code-scanner"
+    ]
   },
   "image-compressor": {
     "slug": "image-compressor",
     "name": "Image Compressor",
     "shortName": "Image Compressor",
+    "tagline": "Shrink JPG, PNG and WebP images to a target size like 50 KB.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Compress image to exact target KB (e.g. under 50KB, 100KB, 200KB) with live quality adaptation and alerts.",
     "longDescription": "Compress JPG, PNG, and WebP images to your exact target file size in KB. Ideal for government portals, job applications, resumes, and websites with strict file size limits. 100% private in-browser compression.",
-    "iconName": "Image",
+    "iconName": "ImageMinus",
+    "privacy": "local",
     "metaTitle": "Image Compressor | TabBench",
     "metaDescription": "Compress JPEG, PNG, and WebP images directly in your browser without uploading files. Reduce file size while maintaining visual clarity.",
     "keywords": [
@@ -648,6 +890,15 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "shrink image file",
       "reduce photo size",
       "image optimizer"
+    ],
+    "aliases": [
+      "reduce image size",
+      "compress photo",
+      "image to 50kb",
+      "image to 100kb",
+      "compress jpg",
+      "image optimizer",
+      "image size"
     ],
     "features": [
       "Compress to exact KB target (e.g. 50KB, 100KB)",
@@ -666,17 +917,24 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "crop-image",
       "image-to-pdf"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "image-resizer",
+      "crop-image",
+      "image-to-webp",
+      "exif-viewer",
+      "image-to-pdf"
+    ]
   },
   "image-to-pdf": {
     "slug": "image-to-pdf",
     "name": "Image to PDF Converter",
     "shortName": "Image to PDF Converter",
+    "tagline": "Combine JPG, PNG and WebP images into a single PDF.",
     "category": "pdf-docs",
-    "categoryName": "PDF & Documents",
     "description": "Convert JPG, PNG, and WebP images into PDF documents, or extract PDF pages as high-resolution images.",
     "longDescription": "Convert multiple photos and documents into a clean multi-page PDF, or convert PDF pages into high-res JPG/PNG images client-side with zero data uploads.",
-    "iconName": "FilePlus",
+    "iconName": "FilePlus2",
+    "privacy": "local",
     "metaTitle": "Image to PDF Converter | TabBench",
     "metaDescription": "Convert JPG, PNG, and WebP images into clean, multi-page PDF documents. Reorder pages, adjust margins, and download instantly.",
     "keywords": [
@@ -690,6 +948,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "make pdf from photos",
       "scan to pdf online",
       "turn images into pdf"
+    ],
+    "aliases": [
+      "jpg to pdf",
+      "png to pdf",
+      "photos to pdf",
+      "scan to pdf"
     ],
     "features": [
       "Convert multiple images to multi-page PDF",
@@ -708,17 +972,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "pdf-merge",
       "image-compressor"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "pdf-merge",
+      "pdf-editor",
+      "add-page-numbers",
+      "image-compressor"
+    ]
   },
   "pdf-to-word": {
     "slug": "pdf-to-word",
     "name": "PDF to Word Converter",
     "shortName": "PDF to Word Converter",
+    "tagline": "Turn a PDF into an editable Word document, or Word into PDF.",
     "category": "pdf-docs",
-    "categoryName": "PDF & Documents",
     "description": "Convert PDF documents to editable Microsoft Word (.docx) files, or convert Word documents to PDF.",
     "longDescription": "Easily extract text and formatting from PDF files into editable DOCX Word files, or convert Word (.docx) documents into clean PDF files right in your browser.",
-    "iconName": "FileText",
+    "iconName": "FileType",
+    "privacy": "local",
     "metaTitle": "PDF to Word Converter | TabBench",
     "metaDescription": "Convert PDF documents to editable Word (.docx) files or Word to PDF in your browser. Fast, private conversion with no uploads.",
     "keywords": [
@@ -731,6 +1001,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "word docx to pdf",
       "extract text from pdf",
       "pdf document to word"
+    ],
+    "aliases": [
+      "pdf to docx",
+      "word to pdf",
+      "docx to pdf",
+      "pdf to doc"
     ],
     "features": [
       "Convert PDF to editable DOCX",
@@ -749,17 +1025,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "pdf-merge",
       "unlock-pdf"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "pdf-editor",
+      "pdf-merge",
+      "pdf-to-jpg",
+      "image-to-text"
+    ]
   },
   "watermark-remover": {
     "slug": "watermark-remover",
     "name": "Watermark Remover",
     "shortName": "Watermark Remover",
+    "tagline": "Erase stamps, dates and logos from photos, or add your own watermark.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Remove watermarks, logos, dates, and stamps from images using smart inpainting, or add custom watermarks.",
     "longDescription": "Clean unwanted watermarks, timestamps, and logos from photos using client-side neighbor inpainting algorithms, or protect your images by adding custom text/image watermarks.",
-    "iconName": "Sparkles",
+    "iconName": "Eraser",
+    "privacy": "local",
     "metaTitle": "Watermark Remover | TabBench",
     "metaDescription": "Erase watermarks, stamps, date logs, and unwanted objects from images client-side. Fast in-browser canvas retouching.",
     "keywords": [
@@ -772,6 +1054,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "erase date stamp image",
       "retouch photo watermark",
       "clean picture background"
+    ],
+    "aliases": [
+      "remove watermark",
+      "remove logo",
+      "erase object",
+      "add watermark"
     ],
     "features": [
       "Interactive watermark erase box",
@@ -790,17 +1078,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "crop-image",
       "png-to-jpg"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "crop-image",
+      "image-compressor",
+      "image-resizer"
+    ]
   },
   "png-to-jpg": {
     "slug": "png-to-jpg",
     "name": "PNG to JPG Converter",
     "shortName": "PNG to JPG Converter",
+    "tagline": "Convert PNG to JPG, filling transparent areas with a colour you pick.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Convert PNG images to JPG with custom background fill for transparent areas and adjustable compression quality.",
     "longDescription": "Instant format conversion from PNG to JPG. Automatically fills transparent PNG backgrounds with clean white or custom colors when saving as JPG.",
-    "iconName": "Image",
+    "iconName": "FileImage",
+    "privacy": "local",
     "metaTitle": "PNG to JPG Converter | TabBench",
     "metaDescription": "Convert PNG images to JPG format with custom background color and compression quality settings. 100% private in your browser.",
     "keywords": [
@@ -812,6 +1105,10 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "change png to jpg",
       "turn png into jpeg",
       "export png as jpg"
+    ],
+    "aliases": [
+      "png to jpeg",
+      "convert png"
     ],
     "features": [
       "PNG to JPG conversion",
@@ -831,17 +1128,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "image-compressor",
       "crop-image"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "image-compressor",
+      "image-resizer",
+      "image-to-pdf"
+    ]
   },
   "png-to-svg": {
     "slug": "png-to-svg",
     "name": "PNG to SVG Converter",
     "shortName": "PNG to SVG",
+    "tagline": "Trace a PNG or JPG into a scalable SVG vector.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Convert raster PNG images into scalable vector SVG graphics with color quantization, threshold controls, and instant code export.",
     "longDescription": "Free in-browser PNG to SVG vectorizer. Convert raster PNG, JPG, and WebP graphics into clean, infinitely scalable vector SVG paths with color clustering, monochrome silhouette tracing, and pixel art preservation.",
-    "iconName": "Image",
+    "iconName": "Layers",
+    "privacy": "local",
     "metaTitle": "Free PNG to SVG Converter - Vectorize Images",
     "metaDescription": "Convert PNG images to scalable SVG vectors online. Features color layers, monochrome silhouettes, pixel art, and instant code export.",
     "keywords": [
@@ -852,6 +1154,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "png to vector",
       "raster to vector svg",
       "free svg converter"
+    ],
+    "aliases": [
+      "vectorize",
+      "image to svg",
+      "raster to vector",
+      "trace image"
     ],
     "features": [
       "Vectorize PNG, JPG, and WebP images into scalable SVG paths",
@@ -882,17 +1190,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "image-resizer",
       "favicon-generator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "favicon-generator",
+      "image-resizer",
+      "color-converter"
+    ]
   },
   "jpg-to-png": {
     "slug": "jpg-to-png",
     "name": "JPG to PNG Converter",
     "shortName": "JPG to PNG Converter",
+    "tagline": "Convert JPG photos to lossless PNG.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Convert JPG and JPEG photos into lossless PNG format with crisp quality and zero compression artifacts.",
     "longDescription": "Convert standard JPEG and JPG photos into uncompressed PNG images. Great for graphic design, logos, and high-fidelity editing.",
-    "iconName": "Image",
+    "iconName": "FileImage",
+    "privacy": "local",
     "metaTitle": "JPG to PNG Converter | TabBench",
     "metaDescription": "Convert JPG and JPEG images to high-quality PNG format instantly. Retain maximum image clarity with client-side conversion.",
     "keywords": [
@@ -904,6 +1217,10 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "make png from jpg",
       "turn jpeg into png",
       "export jpg as png"
+    ],
+    "aliases": [
+      "jpeg to png",
+      "convert jpg"
     ],
     "features": [
       "Lossless PNG export",
@@ -923,17 +1240,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "crop-image",
       "image-compressor"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "png-to-svg",
+      "image-compressor",
+      "crop-image"
+    ]
   },
   "image-to-webp": {
     "slug": "image-to-webp",
     "name": "Image to WebP Converter",
     "shortName": "Image to WebP Converter",
+    "tagline": "Convert JPG and PNG to WebP for smaller, faster-loading images.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Convert JPG and PNG images into modern Google WebP format to reduce file sizes by 30% to 80% while retaining quality.",
     "longDescription": "Speed up your website load times and save bandwidth by converting bulky images to modern, high-efficiency WebP format.",
-    "iconName": "Image",
+    "iconName": "ImageDown",
+    "privacy": "local",
     "metaTitle": "Image to WebP Converter | TabBench",
     "metaDescription": "Convert JPG and PNG images into modern WebP format for faster web page loading. Batch conversion directly in your browser.",
     "keywords": [
@@ -945,6 +1267,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "compress to webp",
       "turn photo to webp",
       "make webp image"
+    ],
+    "aliases": [
+      "jpg to webp",
+      "png to webp",
+      "webp converter"
     ],
     "features": [
       "Convert PNG and JPG to WebP",
@@ -964,17 +1291,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "image-compressor",
       "crop-image"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "image-compressor",
+      "image-resizer",
+      "exif-viewer"
+    ]
   },
   "webp-to-jpg": {
     "slug": "webp-to-jpg",
     "name": "WebP to JPG Converter",
     "shortName": "WebP to JPG Converter",
+    "tagline": "Convert WebP images to JPG or PNG that open anywhere.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Convert WebP images into universally compatible JPG or PNG formats for easy sharing and opening on any device.",
     "longDescription": "Easily open and convert downloaded .webp images into standard JPG or PNG files that can be edited in Photoshop, Word, or shared anywhere.",
-    "iconName": "Image",
+    "iconName": "ImageUp",
+    "privacy": "local",
     "metaTitle": "WebP to JPG Converter | TabBench",
     "metaDescription": "Convert WebP images to standard JPG format for compatibility with older viewers and editors. Fast in-browser processing.",
     "keywords": [
@@ -986,6 +1318,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "open webp file",
       "turn webp into jpeg",
       "webp to png converter"
+    ],
+    "aliases": [
+      "webp to jpeg",
+      "webp to png",
+      "open webp"
     ],
     "features": [
       "Convert WebP to JPG & PNG",
@@ -1005,17 +1342,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "jpg-to-png",
       "crop-image"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "image-compressor",
+      "image-resizer",
+      "crop-image"
+    ]
   },
   "unlock-pdf": {
     "slug": "unlock-pdf",
     "name": "Unlock PDF",
     "shortName": "Unlock PDF",
+    "tagline": "Remove the password and print or copy restrictions from PDFs you are allowed to open.",
     "category": "pdf-docs",
-    "categoryName": "PDF & Documents",
-    "description": "Reset owner print and copy restrictions on your authorized PDF files entirely in your browser.",
-    "longDescription": "Reset owner print, copy, and annotation permission flags on PDF documents you own so you can edit and print freely. 100% processed in browser memory with zero server uploads.",
-    "iconName": "Lock",
+    "description": "Make an unrestricted copy of a protected PDF you can open — no password, no print or copy restrictions — entirely in your browser.",
+    "longDescription": "Open a password-protected or restricted PDF you are entitled to use and save a copy with no password and no printing or copying restrictions. Pages are redrawn as high-resolution images, so the copy looks and prints the same. Everything happens in your browser; the file and password are never uploaded.",
+    "iconName": "LockOpen",
+    "privacy": "local",
     "metaTitle": "Unlock PDF - Reset Permissions",
     "metaDescription": "Reset owner print and copy permissions on your authorized PDF documents safely in your browser. Client-side processing with zero server uploads.",
     "keywords": [
@@ -1026,16 +1368,21 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "unlock owner pdf online",
       "remove edit lock from pdf"
     ],
+    "aliases": [
+      "remove pdf password",
+      "pdf permissions",
+      "decrypt pdf"
+    ],
     "features": [
-      "Reset print and copy restrictions",
-      "Decrypt with authorized password",
-      "Zero server upload",
-      "Instant unrestricted PDF download"
+      "Removes print and copy restrictions",
+      "Opens password-protected PDFs with your password",
+      "Tells you when a PDF isn't locked at all",
+      "File and password never uploaded"
     ],
     "faqs": [
       {
         "question": "Can it unlock password-protected files?",
-        "answer": "Yes. For user-encrypted PDFs you own, enter the password once to decrypt and save a permanently unrestricted copy."
+        "answer": "Yes, if you know the password. Enter it once and the tool saves a copy with no password or restrictions. The copy stores each page as a high-resolution image, so it looks and prints the same but its text is not selectable."
       }
     ],
     "relatedToolSlugs": [
@@ -1043,17 +1390,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "pdf-to-word",
       "image-to-pdf"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "pdf-editor",
+      "pdf-to-word",
+      "pdf-merge"
+    ]
   },
   "crop-image": {
     "slug": "crop-image",
     "name": "Crop Image",
     "shortName": "Crop Image",
+    "tagline": "Crop to 1:1, 16:9, 9:16 or any custom size.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Crop photos to custom dimensions or standard aspect ratios (1:1, 16:9, 4:3, 9:16 Story) with live preview.",
     "longDescription": "Crop, frame, and resize your images for Instagram posts, YouTube thumbnails, profile pictures, and banners with precise pixel controls.",
     "iconName": "Crop",
+    "privacy": "local",
     "metaTitle": "Crop Image | TabBench",
     "metaDescription": "Crop photos and graphics to custom dimensions or standard aspect ratios (16:9, 4:3, 1:1). Download crisp cropped images with zero upload.",
     "keywords": [
@@ -1067,6 +1419,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "crop 16:9 banner",
       "trim image borders",
       "resize and crop photo"
+    ],
+    "aliases": [
+      "image cropper",
+      "cut image",
+      "trim photo",
+      "square crop",
+      "profile picture"
     ],
     "features": [
       "Presets for 1:1, 16:9, 4:3, 9:16 Story",
@@ -1085,17 +1444,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "watermark-remover",
       "png-to-jpg"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "image-resizer",
+      "image-compressor",
+      "favicon-generator",
+      "watermark-remover"
+    ]
   },
   "pdf-merge": {
     "slug": "pdf-merge",
     "name": "Merge PDF",
     "shortName": "Merge PDF",
+    "tagline": "Combine several PDFs into one file, in the order you choose.",
     "category": "pdf-docs",
-    "categoryName": "PDF & Documents",
     "description": "Combine multiple PDF documents into a single organized PDF file entirely client-side in your browser.",
     "longDescription": "Merge multiple PDF files securely in your browser using pdf-lib. Reorder files, remove unwanted pages, and download the combined PDF with zero server upload.",
-    "iconName": "FilePlus",
+    "iconName": "Combine",
+    "privacy": "local",
     "metaTitle": "Merge PDF | TabBench",
     "metaDescription": "Merge and combine multiple PDF documents into a single organized file. Reorder pages and files with client-side processing.",
     "keywords": [
@@ -1108,6 +1473,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "attach pdfs together",
       "combine multiple pdfs into one",
       "merge pdf documents online"
+    ],
+    "aliases": [
+      "combine pdf",
+      "join pdf",
+      "pdf joiner",
+      "merge pdf files"
     ],
     "features": [
       "Merge multiple PDFs",
@@ -1126,17 +1497,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "image-compressor",
       "qr-code-generator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "add-page-numbers",
+      "split-pdf",
+      "pdf-editor",
+      "pdf-compressor"
+    ]
   },
   "pdf-compressor": {
     "slug": "pdf-compressor",
-    "name": "PDF Page Counter & Inspector",
+    "name": "PDF Inspector",
     "shortName": "PDF Inspector",
+    "tagline": "Count a PDF's pages and see its sizes, metadata, encryption and what makes it large.",
     "category": "pdf-docs",
-    "categoryName": "PDF & Documents",
-    "description": "Inspect PDF metadata, count pages, analyze embedded objects, and reduce document overhead.",
-    "longDescription": "Analyze PDF documents, verify page dimensions, check encryption status, and optimize document structure client-side.",
-    "iconName": "FileCheck",
+    "description": "Count a PDF's pages and see its page sizes, document properties, encryption, form fields, and how much of the file is images and fonts.",
+    "longDescription": "See what is inside a PDF before you send or shrink it: page count and paper sizes, title, author and other properties, PDF version, encryption, form fields, and whether images or embedded fonts make the file large. The file is read in your browser and never uploaded.",
+    "iconName": "FileSearch",
+    "privacy": "local",
     "metaTitle": "PDF Page Counter & Inspector | TabBench",
     "metaDescription": "Inspect PDF files, count pages, view document metadata, and learn practical steps to reduce PDF file size safely.",
     "keywords": [
@@ -1150,11 +1527,18 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "view pdf properties",
       "inspect pdf document"
     ],
+    "aliases": [
+      "pdf page count",
+      "count pdf pages",
+      "pdf info",
+      "pdf metadata",
+      "pdf properties"
+    ],
     "features": [
-      "Page count detection",
-      "File size breakdown",
-      "Document metadata viewer",
-      "100% private"
+      "Page count and paper sizes",
+      "Title, author, producer and dates",
+      "Encryption and form field check",
+      "Image and font size breakdown"
     ],
     "faqs": [
       {
@@ -1167,17 +1551,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "image-compressor",
       "word-counter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "pdf-merge",
+      "split-pdf",
+      "pdf-editor"
+    ]
   },
   "age-calculator": {
     "slug": "age-calculator",
     "name": "Age Calculator",
     "shortName": "Age Calculator",
+    "tagline": "Your exact age in years, months and days, plus your next birthday.",
     "category": "date-time",
-    "categoryName": "Date & Time",
     "description": "Calculate your exact age in years, months, weeks, days, hours, and minutes, plus next birthday countdown.",
     "longDescription": "Find out your exact age to the day and minute. View interesting milestones like days lived, total breaths, total heartbeats, and days until your next birthday.",
-    "iconName": "Calendar",
+    "iconName": "Cake",
+    "privacy": "local",
     "metaTitle": "Age Calculator | TabBench",
     "metaDescription": "Calculate your exact age in years, months, weeks, days, hours, and minutes from your date of birth. Accurate with leap-year handling.",
     "keywords": [
@@ -1190,6 +1579,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "how old am i",
       "dob calculator online",
       "date of birth age"
+    ],
+    "aliases": [
+      "how old am i",
+      "date of birth",
+      "dob",
+      "birthday",
+      "date"
     ],
     "features": [
       "Exact age in Years, Months, Days",
@@ -1216,17 +1612,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "percentage-calculator",
       "emi-calculator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "date-difference-calculator",
+      "working-days-calculator",
+      "bmi-calculator"
+    ]
   },
   "gst-calculator": {
     "slug": "gst-calculator",
     "name": "GST Calculator",
     "shortName": "GST Calculator",
+    "tagline": "Add or remove GST at 5%, 18% or 40%, with the CGST/SGST or IGST split.",
     "category": "calculators",
-    "categoryName": "Calculators & Finance",
-    "description": "Calculate GST (Goods & Services Tax) easily: Add GST to base amount or Reverse GST (extract tax from total) with standard 5%, 12%, 18%, 28% slabs.",
+    "description": "Calculate GST (Goods & Services Tax) easily: Add GST to base amount or Reverse GST (extract tax from total) at the current 5%, 18% and 40% rates or any custom rate.",
     "longDescription": "Calculate inclusive and exclusive GST amounts in seconds. Determine CGST, SGST, IGST tax breakdown and find net pricing.",
     "iconName": "Receipt",
+    "privacy": "local",
     "metaTitle": "GST Calculator | TabBench",
     "metaDescription": "Calculate GST amounts instantly with inclusive and exclusive tax rates. View clear CGST, SGST, and IGST breakdowns directly in your browser.",
     "keywords": [
@@ -1240,9 +1641,16 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "goods and services tax calculator",
       "tax calculator india"
     ],
+    "aliases": [
+      "gst inclusive",
+      "gst exclusive",
+      "reverse gst",
+      "tax",
+      "vat"
+    ],
     "features": [
       "Add GST & Remove GST modes",
-      "Standard slabs: 5%, 12%, 18%, 28%",
+      "Current slabs: 5%, 18%, 40% (and 3% on gold)",
       "CGST and SGST split breakdown",
       "One-click copy"
     ],
@@ -1271,17 +1679,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "discount-calculator",
       "emi-calculator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "discount-calculator",
+      "profit-margin-calculator",
+      "percentage-calculator"
+    ]
   },
   "emi-calculator": {
     "slug": "emi-calculator",
     "name": "EMI Calculator",
     "shortName": "EMI Calculator",
+    "tagline": "Monthly EMI, total interest and repayment schedule for any loan.",
     "category": "calculators",
-    "categoryName": "Calculators & Finance",
     "description": "Calculate equated monthly installments (EMI) for home loans, car loans, and personal loans with total interest and amortization charts.",
     "longDescription": "Plan your loan repayment with our loan EMI calculator. Calculate monthly payments, total interest payable, and total cost of loan with interactive tenure sliders.",
-    "iconName": "TrendingUp",
+    "iconName": "Landmark",
+    "privacy": "local",
     "metaTitle": "EMI Calculator | TabBench",
     "metaDescription": "Calculate your monthly loan EMI, total payable interest, and amortization schedule instantly. Fast, accurate, and completely private.",
     "keywords": [
@@ -1294,6 +1707,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "housing loan emi",
       "loan interest calculator",
       "monthly installment calculator"
+    ],
+    "aliases": [
+      "loan calculator",
+      "home loan",
+      "car loan",
+      "mortgage",
+      "installment"
     ],
     "features": [
       "Monthly EMI calculation",
@@ -1320,17 +1740,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "profit-margin-calculator",
       "percentage-calculator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "compound-interest-calculator",
+      "sip-calculator",
+      "salary-calculator"
+    ]
   },
   "discount-calculator": {
     "slug": "discount-calculator",
     "name": "Discount Calculator",
     "shortName": "Discount Calculator",
+    "tagline": "Sale price and savings, including stacked discounts and coupons.",
     "category": "calculators",
-    "categoryName": "Calculators & Finance",
     "description": "Calculate final sale price, discount amount saved, and double discount / stackable coupon savings instantly.",
     "longDescription": "Find out how much you save during sales and clearance events. Calculate percentage discounts, fixed cash discounts, and additional coupon codes.",
     "iconName": "Tag",
+    "privacy": "local",
     "metaTitle": "Discount Calculator | TabBench",
     "metaDescription": "Calculate sale prices, percentage discounts, and stacked savings instantly. See exact savings and final prices with zero calculation errors.",
     "keywords": [
@@ -1343,6 +1768,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "coupon discount calculator",
       "clearance sale price",
       "how much will i save"
+    ],
+    "aliases": [
+      "percent off",
+      "sale price",
+      "coupon"
     ],
     "features": [
       "Percent off and fixed amount discount",
@@ -1368,17 +1798,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "percentage-calculator",
       "gst-calculator",
       "profit-margin-calculator"
+    ],
+    "nextSteps": [
+      "percentage-calculator",
+      "gst-calculator",
+      "profit-margin-calculator"
     ]
   },
   "profit-margin-calculator": {
     "slug": "profit-margin-calculator",
     "name": "Profit Margin Calculator",
     "shortName": "Profit Margin Calculator",
+    "tagline": "Margin, markup and the selling price you need to hit a target.",
     "category": "business",
-    "categoryName": "Business & Marketing",
     "description": "Calculate gross profit margin, markup percentage, revenue, and cost price with clear visual breakdowns.",
     "longDescription": "Optimize your product pricing, ecommerce stores, and quotes. Understand the crucial mathematical difference between Margin and Markup.",
-    "iconName": "TrendingUp",
+    "iconName": "BadgePercent",
+    "privacy": "local",
     "metaTitle": "Profit Margin Calculator | TabBench",
     "metaDescription": "Calculate profit margins, markup percentages, gross profit, and required selling prices with instant formulas and visual breakdowns.",
     "keywords": [
@@ -1391,6 +1827,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "cost price markup",
       "ecommerce margin calculator",
       "net profit calculator"
+    ],
+    "aliases": [
+      "markup",
+      "gross margin",
+      "selling price"
     ],
     "features": [
       "Gross Margin & Markup calculation",
@@ -1415,17 +1856,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "percentage-calculator",
       "discount-calculator",
       "gst-calculator"
+    ],
+    "nextSteps": [
+      "break-even-calculator",
+      "gst-calculator",
+      "discount-calculator"
     ]
   },
   "case-converter": {
     "slug": "case-converter",
     "name": "Case Converter",
     "shortName": "Case Converter",
+    "tagline": "Switch text to UPPER, lower, Title, camelCase, snake_case and more.",
     "category": "text",
-    "categoryName": "Text & Writing",
     "description": "Convert text between UPPERCASE, lowercase, Title Case, camelCase, snake_case, kebab-case, clean spaces, and count words.",
     "longDescription": "Manipulate and format text in your browser. Clean messy copy, format code identifiers, strip redundant spaces, and capitalize headings.",
-    "iconName": "Type",
+    "iconName": "CaseSensitive",
+    "privacy": "local",
     "metaTitle": "Case Converter | TabBench",
     "metaDescription": "Convert text between UPPERCASE, lowercase, Title Case, camelCase, snake_case, and kebab-case instantly. Fast, clean formatting in your browser.",
     "keywords": [
@@ -1439,6 +1886,14 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "capital to small text",
       "sentence case online",
       "format text case"
+    ],
+    "aliases": [
+      "uppercase",
+      "lowercase",
+      "title case",
+      "sentence case",
+      "camelcase",
+      "snake case"
     ],
     "features": [
       "UPPERCASE, lowercase, Title Case, Sentence case",
@@ -1455,17 +1910,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "word-counter",
       "text-diff-checker",
       "json-formatter"
+    ],
+    "nextSteps": [
+      "word-counter",
+      "text-sorter",
+      "slug-generator"
     ]
   },
   "date-difference-calculator": {
     "slug": "date-difference-calculator",
     "name": "Date Difference Calculator",
     "shortName": "Date Difference Calculator",
+    "tagline": "Days, weeks and months between two dates, or add time to a date.",
     "category": "date-time",
-    "categoryName": "Date & Time",
     "description": "Calculate exact days, business days, weeks, months, and years between two dates or add/subtract time from a date.",
     "longDescription": "Calculate calendar days, working/business days, and time intervals between any two dates. Plan deadlines or add/subtract days from today.",
-    "iconName": "Clock",
+    "iconName": "CalendarRange",
+    "privacy": "local",
     "metaTitle": "Date Difference Calculator | TabBench",
     "metaDescription": "Calculate the exact number of days, weeks, months, and business days between two dates. Fast, accurate calendar arithmetic in your browser.",
     "keywords": [
@@ -1479,6 +1940,15 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "weeks between dates",
       "date interval calculator",
       "calendar days calculator"
+    ],
+    "aliases": [
+      "days between dates",
+      "date calculator",
+      "days until",
+      "countdown",
+      "add days",
+      "time difference",
+      "date"
     ],
     "features": [
       "Total calendar days",
@@ -1495,17 +1965,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "age-calculator",
       "percentage-calculator",
       "emi-calculator"
+    ],
+    "nextSteps": [
+      "working-days-calculator",
+      "age-calculator",
+      "unix-timestamp-converter"
     ]
   },
   "image-to-text": {
     "slug": "image-to-text",
     "name": "Image to Text (OCR)",
     "shortName": "Image to Text",
+    "tagline": "Copy text out of screenshots, scans and photos (OCR).",
     "category": "ai-tools",
-    "categoryName": "AI Tools",
     "description": "Extract text from screenshots, scans and photos. Runs on your device, with an optional AI mode for handwriting.",
     "longDescription": "Read the text out of any image and get it back as editable, copyable text. The default recogniser runs entirely in your browser, so the image is never uploaded. An optional AI mode handles handwriting, tables and non-English scripts that on-device OCR cannot.",
     "iconName": "ScanText",
+    "privacy": "cloud-optional",
     "metaTitle": "Image to Text (OCR) | TabBench",
     "metaDescription": "Extract text from an image free. Runs in your browser so nothing is uploaded, with an optional AI mode for handwriting, tables and other scripts.",
     "keywords": [
@@ -1519,6 +1995,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "handwriting to text",
       "jpg to text",
       "png to text"
+    ],
+    "aliases": [
+      "ocr",
+      "extract text from image",
+      "picture to text",
+      "scan text",
+      "screenshot to text"
     ],
     "features": [
       "On-device OCR so the image never leaves your browser",
@@ -1545,17 +2028,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "crop-image",
       "image-compressor"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "ai-text-summarizer",
+      "word-counter",
+      "pdf-to-word"
+    ]
   },
   "hash-generator": {
     "slug": "hash-generator",
     "name": "Hash Generator",
     "shortName": "Hash Generator",
+    "tagline": "Create MD5, SHA-1, SHA-256 and SHA-512 hashes of any text.",
     "category": "security",
-    "categoryName": "Security & Generators",
     "description": "Generate MD5, SHA-1, SHA-256, and SHA-512 cryptographic hashes client-side in real-time.",
     "longDescription": "Compute secure cryptographic checksums and hashes for text strings using standard cryptographic algorithms right in your browser.",
-    "iconName": "Lock",
+    "iconName": "Fingerprint",
+    "privacy": "local",
     "metaTitle": "Hash Generator | TabBench",
     "metaDescription": "Generate cryptographic MD5, SHA-1, SHA-256, and SHA-512 hashes instantly in your browser. Secure, fast, and private client-side hashing.",
     "keywords": [
@@ -1569,6 +2057,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "sha512 checksum",
       "sha1 generator",
       "crypto hash maker"
+    ],
+    "aliases": [
+      "md5",
+      "sha256",
+      "sha1",
+      "checksum"
     ],
     "features": [
       "MD5, SHA-1, SHA-256, SHA-512 algorithms",
@@ -1586,17 +2080,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "password-generator",
       "base64-converter",
       "uuid-generator"
+    ],
+    "nextSteps": [
+      "password-generator",
+      "base64-converter"
     ]
   },
   "text-diff-checker": {
     "slug": "text-diff-checker",
     "name": "Text Diff Checker",
     "shortName": "Text Diff Checker",
+    "tagline": "Compare two texts and see exactly what was added or removed.",
     "category": "text",
-    "categoryName": "Text & Writing",
     "description": "Compare two text snippets side-by-side to highlight additions, deletions, and line-by-line differences.",
     "longDescription": "Find differences between two versions of text, code, or documentation. Visual line-by-line comparison highlighting exact edits.",
-    "iconName": "GitCompare",
+    "iconName": "GitCompareArrows",
+    "privacy": "local",
     "metaTitle": "Text Diff Checker | TabBench",
     "metaDescription": "Compare two blocks of text side by side to find differences, added words, and removed lines. Private, instant in-browser comparison.",
     "keywords": [
@@ -1610,6 +2109,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "text difference finder",
       "diff tool online"
     ],
+    "aliases": [
+      "compare text",
+      "diff",
+      "difference",
+      "text compare"
+    ],
     "features": [
       "Side-by-side or unified diff view",
       "Added and deleted line highlights",
@@ -1619,24 +2124,30 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
     "faqs": [
       {
         "question": "How does the diff algorithm work?",
-        "answer": "Compares lines sequentially to detect additions, deletions, and modifications."
+        "answer": "It uses the Myers difference algorithm — the one behind git diff — to find the smallest set of added and removed lines. Lines that were edited rather than wholly added or removed are shown side by side with the changed words highlighted."
       }
     ],
     "relatedToolSlugs": [
       "word-counter",
       "case-converter",
       "json-formatter"
+    ],
+    "nextSteps": [
+      "word-counter",
+      "case-converter",
+      "text-sorter"
     ]
   },
   "ai-explainer": {
     "slug": "ai-explainer",
     "name": "AI Formula Explainer",
     "shortName": "AI Formula Explainer",
+    "tagline": "Plain-English explanations of formulas, calculations and code.",
     "category": "ai-tools",
-    "categoryName": "AI-Powered Tools",
     "description": "Get instant, plain-English explanations for complex formulas, financial calculations, regex patterns, or code snippets.",
     "longDescription": "An intelligent educational explainer that demystifies mathematical formulas, financial metrics, regex expressions, and code structures.",
-    "iconName": "Sparkles",
+    "iconName": "Sigma",
+    "privacy": "cloud-optional",
     "metaTitle": "AI Formula Explainer | TabBench",
     "metaDescription": "Understand math formulas, financial metrics, code logic, and regex in plain English with instant AI-powered explanations.",
     "keywords": [
@@ -1651,6 +2162,10 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "ai code breakdown",
       "plain english formula assistant",
       "ai math demo"
+    ],
+    "aliases": [
+      "explain formula",
+      "explain code"
     ],
     "features": [
       "Plain English math breakdowns",
@@ -1668,17 +2183,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "percentage-calculator",
       "profit-margin-calculator",
       "json-formatter"
+    ],
+    "nextSteps": [
+      "percentage-calculator",
+      "regex-tester",
+      "ai-json-explainer"
     ]
   },
   "split-pdf": {
     "slug": "split-pdf",
     "name": "Split PDF",
     "shortName": "Split PDF",
+    "tagline": "Pull out specific pages or page ranges into a new PDF.",
     "category": "pdf-docs",
-    "categoryName": "PDF & Documents",
     "description": "Extract specific pages or page ranges from a PDF into a new document, entirely in your browser.",
     "longDescription": "Pull selected pages out of a PDF into a new file using simple range syntax like 1-3, 5, 8-10. Runs client-side with pdf-lib, so contracts and statements are never uploaded.",
-    "iconName": "Scissors",
+    "iconName": "Split",
+    "privacy": "local",
     "metaTitle": "Split PDF | TabBench",
     "metaDescription": "Split PDF files and extract specific pages or custom page ranges into new documents. Fast, secure, and processed in your browser.",
     "keywords": [
@@ -1691,6 +2212,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "save specific pages from pdf",
       "separate pdf document",
       "divide pdf online"
+    ],
+    "aliases": [
+      "extract pages",
+      "separate pdf",
+      "pdf splitter",
+      "remove pages"
     ],
     "features": [
       "Range syntax like 1-3, 5, 8-10",
@@ -1709,17 +2236,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "rotate-pdf",
       "pdf-to-jpg"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "pdf-merge",
+      "rotate-pdf",
+      "pdf-to-jpg",
+      "add-page-numbers"
+    ]
   },
   "pdf-to-jpg": {
     "slug": "pdf-to-jpg",
     "name": "PDF to JPG Converter",
     "shortName": "PDF to JPG Converter",
+    "tagline": "Save every PDF page as a JPG or PNG image.",
     "category": "pdf-docs",
-    "categoryName": "PDF & Documents",
     "description": "Render every page of a PDF as a JPG or PNG image and download them individually or as a ZIP.",
     "longDescription": "Convert PDF pages into images at your chosen resolution using pdf.js. Download single pages or the whole document as a ZIP archive, with all rendering done inside your browser.",
-    "iconName": "Image",
+    "iconName": "FileImage",
+    "privacy": "local",
     "metaTitle": "PDF to JPG Converter | TabBench",
     "metaDescription": "Convert PDF pages into high-resolution JPG or PNG images (up to 288 DPI). Download individual pages or a ZIP archive.",
     "keywords": [
@@ -1733,6 +2266,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "pdf pages to png",
       "save pdf as photos",
       "pdf to image high res"
+    ],
+    "aliases": [
+      "pdf to image",
+      "pdf to png",
+      "pdf pages to images"
     ],
     "features": [
       "JPG or PNG output",
@@ -1751,17 +2289,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "split-pdf",
       "image-compressor"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "image-compressor",
+      "image-to-pdf",
+      "split-pdf"
+    ]
   },
   "rotate-pdf": {
     "slug": "rotate-pdf",
     "name": "Rotate PDF",
     "shortName": "Rotate PDF",
+    "tagline": "Turn PDF pages 90°, 180° or 270° and save the fixed file.",
     "category": "pdf-docs",
-    "categoryName": "PDF & Documents",
     "description": "Rotate every page of a PDF by 90, 180, or 270 degrees and save the corrected document.",
     "longDescription": "Fix sideways or upside-down scans by rotating PDF pages. Rotation is added to any existing page rotation so already-landscape pages stay correct, and the file never leaves your browser.",
     "iconName": "RotateCw",
+    "privacy": "local",
     "metaTitle": "Rotate PDF | TabBench",
     "metaDescription": "Rotate PDF pages clockwise or counter-clockwise (90°, 180°, 270°) and save the corrected document. 100% private in-browser.",
     "keywords": [
@@ -1774,6 +2317,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "change pdf orientation",
       "permanent pdf rotation",
       "flip pdf pages"
+    ],
+    "aliases": [
+      "turn pdf",
+      "pdf orientation",
+      "rotate pages"
     ],
     "features": [
       "90, 180 or 270 degree rotation",
@@ -1791,17 +2339,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "split-pdf",
       "pdf-merge",
       "add-page-numbers"
+    ],
+    "nextSteps": [
+      "pdf-merge",
+      "add-page-numbers",
+      "split-pdf"
     ]
   },
   "add-page-numbers": {
     "slug": "add-page-numbers",
     "name": "Add Page Numbers to PDF",
     "shortName": "Add Page Numbers",
+    "tagline": "Stamp page numbers on a PDF in the position you choose.",
     "category": "pdf-docs",
-    "categoryName": "PDF & Documents",
     "description": "Stamp sequential page numbers onto a PDF with a choice of position and starting number.",
     "longDescription": "Add clean page numbers to any PDF, choosing the corner they sit in and the number to start counting from. Useful for court filings, dissertations, and any document that must be paginated.",
-    "iconName": "Hash",
+    "iconName": "ListOrdered",
+    "privacy": "local",
     "metaTitle": "Add Page Numbers to PDF | TabBench",
     "metaDescription": "Add page numbers to PDF documents with customizable placement, formatting, and starting numbers. Processed entirely in your browser.",
     "keywords": [
@@ -1814,6 +2368,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "bates numbering pdf",
       "insert page numbers into document",
       "stamp page numbers pdf"
+    ],
+    "aliases": [
+      "number pages",
+      "pdf page numbering",
+      "paginate pdf"
     ],
     "features": [
       "Bottom centre, bottom right or top right",
@@ -1831,17 +2390,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "pdf-merge",
       "split-pdf",
       "rotate-pdf"
+    ],
+    "nextSteps": [
+      "pdf-merge",
+      "pdf-editor",
+      "rotate-pdf"
     ]
   },
   "image-resizer": {
     "slug": "image-resizer",
     "name": "Image Resizer",
     "shortName": "Image Resizer",
+    "tagline": "Resize images to exact pixels or a percentage, keeping proportions.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Resize any image to exact pixel dimensions or a percentage, with aspect ratio locking.",
     "longDescription": "Change an image's pixel dimensions precisely, with an optional aspect-ratio lock and high-quality resampling. Export as JPG, PNG, or WebP without uploading anything.",
     "iconName": "Scaling",
+    "privacy": "local",
     "metaTitle": "Image Resizer | TabBench",
     "metaDescription": "Resize images by exact width/height pixels or percentage scale. Maintain aspect ratios and download optimized images instantly.",
     "keywords": [
@@ -1855,6 +2420,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "scale image dimensions",
       "photo resizer online",
       "reduce image dimensions"
+    ],
+    "aliases": [
+      "change image size",
+      "image dimensions",
+      "scale image",
+      "resize photo",
+      "image size"
     ],
     "features": [
       "Exact pixel width and height",
@@ -1873,17 +2445,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "crop-image",
       "png-to-jpg"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "image-compressor",
+      "crop-image",
+      "aspect-ratio-calculator",
+      "favicon-generator"
+    ]
   },
   "favicon-generator": {
     "slug": "favicon-generator",
     "name": "Favicon Generator",
     "shortName": "Favicon Generator",
+    "tagline": "Turn a logo into every favicon and app icon size a site needs.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Turn a logo into a full set of favicon PNGs at every size browsers and phones request.",
     "longDescription": "Generate favicons at 16px through 512px from a single logo, including the 180px Apple touch icon, packaged as a ZIP with a ready-to-paste HTML snippet and web manifest.",
-    "iconName": "Star",
+    "iconName": "AppWindow",
+    "privacy": "local",
     "metaTitle": "Favicon Generator | TabBench",
     "metaDescription": "Generate multi-size website favicons (16x16, 32x32, 48x48, 180x180) and Apple touch icons from any logo or photo in seconds.",
     "keywords": [
@@ -1897,6 +2475,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "logo to favicon",
       "ico maker",
       "website icon generator"
+    ],
+    "aliases": [
+      "favicon",
+      "site icon",
+      "apple touch icon",
+      "app icon"
     ],
     "features": [
       "Nine sizes from 16px to 512px",
@@ -1914,17 +2498,24 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "image-resizer",
       "png-to-jpg",
       "crop-image"
+    ],
+    "nextSteps": [
+      "png-to-svg",
+      "image-resizer",
+      "qr-code-generator"
     ]
   },
   "currency-converter": {
     "slug": "currency-converter",
     "name": "Currency Converter",
     "shortName": "Currency Converter",
+    "tagline": "Convert between 160+ currencies at live exchange rates.",
     "category": "calculators",
-    "categoryName": "Calculators & Finance",
     "description": "Convert dollar to rupee, rupee to dollar, and between 160+ world currencies at live mid-market exchange rates.",
     "longDescription": "Convert dollars to rupees, euros to rupees, and between more than 160 world currencies using live mid-market exchange rates, with the reverse rate and the bank margin explained alongside.",
     "iconName": "ArrowRightLeft",
+    "privacy": "network",
+    "privacyNote": "Fetches live exchange rates. The amounts you type are never sent.",
     "metaTitle": "Currency Converter | TabBench",
     "metaDescription": "Convert global currencies with live exchange rates. Compare foreign exchange values instantly across USD, EUR, GBP, INR, and 160+ currencies.",
     "keywords": [
@@ -1939,6 +2530,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "convert money online",
       "euro to inr",
       "dirham to inr"
+    ],
+    "aliases": [
+      "exchange rate",
+      "usd to inr",
+      "dollar to rupee",
+      "forex",
+      "money"
     ],
     "features": [
       "Live mid-market rates",
@@ -1957,17 +2555,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "gst-calculator",
       "discount-calculator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "percentage-calculator",
+      "gst-calculator",
+      "salary-calculator"
+    ]
   },
   "sample-file-generator": {
     "slug": "sample-file-generator",
-    "name": "Sample & Dummy File Generator",
+    "name": "Sample File Generator",
     "shortName": "Sample File Generator",
+    "tagline": "Create test images, PDFs, CSV, JSON or video at an exact file size.",
     "category": "developer",
-    "categoryName": "Developer & Data",
     "description": "Generate dummy images, PDFs, Word files, CSV, JSON, and video at an exact file size for testing uploads.",
     "longDescription": "Create placeholder files at any size you specify — sample images, PDFs, DOCX, CSV, JSON, text, and short videos — with randomised content each time. Built for testing upload limits, forms, and file handling.",
     "iconName": "Shuffle",
+    "privacy": "local",
     "metaTitle": "Sample File Generator | TabBench",
     "metaDescription": "Generate dummy files of any exact size across PDF, JPG, PNG, MP4, CSV, and JSON formats for upload and performance testing.",
     "keywords": [
@@ -1980,6 +2583,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "placeholder file generator",
       "mock file generator",
       "demo files"
+    ],
+    "aliases": [
+      "dummy file",
+      "test file",
+      "mock data",
+      "placeholder image",
+      "sample pdf"
     ],
     "features": [
       "Exact target file size",
@@ -1998,17 +2608,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "pdf-compressor",
       "json-formatter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "image-compressor",
+      "json-formatter",
+      "json-to-csv"
+    ]
   },
   "notepad": {
     "slug": "notepad",
     "name": "Online Notepad",
     "shortName": "Online Notepad",
+    "tagline": "A quick notepad that saves to your browser as you type.",
     "category": "text",
-    "categoryName": "Text & Writing",
     "description": "A distraction-free notepad that saves automatically to your browser. No account, no sync, no waiting.",
     "longDescription": "Jot notes, drafts, and snippets in a clean editor that autosaves to this browser as you type. Keep multiple notes, search across them, and export any note as a text file.",
-    "iconName": "FileText",
+    "iconName": "NotebookPen",
+    "privacy": "local",
     "metaTitle": "Online Notepad | TabBench",
     "metaDescription": "A clean, distraction-free online notepad that autosaves your notes locally. No account required, 100% private, and works offline.",
     "keywords": [
@@ -2022,6 +2637,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "temporary notes autosave",
       "jot notes online",
       "browser scratchpad"
+    ],
+    "aliases": [
+      "notes",
+      "scratchpad",
+      "text editor",
+      "write"
     ],
     "features": [
       "Autosaves as you type",
@@ -2040,17 +2661,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "case-converter",
       "text-diff-checker"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "word-counter",
+      "text-to-speech",
+      "case-converter"
+    ]
   },
   "text-to-speech": {
     "slug": "text-to-speech",
     "name": "Text to Speech",
     "shortName": "Text to Speech",
+    "tagline": "Hear any text read aloud with your device's voices.",
     "category": "text",
-    "categoryName": "Text & Writing",
     "description": "Read any text aloud using your device's own voices, with adjustable speed and pitch.",
     "longDescription": "Paste text and have it read aloud using the voices installed on your device. Adjust speed and pitch, pause and resume, and proofread by ear. Nothing is sent anywhere.",
     "iconName": "Volume2",
+    "privacy": "local",
     "metaTitle": "Text to Speech | TabBench",
     "metaDescription": "Convert written text into natural spoken audio directly in your browser. Choose system voices, adjust speed and pitch, and listen instantly.",
     "keywords": [
@@ -2064,6 +2690,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "speech synthesizer",
       "listen to article online",
       "tts voice generator"
+    ],
+    "aliases": [
+      "tts",
+      "read aloud",
+      "voice",
+      "speak text"
     ],
     "features": [
       "Uses your device's built-in voices",
@@ -2082,17 +2714,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "word-counter",
       "notepad"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "speech-to-text",
+      "notepad"
+    ]
   },
   "speech-to-text": {
     "slug": "speech-to-text",
     "name": "Speech to Text",
     "shortName": "Speech to Text",
+    "tagline": "Dictate and get an editable transcript in 14 languages.",
     "category": "text",
-    "categoryName": "Text & Writing",
     "description": "Dictate and get a live transcript you can edit, copy, or download. Supports Hindi, Tamil, and more.",
     "longDescription": "Speak and watch words appear as you talk, with support for English, Hindi, Bengali, Tamil, Telugu and more. Edit the transcript inline, then copy or download it. Note that browsers process speech in the cloud.",
     "iconName": "Mic",
+    "privacy": "network",
+    "privacyNote": "Uses your browser's speech recognition, which may process audio on your browser vendor's servers.",
     "metaTitle": "Speech to Text | TabBench",
     "metaDescription": "Dictate text and transcribe spoken voice into written text in real time. Free in-browser speech recognition with instant copying and export.",
     "keywords": [
@@ -2105,6 +2742,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "audio to text transcriber",
       "live dictation tool",
       "speech transcriber hindi english"
+    ],
+    "aliases": [
+      "dictation",
+      "voice typing",
+      "transcribe",
+      "voice to text"
     ],
     "features": [
       "Live transcript as you speak",
@@ -2123,17 +2766,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "notepad",
       "word-counter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "notepad",
+      "ai-text-summarizer",
+      "word-counter"
+    ]
   },
   "video-player": {
     "slug": "video-player",
     "name": "Video Player",
     "shortName": "Video Player",
+    "tagline": "Play MP4, WebM and MOV files from your device with speed control.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Play MP4, WebM, MOV and more straight from your device, with speed control, picture-in-picture and a playlist.",
     "longDescription": "Open any video your browser can decode and play it with full transport controls, adjustable speed, picture-in-picture and a multi-file playlist. Files play from disk and are never uploaded.",
-    "iconName": "Film",
+    "iconName": "MonitorPlay",
+    "privacy": "local",
     "metaTitle": "Video Player | TabBench",
     "metaDescription": "Play MP4, WebM, MOV, and local video files in your browser with speed controls, playlists, and picture-in-picture. Nothing uploaded.",
     "keywords": [
@@ -2146,6 +2794,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "play video in browser",
       "mov player online",
       "speed control video player"
+    ],
+    "aliases": [
+      "mp4 player",
+      "play video",
+      "media player"
     ],
     "features": [
       "Plays MP4, WebM, MOV and Ogg",
@@ -2164,17 +2817,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "video-cutter",
       "image-compressor"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "video-cutter",
+      "audio-remover",
+      "audio-player"
+    ]
   },
   "audio-player": {
     "slug": "audio-player",
     "name": "Audio Player",
     "shortName": "Audio Player",
+    "tagline": "Play MP3, WAV, FLAC and M4A files with a playlist.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Play MP3, WAV, FLAC, M4A and OGG files with a playlist and speed control, entirely in your browser.",
     "longDescription": "Open audio files from your device and play them with a queue, adjustable speed and full transport controls. Useful for reviewing recordings and lectures without installing anything.",
     "iconName": "Music",
+    "privacy": "local",
     "metaTitle": "Audio Player | TabBench",
     "metaDescription": "Play MP3, WAV, FLAC, M4A, and OGG audio files directly in your browser with playlist management and playback speed controls.",
     "keywords": [
@@ -2187,6 +2845,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "m4a player online",
       "browser music player",
       "audio speed controller"
+    ],
+    "aliases": [
+      "mp3 player",
+      "music player",
+      "play audio"
     ],
     "features": [
       "MP3, WAV, FLAC, M4A, OGG",
@@ -2204,17 +2867,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "video-player",
       "speech-to-text",
       "text-to-speech"
+    ],
+    "nextSteps": [
+      "video-player",
+      "speech-to-text"
     ]
   },
   "pdf-editor": {
     "slug": "pdf-editor",
-    "name": "PDF Editor & Form Filler",
+    "name": "PDF Editor",
     "shortName": "PDF Editor",
+    "tagline": "Edit PDF text, fill forms, add signatures and reorder pages.",
     "category": "pdf-docs",
-    "categoryName": "PDF & Documents",
     "description": "Click any text in a PDF to retype it. Fill form fields, add text or signatures, and manage pages.",
     "longDescription": "Click a word on the page and retype it — the editor finds every line of text in your PDF and lets you replace it in place, matching the original position, size and colour. Also fills real form fields, adds text, images and signatures, and reorders, rotates or deletes pages. Everything runs in your browser.",
-    "iconName": "FileText",
+    "iconName": "FilePen",
+    "privacy": "local",
     "metaTitle": "PDF Editor & Form Filler | TabBench",
     "metaDescription": "Edit PDF text, fill form fields, add annotations and signatures, and manage pages directly in your browser. No signup, zero uploads.",
     "keywords": [
@@ -2230,6 +2898,14 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "whiteout pdf",
       "redact pdf",
       "modify pdf"
+    ],
+    "aliases": [
+      "edit pdf",
+      "fill pdf form",
+      "sign pdf",
+      "pdf form filler",
+      "annotate pdf",
+      "add text to pdf"
     ],
     "features": [
       "Edit real PDF form fields",
@@ -2248,17 +2924,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "pdf-merge",
       "rotate-pdf"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "add-page-numbers",
+      "pdf-merge",
+      "split-pdf",
+      "pdf-to-word"
+    ]
   },
   "video-cutter": {
     "slug": "video-cutter",
     "name": "Video Cutter",
     "shortName": "Video Cutter",
+    "tagline": "Trim a video to a start and end point without re-encoding.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Trim a video to any start and end point without re-encoding — instant and lossless.",
     "longDescription": "Cut a clip out of any video by dragging start and end handles, then download it. The trim copies streams rather than re-encoding, so it finishes almost immediately and loses no quality.",
     "iconName": "Scissors",
+    "privacy": "local",
     "metaTitle": "Video Cutter | TabBench",
     "metaDescription": "Trim and cut video clips to any start and end timestamp without re-encoding. Lossless, instant, and runs 100% locally in your browser.",
     "keywords": [
@@ -2271,6 +2953,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "video splitter online",
       "trim mp4 without reencoding",
       "lossless video cutter"
+    ],
+    "aliases": [
+      "trim video",
+      "cut video",
+      "clip video",
+      "shorten video"
     ],
     "features": [
       "Lossless stream copy — no re-encode",
@@ -2289,17 +2977,21 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "video-player",
       "image-compressor"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "audio-remover",
+      "video-player"
+    ]
   },
   "audio-remover": {
     "slug": "audio-remover",
     "name": "Remove Audio from Video",
     "shortName": "Remove Audio from Video",
+    "tagline": "Mute a video, or extract its audio track as a separate file.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Strip the sound from a video, or pull the audio out as a separate file — both without re-encoding.",
     "longDescription": "Mute a video by removing its audio track entirely, or extract that audio as an .m4a file. Both are stream copies, so the video keeps its exact original quality and the audio keeps its original bitrate.",
     "iconName": "VolumeX",
+    "privacy": "local",
     "metaTitle": "Remove Audio from Video | TabBench",
     "metaDescription": "Mute video or extract audio tracks as separate files without re-encoding. Fast, lossless, and completely client-side.",
     "keywords": [
@@ -2312,6 +3004,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "mute mp4 file online",
       "extract m4a from video",
       "remove audio track"
+    ],
+    "aliases": [
+      "mute video",
+      "remove sound",
+      "extract audio",
+      "video to audio"
     ],
     "features": [
       "Remove the audio track entirely",
@@ -2330,17 +3028,21 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "audio-player",
       "video-player"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "video-cutter",
+      "audio-player"
+    ]
   },
   "sip-calculator": {
     "slug": "sip-calculator",
     "name": "SIP Calculator",
     "shortName": "SIP Calculator",
+    "tagline": "Project the future value of a monthly SIP investment.",
     "category": "calculators",
-    "categoryName": "Calculators & Finance",
     "description": "Calculate returns on your Systematic Investment Plan (SIP) with annual growth projections.",
     "longDescription": "Estimate your mutual fund SIP wealth growth, total invested amount, and compounding gains with instant interactive year-by-year projections.",
-    "iconName": "Calculator",
+    "iconName": "PiggyBank",
+    "privacy": "local",
     "metaTitle": "SIP Calculator | TabBench",
     "metaDescription": "Calculate mutual fund SIP returns and maturity wealth with TabBench's free calculator. Live annual compounding breakdown and visual growth charts.",
     "keywords": [
@@ -2351,6 +3053,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "sip maturity calculator",
       "monthly sip calculator",
       "calculate sip online"
+    ],
+    "aliases": [
+      "mutual fund",
+      "investment returns",
+      "systematic investment plan"
     ],
     "features": [
       "Monthly investment slider",
@@ -2377,17 +3084,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "emi-calculator",
       "percentage-calculator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "compound-interest-calculator",
+      "emi-calculator",
+      "salary-calculator"
+    ]
   },
   "compound-interest-calculator": {
     "slug": "compound-interest-calculator",
     "name": "Compound Interest Calculator",
     "shortName": "Compound Interest",
+    "tagline": "See how savings grow with compounding and regular deposits.",
     "category": "calculators",
-    "categoryName": "Calculators & Finance",
     "description": "Calculate compound interest with regular deposits, multiple compounding frequencies, and timeline breakdowns.",
     "longDescription": "Compute exact compound interest growth on initial deposits and optional monthly contributions across daily, monthly, quarterly, and annual compounding periods.",
-    "iconName": "TrendingUp",
+    "iconName": "ChartLine",
+    "privacy": "local",
     "metaTitle": "Compound Interest Calculator | TabBench",
     "metaDescription": "Calculate compound interest growth with initial deposits, monthly contributions, and flexible compounding frequencies. 100% private in-browser tool.",
     "keywords": [
@@ -2397,6 +3109,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "daily compound interest",
       "monthly compound interest",
       "savings interest calculator"
+    ],
+    "aliases": [
+      "interest calculator",
+      "savings growth",
+      "fd calculator"
     ],
     "features": [
       "Daily to annual compounding frequencies",
@@ -2423,17 +3140,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "emi-calculator",
       "percentage-calculator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "sip-calculator",
+      "emi-calculator",
+      "percentage-calculator"
+    ]
   },
   "bmi-calculator": {
     "slug": "bmi-calculator",
     "name": "BMI Calculator",
     "shortName": "BMI Calculator",
+    "tagline": "Body Mass Index, healthy weight range and WHO category.",
     "category": "calculators",
-    "categoryName": "Calculators & Finance",
     "description": "Calculate Body Mass Index (BMI), healthy weight range, and WHO classification for adults.",
     "longDescription": "Instant body mass index calculator supporting metric (cm/kg) and imperial (feet-inches/lbs) units with WHO classification categories and ideal weight ranges.",
-    "iconName": "Scale",
+    "iconName": "HeartPulse",
+    "privacy": "local",
     "metaTitle": "BMI Calculator | TabBench",
     "metaDescription": "Calculate Body Mass Index (BMI) and ideal weight range instantly. Supports metric and imperial units with WHO classification categories.",
     "keywords": [
@@ -2444,6 +3166,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "bmi chart",
       "healthy weight range",
       "bmi metric imperial"
+    ],
+    "aliases": [
+      "body mass index",
+      "healthy weight",
+      "weight calculator"
     ],
     "features": [
       "Metric (cm/kg) and Imperial (ft-in/lbs)",
@@ -2469,17 +3196,21 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "age-calculator",
       "percentage-calculator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "age-calculator",
+      "unit-converter"
+    ]
   },
   "lorem-ipsum-generator": {
     "slug": "lorem-ipsum-generator",
     "name": "Lorem Ipsum Generator",
     "shortName": "Lorem Ipsum",
+    "tagline": "Generate placeholder text by paragraphs, sentences or words.",
     "category": "text",
-    "categoryName": "Text & Writing",
     "description": "Generate clean placeholder Lorem Ipsum text by paragraphs, sentences, words, or lists.",
     "longDescription": "A lightweight placeholder text generator for web designers, developers, and typesetters with customizable paragraph counts, HTML tag options, and instant one-click copying.",
-    "iconName": "Type",
+    "iconName": "Pilcrow",
+    "privacy": "local",
     "metaTitle": "Lorem Ipsum Generator | TabBench",
     "metaDescription": "Generate placeholder Lorem Ipsum text by paragraphs, sentences, words, or lists. Includes optional HTML tags and one-click copy.",
     "keywords": [
@@ -2489,6 +3220,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "lorem ipsum",
       "latin text generator",
       "sample text generator"
+    ],
+    "aliases": [
+      "placeholder text",
+      "dummy text",
+      "filler text"
     ],
     "features": [
       "Paragraphs, sentences, words & list items",
@@ -2507,17 +3243,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "case-converter",
       "slug-generator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "word-counter",
+      "markdown-table-generator",
+      "sample-file-generator"
+    ]
   },
   "slug-generator": {
     "slug": "slug-generator",
     "name": "URL Slug Generator",
     "shortName": "Slug Generator",
+    "tagline": "Turn a title into a clean, SEO-friendly URL slug.",
     "category": "text",
-    "categoryName": "Text & Writing",
     "description": "Convert headlines and titles into clean, SEO-friendly URL slugs with customizable separators.",
     "longDescription": "Generate clean, URL-safe permalinks from any article title, product name, or headline with accent stripping, lowercase formatting, and optional stop word removal.",
-    "iconName": "Link",
+    "iconName": "Link2",
+    "privacy": "local",
     "metaTitle": "URL Slug Generator | TabBench",
     "metaDescription": "Convert headlines and titles into clean, SEO-friendly URL slugs with customizable separators, accent stripping, and lowercase formatting.",
     "keywords": [
@@ -2527,6 +3268,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "title to slug",
       "permalink generator",
       "url friendly string"
+    ],
+    "aliases": [
+      "permalink",
+      "url slug",
+      "seo url"
     ],
     "features": [
       "Hyphen, underscore, and dot separators",
@@ -2545,17 +3291,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "case-converter",
       "url-encoder-decoder"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "utm-builder",
+      "case-converter",
+      "url-encoder-decoder"
+    ]
   },
   "json-to-csv": {
     "slug": "json-to-csv",
-    "name": "JSON to CSV / CSV to JSON Converter",
+    "name": "JSON to CSV Converter",
     "shortName": "JSON to CSV",
+    "tagline": "Convert JSON arrays to CSV, and CSV back to JSON.",
     "category": "developer",
-    "categoryName": "Developer & Data",
     "description": "Convert JSON arrays to CSV spreadsheets and CSV tables back to JSON with live preview and download.",
     "longDescription": "Bidirectional converter between JSON API payloads and CSV tabular data. Handles custom delimiters, quoted text cells, instant copy, and file downloads 100% in your browser.",
     "iconName": "FileSpreadsheet",
+    "privacy": "local",
     "metaTitle": "JSON to CSV & CSV to JSON Converter | TabBench",
     "metaDescription": "Convert JSON to CSV spreadsheets and CSV to JSON arrays instantly in your browser. Supports custom delimiters, file upload, and direct download.",
     "keywords": [
@@ -2565,6 +3316,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "json to excel",
       "csv parser",
       "json converter online"
+    ],
+    "aliases": [
+      "csv to json",
+      "json to excel",
+      "spreadsheet"
     ],
     "features": [
       "Bidirectional JSON <-> CSV conversion",
@@ -2583,17 +3339,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "json-to-typescript",
       "base64-converter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "json-formatter",
+      "json-to-typescript",
+      "markdown-table-generator"
+    ]
   },
   "regex-tester": {
     "slug": "regex-tester",
-    "name": "Regex Tester & Debugger",
+    "name": "Regex Tester",
     "shortName": "Regex Tester",
+    "tagline": "Test regular expressions with live match and group highlighting.",
     "category": "developer",
-    "categoryName": "Developer & Data",
     "description": "Test regular expressions with real-time match highlighting, capture group breakdown, and flags.",
     "longDescription": "Interactive JavaScript regex testing utility with live multi-match highlighting, capture group inspection, syntax validation, and a quick cheat sheet reference.",
-    "iconName": "Code",
+    "iconName": "Regex",
+    "privacy": "local",
     "metaTitle": "Regex Tester & Debugger | TabBench",
     "metaDescription": "Test regular expressions in real-time with live match highlighting, capture groups breakdown, flag toggles, and regex cheat sheet.",
     "keywords": [
@@ -2603,6 +3364,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "javascript regex tester",
       "regex matcher",
       "regex online"
+    ],
+    "aliases": [
+      "regular expression",
+      "regexp",
+      "pattern matcher"
     ],
     "features": [
       "Live match highlighting",
@@ -2621,17 +3387,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "url-encoder-decoder",
       "cron-explainer"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "ai-explainer",
+      "text-diff-checker",
+      "cron-explainer"
+    ]
   },
   "html-entity-converter": {
     "slug": "html-entity-converter",
-    "name": "HTML Entity Encoder / Decoder",
+    "name": "HTML Entity Encoder & Decoder",
     "shortName": "HTML Entity Converter",
+    "tagline": "Escape or unescape HTML characters as named, decimal or hex entities.",
     "category": "developer",
-    "categoryName": "Developer & Data",
     "description": "Escape and unescape special HTML characters with named, decimal, and hex entity options.",
     "longDescription": "Convert reserved HTML characters into safe entities and decode encoded HTML entities back to plain text with instant live conversion.",
-    "iconName": "Code",
+    "iconName": "CodeXml",
+    "privacy": "local",
     "metaTitle": "HTML Entity Encoder & Decoder | TabBench",
     "metaDescription": "Encode reserved HTML characters to safe entities and decode HTML entities back to plain text. Supports named, decimal, and hex entities.",
     "keywords": [
@@ -2641,6 +3412,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "unescape html",
       "html entities online",
       "special characters html"
+    ],
+    "aliases": [
+      "html escape",
+      "html unescape",
+      "html encode",
+      "html decode"
     ],
     "features": [
       "Bidirectional encode and decode",
@@ -2659,17 +3436,21 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "base64-converter",
       "json-formatter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "url-encoder-decoder",
+      "base64-converter"
+    ]
   },
   "color-converter": {
     "slug": "color-converter",
-    "name": "Color Converter & Palette Generator",
+    "name": "Color Converter",
     "shortName": "Color Converter",
+    "tagline": "Convert HEX, RGB, HSL and CMYK and build matching palettes.",
     "category": "developer",
-    "categoryName": "Developer & Data",
     "description": "Convert HEX, RGB, HSL, and CMYK color codes with harmonic palette generation and WCAG contrast previews.",
     "longDescription": "Comprehensive color conversion tool for web developers and UI designers. Converts across HEX, RGB, HSL, CMYK, CSS variables, and generates harmonic color schemes.",
     "iconName": "Palette",
+    "privacy": "local",
     "metaTitle": "Color Converter & Palette Generator | TabBench",
     "metaDescription": "Convert colors between HEX, RGB, HSL, and CMYK with live preview, CSS custom properties, and complementary/triadic palette generation.",
     "keywords": [
@@ -2680,6 +3461,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "cmyk converter",
       "color palette generator",
       "css color converter"
+    ],
+    "aliases": [
+      "hex to rgb",
+      "rgb to hex",
+      "color picker",
+      "palette",
+      "colour"
     ],
     "features": [
       "HEX, RGB, HSL, CMYK & CSS variables",
@@ -2698,17 +3486,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "favicon-generator",
       "base64-converter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "contrast-checker",
+      "png-to-svg",
+      "favicon-generator"
+    ]
   },
   "salary-calculator": {
     "slug": "salary-calculator",
-    "name": "Salary / Take-Home Pay Calculator",
+    "name": "Take-Home Salary Calculator",
     "shortName": "Salary Calculator",
+    "tagline": "Estimate monthly in-hand pay from your annual CTC.",
     "category": "calculators",
-    "categoryName": "Calculators & Finance",
     "description": "Calculate monthly take-home salary from annual CTC with tax slabs, PF, and deduction breakdown.",
     "longDescription": "Break down annual compensation (CTC) into monthly in-hand take-home salary, basic pay, HRA, Provident Fund (PF), and estimated income tax deductions.",
-    "iconName": "DollarSign",
+    "iconName": "Wallet",
+    "privacy": "local",
     "metaTitle": "Salary Take-Home Pay Calculator | TabBench",
     "metaDescription": "Calculate monthly in-hand salary from annual CTC. Breakdown basic pay, HRA, Provident Fund (PF), and income tax deductions accurately.",
     "keywords": [
@@ -2719,18 +3512,24 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "salary deduction calculator",
       "net salary calculator"
     ],
+    "aliases": [
+      "ctc to in hand",
+      "take home pay",
+      "net salary",
+      "in hand salary"
+    ],
     "features": [
       "Annual CTC to monthly in-hand conversion",
       "Variable bonus percentage adjustment",
-      "Provident Fund (PF) and standard deductions",
+      "New and old regime tax at FY 2025-26 rates",
       "Detailed annual salary structure breakdown"
     ],
     "formulas": [
       {
         "name": "Take-Home Salary Formula",
-        "expression": "Net Monthly Salary = (Fixed Annual CTC - Total Annual Deductions) / 12",
-        "explanation": "Fixed compensation minus employee PF, income tax TDS, and professional tax, divided across 12 calendar months.",
-        "example": "12 LPA CTC with 10% bonus yields ~85,000 to ~88,000 monthly take-home depending on tax regime."
+        "expression": "Monthly in-hand = (Fixed CTC − Employer PF − Employee PF − Professional tax − Income tax on fixed pay) / 12",
+        "explanation": "Employer PF is part of CTC but goes to your PF account, so it is removed first. Income tax uses the FY 2025-26 slabs for the regime you choose, including the section 87A rebate and 4% cess.",
+        "example": "₹12 lakh CTC with 10% variable pay and PF at 12% of basic: fixed gross ₹10,15,200, taxable income ₹10,60,200 (below ₹12 lakh, so no tax in the new regime) → about ₹79,000 a month in hand."
       }
     ],
     "faqs": [
@@ -2744,17 +3543,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "emi-calculator",
       "percentage-calculator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "emi-calculator",
+      "sip-calculator",
+      "gst-calculator"
+    ]
   },
   "working-days-calculator": {
     "slug": "working-days-calculator",
-    "name": "Working Days & Business Days Calculator",
-    "shortName": "Working Days",
+    "name": "Business Days Calculator",
+    "shortName": "Business Days",
+    "tagline": "Count working days and hours between dates, minus weekends and holidays.",
     "category": "date-time",
-    "categoryName": "Date & Time",
     "description": "Calculate total business days and working hours between two dates excluding weekends and holidays.",
     "longDescription": "Accurately compute total working days between any two dates with customizable weekend days (Sat-Sun, Sun-only, Fri-Sat), public holiday exclusions, and working hours estimates.",
-    "iconName": "Calendar",
+    "iconName": "CalendarCheck",
+    "privacy": "local",
     "metaTitle": "Working Days & Business Days Calculator | TabBench",
     "metaDescription": "Calculate business days and working hours between dates with customizable weekend schedules and public holiday exclusions. 100% private.",
     "keywords": [
@@ -2764,6 +3568,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "days between dates excluding weekends",
       "working hours calculator",
       "business days between two dates"
+    ],
+    "aliases": [
+      "working days",
+      "workdays",
+      "business days between dates",
+      "exclude weekends",
+      "date"
     ],
     "features": [
       "Customizable weekend schedules",
@@ -2782,17 +3593,21 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "age-calculator",
       "unix-timestamp-converter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "date-difference-calculator",
+      "age-calculator"
+    ]
   },
   "unix-timestamp-converter": {
     "slug": "unix-timestamp-converter",
-    "name": "Unix Timestamp & Epoch Converter",
+    "name": "Unix Timestamp Converter",
     "shortName": "Unix Timestamp",
+    "tagline": "Convert epoch timestamps to readable dates and back.",
     "category": "date-time",
-    "categoryName": "Date & Time",
     "description": "Convert Unix epoch timestamps to human-readable UTC and local dates, with live ticking epoch clock.",
     "longDescription": "Bidirectional converter between Unix timestamps (seconds and milliseconds) and formatted UTC/local date-time strings with relative duration indicators.",
-    "iconName": "Clock",
+    "iconName": "Clock4",
+    "privacy": "local",
     "metaTitle": "Unix Timestamp & Epoch Converter | TabBench",
     "metaDescription": "Convert Unix timestamps to human-readable UTC and local dates. Live ticking current epoch clock and reverse date-to-epoch converter.",
     "keywords": [
@@ -2802,6 +3617,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "date to epoch",
       "current unix timestamp",
       "epoch time online"
+    ],
+    "aliases": [
+      "epoch converter",
+      "timestamp to date",
+      "date to timestamp",
+      "date"
     ],
     "features": [
       "Live ticking epoch timestamp clock",
@@ -2820,17 +3641,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "working-days-calculator",
       "cron-explainer"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "date-difference-calculator",
+      "cron-explainer",
+      "jwt-decoder"
+    ]
   },
   "json-to-typescript": {
     "slug": "json-to-typescript",
-    "name": "JSON to TypeScript Generator",
+    "name": "JSON to TypeScript Converter",
     "shortName": "JSON to TypeScript",
+    "tagline": "Generate TypeScript interfaces from a JSON sample.",
     "category": "developer",
-    "categoryName": "Developer & Data",
     "description": "Generate clean, typed TypeScript interfaces and type definitions from JSON API payloads.",
     "longDescription": "Instantly convert JSON objects and arrays into structured, nested TypeScript interfaces or type aliases with customizable root naming, optional properties, and readonly modifiers.",
-    "iconName": "Code",
+    "iconName": "FileCode",
+    "privacy": "local",
     "metaTitle": "JSON to TypeScript Generator | TabBench",
     "metaDescription": "Convert JSON payloads into clean, typed TypeScript interfaces and type aliases. Supports nested objects, readonly modifiers, and .ts file export.",
     "keywords": [
@@ -2840,6 +3666,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "typescript interface generator",
       "json to type",
       "generate typescript from json"
+    ],
+    "aliases": [
+      "json to ts",
+      "typescript interface",
+      "json types"
     ],
     "features": [
       "Automatic nested interface generation",
@@ -2858,17 +3689,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "json-to-csv",
       "base64-converter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "json-formatter",
+      "json-to-csv",
+      "ai-json-explainer"
+    ]
   },
   "cron-explainer": {
     "slug": "cron-explainer",
-    "name": "Cron Expression Explainer & Builder",
+    "name": "Cron Expression Explainer",
     "shortName": "Cron Explainer",
+    "tagline": "Read cron schedules in plain English and build new ones.",
     "category": "developer",
-    "categoryName": "Developer & Data",
     "description": "Translate complex cron expressions into plain English schedules and build cron strings interactively.",
     "longDescription": "Understand and debug 5-part cron syntax with clear English explanations, field breakdowns, and common schedule presets for cron jobs.",
-    "iconName": "Clock",
+    "iconName": "CalendarClock",
+    "privacy": "local",
     "metaTitle": "Cron Expression Explainer & Builder | TabBench",
     "metaDescription": "Translate cron expressions into plain English explanations. Includes 5-field syntax breakdown and common schedule presets.",
     "keywords": [
@@ -2878,6 +3714,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "cron schedule explainer",
       "crontab guru alternative",
       "explain cron syntax"
+    ],
+    "aliases": [
+      "crontab",
+      "cron schedule",
+      "cron builder"
     ],
     "features": [
       "Plain English schedule translation",
@@ -2896,17 +3737,21 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "regex-tester",
       "json-formatter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "unix-timestamp-converter",
+      "regex-tester"
+    ]
   },
   "utm-builder": {
     "slug": "utm-builder",
-    "name": "UTM Campaign Builder & Cleaner",
+    "name": "UTM Builder",
     "shortName": "UTM Builder",
+    "tagline": "Build campaign tracking links, or strip tracking from a URL.",
     "category": "business",
-    "categoryName": "Business & Marketing",
     "description": "Build marketing campaign tracking URLs and clean tracking parameters from existing links.",
     "longDescription": "Generate standardized UTM campaign tracking links for Google Analytics with utm_source, utm_medium, utm_campaign, utm_term, and utm_content. Also strips trackers for clean URLs.",
-    "iconName": "Link",
+    "iconName": "Megaphone",
+    "privacy": "local",
     "metaTitle": "UTM Campaign Builder & URL Cleaner | TabBench",
     "metaDescription": "Create Google Analytics UTM campaign tracking URLs and strip tracking parameters for clean links. Free, client-side digital marketing tool.",
     "keywords": [
@@ -2916,6 +3761,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "google analytics utm builder",
       "clean utm parameters",
       "url tracker generator"
+    ],
+    "aliases": [
+      "utm link",
+      "campaign url",
+      "utm generator",
+      "remove utm"
     ],
     "features": [
       "Complete 5-parameter UTM generator",
@@ -2934,17 +3785,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "url-encoder-decoder",
       "profit-margin-calculator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "url-encoder-decoder",
+      "qr-code-generator",
+      "slug-generator"
+    ]
   },
   "break-even-calculator": {
     "slug": "break-even-calculator",
-    "name": "Break-Even & ROI Calculator",
+    "name": "Break-Even Calculator",
     "shortName": "Break-Even Calculator",
+    "tagline": "Units and revenue needed to break even, plus projected ROI.",
     "category": "business",
-    "categoryName": "Business & Marketing",
     "description": "Calculate break-even units, break-even revenue, contribution margin, and projected ROI %.",
     "longDescription": "Analyze business profitability by calculating the exact sales volume and revenue required to cover fixed and variable costs, plus unit contribution margins.",
-    "iconName": "TrendingUp",
+    "iconName": "Target",
+    "privacy": "local",
     "metaTitle": "Break-Even & ROI Calculator | TabBench",
     "metaDescription": "Calculate business break-even sales volume, break-even revenue, unit contribution margin, and projected net profit/ROI percentage.",
     "keywords": [
@@ -2954,6 +3810,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "contribution margin calculator",
       "business roi calculator",
       "profitability analysis"
+    ],
+    "aliases": [
+      "roi calculator",
+      "contribution margin",
+      "break even point"
     ],
     "features": [
       "Break-even units and revenue calculation",
@@ -2980,17 +3841,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "discount-calculator",
       "gst-calculator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "profit-margin-calculator",
+      "gst-calculator",
+      "discount-calculator"
+    ]
   },
   "contrast-checker": {
     "slug": "contrast-checker",
-    "name": "WCAG Contrast Checker & Blindness Simulator",
+    "name": "Color Contrast Checker",
     "shortName": "Contrast Checker",
+    "tagline": "Check text and background colours against WCAG AA and AAA.",
     "category": "developer",
-    "categoryName": "Developer & Data",
     "description": "Test color contrast against WCAG 2.1 AA/AAA standards with real-time color blindness simulations.",
     "longDescription": "Ensure website accessibility by measuring exact luminance contrast ratios between text and background colors with WCAG 2.1 AA and AAA pass/fail ratings and color vision deficiency filters.",
-    "iconName": "Eye",
+    "iconName": "Contrast",
+    "privacy": "local",
     "metaTitle": "WCAG Color Contrast Checker & Blindness Simulator | TabBench",
     "metaDescription": "Check color contrast compliance against WCAG 2.1 AA/AAA standards. Includes real-time Protanopia, Deuteranopia, and Tritanopia color blindness simulation.",
     "keywords": [
@@ -3000,6 +3866,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "accessibility contrast checker",
       "color blindness simulator",
       "wcag 2.1 aa aaa"
+    ],
+    "aliases": [
+      "wcag",
+      "accessibility",
+      "a11y",
+      "color blindness",
+      "contrast ratio"
     ],
     "features": [
       "Exact WCAG 2.1 contrast ratio calculation",
@@ -3018,17 +3891,21 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "favicon-generator",
       "html-entity-converter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "color-converter",
+      "png-to-svg"
+    ]
   },
   "aspect-ratio-calculator": {
     "slug": "aspect-ratio-calculator",
-    "name": "Aspect Ratio Calculator & Resizer",
+    "name": "Aspect Ratio Calculator",
     "shortName": "Aspect Ratio Calculator",
+    "tagline": "Work out ratios like 16:9 and the matching width or height.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Calculate aspect ratios, proportional dimensions, and social media image presets.",
     "longDescription": "Find simplified aspect ratios (16:9, 4:3, 1:1, 9:16) from pixel dimensions and automatically calculate proportional width or height during media resizing.",
-    "iconName": "Monitor",
+    "iconName": "Ratio",
+    "privacy": "local",
     "metaTitle": "Aspect Ratio Calculator & Resizer | TabBench",
     "metaDescription": "Calculate aspect ratios from dimensions and resize images proportionally. Includes 16:9, 4:3, 1:1, 9:16, and social media resolution presets.",
     "keywords": [
@@ -3038,6 +3915,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "16:9 calculator",
       "proportional resize calculator",
       "dimension calculator"
+    ],
+    "aliases": [
+      "16:9",
+      "resolution",
+      "image dimensions",
+      "scale dimensions"
     ],
     "features": [
       "Exact ratio simplification (e.g. 16:9)",
@@ -3064,17 +3947,21 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "crop-image",
       "image-compressor"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "image-resizer",
+      "crop-image"
+    ]
   },
   "exif-viewer": {
     "slug": "exif-viewer",
-    "name": "EXIF & Image Metadata Viewer",
+    "name": "EXIF Metadata Viewer",
     "shortName": "EXIF Viewer",
+    "tagline": "See the camera, date and size details stored in a photo.",
     "category": "image-media",
-    "categoryName": "Image & Media",
     "description": "Inspect camera EXIF data, dimensions, ISO, and file metadata completely in your browser.",
     "longDescription": "View embedded photo metadata including camera model, dimensions, file size, modification dates, and color profiles without uploading files to any server.",
     "iconName": "Camera",
+    "privacy": "local",
     "metaTitle": "EXIF & Image Metadata Viewer | TabBench",
     "metaDescription": "Inspect photo EXIF metadata, camera info, dimensions, and file specs. 100% private client-side image analyzer.",
     "keywords": [
@@ -3084,6 +3971,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "read exif online",
       "camera metadata inspector",
       "view photo info"
+    ],
+    "aliases": [
+      "image metadata",
+      "photo info",
+      "camera data",
+      "exif data"
     ],
     "features": [
       "File size, format, and exact dimensions",
@@ -3102,17 +3995,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "image-resizer",
       "image-compressor"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "image-compressor",
+      "image-resizer",
+      "watermark-remover"
+    ]
   },
   "markdown-table-generator": {
     "slug": "markdown-table-generator",
     "name": "Markdown Table Generator",
     "shortName": "Markdown Table Generator",
+    "tagline": "Build Markdown and HTML tables in a spreadsheet-style grid.",
     "category": "developer",
-    "categoryName": "Developer & Data",
     "description": "Create and edit Markdown tables in a visual spreadsheet grid with column alignment and HTML export.",
     "longDescription": "Visual spreadsheet editor to build, customize, and export GitHub Flavored Markdown and HTML tables with cell alignment controls and row/column management.",
     "iconName": "Table",
+    "privacy": "local",
     "metaTitle": "Markdown Table Generator | TabBench",
     "metaDescription": "Create Markdown and HTML tables in an interactive visual spreadsheet editor with column alignment controls and one-click copy.",
     "keywords": [
@@ -3122,6 +4020,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "html table to markdown",
       "markdown grid editor",
       "github markdown table"
+    ],
+    "aliases": [
+      "md table",
+      "markdown",
+      "table generator",
+      "github table"
     ],
     "features": [
       "Interactive visual spreadsheet grid",
@@ -3140,17 +4044,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "notepad",
       "slug-generator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "json-to-csv",
+      "lorem-ipsum-generator",
+      "notepad"
+    ]
   },
   "ai-text-summarizer": {
     "slug": "ai-text-summarizer",
     "name": "AI Text Summarizer",
     "shortName": "AI Summarizer",
+    "tagline": "Condense long text into a short summary or key bullet points.",
     "category": "ai-tools",
-    "categoryName": "AI-Powered Tools",
     "description": "Summarize long articles, essays, reports, and documents into key takeaways with instant local processing.",
     "longDescription": "Free online AI text summarizer that reduces lengthy text into concise summaries and structured bullet points. Runs privately in your browser with zero mandatory signups.",
-    "iconName": "Sparkles",
+    "iconName": "ListCollapse",
+    "privacy": "cloud-optional",
     "metaTitle": "AI Text Summarizer | TabBench",
     "metaDescription": "Summarize long articles, essays, and documents into concise summaries and key bullet points. 100% private in-browser AI processing.",
     "keywords": [
@@ -3161,6 +4070,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "ai summary generator",
       "text condensation",
       "key points extractor"
+    ],
+    "aliases": [
+      "summarize",
+      "summary",
+      "tldr",
+      "shorten text",
+      "article summary"
     ],
     "features": [
       "Short, Medium, and Detailed summary lengths",
@@ -3184,17 +4100,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "ai-keyword-extractor",
       "word-counter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "ai-keyword-extractor",
+      "ai-text-rewriter",
+      "word-counter"
+    ]
   },
   "ai-text-rewriter": {
     "slug": "ai-text-rewriter",
     "name": "AI Text Rewriter",
     "shortName": "AI Rewriter",
+    "tagline": "Rewrite text in a professional, friendly, concise or formal tone.",
     "category": "ai-tools",
-    "categoryName": "AI-Powered Tools",
     "description": "Rewrite text in professional, friendly, concise, formal, or casual tones while preserving core meaning.",
     "longDescription": "Intelligent in-browser text rewriter and paraphrasing tool that transforms tone, polishes vocabulary, and enhances clarity with zero server costs.",
-    "iconName": "Sparkles",
+    "iconName": "PenLine",
+    "privacy": "cloud-optional",
     "metaTitle": "AI Text Rewriter | TabBench",
     "metaDescription": "Rewrite emails, essays, and text in professional, friendly, concise, or formal tones. Private client-side paraphrasing tool.",
     "keywords": [
@@ -3204,6 +4125,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "sentence rewriter free",
       "tone changer",
       "ai paraphraser"
+    ],
+    "aliases": [
+      "paraphrase",
+      "paraphraser",
+      "reword",
+      "change tone"
     ],
     "features": [
       "6 Tone styles (Professional, Friendly, Concise, Formal, Casual, Simple)",
@@ -3223,17 +4150,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "case-converter",
       "text-diff-checker"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "ai-text-simplifier",
+      "text-diff-checker",
+      "word-counter"
+    ]
   },
   "ai-text-simplifier": {
     "slug": "ai-text-simplifier",
     "name": "AI Text Simplifier",
     "shortName": "AI Simplifier",
+    "tagline": "Turn dense or technical writing into plain, easy English.",
     "category": "ai-tools",
-    "categoryName": "AI-Powered Tools",
     "description": "Translate complex jargon, legalese, and dense academic text into plain, clear 8th-grade English.",
     "longDescription": "Transform convoluted writing into clear, accessible plain English with Flesch-Kincaid readability scoring and jargon reduction.",
-    "iconName": "Sparkles",
+    "iconName": "WandSparkles",
+    "privacy": "cloud-optional",
     "metaTitle": "AI Text Simplifier | TabBench",
     "metaDescription": "Simplify legal, academic, and complex technical text into plain English. Free in-browser readability tool with instant jargon replacement.",
     "keywords": [
@@ -3243,6 +4175,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "reading level improver",
       "jargon replacer",
       "clear writing tool"
+    ],
+    "aliases": [
+      "plain english",
+      "simplify text",
+      "readability",
+      "explain simply"
     ],
     "features": [
       "Automated complex jargon replacement",
@@ -3260,17 +4198,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "ai-text-rewriter",
       "ai-text-summarizer",
       "word-counter"
+    ],
+    "nextSteps": [
+      "ai-text-summarizer",
+      "ai-text-rewriter",
+      "word-counter"
     ]
   },
   "ai-keyword-extractor": {
     "slug": "ai-keyword-extractor",
     "name": "AI Keyword Extractor",
     "shortName": "Keyword Extractor",
+    "tagline": "Pull the main keywords and key phrases out of any text.",
     "category": "ai-tools",
-    "categoryName": "AI-Powered Tools",
     "description": "Extract ranked keywords, search tags, and multi-word key phrases from articles and text.",
     "longDescription": "Analyze text to extract high-relevance search keywords, tags, and n-gram phrases for SEO, indexing, and content research.",
-    "iconName": "Sparkles",
+    "iconName": "Tags",
+    "privacy": "cloud-optional",
     "metaTitle": "AI Keyword Extractor | TabBench",
     "metaDescription": "Extract primary keywords, secondary tags, and key phrases from text in your browser. Free client-side SEO utility.",
     "keywords": [
@@ -3280,6 +4224,12 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "keyphrase extraction tool",
       "content tag finder",
       "n-gram extractor"
+    ],
+    "aliases": [
+      "keywords",
+      "tags",
+      "seo keywords",
+      "key phrases"
     ],
     "features": [
       "Ranked primary and secondary keywords",
@@ -3297,17 +4247,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "ai-text-summarizer",
       "word-counter",
       "slug-generator"
+    ],
+    "nextSteps": [
+      "slug-generator",
+      "ai-text-summarizer",
+      "word-counter"
     ]
   },
   "ai-json-explainer": {
     "slug": "ai-json-explainer",
     "name": "AI JSON Explainer",
     "shortName": "JSON Explainer",
+    "tagline": "Get a plain-English walkthrough of what a JSON payload contains.",
     "category": "ai-tools",
-    "categoryName": "AI-Powered Tools",
     "description": "Analyze and explain JSON payloads, nested schemas, data structures, and potential security issues.",
     "longDescription": "Demystify complex API responses and JSON documents with deterministic schema visualization, field explanations, and architectural insights.",
-    "iconName": "Sparkles",
+    "iconName": "TextSearch",
+    "privacy": "cloud-optional",
     "metaTitle": "AI JSON Explainer | TabBench",
     "metaDescription": "Explain JSON structures, object hierarchies, data types, and security insights in plain English. Fast, private in-browser analysis.",
     "keywords": [
@@ -3317,6 +4273,11 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "api response analyzer",
       "json structure viewer",
       "understand json format"
+    ],
+    "aliases": [
+      "explain json",
+      "json structure",
+      "json schema"
     ],
     "features": [
       "Deterministic AST structure parsing",
@@ -3334,19 +4295,25 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "json-formatter",
       "json-to-typescript",
       "json-to-csv"
+    ],
+    "nextSteps": [
+      "json-formatter",
+      "json-to-typescript",
+      "json-to-csv"
     ]
   },
   "calculator": {
     "slug": "calculator",
     "name": "Calculator",
     "shortName": "Calculator",
+    "tagline": "Standard and scientific calculator with history and keyboard input.",
     "category": "calculators",
-    "categoryName": "Calculators & Finance",
-    "description": "Realistic standard and scientific calculator with physical hardware design, tactile click feedback, paper tape history, and full keyboard shortcuts.",
-    "longDescription": "A free, private online calculator engineered to look and feel like an authentic physical desktop calculator. Featuring dual modes for everyday arithmetic and advanced scientific calculations (trigonometry, logarithms, exponents, roots, factorials), synthesized key click sounds, mobile haptics, and a continuous paper tape audit log.",
+    "description": "Standard and scientific calculator with memory keys, a calculation history and full keyboard support.",
+    "longDescription": "A free, private online calculator with two modes: Standard for everyday arithmetic, percentages, squares and roots, and Scientific for trigonometry, logarithms, powers, factorials and brackets. It keeps a history of your results, has memory keys, and works with your keyboard. Everything is calculated in your browser.",
     "iconName": "Calculator",
+    "privacy": "local",
     "metaTitle": "Free Online Calculator - Standard & Scientific",
-    "metaDescription": "Free online calculator — standard and scientific modes, paper tape history, realistic hardware UI, tactile sounds. No ads, no tracking.",
+    "metaDescription": "Free online calculator with standard and scientific modes, memory keys, calculation history and keyboard support. Runs entirely in your browser.",
     "keywords": [
       "simple calculator",
       "basic calculator",
@@ -3359,13 +4326,19 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "free math calculator",
       "calculator with history"
     ],
+    "aliases": [
+      "basic calculator",
+      "scientific calculator",
+      "math"
+    ],
     "features": [
-      "Realistic hardware casing with ambient solar panel and recessed LCD display",
-      "Dual Standard Mode and Scientific Mode with trigonometry and logarithms",
-      "Authentic tactile mechanical key click audio with sound toggle and mobile haptics",
-      "Continuous paper tape calculation history with 1-click answer recall and copy",
-      "Complete physical keyboard and numpad support with visual key glow",
-      "100% client-side computation with zero tracking or external server requests"
+      "Standard mode with percent, reciprocal, square and square root keys",
+      "Scientific mode with trigonometry (degrees or radians), logarithms, powers, factorials and brackets",
+      "Calculation history: select any past result to use it again",
+      "Memory keys (MC, MR, M+, M−, MS)",
+      "Full keyboard and numpad support; Ctrl/Cmd+C copies the result",
+      "Optional key sounds, off by default",
+      "Calculations run in your browser; nothing is sent to a server"
     ],
     "formulas": [
       {
@@ -3388,7 +4361,7 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       },
       {
         "question": "Does this calculator save my calculations?",
-        "answer": "Yes. Every calculation is continuously logged in the Paper Tape Audit Drawer. You can review past calculations, click any previous answer to reuse it in your current equation, or clear the tape whenever you choose."
+        "answer": "Yes. Each result you get with = is added to the History panel. Select a past result to use it in your next calculation, or clear the history at any time. It is kept in this browser for three days."
       },
       {
         "question": "Is my data private?",
@@ -3396,7 +4369,7 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       },
       {
         "question": "How do I switch between Standard and Scientific modes?",
-        "answer": "Use the mode toggle button at the top of the calculator. Standard mode offers a clean 4-operation layout for quick everyday math, while Scientific mode adds trigonometry (sin, cos, tan), natural logarithms (ln), powers (xʸ), square roots, factorials, and constants (π, e)."
+        "answer": "Use the Standard / Scientific switch above the calculator. Standard mode covers everyday arithmetic, percent, squares and square roots; Scientific mode adds trigonometry (sin, cos, tan and their inverses), logarithms (ln, log), powers (xʸ), cubes and cube roots, factorials, brackets and the constants π and e."
       }
     ],
     "relatedToolSlugs": [
@@ -3405,18 +4378,23 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "discount-calculator",
       "emi-calculator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "percentage-calculator",
+      "unit-converter",
+      "discount-calculator"
+    ]
   },
   "unit-converter": {
     "slug": "unit-converter",
-    "name": "Universal Unit Converter",
+    "name": "Unit Converter",
     "shortName": "Unit Converter",
+    "tagline": "Convert length, weight, temperature, area, volume, speed and data.",
     "category": "calculators",
-    "categoryName": "Calculators & Finance",
     "description": "Convert across 8 unit dimensions: length, mass/weight, temperature, area, volume, speed, digital storage, and time with live multi-unit comparison.",
     "longDescription": "A fast, comprehensive unit converter covering length, weight, temperature, area, volume, speed, digital storage, and time. Features real-time conversion across all units simultaneously in a clean comparison grid, 1-click unit swapping, and formula explanations.",
-    "iconName": "Scale",
-    "metaTitle": "Free Universal Unit Converter - Fast & Private",
+    "iconName": "Ruler",
+    "privacy": "local",
+    "metaTitle": "Unit Converter – Length, Weight & Temperature",
     "metaDescription": "Free universal unit converter for length, mass, temperature, area, volume, speed, data storage, and time. Instant multi-unit comparison grid.",
     "keywords": [
       "unit converter",
@@ -3426,6 +4404,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "km to miles converter",
       "celsius to fahrenheit",
       "digital storage converter"
+    ],
+    "aliases": [
+      "km to miles",
+      "kg to lbs",
+      "celsius to fahrenheit",
+      "inches to cm",
+      "measurement"
     ],
     "features": [
       "8 comprehensive measurement dimensions with over 60 standard units",
@@ -3469,17 +4454,22 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "currency-converter",
       "aspect-ratio-calculator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "currency-converter",
+      "calculator",
+      "aspect-ratio-calculator"
+    ]
   },
   "stopwatch-timer": {
     "slug": "stopwatch-timer",
-    "name": "Online Stopwatch & Countdown Timer",
+    "name": "Stopwatch & Timer",
     "shortName": "Stopwatch & Timer",
+    "tagline": "A stopwatch with laps, and a countdown timer with an alarm.",
     "category": "date-time",
-    "categoryName": "Date & Time",
     "description": "Digital millisecond stopwatch with split and lap delta tracking, plus countdown timer with presets, synthesized chime alarms, and fullscreen mode.",
     "longDescription": "A free online precision digital stopwatch and countdown timer. Track split times, lap deltas with fastest/slowest lap highlighting, set custom countdown durations or one-click presets (including 25-minute Pomodoro), and enjoy synthesized audio chime alarms and fullscreen presentation mode.",
-    "iconName": "Clock",
+    "iconName": "Timer",
+    "privacy": "local",
     "metaTitle": "Free Online Stopwatch & Countdown Timer",
     "metaDescription": "Free online precision stopwatch with lap tracking and countdown timer with sound alerts, presets, and fullscreen mode. 100% private in your browser.",
     "keywords": [
@@ -3490,6 +4480,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "pomodoro timer online",
       "timer with sound alarm",
       "millisecond stopwatch"
+    ],
+    "aliases": [
+      "timer",
+      "countdown",
+      "pomodoro",
+      "stopwatch",
+      "alarm"
     ],
     "features": [
       "Centisecond (10ms) precision digital stopwatch with lap and split times",
@@ -3518,17 +4515,21 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "date-difference-calculator",
       "unix-timestamp-converter"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "working-days-calculator",
+      "date-difference-calculator"
+    ]
   },
   "text-sorter": {
     "slug": "text-sorter",
-    "name": "Text Sorter & Duplicate Line Remover",
+    "name": "Text Sorter & Deduplicator",
     "shortName": "Text Sorter",
+    "tagline": "Sort lines A–Z or by length, and remove duplicate lines.",
     "category": "text",
-    "categoryName": "Text & Writing",
     "description": "Sort lists alphabetically (A-Z, Z-A) or by length, remove duplicate lines, trim whitespace, shuffle, and add line numbers instantly.",
     "longDescription": "A fast, client-side list cleaner and text sorter. Alphabetize lines, sort in reverse, sort by character length, shuffle randomly, deduplicate with case-sensitive or insensitive matching, trim whitespace, and export or copy clean results in seconds.",
-    "iconName": "Type",
+    "iconName": "ArrowDownAZ",
+    "privacy": "local",
     "metaTitle": "Free Text Sorter & Duplicate Line Remover",
     "metaDescription": "Sort lists alphabetically A-Z, remove duplicate lines, sort by length, and trim whitespace online. Free, instant, and 100% private in your browser.",
     "keywords": [
@@ -3539,6 +4540,13 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "list cleaner online",
       "line deduplicator",
       "sort text by length"
+    ],
+    "aliases": [
+      "remove duplicate lines",
+      "alphabetize",
+      "sort list",
+      "dedupe",
+      "unique lines"
     ],
     "features": [
       "Alphabetical sorting (A-Z and Z-A) with natural alphanumeric recognition",
@@ -3568,9 +4576,57 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = {
       "text-diff-checker",
       "slug-generator"
     ],
-    "isPopular": true
+    "nextSteps": [
+      "text-diff-checker",
+      "case-converter",
+      "word-counter"
+    ]
   }
 };
+
+const CATEGORY_NAMES = Object.fromEntries(
+  TOOL_CATEGORIES.map((c) => [c.id, c.name])
+) as Record<ToolCategoryId, string>;
+
+const POPULAR_SET = new Set(POPULAR_TOOL_SLUGS);
+
+export const TOOLS_REGISTRY: Record<string, ToolDefinition> = Object.fromEntries(
+  Object.entries(TOOL_SOURCE).map(([slug, tool]) => [
+    slug,
+    {
+      ...tool,
+      categoryName: CATEGORY_NAMES[tool.category],
+      isPopular: POPULAR_SET.has(slug),
+    },
+  ])
+);
+
+export function getCategory(id: string): ToolCategory | undefined {
+  return TOOL_CATEGORIES.find((c) => c.id === id);
+}
+
+export function getToolsBySlugs(slugs: string[]): ToolDefinition[] {
+  return slugs
+    .map((slug) => TOOLS_REGISTRY[slug])
+    .filter((t): t is ToolDefinition => !!t);
+}
+
+/**
+ * Next steps for the "What would you like to do next?" strip: the curated
+ * workflow first, topped up with related tools so every tool has some.
+ */
+export function getNextTools(tool: ToolDefinition, limit = 4): ToolDefinition[] {
+  const seen = new Set<string>([tool.slug]);
+  const out: ToolDefinition[] = [];
+  for (const slug of [...tool.nextSteps, ...tool.relatedToolSlugs]) {
+    if (seen.has(slug)) continue;
+    seen.add(slug);
+    const t = TOOLS_REGISTRY[slug];
+    if (t) out.push(t);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
 
 export function getAllTools(): ToolDefinition[] {
   return Object.values(TOOLS_REGISTRY);
@@ -3585,7 +4641,7 @@ export function getToolsByCategory(category: string): ToolDefinition[] {
 }
 
 export function getPopularTools(): ToolDefinition[] {
-  return Object.values(TOOLS_REGISTRY).filter((tool) => tool.isPopular);
+  return getToolsBySlugs(POPULAR_TOOL_SLUGS);
 }
 
 export function getRelatedTools(tool: ToolDefinition): ToolDefinition[] {

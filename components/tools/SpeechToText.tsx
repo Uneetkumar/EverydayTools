@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Mic, Square, Copy, Check, Trash2, Download, AlertTriangle } from "lucide-react";
 import { downloadText } from "@/lib/utils/download";
+import { copyText } from "@/lib/utils/clipboard";
 
 /**
  * Voice to text via the Web Speech API.
@@ -125,16 +126,16 @@ export default function SpeechToText() {
   };
 
   const copy = async () => {
-    await navigator.clipboard.writeText(finalText);
+    await copyText(finalText);
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
 
   if (!supported) {
     return (
-      <div className="flex gap-2.5 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40">
-        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-        <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-200">
+      <div className="flex gap-2.5 p-4 rounded-xl border bg-muted/30">
+        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-muted-foreground" />
+        <p className="text-xs leading-relaxed text-muted-foreground">
           This browser does not support speech recognition. It works in Chrome,
           Edge, and Safari; Firefox does not implement it.
         </p>
@@ -148,7 +149,7 @@ export default function SpeechToText() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3">
         <div className="space-y-1.5">
-          <label htmlFor="stt-lang" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <label htmlFor="stt-lang" className="block text-sm font-medium text-foreground">
             Language
           </label>
           <select
@@ -156,7 +157,7 @@ export default function SpeechToText() {
             value={lang}
             onChange={(e) => setLang(e.target.value)}
             disabled={listening}
-            className="cursor-pointer rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white disabled:opacity-50"
+            className="cursor-pointer px-3 py-2 disabled:opacity-50 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             {LANGUAGES.map((l) => (
               <option key={l.code} value={l.code}>{l.label}</option>
@@ -172,7 +173,7 @@ export default function SpeechToText() {
           </button>
         ) : (
           <button onClick={start}
-            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition cursor-pointer">
+            className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm transition cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 font-medium">
             <Mic className="w-4 h-4" />
             Start listening
           </button>
@@ -190,14 +191,14 @@ export default function SpeechToText() {
       </div>
 
       {error && (
-        <div className="flex gap-2.5 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-          <p className="text-xs text-amber-800 dark:text-amber-200">{error}</p>
+        <div className="flex gap-2.5 p-4 rounded-xl border bg-muted/30">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-muted-foreground" />
+          <p className="text-xs text-muted-foreground">{error}</p>
         </div>
       )}
 
       <div className="space-y-1.5">
-        <label htmlFor="stt-out" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+        <label htmlFor="stt-out" className="block text-sm font-medium text-foreground">
           Transcript
         </label>
         <textarea
@@ -209,25 +210,25 @@ export default function SpeechToText() {
           }}
           rows={9}
           placeholder="Press Start listening and speak. Words appear here as you talk, and you can edit them afterwards."
-          className="w-full resize-y rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 text-sm leading-relaxed text-slate-900 dark:text-slate-100 outline-none focus:border-blue-400"
+          className="w-full resize-y p-3 leading-relaxed outline-none text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         />
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="text-[11px] text-slate-400 tabular-nums">
+          <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
             {words} word{words === 1 ? "" : "s"} · {finalText.length} characters
           </span>
           <div className="flex gap-2">
             <button onClick={copy} disabled={!finalText}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 transition cursor-pointer">
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 transition cursor-pointer">
               {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
               {copied ? "Copied" : "Copy"}
             </button>
             <button onClick={() => downloadText(finalText, "transcript.txt")} disabled={!finalText}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 transition cursor-pointer">
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 disabled:opacity-40 transition cursor-pointer">
               <Download className="w-3 h-3" />
               .txt
             </button>
             <button onClick={() => { setFinalText(""); setInterim(""); }} disabled={!finalText}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 text-[11px] font-semibold hover:text-red-500 disabled:opacity-40 transition cursor-pointer">
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs font-semibold hover:text-red-500 disabled:opacity-40 transition cursor-pointer">
               <Trash2 className="w-3 h-3" />
               Clear
             </button>
@@ -235,8 +236,8 @@ export default function SpeechToText() {
         </div>
       </div>
 
-      <div className="flex gap-2.5 p-4 rounded-xl bg-sky-50 dark:bg-sky-950/25 border border-sky-200 dark:border-sky-900/40">
-        <AlertTriangle className="w-4 h-4 text-sky-600 dark:text-sky-400 shrink-0 mt-0.5" />
+      <div className="flex gap-2.5 p-4 rounded-xl border bg-muted/30">
+        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-muted-foreground" />
         <p className="text-xs leading-relaxed text-sky-900 dark:text-sky-200">
           <strong>This tool is not fully private.</strong> Chrome and Edge send
           your audio to a cloud speech service to transcribe it; only Safari

@@ -107,9 +107,9 @@ export default function RegexTester() {
   return (
     <div className="space-y-6">
       {/* Pattern Bar */}
-      <div className="p-4 sm:p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 space-y-3">
+      <div className="p-4 sm:p-5 rounded-xl border space-y-3 bg-muted/30">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <label className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+          <label className="text-sm text-slate-900 dark:text-white font-semibold">
             Regular Expression
           </label>
           {/* Flags toggles */}
@@ -120,7 +120,7 @@ export default function RegexTester() {
                 onClick={() => toggleFlag(flagKey)}
                 className={`px-2.5 py-1 rounded-lg transition-all ${
                   flags[flagKey]
-                    ? "bg-blue-600 text-white shadow-xs"
+                    ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                     : "bg-slate-200/80 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
                 title={`Flag /${flagKey}/ - ${flagKey === "g" ? "Global" : flagKey === "i" ? "Case Insensitive" : flagKey === "m" ? "Multiline" : flagKey === "s" ? "DotAll" : "Unicode"}`}
@@ -133,17 +133,17 @@ export default function RegexTester() {
 
         {/* Pattern Input Container */}
         <div className="relative flex items-center">
-          <span className="absolute left-3.5 font-mono text-slate-400 text-sm font-bold select-none">
+          <span className="absolute left-3.5 font-mono text-slate-500 dark:text-slate-400 text-sm font-semibold select-none">
             /
           </span>
-          <input
+          <input aria-label="Regular expression"
             type="text"
             value={pattern}
             onChange={(e) => setPattern(e.target.value)}
             placeholder="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}"
-            className="w-full pl-7 pr-12 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-mono text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            className="w-full pl-7 pr-12 py-3 font-mono text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           />
-          <span className="absolute right-3.5 font-mono text-blue-600 dark:text-blue-400 text-sm font-bold select-none">
+          <span className="absolute right-3.5 font-mono text-blue-600 dark:text-blue-400 text-sm font-semibold select-none">
             /{activeFlagsStr}
           </span>
         </div>
@@ -160,29 +160,29 @@ export default function RegexTester() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* Test String Input */}
         <div className="space-y-2">
-          <div className="flex justify-between items-center text-xs font-bold text-slate-700 dark:text-slate-300">
+          <div className="flex justify-between items-center text-sm font-medium text-foreground">
             <span>Test String</span>
-            <span className="text-slate-400 font-mono text-[11px]">{testString.length} chars</span>
+            <span className="text-slate-500 dark:text-slate-400 font-mono text-xs">{testString.length} chars</span>
           </div>
-          <textarea
+          <textarea aria-label="Test string"
             rows={8}
             value={testString}
             onChange={(e) => setTestString(e.target.value)}
             placeholder="Enter text to match against regex..."
-            className="w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-mono text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-y"
+            className="w-full p-4 font-mono resize-y text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           />
         </div>
 
         {/* Live Match Highlighting */}
         <div className="space-y-2">
-          <div className="flex justify-between items-center text-xs font-bold text-slate-700 dark:text-slate-300">
+          <div className="flex justify-between items-center text-sm font-medium text-foreground">
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
+              <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground" />
               Live Highlighted Matches ({matches.length})
             </span>
           </div>
           <div
-            className="w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/60 font-mono text-xs text-slate-900 dark:text-white min-h-[190px] overflow-auto whitespace-pre-wrap leading-relaxed"
+            className="w-full p-4 rounded-xl border font-mono text-xs text-slate-900 dark:text-white min-h-[190px] overflow-auto whitespace-pre-wrap leading-relaxed bg-muted/30"
             dangerouslySetInnerHTML={{ __html: highlightedHtml }}
           />
         </div>
@@ -192,11 +192,11 @@ export default function RegexTester() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Match Groups List */}
         <div className="lg:col-span-7 space-y-3">
-          <h3 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+          <h3 className="text-sm text-slate-900 dark:text-white font-semibold">
             Match Details & Capture Groups
           </h3>
           {matches.length === 0 ? (
-            <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-500 italic text-center">
+            <div className="p-4 rounded-xl border text-xs text-slate-500 italic text-center bg-muted/30">
               No matches found with current pattern and flags.
             </div>
           ) : (
@@ -204,13 +204,13 @@ export default function RegexTester() {
               {matches.map((m, idx) => (
                 <div
                   key={idx}
-                  className="p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-1.5"
+                  className="p-3 rounded-xl border space-y-1.5 bg-muted/30"
                 >
                   <div className="flex justify-between items-center text-xs">
-                    <span className="font-bold text-blue-600 dark:text-blue-400 font-mono">
+                    <span className="font-semibold text-blue-600 dark:text-blue-400 font-mono">
                       Match #{idx + 1} (Index: {m.index})
                     </span>
-                    <span className="font-mono text-slate-500 text-[11px] font-medium">
+                    <span className="font-mono text-slate-500 text-xs font-medium">
                       Length: {m.match.length}
                     </span>
                   </div>
@@ -220,8 +220,8 @@ export default function RegexTester() {
                   {m.groups.length > 0 && (
                     <div className="pl-2 border-l-2 border-blue-500/40 space-y-1 pt-1">
                       {m.groups.map((g, gIdx) => (
-                        <div key={gIdx} className="text-[11px] font-mono text-slate-600 dark:text-slate-300">
-                          <span className="text-slate-400 font-semibold">Group ${gIdx + 1}:</span> {g}
+                        <div key={gIdx} className="text-xs font-mono text-slate-600 dark:text-slate-300">
+                          <span className="text-slate-500 dark:text-slate-400 font-semibold">Group ${gIdx + 1}:</span> {g}
                         </div>
                       ))}
                     </div>
@@ -233,19 +233,19 @@ export default function RegexTester() {
         </div>
 
         {/* Quick Reference Cheat Sheet */}
-        <div className="lg:col-span-5 p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 space-y-3">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
-            <BookOpen className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+        <div className="lg:col-span-5 p-4 rounded-xl border space-y-3 bg-muted/30">
+          <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-900 dark:text-white">
+            <BookOpen className="w-3.5 h-3.5 text-muted-foreground" />
             Quick Regex Reference
           </div>
-          <div className="grid grid-cols-2 gap-2 text-[11px]">
+          <div className="grid grid-cols-2 gap-2 text-xs">
             {CHEAT_SHEET.map((item, i) => (
               <div
                 key={i}
                 className="p-2 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col justify-between"
               >
-                <code className="font-bold text-blue-600 dark:text-blue-400 font-mono">{item.pattern}</code>
-                <span className="text-slate-500 dark:text-slate-400 text-[10px] mt-0.5">{item.desc}</span>
+                <code className="font-semibold text-blue-600 dark:text-blue-400 font-mono">{item.pattern}</code>
+                <span className="text-slate-500 dark:text-slate-400 text-xs mt-0.5">{item.desc}</span>
               </div>
             ))}
           </div>

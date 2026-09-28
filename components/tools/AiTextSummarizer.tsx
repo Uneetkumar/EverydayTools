@@ -4,125 +4,111 @@ import React, { useState } from "react";
 import AIWorkspace from "@/components/ai/AIWorkspace";
 import AIInput from "@/components/ai/AIInput";
 import AIOutput from "@/components/ai/AIOutput";
-import { LocalAIProvider } from "@/lib/ai/providers/local-provider";
-import { GeminiProvider } from "@/lib/ai/providers/gemini-provider";
-import { AIProviderType, AIOutput as AIOutputType } from "@/lib/ai/types";
-import { AlignLeft, List, Sparkles } from "lucide-react";
-import { runAI } from "@/lib/ai/run";
+import { useAiTask } from "@/components/ai/useAiTask";
+import { Field, Segmented, Stat, StatGrid } from "@/components/tool/kit";
+import { countWords } from "@/lib/ai/nlp/text";
+import type { SummaryResult } from "@/lib/ai/nlp/summarizer";
 
-const SAMPLE_TEXT = `Artificial intelligence is transforming modern computing by shifting heavy computational workloads directly onto end-user client devices. Historically, web applications relied almost entirely on centralized cloud servers for natural language processing, image generation, and machine learning inference. However, modern client-side architectures leverage WebAssembly, WebGPU, and optimized quantized models running within the browser. This technological shift delivers three critical benefits: dramatic reductions in cloud server operating costs, zero latency responses with offline computing capabilities, and absolute user privacy since private data never leaves local device memory. By decoupling foundational utility tools from continuous cloud API calls, web platforms can offer free, unlimited, and sustainable software to millions of daily users without incurring prohibitive hosting fees.`;
+const SAMPLE_TEXT = `Remote work changed how many companies think about offices. Before 2020, most teams worked from a shared building five days a week, and working from home was treated as an occasional perk. During the pandemic, companies that had never allowed remote work were forced to try it, and many found that productivity held up better than expected.
 
-const localProvider = new LocalAIProvider();
-const geminiProvider = new GeminiProvider();
+The shift was not free of problems. New employees found it harder to learn by watching colleagues, and managers reported that informal conversations, where many ideas start, became rare. Some workers also struggled to separate work from home life, and reported working longer hours than before.
+
+As a result, most large employers have settled on a hybrid model: two or three days in the office and the rest at home. Surveys suggest employees value this flexibility highly, with many saying they would consider changing jobs to keep it. Office space is being redesigned too, with fewer assigned desks and more rooms for meetings and team work, because people now come in mainly to collaborate rather than to sit alone at a desk.`;
+
+type Length = "short" | "medium" | "detailed";
+type Shape = "paragraph" | "bullets";
 
 export default function AiTextSummarizer() {
-  const [provider, setProvider] = useState<AIProviderType>("local");
   const [input, setInput] = useState(SAMPLE_TEXT);
-  const [length, setLength] = useState<"short" | "medium" | "detailed">("medium");
-  const [bulletPoints, setBulletPoints] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [output, setOutput] = useState<AIOutputType | null>(null);
-  // Text as it streams in, before the final AIOutput lands.
-  const [partial, setPartial] = useState("");
+  const [length, setLength] = useState<Length>("medium");
+  const [shape, setShape] = useState<Shape>("paragraph");
+  const ai = useAiTask("summarize");
 
-  const handleRun = async () => {
-    if (!input.trim()) {
-      setError("Please enter some text to summarize.");
-      return;
-    }
+  const handleRun = () => ai.run(input, { length, bulletPoints: shape === "bullets" }, "Paste some text to summarise.");
 
-    setBusy(true);
-    setError(null);
-    setPartial("");
-
-    try {
-      const activeProvider = provider === "local" ? localProvider : geminiProvider;
-      const res = await runAI(activeProvider, {
-        text: input,
-        task: "summarize",
-        options: { length, bulletPoints },
-      }, setPartial);
-      setOutput(res);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(false);
-    }
-  };
+  const out = ai.output;
+  const local = out?.provider === "local" ? (out.metrics?.data as SummaryResult | undefined) : undefined;
+  const inWords = out ? countWords(out.input) : 0;
+  const outWords = out ? countWords(out.result) : 0;
+  const tooShort = !!local && local.sentencesKept === local.sentencesTotal;
 
   return (
     <div className="space-y-6">
       <AIWorkspace
-        provider={provider}
-        onProviderChange={setProvider}
-        streamingText={partial}
-        busy={busy}
+        provider={ai.provider}
+        onProviderChange={ai.setProvider}
+        localHint="Picks the key sentences from your text. Private and instant."
+        cloudHint="Writes a new summary with Google Gemini. Text is sent to Google."
+        streamingText={ai.partial}
+        busy={ai.busy}
         onRun={handleRun}
-        runLabel="Summarize Text"
-        error={error}
-        onClearError={() => setError(null)}
+        runLabel="Summarise"
+        error={ai.error}
         disabled={!input.trim()}
       >
         <AIInput
           value={input}
           onChange={setInput}
-          placeholder="Paste or type text to summarize..."
+          placeholder="Paste an article, report, email thread or notes…"
           sampleText={SAMPLE_TEXT}
-          sampleLabel="Load AI Sample"
-          disabled={busy}
+          disabled={ai.busy}
         />
 
-        {/* Summarizer Options */}
-        <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-slate-800 text-xs">
-          <div className="flex items-center space-x-2">
-            <span className="font-bold text-slate-700 dark:text-slate-300">
-              Length:
-            </span>
-            <div className="flex items-center gap-1 p-0.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-              {(["short", "medium", "detailed"] as const).map((l) => (
-                <button
-                  key={l}
-                  type="button"
-                  onClick={() => setLength(l)}
-                  className={`px-2.5 py-1 rounded-lg font-semibold capitalize transition cursor-pointer ${
-                    length === l
-                      ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
-                      : "text-slate-500 hover:text-slate-900 dark:hover:text-slate-200"
-                  }`}
-                >
-                  {l}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setBulletPoints(!bulletPoints)}
-            className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition cursor-pointer ${
-              bulletPoints
-                ? "bg-blue-50 dark:bg-blue-950/60 border-blue-300 dark:border-blue-800 text-blue-600 dark:text-blue-400"
-                : "border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-            }`}
-          >
-            {bulletPoints ? <List className="w-3.5 h-3.5" /> : <AlignLeft className="w-3.5 h-3.5" />}
-            <span>Bullet Points</span>
-          </button>
+        <div className="flex flex-wrap gap-x-6 gap-y-4">
+          <Field label="Length">
+            <Segmented
+              ariaLabel="Summary length"
+              value={length}
+              onChange={setLength}
+              options={[
+                { value: "short", label: "Short" },
+                { value: "medium", label: "Medium" },
+                { value: "detailed", label: "Detailed" },
+              ]}
+            />
+          </Field>
+          <Field label="Format">
+            <Segmented
+              ariaLabel="Summary format"
+              value={shape}
+              onChange={setShape}
+              options={[
+                { value: "paragraph", label: "Paragraph" },
+                { value: "bullets", label: "Bullet points" },
+              ]}
+            />
+          </Field>
         </div>
       </AIWorkspace>
 
-      {/* Output Panel */}
-      {output && (
+      {out && (
         <AIOutput
-          title="Summary Result"
-          result={output.result}
-          provider={output.provider}
-          modelUsed={output.modelUsed}
-          elapsedMs={output.elapsedMs}
+          title="Summary"
+          result={out.result}
+          provider={out.provider}
+          modelUsed={out.modelUsed}
+          elapsedMs={out.elapsedMs}
           filename="summary.txt"
           toolName="ai-text-summarizer"
           onRegenerate={handleRun}
+          stats={
+            <div className="space-y-3">
+              <StatGrid>
+                <Stat label="Original" value={`${inWords.toLocaleString()} words`} />
+                <Stat label="Summary" value={`${outWords.toLocaleString()} words`} />
+                <Stat label="Shorter by" value={`${Math.max(0, Math.round((1 - outWords / Math.max(inWords, 1)) * 100))}%`} />
+                <Stat
+                  label={local ? "Sentences kept" : "Reading time saved"}
+                  value={local ? `${local.sentencesKept} of ${local.sentencesTotal}` : `${Math.max(0, Math.round((inWords - outWords) / 230))} min`}
+                />
+              </StatGrid>
+              {tooShort && (
+                <p className="text-xs text-muted-foreground">
+                  The text is already short, so every sentence was kept. Summaries work best on a few paragraphs or more.
+                </p>
+              )}
+            </div>
+          }
         />
       )}
     </div>

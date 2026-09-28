@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import { Download, Eraser, Undo, RotateCcw, Columns2, Maximize2 } from "lucide-react";
-import confetti from "canvas-confetti";
+import { markToolCompleted } from "@/lib/analytics";
 
 /** Boundary colours sampled around each dab. */
 const RING_SAMPLES = 24;
@@ -318,21 +318,21 @@ export default function WatermarkRemover() {
     link.href = canvas.toDataURL("image/png");
     link.download = "clean-image.png";
     link.click();
-    confetti({ particleCount: 35, spread: 50, origin: { y: 0.85 } });
+    markToolCompleted();
   };
 
   return (
     <div className="space-y-6">
-      <div className="p-8 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-950/40 hover:bg-blue-50/30 text-center cursor-pointer transition flex flex-col items-center justify-center space-y-2 relative">
-        <Eraser className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-        <div className="text-sm font-bold text-slate-800 dark:text-slate-200">
+      <div className="p-8 rounded-xl border-dashed text-center cursor-pointer flex flex-col items-center justify-center space-y-2 relative border-2 border-input bg-muted/30 transition-colors hover:border-primary/50 hover:bg-muted/60">
+        <Eraser className="w-8 h-8 text-muted-foreground" />
+        <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
           Upload an image to erase a watermark or text stamp
         </div>
         <p className="text-xs text-slate-500">
           Brush over the watermark. Surrounding pixels are blended in to fill
           the area.
         </p>
-        <input
+        <input aria-label="Choose an image"
           type="file"
           accept="image/*"
           onChange={handleFile}
@@ -342,11 +342,11 @@ export default function WatermarkRemover() {
 
       {imageSrc && (
         <div className="space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+          <div className="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl border bg-muted/30">
             <div className="flex items-center space-x-3">
               <label
                 htmlFor="wm-brush"
-                className="text-xs font-semibold text-slate-700 dark:text-slate-300"
+                className="text-sm font-medium text-foreground"
               >
                 Brush size
               </label>
@@ -359,10 +359,10 @@ export default function WatermarkRemover() {
                 onChange={(e) => setBrushSize(parseInt(e.target.value, 10))}
                 className="w-32 accent-blue-600 cursor-pointer"
               />
-              <span className="text-xs font-bold text-blue-600 tabular-nums">
+              <span className="text-xs font-semibold tabular-nums text-muted-foreground">
                 {brushSize}px
                 {imageRadius !== brushSize && (
-                  <span className="ml-1 font-normal text-slate-400">
+                  <span className="ml-1 font-normal text-slate-500 dark:text-slate-400">
                     ({imageRadius}px on the full-size image)
                   </span>
                 )}
@@ -399,7 +399,7 @@ export default function WatermarkRemover() {
               <button
                 onClick={handleDownload}
                 disabled={!isReady}
-                className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-semibold transition shadow-xs"
+                className="flex items-center space-x-1.5 px-4 py-2 rounded-lg disabled:opacity-40 text-xs transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
               >
                 <Download className="w-4 h-4" />
                 <span>Download Clean Image</span>
@@ -421,11 +421,11 @@ export default function WatermarkRemover() {
                 remounted one came back blank — the image is only painted here
                 on upload, so there was nothing to restore it. */}
             <figure className={sideBySide ? "space-y-2" : "hidden"}>
-                <figcaption className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-400">
+                <figcaption className="flex items-center justify-between text-sm font-medium text-foreground">
                   <span>Original</span>
-                  <span className="font-normal text-slate-400">unchanged</span>
+                  <span className="font-normal text-slate-500 dark:text-slate-400">unchanged</span>
                 </figcaption>
-                <div className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 overflow-auto flex justify-center max-h-[560px]">
+                <div className="p-3 rounded-xl border overflow-auto flex justify-center max-h-[560px] bg-muted/30">
                   <canvas
                     ref={originalCanvasRef}
                     aria-label="The original image before any edits"
@@ -435,13 +435,13 @@ export default function WatermarkRemover() {
             </figure>
 
             <figure className="space-y-2">
-              <figcaption className="flex items-center justify-between text-xs font-semibold text-slate-600 dark:text-slate-400">
+              <figcaption className="flex items-center justify-between text-sm font-medium text-foreground">
                 <span>{sideBySide ? "Edited" : "Brush over the watermark"}</span>
                 <span
                   className={`font-normal tabular-nums ${
                     changedPct > 0
                       ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-slate-400"
+                      : "text-slate-500 dark:text-slate-400"
                   }`}
                 >
                   {changedPct > 0
@@ -449,7 +449,7 @@ export default function WatermarkRemover() {
                     : "nothing erased yet"}
                 </span>
               </figcaption>
-              <div className="p-3 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 overflow-auto flex justify-center max-h-[560px]">
+              <div className="p-3 rounded-xl border overflow-auto flex justify-center max-h-[560px] bg-muted/30">
                 <canvas
                   ref={canvasRef}
                   onPointerDown={handlePointerDown}

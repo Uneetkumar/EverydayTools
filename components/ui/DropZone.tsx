@@ -1,7 +1,10 @@
 "use client";
 
 import React, { useState, useRef, useCallback } from "react";
-import { UploadCloud, File, AlertCircle, CheckCircle2, X } from "lucide-react";
+import { UploadCloud, File, AlertCircle, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 export interface DropZoneProps {
   onFileSelect: (file: File) => void;
@@ -19,14 +22,25 @@ export interface DropZoneProps {
   onClear?: () => void;
 }
 
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(2)} MB`;
+}
+
+/**
+ * The shared file picker: drop a file or activate it with a click, Enter or
+ * Space. Oversized files are rejected here with a message, before any tool
+ * code tries to read them.
+ */
 export default function DropZone({
   onFileSelect,
   onFilesSelect,
   multiple = false,
   accept,
   maxSizeMB = 25,
-  title = "Drop your file here or click to browse",
-  subtitle = "Fast and 100% private in your browser",
+  title = "Drop a file here or choose one",
+  subtitle = "Processed in your browser. Nothing is uploaded.",
   supportedFormatsText,
   isProcessing = false,
   processingProgress,
@@ -49,7 +63,7 @@ export default function DropZone({
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         if (file.size > maxBytes) {
-          setErrorMessage(`File "${file.name}" exceeds the ${maxSizeMB}MB limit.`);
+          setErrorMessage(`"${file.name}" is ${formatBytes(file.size)}. The limit here is ${maxSizeMB} MB.`);
           return;
         }
         validFiles.push(file);
@@ -64,17 +78,7 @@ export default function DropZone({
     [maxSizeMB, multiple, onFileSelect, onFilesSelect]
   );
 
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
-  };
+  const open = () => fileInputRef.current?.click();
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -85,50 +89,59 @@ export default function DropZone({
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     validateAndHandle(e.target.files);
-    // Reset so same file can be re-selected if cleared
+    // Reset so the same file can be chosen again after clearing.
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
   return (
-    <div className={`w-full space-y-2.5 ${className}`}>
+    <div className={cn("w-full space-y-2.5", className)}>
       {selectedFile ? (
-        <div className="flex items-center justify-between p-4 rounded-2xl border border-blue-500/30 bg-blue-50/40 dark:bg-blue-950/20 backdrop-blur-xs">
-          <div className="flex items-center space-x-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/60 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-              <File className="w-5 h-5" />
-            </div>
+        <div className="flex items-center justify-between gap-3 rounded-xl border bg-muted/40 p-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-brand-subtle text-brand-subtle-foreground">
+              <File className="size-5" aria-hidden="true" />
+            </span>
             <div className="min-w-0">
-              <div className="text-xs font-bold text-slate-900 dark:text-white truncate">
-                {selectedFile.name}
-              </div>
-              <div className="text-[11px] text-slate-400">
-                {(selectedFile.size / 1024 / 1024).toFixed(2)} MB &bull; {selectedFile.type || "Document"}
-              </div>
+              <p className="truncate text-sm font-medium text-foreground">{selectedFile.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {formatBytes(selectedFile.size)}
+                {selectedFile.type ? ` · ${selectedFile.type}` : ""}
+              </p>
             </div>
           </div>
 
           {onClear && !isProcessing && (
-            <button
-              type="button"
-              onClick={onClear}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition"
-              title="Remove file"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <Button type="button" variant="ghost" size="icon-sm" onClick={onClear} aria-label={`Remove ${selectedFile.name}`}>
+              <X aria-hidden="true" />
+            </Button>
           )}
         </div>
       ) : (
         <div
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
+          role="button"
+          tabIndex={0}
+          aria-label={`${title}. ${supportedFormatsText ?? ""}`.trim()}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setIsDragOver(true);
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            setIsDragOver(false);
+          }}
           onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-          className={`relative group flex flex-col items-center justify-center p-8 rounded-2xl border-2 border-dashed transition cursor-pointer text-center ${
-            isDragOver
-              ? "border-blue-500 bg-blue-50/60 dark:bg-blue-950/30 scale-[1.01]"
-              : "border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 bg-slate-50/50 dark:bg-slate-900/40 hover:bg-slate-50 dark:hover:bg-slate-900"
-          }`}
+          onClick={open}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              open();
+            }
+          }}
+          className={cn(
+            "flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed px-6 py-10 text-center transition-colors outline-none",
+            "focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+            isDragOver ? "border-primary bg-brand-subtle/60" : "border-input bg-muted/30 hover:border-primary/50 hover:bg-muted/60"
+          )}
         >
           <input
             ref={fileInputRef}
@@ -137,63 +150,37 @@ export default function DropZone({
             multiple={multiple}
             onChange={handleInputChange}
             className="hidden"
+            tabIndex={-1}
           />
-
-          <div className="w-12 h-12 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3 group-hover:scale-110 transition shadow-xs">
-            <UploadCloud className="w-6 h-6" />
-          </div>
-
-          <div className="text-sm font-bold text-slate-900 dark:text-white mb-1">
-            {title}
-          </div>
-
-          <div className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mb-3">
-            {subtitle}
-          </div>
-
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            <span className="px-2.5 py-1 text-[11px] font-semibold rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300">
-              Browse Files
-            </span>
-            {supportedFormatsText && (
-              <span className="text-[11px] text-slate-400">
-                {supportedFormatsText} &bull; Up to {maxSizeMB}MB
-              </span>
-            )}
-          </div>
+          <span className="mb-3 flex size-11 items-center justify-center rounded-xl bg-brand-subtle text-brand-subtle-foreground">
+            <UploadCloud className="size-5" aria-hidden="true" />
+          </span>
+          <p className="text-sm font-medium text-foreground">{title}</p>
+          <p className="mt-1 max-w-sm text-xs text-muted-foreground">{subtitle}</p>
+          <p className="mt-3 text-xs text-muted-foreground">
+            {supportedFormatsText ? `${supportedFormatsText} · ` : ""}Up to {maxSizeMB} MB
+          </p>
         </div>
       )}
 
-      {/* Progress Bar */}
       {isProcessing && (
-        <div className="space-y-1.5 pt-1">
-          <div className="flex items-center justify-between text-xs font-semibold text-slate-700 dark:text-slate-300">
-            <span>Processing...</span>
-            {processingProgress !== undefined && (
-              <span>{Math.round(processingProgress)}%</span>
-            )}
+        <div className="space-y-1.5 pt-1" role="status">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Processing…</span>
+            {processingProgress !== undefined && <span className="tabular-nums">{Math.round(processingProgress)}%</span>}
           </div>
-          <div className="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-            <div
-              className={`h-full bg-blue-600 transition-all duration-200 rounded-full ${
-                processingProgress === undefined ? "animate-pulse w-full" : ""
-              }`}
-              style={
-                processingProgress !== undefined
-                  ? { width: `${processingProgress}%` }
-                  : undefined
-              }
-            />
-          </div>
+          <Progress
+            value={processingProgress ?? 100}
+            className={processingProgress === undefined ? "animate-pulse" : undefined}
+          />
         </div>
       )}
 
-      {/* Error Callout */}
       {errorMessage && (
-        <div className="flex items-center gap-2 p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-600 dark:text-rose-400">
-          <AlertCircle className="w-4 h-4 shrink-0" />
-          <span>{errorMessage}</span>
-        </div>
+        <p role="alert" className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          <AlertCircle className="size-4 shrink-0" aria-hidden="true" />
+          {errorMessage}
+        </p>
       )}
     </div>
   );

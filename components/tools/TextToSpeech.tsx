@@ -87,9 +87,9 @@ export default function TextToSpeech() {
 
   if (!supported) {
     return (
-      <div className="flex gap-2.5 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40">
-        <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-        <p className="text-xs text-amber-800 dark:text-amber-200">
+      <div className="flex gap-2.5 p-4 rounded-xl border bg-muted/30">
+        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-muted-foreground" />
+        <p className="text-xs text-muted-foreground">
           This browser does not support speech synthesis. Chrome, Edge, Safari,
           and Firefox all do on desktop.
         </p>
@@ -102,7 +102,7 @@ export default function TextToSpeech() {
   return (
     <div className="space-y-4">
       <div className="space-y-1.5">
-        <label htmlFor="tts-text" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+        <label htmlFor="tts-text" className="block text-sm font-medium text-foreground">
           Text to read aloud
         </label>
         <textarea
@@ -110,23 +110,23 @@ export default function TextToSpeech() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={7}
-          className="w-full resize-y rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 text-sm leading-relaxed text-slate-900 dark:text-slate-100 outline-none focus:border-blue-400"
+          className="w-full resize-y p-3 leading-relaxed outline-none text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         />
-        <p className="text-[11px] text-slate-400 tabular-nums">
+        <p className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
           {words} word{words === 1 ? "" : "s"} · about {Math.max(1, Math.round(words / (150 * rate)))} min to read aloud
         </p>
       </div>
 
       <div className="grid grid-cols-1 @md:grid-cols-3 gap-3">
         <div className="space-y-1.5">
-          <label htmlFor="tts-voice" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <label htmlFor="tts-voice" className="block text-sm font-medium text-foreground">
             Voice
           </label>
           <select
             id="tts-voice"
             value={voiceName}
             onChange={(e) => setVoiceName(e.target.value)}
-            className="w-full cursor-pointer rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-white"
+            className="w-full cursor-pointer px-3 py-2 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           >
             {voices.map((v) => (
               <option key={v.name} value={v.name}>
@@ -137,8 +137,8 @@ export default function TextToSpeech() {
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="tts-rate" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-            Speed <span className="font-normal text-slate-400">{rate.toFixed(1)}x</span>
+          <label htmlFor="tts-rate" className="block text-sm font-medium text-foreground">
+            Speed <span className="font-normal text-slate-500 dark:text-slate-400">{rate.toFixed(1)}x</span>
           </label>
           <input id="tts-rate" type="range" min={0.5} max={2} step={0.1} value={rate}
             onChange={(e) => setRate(parseFloat(e.target.value))}
@@ -146,8 +146,8 @@ export default function TextToSpeech() {
         </div>
 
         <div className="space-y-1.5">
-          <label htmlFor="tts-pitch" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-            Pitch <span className="font-normal text-slate-400">{pitch.toFixed(1)}</span>
+          <label htmlFor="tts-pitch" className="block text-sm font-medium text-foreground">
+            Pitch <span className="font-normal text-slate-500 dark:text-slate-400">{pitch.toFixed(1)}</span>
           </label>
           <input id="tts-pitch" type="range" min={0.5} max={2} step={0.1} value={pitch}
             onChange={(e) => setPitch(parseFloat(e.target.value))}
@@ -157,7 +157,7 @@ export default function TextToSpeech() {
 
       <div className="flex flex-wrap gap-2">
         <button onClick={speak} disabled={!text.trim()}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-semibold transition cursor-pointer">
+          className="flex items-center gap-2 px-5 py-2.5 rounded-lg disabled:opacity-40 disabled:cursor-not-allowed text-sm transition cursor-pointer bg-primary text-primary-foreground hover:bg-primary/90 font-medium">
           <Play className="w-4 h-4" />
           {speaking ? "Restart" : "Play"}
         </button>
@@ -177,7 +177,7 @@ export default function TextToSpeech() {
         )}
       </div>
 
-      <p className="flex items-start gap-1.5 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+      <p className="flex items-start gap-1.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
         <Volume2 className="w-3 h-3 mt-0.5 shrink-0" />
         <span>
           Voices come from your own device, so your text is never sent anywhere.

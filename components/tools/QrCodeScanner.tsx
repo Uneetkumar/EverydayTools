@@ -32,7 +32,8 @@ import {
   Zap,
   ZapOff,
 } from "lucide-react";
-import confetti from "canvas-confetti";
+import { markToolCompleted } from "@/lib/analytics";
+import { copyText } from "@/lib/utils/clipboard";
 
 export type DetectedQrType =
   | "url"
@@ -363,7 +364,7 @@ export default function QrCodeScanner() {
       };
 
       setHistory((prev = []) => [item, ...prev.filter((p) => p.raw !== item.raw)].slice(0, 8));
-      confetti({ particleCount: 30, spread: 50, origin: { y: 0.85 } });
+      markToolCompleted();
       playBeep();
     },
     [playBeep, setHistory]
@@ -588,7 +589,7 @@ export default function QrCodeScanner() {
 
   // Copy helper
   const copyToClipboard = (textToCopy: string, fieldKey?: string) => {
-    navigator.clipboard.writeText(textToCopy);
+    copyText(textToCopy);
     if (fieldKey) {
       setCopiedField(fieldKey);
       setTimeout(() => setCopiedField(null), 1800);
@@ -648,13 +649,13 @@ export default function QrCodeScanner() {
   return (
     <div className="space-y-6">
       {/* Top Controls: Mode Selector & Sound Toggle */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-1.5 border rounded-lg bg-muted/60">
         <div className="flex items-center gap-1">
           <button
             onClick={() => setActiveMode("upload")}
             className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2 text-xs font-semibold rounded-xl transition ${
               activeMode === "upload"
-                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                ? "bg-background text-foreground shadow-xs dark:bg-input/50"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
@@ -669,7 +670,7 @@ export default function QrCodeScanner() {
             }}
             className={`flex-1 sm:flex-none flex items-center justify-center space-x-2 px-4 py-2 text-xs font-semibold rounded-xl transition ${
               activeMode === "camera"
-                ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
+                ? "bg-background text-foreground shadow-xs dark:bg-input/50"
                 : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
             }`}
           >
@@ -679,17 +680,17 @@ export default function QrCodeScanner() {
         </div>
 
         <div className="flex items-center justify-end px-2 space-x-2">
-          <button
+          <button aria-label="Toggle scan confirmation audio beep"
             onClick={() => setSoundEnabled(!soundEnabled)}
             className={`p-1.5 rounded-xl border text-xs font-medium flex items-center space-x-1.5 transition ${
               soundEnabled
                 ? "bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 border-slate-200 dark:border-slate-700"
-                : "text-slate-400 border-transparent hover:bg-slate-200 dark:hover:bg-slate-800"
+                : "text-slate-500 dark:text-slate-400 border-transparent hover:bg-slate-200 dark:hover:bg-slate-800"
             }`}
             title="Toggle scan confirmation audio beep"
           >
             {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5" />}
-            <span className="text-[11px]">{soundEnabled ? "Audio On" : "Muted"}</span>
+            <span className="text-xs">{soundEnabled ? "Audio On" : "Muted"}</span>
           </button>
         </div>
       </div>
@@ -700,13 +701,13 @@ export default function QrCodeScanner() {
         <div className="@container @4xl:col-span-6 space-y-4">
           {/* Mode 1: File Upload & Clipboard */}
           {activeMode === "upload" && (
-            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+            <div className="p-6 rounded-xl border space-y-4 bg-muted/30">
               <div className="flex items-center justify-between">
-                <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
-                  <Upload className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                <div className="text-sm text-slate-900 dark:text-white flex items-center space-x-2 font-semibold">
+                  <Upload className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>Image Upload & Clipboard</span>
                 </div>
-                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full text-blue-600 dark:text-blue-400 border bg-muted/30">
                   Ctrl + V Anywhere
                 </span>
               </div>
@@ -720,7 +721,7 @@ export default function QrCodeScanner() {
                   if (file) handleFileUpload(file);
                 }}
                 onClick={() => fileInputRef.current?.click()}
-                className="group border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 rounded-3xl p-8 text-center cursor-pointer transition flex flex-col items-center justify-center min-h-[220px] bg-slate-50/50 dark:bg-slate-950/40 hover:bg-blue-50/30 dark:hover:bg-blue-950/20"
+                className="group border-dashed rounded-xl p-8 text-center cursor-pointer flex flex-col items-center justify-center min-h-[220px] border-2 border-input bg-muted/30 transition-colors hover:border-primary/50 hover:bg-muted/60"
               >
                 <input
                   ref={fileInputRef}
@@ -733,53 +734,53 @@ export default function QrCodeScanner() {
                   className="hidden"
                 />
 
-                <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-xs">
+                <div className="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform shadow-xs">
                   <QrCode className="w-7 h-7" />
                 </div>
 
-                <div className="text-xs font-bold text-slate-900 dark:text-white mb-1">
+                <div className="text-xs font-semibold text-slate-900 dark:text-white mb-1">
                   Drop a QR code image here or click to browse
                 </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xs mb-3">
-                  Supports PNG, JPG, WebP, SVG screenshots & photos. Or press <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-mono text-[10px]">Ctrl+V</kbd> / <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-mono text-[10px]">Cmd+V</kbd> to paste.
+                <div className="text-xs text-slate-500 dark:text-slate-400 max-w-xs mb-3">
+                  Supports PNG, JPG, WebP, SVG screenshots & photos. Or press <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-mono text-xs">Ctrl+V</kbd> / <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-800 font-mono text-xs">Cmd+V</kbd> to paste.
                 </div>
 
-                <div className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-xs">
-                  <Clipboard className="w-3.5 h-3.5 text-blue-500" />
+                <div className="inline-flex items-center space-x-1 px-3 py-1 rounded-xl border text-xs font-semibold text-slate-700 dark:text-slate-300 bg-muted/30">
+                  <Clipboard className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>Choose Image File</span>
                 </div>
               </div>
 
               {/* Sample QR Codes Quick Bar */}
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
-                <div className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-                  <span>Try Quick Sample QR Codes:</span>
-                  <Sparkles className="w-3 h-3 text-amber-500" />
+                <div className="text-xs text-slate-500 dark:text-slate-400 mb-2 flex items-center justify-between font-medium">
+                  <span>Try quick sample QR codes</span>
+                  <Sparkles className="w-3 h-3 text-muted-foreground" />
                 </div>
                 <div className="grid grid-cols-2 @sm:grid-cols-4 gap-2">
                   <button
                     onClick={() => loadSampleQr("vcard")}
-                    className="py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-[11px] font-semibold transition text-left truncate"
+                    className="py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-xs font-semibold transition text-left truncate"
                   >
-                    👤 vCard Contact
+                    vCard contact
                   </button>
                   <button
                     onClick={() => loadSampleQr("wifi")}
-                    className="py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-[11px] font-semibold transition text-left truncate"
+                    className="py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-xs font-semibold transition text-left truncate"
                   >
-                    📶 Wi-Fi Network
+                    Wi-Fi network
                   </button>
                   <button
                     onClick={() => loadSampleQr("url")}
-                    className="py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-[11px] font-semibold transition text-left truncate"
+                    className="py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-xs font-semibold transition text-left truncate"
                   >
-                    🌐 Website URL
+                    Website URL
                   </button>
                   <button
                     onClick={() => loadSampleQr("event")}
-                    className="py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-[11px] font-semibold transition text-left truncate"
+                    className="py-1.5 px-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:text-blue-600 text-xs font-semibold transition text-left truncate"
                   >
-                    📅 iCal Event
+                    Calendar event
                   </button>
                 </div>
               </div>
@@ -788,14 +789,14 @@ export default function QrCodeScanner() {
 
           {/* Mode 2: Live Camera Viewport */}
           {activeMode === "camera" && (
-            <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-4">
+            <div className="p-6 rounded-xl border space-y-4 bg-muted/30">
               <div className="flex items-center justify-between">
-                <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+                <div className="text-sm text-slate-900 dark:text-white flex items-center space-x-2 font-semibold">
                   <Camera className="w-3.5 h-3.5 text-rose-500" />
                   <span>Real-Time Camera Scan</span>
                 </div>
                 {cameraActive && (
-                  <span className="flex items-center space-x-1.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full">
+                  <span className="flex items-center space-x-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2 py-0.5 rounded-full">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     <span>Scanning</span>
                   </span>
@@ -804,14 +805,14 @@ export default function QrCodeScanner() {
 
               {/* Camera Error Message */}
               {cameraError && (
-                <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-start space-x-2.5">
+                <div className="p-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-rose-700 dark:text-rose-300 text-xs flex items-start space-x-2.5">
                   <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <div>{cameraError}</div>
                 </div>
               )}
 
               {/* Viewfinder Frame */}
-              <div className="relative w-full aspect-square max-h-[360px] mx-auto rounded-3xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center">
+              <div className="relative w-full aspect-square max-h-[360px] mx-auto rounded-xl overflow-hidden bg-slate-950 border border-slate-800 flex items-center justify-center">
                 <video
                   ref={videoRef}
                   playsInline
@@ -821,7 +822,7 @@ export default function QrCodeScanner() {
 
                 {!cameraActive && !cameraError && (
                   <div className="flex flex-col items-center justify-center p-6 text-center space-y-3">
-                    <div className="w-12 h-12 rounded-2xl bg-slate-800 text-slate-400 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-xl bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center">
                       <Camera className="w-6 h-6" />
                     </div>
                     <div className="text-xs font-semibold text-slate-300">
@@ -829,7 +830,7 @@ export default function QrCodeScanner() {
                     </div>
                     <button
                       onClick={startCamera}
-                      className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition"
+                      className="px-4 py-2 rounded-lg text-xs transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
                     >
                       Start Camera Scanner
                     </button>
@@ -839,7 +840,7 @@ export default function QrCodeScanner() {
                 {/* Laser Overlay & Target Box */}
                 {cameraActive && (
                   <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-                    <div className="w-3/4 h-3/4 border-2 border-dashed border-blue-400/80 rounded-2xl relative">
+                    <div className="w-3/4 h-3/4 border-dashed rounded-xl relative border-2 border-input bg-muted/30 transition-colors hover:border-primary/50 hover:bg-muted/60">
                       {/* Animated scanning laser line */}
                       <div className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-rose-500 to-transparent shadow-[0_0_8px_#f43f5e] animate-[bounce_2s_infinite]" />
                     </div>
@@ -850,13 +851,13 @@ export default function QrCodeScanner() {
               {/* Camera Controls Bar */}
               <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
                 {devices.length > 1 && (
-                  <select
+                  <select aria-label="Camera"
                     value={selectedDeviceId}
                     onChange={(e) => {
                       setSelectedDeviceId(e.target.value);
                       if (cameraActive) startCamera();
                     }}
-                    className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-xs font-medium text-slate-700 dark:text-slate-300"
+                    className="px-3 py-1.5 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                   >
                     {devices.map((d, i) => (
                       <option key={d.deviceId || i} value={d.deviceId}>
@@ -891,7 +892,7 @@ export default function QrCodeScanner() {
                   ) : (
                     <button
                       onClick={startCamera}
-                      className="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition"
+                      className="px-3.5 py-1.5 rounded-lg text-xs transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
                     >
                       Resume Camera
                     </button>
@@ -904,9 +905,9 @@ export default function QrCodeScanner() {
 
         {/* Right Column: Extracted Structured Data & Actions */}
         <div className="@container @4xl:col-span-6 space-y-4">
-          <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <div className="p-6 rounded-xl border space-y-4 bg-muted/30">
             <div className="flex items-center justify-between">
-              <div className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center space-x-2">
+              <div className="text-sm text-slate-900 dark:text-white flex items-center space-x-2 font-semibold">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                 <span>Extracted QR Data</span>
               </div>
@@ -915,7 +916,7 @@ export default function QrCodeScanner() {
                 <div className="flex items-center space-x-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl">
                   <button
                     onClick={() => setActiveViewTab("extracted")}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
                       activeViewTab === "extracted"
                         ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs"
                         : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -925,7 +926,7 @@ export default function QrCodeScanner() {
                   </button>
                   <button
                     onClick={() => setActiveViewTab("raw")}
-                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${
+                    className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition ${
                       activeViewTab === "raw"
                         ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs"
                         : "text-slate-500 hover:text-slate-900 dark:hover:text-white"
@@ -939,14 +940,14 @@ export default function QrCodeScanner() {
 
             {/* Empty State */}
             {!scanResult && (
-              <div className="p-10 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center space-y-3 min-h-[300px]">
-                <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+              <div className="p-10 rounded-xl border-dashed text-center flex flex-col items-center justify-center space-y-3 min-h-[300px] border-2 border-input bg-muted/30 transition-colors hover:border-primary/50 hover:bg-muted/60">
+                <div className="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 dark:text-slate-400">
                   <QrCode className="w-6 h-6" />
                 </div>
                 <div className="text-xs font-semibold text-slate-900 dark:text-white">
                   No QR Code scanned yet
                 </div>
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xs">
+                <div className="text-xs text-slate-500 dark:text-slate-400 max-w-xs">
                   Upload an image, hold a QR code up to your camera, or click one of the quick sample buttons on the left.
                 </div>
               </div>
@@ -957,22 +958,22 @@ export default function QrCodeScanner() {
               <div className="space-y-4 animate-in fade-in duration-200">
                 {/* 1. URL Result Card */}
                 {scanResult.type === "url" && scanResult.parsedUrl && (
-                  <div className="p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900/50 space-y-3">
+                  <div className="p-4 rounded-xl border space-y-3 bg-muted/30">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <span className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">
                           <ExternalLink className="w-4 h-4" />
                         </span>
-                        <span className="text-xs font-bold text-blue-950 dark:text-blue-200">
+                        <span className="text-xs font-semibold text-blue-950 dark:text-blue-200">
                           Website Destination
                         </span>
                       </div>
-                      <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 font-semibold">
+                      <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 font-semibold text-foreground">
                         HTTPS Link
                       </span>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                    <div className="p-3 rounded-xl border bg-muted/30">
                       <a
                         href={scanResult.parsedUrl}
                         target="_blank"
@@ -988,14 +989,14 @@ export default function QrCodeScanner() {
                         href={scanResult.parsedUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center justify-center space-x-1.5 transition shadow-xs"
+                        className="flex-1 py-2 px-3 rounded-lg text-xs flex items-center justify-center space-x-1.5 transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
                       >
                         <span>Open Website</span>
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
                       <button
                         onClick={() => copyToClipboard(scanResult.parsedUrl || "", "url")}
-                        className="py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold flex items-center space-x-1 transition"
+                        className="py-2 px-3 rounded-xl border text-xs font-semibold flex items-center space-x-1 transition bg-muted/30"
                       >
                         {copiedField === "url" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                         <span>{copiedField === "url" ? "Copied" : "Copy Link"}</span>
@@ -1006,33 +1007,33 @@ export default function QrCodeScanner() {
 
                 {/* 2. vCard Contact Card */}
                 {scanResult.type === "vcard" && scanResult.vcard && (
-                  <div className="p-4 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50 space-y-4">
+                  <div className="p-4 rounded-xl border space-y-4 bg-muted/30">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
-                        <span className="p-1.5 rounded-lg bg-indigo-100 dark:bg-indigo-900 text-indigo-600 dark:text-indigo-300">
+                        <span className="p-1.5 rounded-lg bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">
                           <User className="w-4 h-4" />
                         </span>
                         <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white">
+                          <div className="text-xs font-semibold text-slate-900 dark:text-white">
                             {scanResult.vcard.fullName}
                           </div>
                           {(scanResult.vcard.title || scanResult.vcard.organization) && (
-                            <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                            <div className="text-xs text-slate-500 dark:text-slate-400">
                               {[scanResult.vcard.title, scanResult.vcard.organization].filter(Boolean).join(" • ")}
                             </div>
                           )}
                         </div>
                       </div>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300">
                         vCard 3.0
                       </span>
                     </div>
 
                     {/* Contact details rows */}
-                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-2 text-xs">
+                    <div className="p-3 rounded-xl border space-y-2 text-xs bg-muted/30">
                       {scanResult.vcard.cellPhone && (
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400 flex items-center gap-1.5">
+                          <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                             <Phone className="w-3.5 h-3.5" /> Mobile:
                           </span>
                           <a href={`tel:${scanResult.vcard.cellPhone}`} className="font-semibold text-blue-600 hover:underline">
@@ -1042,7 +1043,7 @@ export default function QrCodeScanner() {
                       )}
                       {scanResult.vcard.phone && (
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400 flex items-center gap-1.5">
+                          <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                             <Phone className="w-3.5 h-3.5" /> Work:
                           </span>
                           <a href={`tel:${scanResult.vcard.phone}`} className="font-semibold text-blue-600 hover:underline">
@@ -1052,7 +1053,7 @@ export default function QrCodeScanner() {
                       )}
                       {scanResult.vcard.email && (
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400 flex items-center gap-1.5">
+                          <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                             <Mail className="w-3.5 h-3.5" /> Email:
                           </span>
                           <a href={`mailto:${scanResult.vcard.email}`} className="font-semibold text-blue-600 hover:underline">
@@ -1062,7 +1063,7 @@ export default function QrCodeScanner() {
                       )}
                       {scanResult.vcard.url && (
                         <div className="flex items-center justify-between">
-                          <span className="text-slate-400 flex items-center gap-1.5">
+                          <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
                             <ExternalLink className="w-3.5 h-3.5" /> Website:
                           </span>
                           <a href={scanResult.vcard.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-blue-600 hover:underline truncate max-w-[200px]">
@@ -1072,7 +1073,7 @@ export default function QrCodeScanner() {
                       )}
                       {scanResult.vcard.address && (
                         <div className="flex items-start justify-between gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
-                          <span className="text-slate-400 flex items-center gap-1.5 shrink-0">
+                          <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1.5 shrink-0">
                             <MapPin className="w-3.5 h-3.5" /> Address:
                           </span>
                           <span className="font-medium text-slate-700 dark:text-slate-300 text-right">
@@ -1081,8 +1082,8 @@ export default function QrCodeScanner() {
                         </div>
                       )}
                       {scanResult.vcard.note && (
-                        <div className="pt-1 text-[11px] text-slate-500 italic">
-                          "{scanResult.vcard.note}"
+                        <div className="pt-1 text-xs text-slate-500 italic">
+                          &ldquo;{scanResult.vcard.note}&rdquo;
                         </div>
                       )}
                     </div>
@@ -1091,14 +1092,14 @@ export default function QrCodeScanner() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={downloadVcf}
-                        className="flex-1 py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold flex items-center justify-center space-x-1.5 transition shadow-xs"
+                        className="flex-1 py-2 px-3 rounded-lg text-xs flex items-center justify-center space-x-1.5 transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>Save to Phone Contacts (.vcf)</span>
                       </button>
                       <button
                         onClick={() => copyToClipboard(scanResult.raw, "vcard")}
-                        className="py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold flex items-center space-x-1 transition"
+                        className="py-2 px-3 rounded-xl border text-xs font-semibold flex items-center space-x-1 transition bg-muted/30"
                       >
                         {copiedField === "vcard" ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                         <span>Copy</span>
@@ -1109,36 +1110,36 @@ export default function QrCodeScanner() {
 
                 {/* 3. Wi-Fi Card */}
                 {scanResult.type === "wifi" && scanResult.wifi && (
-                  <div className="p-4 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 space-y-3">
+                  <div className="p-4 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/50 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <span className="p-1.5 rounded-lg bg-emerald-100 dark:bg-emerald-900 text-emerald-600 dark:text-emerald-300">
                           <Wifi className="w-4 h-4" />
                         </span>
                         <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white">
+                          <div className="text-xs font-semibold text-slate-900 dark:text-white">
                             {scanResult.wifi.ssid || "Hidden Network"}
                           </div>
-                          <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                          <div className="text-xs text-slate-500 dark:text-slate-400">
                             Encryption: {scanResult.wifi.authType} {scanResult.wifi.hidden ? "(Hidden)" : ""}
                           </div>
                         </div>
                       </div>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300">
                         Wi-Fi Credentials
                       </span>
                     </div>
 
-                    <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                    <div className="p-3 rounded-xl border space-y-1.5 bg-muted/30">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400 font-medium">Network Name (SSID):</span>
-                        <span className="font-mono font-bold text-slate-900 dark:text-white">
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">Network name (SSID)</span>
+                        <span className="font-mono font-semibold text-slate-900 dark:text-white">
                           {scanResult.wifi.ssid}
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-slate-400 font-medium">Password:</span>
-                        <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                        <span className="text-slate-500 dark:text-slate-400 font-medium">Password</span>
+                        <span className="font-mono font-semibold text-foreground">
                           {scanResult.wifi.password || "No password (Open)"}
                         </span>
                       </div>
@@ -1158,30 +1159,30 @@ export default function QrCodeScanner() {
 
                 {/* 4. Calendar Event */}
                 {scanResult.type === "event" && scanResult.event && (
-                  <div className="p-4 rounded-2xl bg-purple-50/50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-900/50 space-y-3">
+                  <div className="p-4 rounded-xl border space-y-3 bg-muted/30">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <span className="p-1.5 rounded-lg bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300">
                           <Calendar className="w-4 h-4" />
                         </span>
                         <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white">
+                          <div className="text-xs font-semibold text-slate-900 dark:text-white">
                             {scanResult.event.title}
                           </div>
                           {scanResult.event.location && (
-                            <div className="text-[11px] text-slate-500">
+                            <div className="text-xs text-slate-500">
                               {scanResult.event.location}
                             </div>
                           )}
                         </div>
                       </div>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">
                         iCal Event
                       </span>
                     </div>
 
                     {scanResult.event.description && (
-                      <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300">
+                      <div className="p-3 rounded-xl border text-xs text-slate-600 dark:text-slate-300 bg-muted/30">
                         {scanResult.event.description}
                       </div>
                     )}
@@ -1200,23 +1201,23 @@ export default function QrCodeScanner() {
 
                 {/* 5. UPI / Payment */}
                 {scanResult.type === "upi" && scanResult.upi && (
-                  <div className="p-4 rounded-2xl bg-amber-50/50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 space-y-3">
+                  <div className="p-4 rounded-xl border space-y-3 bg-muted/30">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-2">
                         <span className="p-1.5 rounded-lg bg-amber-100 dark:bg-amber-900 text-amber-600 dark:text-amber-300">
                           <CreditCard className="w-4 h-4" />
                         </span>
                         <div>
-                          <div className="text-xs font-bold text-slate-900 dark:text-white">
+                          <div className="text-xs font-semibold text-slate-900 dark:text-white">
                             {scanResult.upi.pn || "UPI Merchant"}
                           </div>
-                          <div className="text-[11px] font-mono text-slate-500">
+                          <div className="text-xs font-mono text-slate-500">
                             {scanResult.upi.pa}
                           </div>
                         </div>
                       </div>
                       {scanResult.upi.am && (
-                        <span className="text-xs font-bold font-mono px-2 py-1 rounded-lg bg-amber-200/60 dark:bg-amber-900 text-amber-900 dark:text-amber-200">
+                        <span className="text-xs font-semibold font-mono px-2 py-1 rounded-lg bg-amber-200/60 dark:bg-amber-900 text-amber-900 dark:text-amber-200">
                           ₹{scanResult.upi.am}
                         </span>
                       )}
@@ -1234,13 +1235,13 @@ export default function QrCodeScanner() {
 
                 {/* 6. Plain Text / JSON */}
                 {(scanResult.type === "text" || scanResult.type === "json") && (
-                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
+                  <div className="p-4 rounded-xl border space-y-3 bg-muted/30">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center space-x-1.5">
+                      <span className="text-sm text-slate-700 dark:text-slate-300 flex items-center space-x-1.5 font-semibold">
                         <FileText className="w-3.5 h-3.5" />
                         <span>Decoded Text Data</span>
                       </span>
-                      <span className="text-[10px] font-mono text-slate-400">
+                      <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
                         {scanResult.raw.length} characters
                       </span>
                     </div>
@@ -1254,7 +1255,7 @@ export default function QrCodeScanner() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => copyToClipboard(scanResult.raw, "rawtext")}
-                        className="flex-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center justify-center space-x-1.5 transition shadow-xs"
+                        className="flex-1 py-2 px-3 rounded-lg text-xs flex items-center justify-center space-x-1.5 transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
                       >
                         {copiedField === "rawtext" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                         <span>Copy Decoded Text</span>
@@ -1269,7 +1270,7 @@ export default function QrCodeScanner() {
                           link.click();
                           URL.revokeObjectURL(url);
                         }}
-                        className="py-2 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold flex items-center space-x-1 transition"
+                        className="py-2 px-3 rounded-xl border text-xs font-semibold flex items-center space-x-1 transition bg-muted/30"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>Save .TXT</span>
@@ -1283,16 +1284,16 @@ export default function QrCodeScanner() {
             {/* Raw Payload View */}
             {scanResult && activeViewTab === "raw" && (
               <div className="space-y-3 animate-in fade-in duration-200">
-                <textarea
+                <textarea aria-label="Scanned content"
                   readOnly
                   rows={8}
                   value={scanResult.raw}
-                  className="w-full p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 font-mono text-xs text-slate-900 dark:text-white"
+                  className="w-full p-3.5 font-mono text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
                 />
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => copyToClipboard(scanResult.raw)}
-                    className="flex-1 py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center justify-center space-x-1.5 transition"
+                    className="flex-1 py-2.5 px-3 rounded-lg text-xs flex items-center justify-center space-x-1.5 transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
                   >
                     {copiedRaw ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     <span>{copiedRaw ? "Copied Raw Data!" : "Copy Raw Payload"}</span>
@@ -1306,19 +1307,19 @@ export default function QrCodeScanner() {
 
       {/* Scan History Section */}
       {history && history.length > 0 && (
-        <div className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-xs">
+        <div className="p-6 rounded-xl border space-y-4 bg-muted/30">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+              <span className="text-sm text-slate-900 dark:text-white font-semibold">
                 Recent Scanned QR History ({history.length}/8)
               </span>
-              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
                 Stored in your browser
               </span>
             </div>
             <button
               onClick={() => setHistory([])}
-              className="text-[11px] font-semibold text-rose-500 hover:text-rose-700 transition flex items-center space-x-1"
+              className="text-xs font-semibold text-rose-500 hover:text-rose-700 transition flex items-center space-x-1"
             >
               <Trash2 className="w-3 h-3" />
               <span>Clear History</span>
@@ -1333,10 +1334,10 @@ export default function QrCodeScanner() {
                   setScanResult(parseQrData(item.raw));
                   window.scrollTo({ top: 120, behavior: "smooth" });
                 }}
-                className="p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 hover:border-blue-500/50 cursor-pointer transition flex flex-col justify-between space-y-2 group"
+                className="p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 hover:border-blue-500/50 cursor-pointer transition flex flex-col justify-between space-y-2 group"
               >
                 <div>
-                  <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono mb-1">
+                  <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-mono mb-1">
                     <span className="uppercase font-semibold text-blue-600 dark:text-blue-400">
                       {item.type}
                     </span>
@@ -1352,7 +1353,7 @@ export default function QrCodeScanner() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-400">
+                <div className="flex items-center justify-between pt-1 border-t border-slate-100 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400">
                   <span>Click to view details</span>
                   <ExternalLink className="w-3 h-3" />
                 </div>

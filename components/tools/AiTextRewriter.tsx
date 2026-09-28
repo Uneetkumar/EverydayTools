@@ -4,120 +4,92 @@ import React, { useState } from "react";
 import AIWorkspace from "@/components/ai/AIWorkspace";
 import AIInput from "@/components/ai/AIInput";
 import AIOutput from "@/components/ai/AIOutput";
-import { LocalAIProvider } from "@/lib/ai/providers/local-provider";
-import { GeminiProvider } from "@/lib/ai/providers/gemini-provider";
-import { AIProviderType, AIOutput as AIOutputType } from "@/lib/ai/types";
-import { ToneType } from "@/lib/ai/nlp/rewriter";
-import { runAI } from "@/lib/ai/run";
+import { useAiTask } from "@/components/ai/useAiTask";
+import { Field, Notice, OptionCards } from "@/components/tool/kit";
+import type { RewriteResult, ToneType } from "@/lib/ai/nlp/rewriter";
 
-const SAMPLE_TEXT = `Hey boss, I'm gonna be a bit late to the morning sync because my train got stuck. Gonna try to jump on the call from my phone if I can. Let me know if we gotta reschedule our 1-on-1 talk for later today. Thanks a lot!`;
+const SAMPLE_TEXT = `Hey boss, I'm gonna be a bit late to the morning sync because my train got stuck. Gonna try to jump on the call from my phone if I can. Let me know if we gotta reschedule our 1-on-1 talk for later today. Thanks a lot!!`;
 
-const localProvider = new LocalAIProvider();
-const geminiProvider = new GeminiProvider();
-
-const TONES: { id: ToneType; label: string; desc: string }[] = [
-  { id: "professional", label: "Professional", desc: "Polished and business-ready" },
-  { id: "friendly", label: "Friendly", desc: "Warm and approachable" },
-  { id: "concise", label: "Concise", desc: "Short and directly to the point" },
-  { id: "formal", label: "Formal", desc: "Traditional and authoritative" },
-  { id: "casual", label: "Casual", desc: "Relaxed and conversational" },
-  { id: "simple", label: "Simple", desc: "Clear and straightforward" },
+const TONES: { value: ToneType; label: string; description: string; local: string }[] = [
+  { value: "professional", label: "Professional", description: "Polished, ready for work email", local: "Fixes slang, text-speak, filler words and !!!" },
+  { value: "formal", label: "Formal", description: "No contractions or slang", local: "Also expands contractions and wordy phrases" },
+  { value: "friendly", label: "Friendly", description: "Warm and approachable", local: "Softens stiff openings and sign-offs, uses contractions" },
+  { value: "casual", label: "Casual", description: "Relaxed and conversational", local: "Everyday words, contractions, shorter phrases" },
+  { value: "concise", label: "Concise", description: "Shorter, same meaning", local: "Removes filler and wordy phrases" },
+  { value: "simple", label: "Simple", description: "Everyday words", local: "Replaces formal and technical words" },
 ];
 
 export default function AiTextRewriter() {
-  const [provider, setProvider] = useState<AIProviderType>("local");
   const [input, setInput] = useState(SAMPLE_TEXT);
   const [tone, setTone] = useState<ToneType>("professional");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [output, setOutput] = useState<AIOutputType | null>(null);
-  // Text as it streams in, before the final AIOutput lands.
-  const [partial, setPartial] = useState("");
+  const ai = useAiTask("rewrite");
+  const toneInfo = TONES.find((t) => t.value === tone)!;
 
-  const handleRun = async () => {
-    if (!input.trim()) {
-      setError("Please enter text to rewrite.");
-      return;
-    }
+  const handleRun = () => ai.run(input, { tone }, "Paste some text to rewrite.");
 
-    setBusy(true);
-    setError(null);
-    setPartial("");
-
-    try {
-      const activeProvider = provider === "local" ? localProvider : geminiProvider;
-      const res = await runAI(activeProvider, {
-        text: input,
-        task: "rewrite",
-        options: { tone },
-      }, setPartial);
-      setOutput(res);
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : String(err));
-    } finally {
-      setBusy(false);
-    }
-  };
+  const out = ai.output;
+  const local = out?.provider === "local" ? (out.metrics?.data as RewriteResult | undefined) : undefined;
 
   return (
     <div className="space-y-6">
       <AIWorkspace
-        provider={provider}
-        onProviderChange={setProvider}
-        streamingText={partial}
-        busy={busy}
+        provider={ai.provider}
+        onProviderChange={ai.setProvider}
+        localHint="Safe, rule-based edits you can review. Private and instant."
+        cloudHint="Rewrites the whole text with Google Gemini. Text is sent to Google."
+        streamingText={ai.partial}
+        busy={ai.busy}
         onRun={handleRun}
-        runLabel={`Rewrite as ${TONES.find((t) => t.id === tone)?.label || "Text"}`}
-        error={error}
-        onClearError={() => setError(null)}
+        runLabel={`Rewrite as ${toneInfo.label.toLowerCase()}`}
+        error={ai.error}
         disabled={!input.trim()}
       >
         <AIInput
           value={input}
           onChange={setInput}
-          placeholder="Paste or write text you want to rewrite..."
+          placeholder="Paste an email, message or paragraph…"
           sampleText={SAMPLE_TEXT}
-          sampleLabel="Load Email Sample"
-          disabled={busy}
+          disabled={ai.busy}
         />
 
-        {/* Tone Selector */}
-        <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
-          <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Select Desired Tone
-          </label>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-            {TONES.map((t) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setTone(t.id)}
-                className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
-                  tone === t.id
-                    ? "bg-blue-50 dark:bg-blue-950/60 border-blue-500 text-blue-600 dark:text-blue-400 ring-1 ring-blue-500/30"
-                    : "border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 hover:border-slate-300 text-slate-700 dark:text-slate-300"
-                }`}
-              >
-                <div className="text-xs font-bold">{t.label}</div>
-                <div className="text-[10px] text-slate-400 truncate mt-0.5">{t.desc}</div>
-              </button>
-            ))}
-          </div>
-        </div>
+        <Field label="Tone" hint={ai.provider === "local" ? `On-device: ${toneInfo.local.toLowerCase()}.` : undefined}>
+          <OptionCards
+            ariaLabel="Tone"
+            value={tone}
+            onChange={setTone}
+            className="grid-cols-2 @2xl:grid-cols-3"
+            options={TONES.map((t) => ({ value: t.value, label: t.label, description: t.description }))}
+          />
+        </Field>
       </AIWorkspace>
 
-      {/* Output Panel */}
-      {output && (
-        <AIOutput
-          title={`Rewritten Text (${TONES.find((t) => t.id === tone)?.label})`}
-          result={output.result}
-          provider={output.provider}
-          modelUsed={output.modelUsed}
-          elapsedMs={output.elapsedMs}
-          filename="rewritten.txt"
-          toolName="ai-text-rewriter"
-          onRegenerate={handleRun}
-        />
+      {out && local && local.changes.length === 0 ? (
+        <Notice>
+          Nothing to change on-device: none of this tone&apos;s rules apply to your text. For a full rewrite with new
+          sentences, switch to Cloud AI.
+        </Notice>
+      ) : (
+        out && (
+          <AIOutput
+            title="Rewritten text"
+            result={out.result}
+            provider={out.provider}
+            modelUsed={out.modelUsed}
+            elapsedMs={out.elapsedMs}
+            filename="rewritten.txt"
+            toolName="ai-text-rewriter"
+            onRegenerate={handleRun}
+            format="text"
+            compareWith={out.input}
+            stats={
+              local ? (
+                <p className="text-xs text-muted-foreground">
+                  {local.changes.length} edit{local.changes.length === 1 ? "" : "s"}. Choose Show changes to review each one.
+                </p>
+              ) : undefined
+            }
+          />
+        )
       )}
     </div>
   );

@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { Copy, Check, Link2, Sparkles, Trash2, ArrowRightLeft, ShieldCheck } from "lucide-react";
+import { copyText } from "@/lib/utils/clipboard";
 
 export default function UtmBuilder() {
   const [baseUrl, setBaseUrl] = useState<string>("https://tabbench.com/tools/percentage-calculator");
@@ -62,14 +63,14 @@ export default function UtmBuilder() {
 
   const handleCopy = () => {
     if (!generatedUrl) return;
-    navigator.clipboard.writeText(generatedUrl);
+    copyText(generatedUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
   const handleCopyClean = () => {
     if (!cleanUrl) return;
-    navigator.clipboard.writeText(cleanUrl);
+    copyText(cleanUrl);
     setCopiedClean(true);
     setTimeout(() => setCopiedClean(false), 2000);
   };
@@ -78,10 +79,10 @@ export default function UtmBuilder() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Form Inputs */}
-        <div className="lg:col-span-6 space-y-4 p-5 sm:p-6 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80">
+        <div className="lg:col-span-6 space-y-4 p-5 sm:p-6 rounded-xl border bg-muted/30">
           <div className="flex justify-between items-center">
-            <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Link2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+              <Link2 className="w-4 h-4 text-muted-foreground" />
               Campaign Parameters
             </h2>
             <button
@@ -92,7 +93,7 @@ export default function UtmBuilder() {
                 setUtmTerm("");
                 setUtmContent("");
               }}
-              className="text-xs font-semibold text-slate-400 hover:text-rose-500 transition-colors"
+              className="text-xs font-semibold text-slate-500 dark:text-slate-400 hover:text-rose-500 transition-colors"
             >
               Reset UTMs
             </button>
@@ -100,7 +101,7 @@ export default function UtmBuilder() {
 
           {/* Website URL */}
           <div className="space-y-1.5">
-            <label htmlFor="utm-url-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <label htmlFor="utm-url-input" className="text-sm font-medium text-foreground">
               Website Landing URL *
             </label>
             <input
@@ -109,14 +110,14 @@ export default function UtmBuilder() {
               value={baseUrl}
               onChange={(e) => handlePasteFullUrl(e.target.value)}
               placeholder="https://example.com/pricing"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-sm font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full px-3.5 py-2.5 font-mono text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Campaign Source */}
             <div className="space-y-1.5">
-              <label htmlFor="utm-source-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label htmlFor="utm-source-input" className="text-sm font-medium text-foreground">
                 Source (utm_source) *
               </label>
               <input
@@ -125,13 +126,13 @@ export default function UtmBuilder() {
                 value={utmSource}
                 onChange={(e) => setUtmSource(e.target.value)}
                 placeholder="google, newsletter, twitter"
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full px-3 py-2 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               />
             </div>
 
             {/* Campaign Medium */}
             <div className="space-y-1.5">
-              <label htmlFor="utm-medium-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label htmlFor="utm-medium-input" className="text-sm font-medium text-foreground">
                 Medium (utm_medium) *
               </label>
               <input
@@ -140,14 +141,14 @@ export default function UtmBuilder() {
                 value={utmMedium}
                 onChange={(e) => setUtmMedium(e.target.value)}
                 placeholder="cpc, banner, email, social"
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full px-3 py-2 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               />
             </div>
           </div>
 
           {/* Campaign Name */}
           <div className="space-y-1.5">
-            <label htmlFor="utm-campaign-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <label htmlFor="utm-campaign-input" className="text-sm font-medium text-foreground">
               Campaign Name (utm_campaign) *
             </label>
             <input
@@ -156,14 +157,14 @@ export default function UtmBuilder() {
               value={utmCampaign}
               onChange={(e) => setUtmCampaign(e.target.value)}
               placeholder="summer_sale_2026"
-              className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+              className="w-full px-3 py-2 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             />
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Campaign Term */}
             <div className="space-y-1.5">
-              <label htmlFor="utm-term-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label htmlFor="utm-term-input" className="text-sm font-medium text-foreground">
                 Keyword Term (utm_term)
               </label>
               <input
@@ -172,13 +173,13 @@ export default function UtmBuilder() {
                 value={utmTerm}
                 onChange={(e) => setUtmTerm(e.target.value)}
                 placeholder="online_tools"
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full px-3 py-2 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               />
             </div>
 
             {/* Campaign Content */}
             <div className="space-y-1.5">
-              <label htmlFor="utm-content-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+              <label htmlFor="utm-content-input" className="text-sm font-medium text-foreground">
                 Ad Content (utm_content)
               </label>
               <input
@@ -187,7 +188,7 @@ export default function UtmBuilder() {
                 value={utmContent}
                 onChange={(e) => setUtmContent(e.target.value)}
                 placeholder="blue_sidebar_banner"
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-medium text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                className="w-full px-3 py-2 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               />
             </div>
           </div>
@@ -196,8 +197,8 @@ export default function UtmBuilder() {
         {/* Output Cards */}
         <div className="lg:col-span-6 space-y-4">
           {/* Tagged Campaign URL */}
-          <div className="p-6 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs space-y-3">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+          <div className="p-6 rounded-xl border space-y-3 bg-muted/30">
+            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
               Generated Tracking URL
             </span>
 
@@ -208,7 +209,7 @@ export default function UtmBuilder() {
             <button
               onClick={handleCopy}
               disabled={!generatedUrl}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs transition-colors bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
             >
               {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               {copied ? "Copied Campaign URL!" : "Copy Full Campaign URL"}
@@ -216,9 +217,9 @@ export default function UtmBuilder() {
           </div>
 
           {/* Clean URL Tool */}
-          <div className="p-5 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/60 space-y-3">
+          <div className="p-5 rounded-xl border space-y-3 bg-muted/30">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+              <span className="text-xs font-semibold text-slate-900 dark:text-white flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" />
                 Stripped & Clean URL (Tracker-Free)
               </span>

@@ -9,7 +9,8 @@ import { generateBreadcrumbJsonLd, generateFaqJsonLd } from "@/lib/seo/jsonld";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import AdSlot from "@/components/AdSlot";
 import FaqSection from "@/components/FaqSection";
-import { ArrowRight, ListOrdered, Lightbulb, Clock, CheckCircle2 } from "lucide-react";
+import { ArrowRight, ListOrdered, Lightbulb, Clock } from "lucide-react";
+import { ToolVisual } from "@/components/tool/tool-visual";
 
 interface GuidePageProps {
   params: Promise<{ slug: string }>;
@@ -89,25 +90,18 @@ export default async function GuidePage({ params }: GuidePageProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+      <div className="page-container py-8 md:py-12">
         <Breadcrumbs items={[{ name: "Guides", url: "/guides" }, { name: guide.title }]} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-          <article className="lg:col-span-8 space-y-6">
-            <header className="space-y-3">
-              <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                {guide.title}
-              </h1>
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/80 pb-3">
-                <span className="font-semibold text-slate-700 dark:text-slate-300">
-                  By TabBench Editorial Board
-                </span>
-                <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  Fact-Checked & Verified
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5" />
+        <div className="mt-6 grid items-start gap-x-12 gap-y-10 lg:grid-cols-[minmax(0,1fr)_300px]">
+          <article className="min-w-0 max-w-3xl">
+            <header>
+              <h1 className="type-h1 text-foreground">{guide.title}</h1>
+              <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 border-b pb-4 text-sm text-muted-foreground">
+                <span>By TabBench</span>
+                <span aria-hidden="true">·</span>
+                <span className="inline-flex items-center gap-1">
+                  <Clock className="size-3.5" aria-hidden="true" />
                   <time dateTime={guide.updated}>
                     Updated{" "}
                     {new Date(guide.updated).toLocaleDateString("en-GB", {
@@ -115,104 +109,108 @@ export default async function GuidePage({ params }: GuidePageProps) {
                     })}
                   </time>
                 </span>
+                <span aria-hidden="true">·</span>
+                <Link href="/editorial-policy" className="text-link hover:underline">
+                  How we check our guides
+                </Link>
+              </p>
+              <div className="mt-6 space-y-4">
+                {guide.intro.map((para, i) => (
+                  <p key={i} className="type-body text-foreground/85">
+                    {para}
+                  </p>
+                ))}
               </div>
-              {guide.intro.map((para, i) => (
-                <p key={i} className="text-base leading-relaxed text-slate-600 dark:text-slate-400">
-                  {para}
-                </p>
-              ))}
             </header>
 
             {tool && (
-              <Link href={`/tools/${tool.slug}`}
-                className="group flex items-center justify-between gap-3 rounded-2xl border border-blue-200 dark:border-blue-900/50 bg-blue-50/60 dark:bg-blue-950/30 p-5 transition hover:border-blue-400">
-                <span>
-                  <span className="block text-sm font-bold text-slate-900 dark:text-white">
-                    Open the {guide.toolLabel}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-slate-600 dark:text-slate-400">
-                    Free, no signup, and the file never leaves your browser.
+              <div className="group relative mt-8 flex items-center justify-between gap-4 rounded-xl border border-primary/20 bg-brand-subtle/60 p-5 transition-colors hover:border-primary/40 has-[a:focus-visible]:outline-2 has-[a:focus-visible]:outline-offset-2 has-[a:focus-visible]:outline-ring">
+                <span className="flex min-w-0 items-center gap-3">
+                  <ToolVisual slug={tool.slug} iconName={tool.iconName} category={tool.category} size="md" />
+                  <span className="min-w-0">
+                    <Link
+                      href={`/tools/${tool.slug}`}
+                      className="block font-medium text-foreground outline-none after:absolute after:inset-0 after:rounded-xl"
+                    >
+                      Open the {guide.toolLabel}
+                    </Link>
+                    <span className="mt-0.5 block text-sm text-muted-foreground">
+                      {tool.privacy === "local"
+                        ? "Free, no sign-up, and your file never leaves your browser."
+                        : "Free and no sign-up."}
+                    </span>
                   </span>
                 </span>
-                <ArrowRight className="w-4 h-4 shrink-0 text-blue-600 transition group-hover:translate-x-0.5" />
-              </Link>
+                <ArrowRight aria-hidden="true" className="size-4 shrink-0 text-link transition-transform group-hover:translate-x-0.5" />
+              </div>
             )}
 
-            <section className="rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white/70 dark:bg-slate-900/60 p-6 shadow-sm">
-              <div className="flex items-center space-x-2.5 mb-5 pb-3 border-b border-slate-100 dark:border-slate-800/60">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center">
-                  <ListOrdered className="w-4 h-4" />
-                </div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  Step by step
-                </h2>
-              </div>
-              <ol className="space-y-5">
+            <section aria-labelledby="steps-heading" className="mt-12">
+              <h2 id="steps-heading" className="flex items-center gap-2.5 type-h2 text-foreground">
+                <ListOrdered className="size-5 text-muted-foreground" aria-hidden="true" />
+                Step by step
+              </h2>
+              <ol className="mt-6 space-y-6">
                 {guide.steps.map((step, i) => (
-                  <li key={i} className="flex gap-3">
-                    <span aria-hidden="true"
-                      className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[11px] font-bold text-white">
+                  <li key={i} className="flex gap-4">
+                    <span
+                      aria-hidden="true"
+                      className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground"
+                    >
                       {i + 1}
                     </span>
-                    <div>
-                      <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-1">
-                        {step.title}
-                      </h3>
-                      <p className="text-sm leading-relaxed text-slate-600 dark:text-slate-400">
-                        {step.body}
-                      </p>
+                    <div className="min-w-0 pt-0.5">
+                      <h3 className="type-h4 text-foreground">{step.title}</h3>
+                      <p className="mt-1.5 type-body text-muted-foreground">{step.body}</p>
                     </div>
                   </li>
                 ))}
               </ol>
             </section>
 
-            <div className="py-2">
-              <AdSlot placement="toolInArticle" format="in-article" />
+            <div className="mt-12">
+              <AdSlot placement="content-middle" />
             </div>
 
-            <section className="rounded-2xl border border-amber-200/70 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-950/15 p-6 shadow-sm">
-              <div className="flex items-center space-x-2.5 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                  <Lightbulb className="w-4 h-4" />
-                </div>
-                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-                  Things worth knowing
-                </h2>
-              </div>
-              <ul className="space-y-2.5">
+            <section aria-labelledby="notes-heading" className="mt-12">
+              <h2 id="notes-heading" className="flex items-center gap-2.5 type-h2 text-foreground">
+                <Lightbulb className="size-5 text-muted-foreground" aria-hidden="true" />
+                Things worth knowing
+              </h2>
+              <ul className="mt-5 space-y-3">
                 {guide.notes.map((note, i) => (
-                  <li key={i} className="flex gap-2.5 text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                    <span aria-hidden="true" className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-500" />
+                  <li key={i} className="flex gap-3 type-body text-muted-foreground">
+                    <span aria-hidden="true" className="mt-2.5 size-1.5 shrink-0 rounded-full bg-warning" />
                     <span>{note}</span>
                   </li>
                 ))}
               </ul>
             </section>
 
-            <FaqSection faqs={guide.faqs} />
+            <div className="mt-12">
+              <FaqSection faqs={guide.faqs} />
+            </div>
           </article>
 
-          <aside className="lg:col-span-4 space-y-6">
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-xs space-y-3">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white">
-                More guides
-              </h2>
-              <div className="space-y-1.5 pt-1">
+          <aside aria-label="More guides" className="lg:sticky lg:top-24">
+            <nav aria-labelledby="more-guides" className="rounded-xl border bg-card p-4 shadow-soft">
+              <h2 id="more-guides" className="type-h4 text-foreground">More guides</h2>
+              <ul className="mt-3 space-y-0.5">
                 {others.map((g) => (
-                  <Link key={g.slug} href={`/guides/${g.slug}`}
-                    className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-200 transition group">
-                    <span className="group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
+                  <li key={g.slug}>
+                    <Link
+                      href={`/guides/${g.slug}`}
+                      className="block rounded-md px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    >
                       {g.title}
-                    </span>
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0 ml-2" />
-                  </Link>
+                    </Link>
+                  </li>
                 ))}
-              </div>
-              <Link href="/guides" className="block pt-2 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
-                All guides →
+              </ul>
+              <Link href="/guides" className="mt-3 inline-flex items-center gap-1 px-2 text-sm text-link hover:underline">
+                All guides <ArrowRight className="size-3.5" aria-hidden="true" />
               </Link>
-            </div>
+            </nav>
           </aside>
         </div>
       </div>

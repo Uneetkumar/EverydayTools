@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { Copy, Check, Download, Code, Sparkles, Trash2 } from "lucide-react";
 import { downloadBlob } from "@/lib/utils/download";
+import { copyText } from "@/lib/utils/clipboard";
 
 const SAMPLE_JSON = `{
   "userId": 104,
@@ -89,23 +90,20 @@ export default function JsonToTypeScript() {
   const [isReadonly, setIsReadonly] = useState<boolean>(false);
   const [isOptional, setIsOptional] = useState<boolean>(false);
   const [copied, setCopied] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const output = useMemo(() => {
-    setError(null);
-    if (!input.trim()) return "";
+  // Derived together; setting state from inside useMemo re-renders during render.
+  const { output, error } = useMemo((): { output: string; error: string | null } => {
+    if (!input.trim()) return { output: "", error: null };
     try {
       const parsed = JSON.parse(input);
-      return generateTs(parsed, rootName || "RootObject", declarationKind, isReadonly, isOptional);
+      return { output: generateTs(parsed, rootName || "RootObject", declarationKind, isReadonly, isOptional), error: null };
     } catch (e) {
-      setError((e as Error).message);
-      return "";
+      return { output: "", error: (e as Error).message };
     }
   }, [input, rootName, declarationKind, isReadonly, isOptional]);
 
   const handleCopy = () => {
     if (!output) return;
-    navigator.clipboard.writeText(output);
+    copyText(output);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
@@ -118,11 +116,11 @@ export default function JsonToTypeScript() {
   return (
     <div className="space-y-6">
       {/* Options Toolbar */}
-      <div className="flex flex-wrap gap-3 items-center justify-between p-4 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80">
+      <div className="flex flex-wrap gap-3 items-center justify-between p-4 rounded-xl border bg-muted/30">
         <div className="flex flex-wrap items-center gap-3">
           {/* Root Interface Name */}
           <div className="flex items-center gap-1.5">
-            <label htmlFor="ts-root-input" className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <label htmlFor="ts-root-input" className="text-sm font-medium text-foreground">
               Root Name:
             </label>
             <input
@@ -130,7 +128,7 @@ export default function JsonToTypeScript() {
               type="text"
               value={rootName}
               onChange={(e) => setRootName(e.target.value)}
-              className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs font-mono font-bold text-slate-900 dark:text-white w-36"
+              className="px-2.5 py-1.5 font-mono w-36 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
               placeholder="UserResponse"
             />
           </div>
@@ -161,7 +159,7 @@ export default function JsonToTypeScript() {
         </div>
 
         {/* Toggles */}
-        <div className="flex items-center gap-3 text-xs font-medium text-slate-700 dark:text-slate-300">
+        <div className="flex items-center gap-3 text-sm font-medium text-foreground">
           <label className="flex items-center gap-1.5 cursor-pointer">
             <input
               type="checkbox"
@@ -187,29 +185,29 @@ export default function JsonToTypeScript() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Input JSON */}
         <div className="space-y-2">
-          <div className="flex justify-between items-center text-xs font-bold text-slate-700 dark:text-slate-300">
+          <div className="flex justify-between items-center text-sm font-medium text-foreground">
             <span>Input JSON Object or Array</span>
             <button
               onClick={() => setInput("")}
-              className="text-slate-400 hover:text-rose-500 flex items-center gap-1 transition-colors"
+              className="text-slate-500 dark:text-slate-400 hover:text-rose-500 flex items-center gap-1 transition-colors"
             >
               <Trash2 className="w-3 h-3" /> Clear
             </button>
           </div>
-          <textarea
+          <textarea aria-label="JSON input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             rows={14}
             placeholder="Paste JSON here to generate TypeScript interfaces..."
-            className="w-full p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 font-mono text-xs text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 resize-y"
+            className="w-full p-4 font-mono resize-y text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           />
         </div>
 
         {/* Output TypeScript */}
         <div className="space-y-2">
-          <div className="flex justify-between items-center text-xs font-bold text-slate-700 dark:text-slate-300">
+          <div className="flex justify-between items-center text-sm font-medium text-foreground">
             <span className="flex items-center gap-1.5">
-              <Code className="w-3.5 h-3.5 text-blue-500" />
+              <Code className="w-3.5 h-3.5 text-muted-foreground" />
               Generated TypeScript Definitions
             </span>
             <div className="flex items-center gap-2">
@@ -224,7 +222,7 @@ export default function JsonToTypeScript() {
               <button
                 onClick={handleDownload}
                 disabled={!output}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold disabled:opacity-50 transition-colors"
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs disabled:opacity-50 transition-colors bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
               >
                 <Download className="w-3 h-3" />
                 .ts File
@@ -232,14 +230,14 @@ export default function JsonToTypeScript() {
             </div>
           </div>
 
-          <textarea
+          <textarea aria-label="TypeScript output"
             readOnly
             value={error ? `Syntax Error: ${error}` : output}
             rows={14}
-            className={`w-full p-4 rounded-2xl border font-mono text-xs resize-y focus:outline-none ${
+            className={`w-full p-4 font-mono resize-y text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 ${
               error
-                ? "border-rose-300 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400"
-                : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-slate-900 dark:text-white"
+                ? "border-rose-300 dark:border-rose-900 bg-rose-50/50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                : "text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
             }`}
           />
         </div>

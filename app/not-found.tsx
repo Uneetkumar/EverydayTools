@@ -1,8 +1,11 @@
 import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
-import { getPopularTools, TOOL_CATEGORIES, getToolsByCategory } from "@/lib/tools/registry";
+import { getAllTools, getPopularTools, TOOL_CATEGORIES, getToolsByCategory } from "@/lib/tools/registry";
 import { ArrowRight, Compass } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ToolCard } from "@/components/tool/tool-card";
+import { HeroSearch } from "@/components/home/hero-search";
 
 /**
  * A 404 with real links, rather than a dead end.
@@ -25,74 +28,52 @@ export default function NotFound() {
   );
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16 space-y-10">
-      <header className="space-y-4 text-center">
-        <span className="inline-flex items-center gap-1.5 rounded-md bg-slate-100 dark:bg-slate-800 px-3 py-1 text-xs font-semibold text-slate-500">
-          <Compass className="w-3.5 h-3.5" />
+    <div className="page-container py-12 md:py-20">
+      <header className="mx-auto max-w-2xl text-center">
+        <p className="inline-flex items-center gap-1.5 rounded-md bg-muted px-2.5 py-1 type-overline text-muted-foreground">
+          <Compass className="size-3.5" aria-hidden="true" />
           404
-        </span>
-        <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-          That page does not exist
-        </h1>
-        <p className="text-base text-slate-600 dark:text-slate-400 max-w-xl mx-auto">
-          The link may be outdated, or the address might have a typo. Everything
-          on the site is reachable from the tool directory.
         </p>
-        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-          <Link
-            href="/tools"
-            className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
-          >
-            Browse all tools
-          </Link>
-          <Link
-            href="/"
-            className="px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition"
-          >
-            Go to homepage
-          </Link>
+        <h1 className="mt-4 type-h1 text-foreground">That page doesn&apos;t exist</h1>
+        <p className="mt-3 type-body text-muted-foreground">
+          The link may be out of date, or the address may have a typo. Search for the tool you need, or pick one
+          below.
+        </p>
+        <div className="mx-auto mt-6 max-w-lg">
+          <HeroSearch toolCount={getAllTools().length} />
+        </div>
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+          <Button asChild>
+            <Link href="/tools">Browse all tools</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <Link href="/">Go to the homepage</Link>
+          </Button>
         </div>
       </header>
 
-      <section aria-labelledby="popular-404" className="space-y-4">
-        <h2
-          id="popular-404"
-          className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2"
-        >
-          Popular tools
-        </h2>
-        <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+      <section aria-labelledby="popular-404" className="mx-auto mt-14 max-w-5xl">
+        <h2 id="popular-404" className="type-h3 text-foreground">Popular tools</h2>
+        <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {popular.map((tool) => (
             <li key={tool.slug}>
-              <Link
-                href={`/tools/${tool.slug}`}
-                className="group flex items-center justify-between gap-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 text-sm font-medium text-slate-800 dark:text-slate-200 transition hover:border-blue-300 dark:hover:border-blue-700"
-              >
-                <span className="truncate group-hover:text-blue-600 dark:group-hover:text-blue-400">
-                  {tool.name}
-                </span>
-                <ArrowRight className="h-3.5 w-3.5 shrink-0 text-slate-400 transition group-hover:translate-x-0.5 group-hover:text-blue-600" />
-              </Link>
+              <ToolCard tool={tool} as="p" showFavorite={false} className="h-full" />
             </li>
           ))}
         </ul>
       </section>
 
-      <section aria-labelledby="cats-404" className="space-y-4">
-        <h2
-          id="cats-404"
-          className="text-sm font-bold uppercase tracking-wider text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2"
-        >
-          Categories
-        </h2>
-        <ul className="flex flex-wrap gap-2">
+      <section aria-labelledby="cats-404" className="mx-auto mt-12 max-w-5xl">
+        <h2 id="cats-404" className="type-h3 text-foreground">Categories</h2>
+        <ul className="mt-4 flex flex-wrap gap-2">
           {categories.map((cat) => (
             <li key={cat.id}>
               <Link
                 href={`/categories/${cat.id}`}
-                className="inline-block rounded-lg bg-slate-100 dark:bg-slate-800 px-3 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-700 dark:hover:text-blue-300 transition"
+                className="inline-flex items-center gap-1.5 rounded-full border bg-card px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-accent"
               >
                 {cat.name}
+                <ArrowRight className="size-3.5 text-muted-foreground" aria-hidden="true" />
               </Link>
             </li>
           ))}

@@ -3,12 +3,11 @@
 // deletes caches whose key !== CACHE_NAME, so a constant name meant nothing was
 // ever purged: stale HTML from an old deploy survived indefinitely and could be
 // served on any navigation whose network fetch failed.
-const CACHE_NAME = "tabbench-pwa-v3";
+const CACHE_NAME = "tabbench-pwa-v4";
 const STATIC_ASSETS = [
   "/",
   "/manifest.webmanifest",
   "/icon.svg",
-  "/public/icon.svg",
   "/about",
   "/tools",
 ];
@@ -45,13 +44,24 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const request = event.request;
 
-  // Ignore non-GET requests and external ad requests
-  if (
-    request.method !== "GET" ||
-    request.url.includes("googlesyndication.com") ||
-    request.url.includes("google-analytics.com") ||
-    request.url.includes("pagead2.googlesyndication")
-  ) {
+  // Only same-origin GETs. Cross-origin requests — ads, analytics, Firebase,
+  // and the exchange-rate APIs — go straight to the network: serving those
+  // stale-while-revalidate (as before) could hand the currency converter
+  // yesterday's rates from this cache.
+  const url = new URL(request.url);
+  if (request.method !== "GET" || url.origin !== self.location.origin) {
+    return;
+  }
+
+  // Next.js router payloads (prefetch/navigation data) must always match the
+  // deployed JavaScript; a cached copy from an older deploy breaks navigation.
+  if (url.searchParams.has("_rsc") || url.pathname.includes("/__next.") || request.headers.get("RSC")) {
+    return;
+  }
+
+  // The tool list for search changes with every deploy; the HTTP cache
+  // revalidates it, so a stale copy here would only show old names.
+  if (url.pathname === "/tool-index.json") {
     return;
   }
 

@@ -17,6 +17,7 @@ import {
 } from "@/lib/currency/rates";
 import { detectLocalCurrency, defaultPairForCurrency } from "@/lib/currency/locale";
 import CurrencyPicker from "./CurrencyPicker";
+import { copyText } from "@/lib/utils/clipboard";
 
 const QUICK_AMOUNTS = [1, 10, 100, 1000, 10000];
 
@@ -128,7 +129,7 @@ export default function CurrencyConverter({
 
   const copyResult = async () => {
     if (converted === null) return;
-    await navigator.clipboard.writeText(converted.toFixed(2));
+    await copyText(converted.toFixed(2));
     setCopied(true);
     setTimeout(() => setCopied(false), 1800);
   };
@@ -137,7 +138,7 @@ export default function CurrencyConverter({
     <div className="space-y-5">
       <div className="grid grid-cols-1 @2xl:grid-cols-[1fr_auto_1fr] gap-3 items-end">
         <div className="space-y-1.5">
-          <label htmlFor="fx-amount" className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <label htmlFor="fx-amount" className="block text-sm font-medium text-foreground">
             Amount
           </label>
           <input
@@ -146,7 +147,7 @@ export default function CurrencyConverter({
             inputMode="decimal"
             value={amount}
             onChange={(e) => setAmount(e.target.value.replace(/[^\d.,]/g, ""))}
-            className="w-full text-lg font-semibold bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 px-3 py-2.5 rounded-xl text-slate-900 dark:text-white"
+            className="w-full text-lg px-3 py-2.5 rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
           />
           <CurrencyPicker
             label="Convert from currency"
@@ -160,16 +161,16 @@ export default function CurrencyConverter({
         <button
           onClick={swap}
           aria-label="Swap currencies"
-          className="mx-auto @2xl:mb-1 p-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white transition"
+          className="mx-auto @2xl:mb-1 p-2.5 rounded-lg transition bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
         >
           <ArrowRightLeft className="w-4 h-4" />
         </button>
 
         <div className="space-y-1.5">
-          <span className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+          <span className="block text-sm font-medium text-foreground">
             Converted to
           </span>
-          <div className="w-full text-lg font-bold bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 px-3 py-2.5 rounded-xl text-emerald-800 dark:text-emerald-300 min-h-[46px] flex items-center justify-between gap-2">
+          <div className="w-full text-lg font-semibold bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900/40 px-3 py-2.5 rounded-xl text-emerald-800 dark:text-emerald-300 min-h-[46px] flex items-center justify-between gap-2">
             <span className="truncate">
               {loading ? "…" : converted !== null ? fmt(converted, to) : "—"}
             </span>
@@ -191,12 +192,12 @@ export default function CurrencyConverter({
       </div>
 
       {rate !== null && !loading && (
-        <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-4 rounded-xl border bg-muted/30">
           <div className="text-sm">
             <span className="font-semibold text-slate-900 dark:text-white">
               1 {from} = {rate.toLocaleString(undefined, { maximumFractionDigits: 6 })} {to}
             </span>
-            <span className="block text-[11px] text-slate-500 mt-0.5">
+            <span className="block text-xs text-slate-500 mt-0.5">
               1 {to} = {(1 / rate).toLocaleString(undefined, { maximumFractionDigits: 6 })} {from}
             </span>
           </div>
@@ -209,7 +210,7 @@ export default function CurrencyConverter({
       )}
 
       <div className="space-y-1.5">
-        <span className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+        <span className="block text-sm font-medium text-foreground">
           Quick amounts
         </span>
         <div className="flex flex-wrap gap-2">
@@ -223,7 +224,7 @@ export default function CurrencyConverter({
       </div>
 
       <div className="space-y-1.5">
-        <span className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+        <span className="block text-sm font-medium text-foreground">
           Popular pairs
         </span>
         <div className="flex flex-wrap gap-2">
@@ -231,7 +232,7 @@ export default function CurrencyConverter({
             <button key={`${a}${b}`} onClick={() => { changeFrom(a); setTo(b); }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                 from === a && to === b
-                  ? "bg-blue-600 text-white"
+                  ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                   : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
               }`}>
               {a} → {b}
@@ -241,10 +242,10 @@ export default function CurrencyConverter({
       </div>
 
       {error && (
-        <div className="flex gap-2.5 p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+        <div className="flex gap-2.5 p-4 rounded-xl border bg-muted/30">
+          <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-muted-foreground" />
           <div className="space-y-2">
-            <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-200">{error}</p>
+            <p className="text-xs leading-relaxed text-muted-foreground">{error}</p>
             <button onClick={refresh}
               className="text-xs font-semibold text-amber-900 dark:text-amber-100 underline">
               Try again
@@ -254,7 +255,7 @@ export default function CurrencyConverter({
       )}
 
       {localCurrency && (
-        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+        <p className="text-xs text-slate-500 dark:text-slate-400">
           Defaulted to {localCurrency} from your device&rsquo;s region settings.
           Change either currency above to override — no location lookup was
           performed.
@@ -262,15 +263,15 @@ export default function CurrencyConverter({
       )}
 
       {table && !loading && (
-        <p className="flex items-start gap-1.5 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400">
+        <p className="flex items-start gap-1.5 text-xs leading-relaxed text-slate-500 dark:text-slate-400">
           <Wifi className="w-3 h-3 mt-0.5 shrink-0" />
           <span>
             Mid-market rates from {table.provider}, updated{" "}
             {new Date(table.updatedAt).toUTCString()}. Banks and card networks
             add a margin of roughly 1–4% on top, so the amount you actually
-            receive will be lower than the figure shown. This is the one tool on
-            the site that contacts an external service — it sends no personal
-            data, only a request for the public rate table.
+            receive will be lower than the figure shown. To get the rates this
+            tool contacts an external service; it sends no personal data or
+            amounts, only a request for the public rate table.
           </span>
         </p>
       )}

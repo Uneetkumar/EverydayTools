@@ -4,164 +4,215 @@ import React, { useState } from "react";
 import ResultCard from "@/components/ResultCard";
 import ToolInput from "@/components/ui/ToolInput";
 import CopyButton from "@/components/ui/CopyButton";
-import { formatCurrency, formatNumber } from "@/lib/utils";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { formatNumber } from "@/lib/utils";
 import { usePersistentState } from "@/lib/hooks/usePersistentState";
-import { Receipt } from "lucide-react";
+import { Info } from "lucide-react";
+
+/**
+ * GST slabs in force since 22 September 2025 ("GST 2.0"): the 12% and 28%
+ * slabs were folded into 5% and 18%, with 40% for luxury and sin goods. 3% is
+ * the long-standing rate for gold and silver. Older rates can still be typed
+ * into the custom field for pre-reform invoices.
+ */
+const SLABS = ["3", "5", "18", "40"];
 
 export default function GstCalculator() {
   const [mode, setMode] = usePersistentState<"exclusive" | "inclusive">("gst_mode", "exclusive");
+  const [supply, setSupply] = usePersistentState<"intra" | "inter">("gst_supply", "intra");
   const [amount, setAmount] = usePersistentState<string>("gst_amount", "1000");
   const [rate, setRate] = usePersistentState<string>("gst_rate", "18");
   const [currencySymbol, setCurrencySymbol] = useState("₹");
 
-  const numAmount = Math.max(0, parseFloat(amount) || 0);
-  const numRate = Math.max(0, parseFloat(rate) || 0);
+  const parsedAmount = parseFloat(amount);
+  const parsedRate = parseFloat(rate);
+  const amountError =
+    amount.trim() !== "" && (!Number.isFinite(parsedAmount) || parsedAmount < 0) ? "Enter an amount of 0 or more." : undefined;
+  const rateError =
+    rate.trim() === ""
+      ? "Choose a rate or type one."
+      : !Number.isFinite(parsedRate) || parsedRate < 0 || parsedRate > 100
+        ? "Enter a rate between 0 and 100."
+        : undefined;
 
-  let netPrice = 0;
-  let gstAmount = 0;
-  let grossPrice = 0;
-  let cgst = 0;
-  let sgst = 0;
+  const numAmount = amountError ? 0 : Math.max(0, parsedAmount || 0);
+  const numRate = rateError ? 0 : parsedRate;
 
+  let netPrice: number;
+  let grossPrice: number;
   if (mode === "exclusive") {
     netPrice = numAmount;
-    gstAmount = (numAmount * numRate) / 100;
-    grossPrice = netPrice + gstAmount;
-    cgst = gstAmount / 2;
-    sgst = gstAmount / 2;
+    grossPrice = numAmount + (numAmount * numRate) / 100;
   } else {
     grossPrice = numAmount;
     netPrice = (numAmount * 100) / (100 + numRate);
-    gstAmount = grossPrice - netPrice;
-    cgst = gstAmount / 2;
-    sgst = gstAmount / 2;
   }
+  const gstAmount = grossPrice - netPrice;
+  const half = gstAmount / 2;
 
-  const resultSummary = `Net Price: ${currencySymbol}${netPrice.toFixed(2)} | GST (${numRate}%): ${currencySymbol}${gstAmount.toFixed(2)} | Gross Total: ${currencySymbol}${grossPrice.toFixed(2)}`;
+  const money = (v: number) => `${currencySymbol}${formatNumber(v, 2)}`;
+  const taxLines =
+    supply === "intra"
+      ? [
+          { label: `CGST (${formatNumber(numRate / 2, 2)}%)`, value: money(half) },
+          { label: `SGST / UTGST (${formatNumber(numRate / 2, 2)}%)`, value: money(half) },
+        ]
+      : [{ label: `IGST (${formatNumber(numRate, 2)}%)`, value: money(gstAmount) }];
+
+  const resultSummary = [
+    `Net price: ${money(netPrice)}`,
+    ...taxLines.map((l) => `${l.label}: ${l.value}`),
+    `Total GST: ${money(gstAmount)}`,
+    `Invoice total: ${money(grossPrice)}`,
+  ].join("\n");
+
+  const hasInput = amount.trim() !== "" && !amountError && !rateError;
 
   return (
     <div className="space-y-6">
-      {/* Mode Switches */}
-      <div className="flex space-x-2 p-1.5 rounded-2xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-        <button
-          type="button"
-          onClick={() => setMode("exclusive")}
-          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition cursor-pointer ${
-            mode === "exclusive"
-              ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-          }`}
-        >
-          Add GST (Exclusive)
-        </button>
-        <button
-          type="button"
-          onClick={() => setMode("inclusive")}
-          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition cursor-pointer ${
-            mode === "inclusive"
-              ? "bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-xs"
-              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-          }`}
-        >
-          Remove GST (Inclusive)
-        </button>
-      </div>
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        value={mode}
+        onValueChange={(v) => v && setMode(v as typeof mode)}
+        aria-label="Calculation"
+        className="w-full"
+      >
+        <ToggleGroupItem value="exclusive" className="flex-1">
+          Add GST to a price
+        </ToggleGroupItem>
+        <ToggleGroupItem value="inclusive" className="flex-1">
+          Remove GST from a total
+        </ToggleGroupItem>
+      </ToggleGroup>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-        {/* Input parameters */}
-        <div className="space-y-4 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
-          <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
-            <h3 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <Receipt className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span>{mode === "exclusive" ? "Base Price (Before Tax)" : "Total Price (Including Tax)"}</span>
-            </h3>
-            <div className="flex items-center gap-1 text-xs">
+      <div className="grid grid-cols-1 items-start gap-6 @2xl:grid-cols-2">
+        <div className="space-y-5">
+          <ToolInput
+                label={mode === "exclusive" ? "Price before GST" : "Total including GST"}
+                id="gst-amount"
+                type="number"
+                inputMode="decimal"
+                min={0}
+                step="any"
+                value={amount}
+                prefixText={currencySymbol}
+                showClear
+                onClear={() => setAmount("")}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="e.g. 1000"
+                error={amountError}
+              />
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">Currency symbol</span>
+            <ToggleGroup
+              type="single"
+              size="sm"
+              variant="outline"
+              value={currencySymbol}
+              onValueChange={(v) => v && setCurrencySymbol(v)}
+              aria-label="Currency symbol"
+            >
               {["₹", "$", "€", "£"].map((cur) => (
-                <button
-                  key={cur}
-                  type="button"
-                  onClick={() => setCurrencySymbol(cur)}
-                  className={`px-2 py-0.5 rounded-md font-bold text-[11px] transition ${
-                    currencySymbol === cur
-                      ? "bg-blue-600 text-white"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
-                  }`}
-                >
+                <ToggleGroupItem key={cur} value={cur} className="px-2.5">
                   {cur}
-                </button>
+                </ToggleGroupItem>
               ))}
-            </div>
+            </ToggleGroup>
           </div>
 
-          <ToolInput
-            label={mode === "exclusive" ? "Initial Net Amount" : "Invoice Gross Amount"}
-            type="number"
-            min={0}
-            step="any"
-            value={amount}
-            prefixText={currencySymbol}
-            showClear={true}
-            onClear={() => setAmount("")}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="e.g. 1000"
-          />
-
-          <div className="space-y-2">
-            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-              GST Tax Rate Slab
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              {["5", "12", "18", "28"].map((slab) => (
-                <button
-                  key={slab}
-                  type="button"
-                  onClick={() => setRate(slab)}
-                  className={`py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                    rate === slab
-                      ? "bg-blue-600 text-white shadow-xs"
-                      : "bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300"
-                  }`}
-                >
+          <fieldset className="space-y-2">
+            <legend className="type-label text-foreground">GST rate</legend>
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              value={SLABS.includes(rate) ? rate : ""}
+              onValueChange={(v) => v && setRate(v)}
+              aria-label="GST rate"
+              className="grid w-full grid-cols-4"
+            >
+              {SLABS.map((slab) => (
+                <ToggleGroupItem key={slab} value={slab}>
                   {slab}%
-                </button>
+                </ToggleGroupItem>
               ))}
-            </div>
-
+            </ToggleGroup>
             <ToolInput
-              label="Custom Tax Rate"
+              label="Or type a rate"
+              id="gst-custom-rate"
               type="number"
+              inputMode="decimal"
               min={0}
               max={100}
-              step="0.1"
+              step="any"
               value={rate}
               suffixText="%"
               onChange={(e) => setRate(e.target.value)}
               placeholder="e.g. 18"
+              error={rateError}
             />
-          </div>
+            <p className="flex gap-1.5 text-xs text-muted-foreground">
+              <Info className="mt-px size-3.5 shrink-0" aria-hidden="true" />
+              <span>
+                Rates from 22 September 2025: 5%, 18% and 40%, and 3% on gold and silver. For invoices before that
+                date, type 12% or 28% if they applied.
+              </span>
+            </p>
+          </fieldset>
+
+          <fieldset className="space-y-2">
+            <legend className="type-label text-foreground">Type of sale</legend>
+            <ToggleGroup
+              type="single"
+              variant="outline"
+              value={supply}
+              onValueChange={(v) => v && setSupply(v as typeof supply)}
+              aria-label="Type of sale"
+              className="w-full"
+            >
+              <ToggleGroupItem value="intra" className="flex-1">
+                Within a state
+              </ToggleGroupItem>
+              <ToggleGroupItem value="inter" className="flex-1">
+                Between states
+              </ToggleGroupItem>
+            </ToggleGroup>
+            <p className="text-xs text-muted-foreground">
+              {supply === "intra"
+                ? "Split equally into CGST and SGST (UTGST in union territories)."
+                : "Charged as a single IGST, as on imports and interstate sales."}
+            </p>
+          </fieldset>
         </div>
 
-        {/* Results */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <ResultCard
-            title={mode === "exclusive" ? "Total Price (with GST)" : "Net Price (without GST)"}
-            value={`${currencySymbol}${formatNumber(mode === "exclusive" ? grossPrice : netPrice, 2)}`}
-            subtitle={`GST Tax Amount: ${currencySymbol}${formatNumber(gstAmount, 2)} at ${numRate}%`}
-            details={[
-              { label: "Net / Base Price", value: `${currencySymbol}${formatNumber(netPrice, 2)}` },
-              { label: "CGST (Central Tax)", value: `${currencySymbol}${formatNumber(cgst, 2)}` },
-              { label: "SGST (State Tax)", value: `${currencySymbol}${formatNumber(sgst, 2)}` },
-              { label: "Total Invoice Amount", value: `${currencySymbol}${formatNumber(grossPrice, 2)}` },
-            ]}
+            title={mode === "exclusive" ? "Invoice total with GST" : "Price before GST"}
+            value={hasInput ? money(mode === "exclusive" ? grossPrice : netPrice) : "—"}
+            subtitle={
+              hasInput
+                ? `GST of ${money(gstAmount)} at ${formatNumber(numRate, 2)}%`
+                : "Enter an amount and a rate to see the result."
+            }
+            copyText={resultSummary}
+            details={
+              hasInput
+                ? [
+                    { label: "Price before GST", value: money(netPrice) },
+                    ...taxLines,
+                    { label: "Invoice total", value: money(grossPrice) },
+                  ]
+                : []
+            }
             highlightColor="emerald"
           />
-
-          <div className="flex justify-end">
-            <CopyButton text={resultSummary} label="Copy Tax Breakdown" />
-          </div>
+          {hasInput && (
+            <div className="flex justify-end">
+              <CopyButton text={resultSummary} label="Copy tax breakdown" />
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
 }
-

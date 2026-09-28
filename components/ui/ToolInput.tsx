@@ -2,6 +2,7 @@
 
 import React, { forwardRef } from "react";
 import { X, AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface ToolInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -33,31 +34,31 @@ export const ToolInput = forwardRef<HTMLInputElement, ToolInputProps>(
     ref
   ) => {
     const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, "-") : undefined);
+    const errorId = error && inputId ? `${inputId}-error` : undefined;
     const hasValue = value !== undefined && value !== "" && value !== null;
 
     return (
-      <div className="space-y-1.5 w-full">
+      <div className="w-full space-y-1.5">
         {label && (
-          <div className="flex items-center justify-between">
-            <label
-              htmlFor={inputId}
-              className="block text-xs font-semibold text-slate-700 dark:text-slate-300"
-            >
+          <div className="flex items-center justify-between gap-2">
+            <label htmlFor={inputId} className="block type-label text-foreground">
               {label}
             </label>
             {helperText && !error && (
-              <span className="text-[11px] text-slate-400 dark:text-slate-500">
-                {helperText}
-              </span>
+              <span className="text-xs text-muted-foreground">{helperText}</span>
             )}
           </div>
         )}
 
-        <div className="relative flex items-center rounded-xl border bg-white dark:bg-slate-900 transition-colors focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 border-slate-200 dark:border-slate-800">
+        <div
+          className={cn(
+            "relative flex h-10 items-center rounded-lg border border-input bg-background transition-colors dark:bg-input/30",
+            "focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50",
+            error && "border-destructive focus-within:border-destructive focus-within:ring-destructive/20"
+          )}
+        >
           {prefixText && (
-            <span className="pl-3.5 pr-1.5 text-xs font-medium text-slate-400 select-none">
-              {prefixText}
-            </span>
+            <span className="pl-3 pr-1 text-sm text-muted-foreground select-none">{prefixText}</span>
           )}
 
           <input
@@ -65,9 +66,14 @@ export const ToolInput = forwardRef<HTMLInputElement, ToolInputProps>(
             id={inputId}
             value={value}
             disabled={disabled}
-            className={`w-full px-3.5 py-2.5 text-sm bg-transparent rounded-xl text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-hidden disabled:opacity-50 disabled:cursor-not-allowed ${
-              prefixText ? "pl-1.5" : ""
-            } ${suffixText || showClear ? "pr-8" : ""} ${className}`}
+            aria-invalid={error ? true : undefined}
+            aria-describedby={errorId}
+            className={cn(
+              "h-full w-full min-w-0 rounded-lg bg-transparent px-3 text-base text-foreground tabular-nums placeholder:text-muted-foreground focus:outline-hidden disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
+              prefixText && "pl-1",
+              (suffixText || showClear) && "pr-9",
+              className
+            )}
             {...props}
           />
 
@@ -75,25 +81,23 @@ export const ToolInput = forwardRef<HTMLInputElement, ToolInputProps>(
             <button
               type="button"
               onClick={onClear}
-              className="absolute right-2.5 p-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              aria-label="Clear input"
+              className="absolute right-2 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+              aria-label={label ? `Clear ${label}` : "Clear input"}
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="size-3.5" aria-hidden="true" />
             </button>
           )}
 
           {suffixText && !showClear && (
-            <span className="pr-3.5 pl-1.5 text-xs font-medium text-slate-400 select-none">
-              {suffixText}
-            </span>
+            <span className="pl-1 pr-3 text-sm text-muted-foreground select-none">{suffixText}</span>
           )}
         </div>
 
         {error && (
-          <div className="flex items-center gap-1.5 text-[11px] text-rose-500 font-medium animate-in fade-in duration-150">
-            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+          <p id={errorId} className="flex items-center gap-1.5 text-xs font-medium text-destructive">
+            <AlertCircle className="size-3.5 shrink-0" aria-hidden="true" />
             <span>{error}</span>
-          </div>
+          </p>
         )}
       </div>
     );
