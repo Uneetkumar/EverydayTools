@@ -58,15 +58,30 @@ export function FilterPanel({
   look,
   onChange,
   thumbs,
+  strip = false,
 }: {
   look: Look;
   onChange: (look: Look) => void;
   thumbs: Record<string, string>;
+  /** One scrolling row, as in a phone's camera app (full-screen view). */
+  strip?: boolean;
 }) {
   const id = React.useId();
   return (
-    <ToolSection title="Filters" description="Applied live, and saved with every photo and video.">
-      <div role="radiogroup" aria-label="Filter" className="grid grid-cols-5 gap-x-2 gap-y-3 @4xl:grid-cols-4">
+    <ToolSection
+      title={strip ? undefined : "Filters"}
+      description={strip ? undefined : "Applied live and saved with every photo and video. Press and hold the picture to compare with the original."}
+      className={strip ? "space-y-3" : undefined}
+    >
+      <div
+        role="radiogroup"
+        aria-label="Filter"
+        className={
+          strip
+            ? "-mx-1 flex snap-x gap-2.5 overflow-x-auto px-1 pt-1 pb-1.5 [scrollbar-width:none] [&>button]:w-16 [&>button]:shrink-0 [&>button]:snap-start"
+            : "grid grid-cols-5 gap-x-2 gap-y-3 @4xl:grid-cols-4"
+        }
+      >
         {FILTERS.map((f) => {
           const active = look.filter === f.id;
           return (
@@ -121,7 +136,7 @@ export function AdjustPanel({ look, onChange }: { look: Look; onChange: (look: L
   return (
     <ToolSection
       title="Adjust"
-      description="Fine-tune on top of the filter."
+      description="Fine-tune on top of the filter. Sliders start fresh each visit."
       actions={
         <Button variant="ghost" size="sm" disabled={!changed} onClick={() => onChange({ ...look, adjust: NEUTRAL })}>
           <RotateCcw aria-hidden="true" /> Reset

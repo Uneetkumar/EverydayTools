@@ -158,7 +158,7 @@ export default function DropZone({
           <p className="text-sm font-medium text-foreground">{title}</p>
           <p className="mt-1 max-w-sm text-xs text-muted-foreground">{subtitle}</p>
           <p className="mt-3 text-xs text-muted-foreground">
-            {supportedFormatsText ? `${supportedFormatsText} · ` : ""}Up to {maxSizeMB} MB
+            {[supportedFormatsText, Number.isFinite(maxSizeMB) ? `Up to ${maxSizeMB} MB` : ""].filter(Boolean).join(" · ")}
           </p>
         </div>
       )}

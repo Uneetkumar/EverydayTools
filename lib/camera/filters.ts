@@ -15,6 +15,8 @@ export interface Adjustments {
   exposure: number;
   /** −1 … 1 */
   contrast: number;
+  /** 0 … 1. Local contrast: brings out texture and detail without harsh edges. */
+  clarity: number;
   /** −1 … 1. −1 is black and white. */
   saturation: number;
   /** −1 (cool) … 1 (warm) */
@@ -28,6 +30,7 @@ export interface Adjustments {
 export const NEUTRAL: Adjustments = {
   exposure: 0,
   contrast: 0,
+  clarity: 0,
   saturation: 0,
   warmth: 0,
   sharpness: 0,
@@ -37,6 +40,7 @@ export const NEUTRAL: Adjustments = {
 export const ADJUSTMENT_FIELDS: { key: keyof Adjustments; label: string; min: number }[] = [
   { key: "exposure", label: "Brightness", min: -1 },
   { key: "contrast", label: "Contrast", min: -1 },
+  { key: "clarity", label: "Clarity", min: 0 },
   { key: "saturation", label: "Saturation", min: -1 },
   { key: "warmth", label: "Warmth", min: -1 },
   { key: "sharpness", label: "Sharpness", min: 0 },
@@ -61,14 +65,14 @@ export interface FilterPreset {
  */
 export const FILTERS: FilterPreset[] = [
   { id: "original", name: "Original", adjust: {} },
-  { id: "vivid", name: "Vivid", adjust: { saturation: 0.3, contrast: 0.18 } },
+  { id: "vivid", name: "Vivid", adjust: { saturation: 0.3, contrast: 0.15, clarity: 0.15 } },
   { id: "warm", name: "Warm", adjust: { warmth: 0.35, saturation: 0.06 } },
   { id: "cool", name: "Cool", adjust: { warmth: -0.32, contrast: 0.05 } },
   { id: "bright", name: "Bright", adjust: { exposure: 0.28, contrast: -0.06, saturation: 0.08 } },
   { id: "soft", name: "Soft", adjust: { contrast: -0.2, warmth: 0.08, saturation: -0.05 }, fade: 0.05 },
   { id: "film", name: "Film", adjust: { contrast: 0.12, saturation: -0.18, warmth: 0.12 }, fade: 0.08 },
   { id: "mono", name: "Mono", adjust: { contrast: 0.1 }, mono: 1 },
-  { id: "noir", name: "Noir", adjust: { contrast: 0.45, vignette: 0.35 }, mono: 1 },
+  { id: "noir", name: "Noir", adjust: { contrast: 0.4, clarity: 0.3, vignette: 0.35 }, mono: 1 },
   { id: "sepia", name: "Sepia", adjust: { contrast: 0.05 }, mono: 1, tone: [1.08, 0.97, 0.8], fade: 0.05 },
 ];
 
@@ -81,9 +85,13 @@ export interface Levels {
   black: [number, number, number];
   scale: [number, number, number];
   gamma: number;
+  /** Expected grain, 0 … 1 of full scale: differences below this are noise, not detail. */
+  noise: number;
+  /** 0 … 1: how strongly grain is smoothed (more in dim scenes). */
+  denoise: number;
 }
 
-export const IDENTITY_LEVELS: Levels = { black: [0, 0, 0], scale: [1, 1, 1], gamma: 1 };
+export const IDENTITY_LEVELS: Levels = { black: [0, 0, 0], scale: [1, 1, 1], gamma: 1, noise: 0.012, denoise: 0 };
 
 export interface Look {
   filter: string;
@@ -96,8 +104,11 @@ export interface Look {
 export const DEFAULT_LOOK: Look = { filter: "original", intensity: 1, adjust: NEUTRAL, enhance: true };
 
 /** Extra polish auto-enhance adds on top of its measured levels. */
-const ENHANCE_VIBRANCE = 0.18;
-const ENHANCE_SHARPEN = 0.35;
+// Kept small on purpose: a phone or MacBook camera already processes its
+// picture, and Enhance should leave a good picture almost as it is.
+const ENHANCE_VIBRANCE = 0.06;
+const ENHANCE_SHARPEN = 0.4;
+const ENHANCE_CLARITY = 0.1;
 
 export interface Uniforms {
   black: [number, number, number];
@@ -113,6 +124,10 @@ export interface Uniforms {
   fade: number;
   vignette: number;
   sharpen: number;
+  /** Local contrast strength. */
+  clarity: number;
+  denoise: number;
+  noise: number;
 }
 
 const LUMA = [0.2126, 0.7152, 0.0722] as const;
@@ -155,6 +170,7 @@ export function computeUniforms(look: Look, levels: Levels = IDENTITY_LEVELS): U
   const saturation = clamp(p("saturation") + a.saturation, -1, 1);
   const warmth = clamp(p("warmth") + a.warmth, -1, 1);
   const sharpness = clamp(p("sharpness") + a.sharpness, 0, 1);
+  const clarity = clamp(p("clarity") + (a.clarity ?? 0), 0, 1);
   const vignette = clamp(p("vignette") + a.vignette, 0, 1);
   const mono = (preset.mono ?? 0) * k;
   const fade = (preset.fade ?? 0) * k;
@@ -188,7 +204,10 @@ export function computeUniforms(look: Look, levels: Levels = IDENTITY_LEVELS): U
     offset: [0, 0, 0],
     fade,
     vignette,
-    sharpen: clamp(sharpness * 1.4 + (look.enhance ? ENHANCE_SHARPEN : 0), 0, 1.6),
+    sharpen: clamp(sharpness * 1.4 + (look.enhance ? ENHANCE_SHARPEN : 0), 0, 1.8),
+    clarity: clamp(clarity * 0.8 + (look.enhance ? ENHANCE_CLARITY : 0), 0, 1),
+    denoise: look.enhance ? levels.denoise : 0,
+    noise: levels.noise,
   };
 }
 

@@ -3,6 +3,14 @@
 import * as React from "react";
 import {
   Camera as CameraIcon,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Maximize2,
+  Pencil,
+  ScanFace,
+  Trash2,
+  X,
   Grid3x3,
   ImageUp,
   Loader2,
@@ -21,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Notice, Segmented, ToggleRow, ToolSection } from "@/components/tool/kit";
 import { AdjustPanel, FilterPanel } from "@/components/camera/look-controls";
 import { ShotGallery, formatDuration, type Shot } from "@/components/camera/shot-gallery";
-import { usePersistentState } from "@/lib/hooks/usePersistentState";
+import { clearSavedToolState, usePersistentState } from "@/lib/hooks/usePersistentState";
 import { markToolCompleted, markToolError } from "@/lib/analytics";
 import { downloadBlob } from "@/lib/utils/download";
 import {
@@ -33,7 +41,8 @@ import {
   type Levels,
   type Look,
 } from "@/lib/camera/filters";
-import { blendLevels, measureLevels, mergeFrames } from "@/lib/camera/enhance";
+import { averageLevels, blendLevels, levelsDistance, measureLevels, mergeFrames } from "@/lib/camera/enhance";
+import { detectFaces, facesInCrop, loadFaceDetector, smoothFaces, type Face } from "@/lib/camera/faces";
 import { FULL_CROP, LookRenderer, type Crop } from "@/lib/camera/renderer";
 import {
   SHAPES,
@@ -81,6 +90,9 @@ interface Prefs {
   timer: TimerDelay;
   lowLight: boolean;
   mode: Mode;
+  /** "auto": on, except on low-memory phones. */
+  faces: "auto" | boolean;
+  enhance: boolean;
 }
 
 const DEFAULT_PREFS: Prefs = {
@@ -92,6 +104,8 @@ const DEFAULT_PREFS: Prefs = {
   timer: 0,
   lowLight: false,
   mode: "photo",
+  faces: "auto",
+  enhance: true,
 };
 
 /** The live preview is drawn at most this big; photos use the full frame. */
@@ -105,6 +119,8 @@ interface Editing {
   original: Blob;
   name: string;
   levels: Levels;
+  /** Faces in the photo, 0 … 1 coordinates. */
+  faces: Face[];
   restoreLook: Look;
   resumeCamera: boolean;
 }
@@ -140,6 +156,9 @@ function normaliseLook(l: Partial<Look> | undefined): Look {
 }
 
 const noopSubscribe = () => () => {};
+
+/** The picture exactly as the camera sends it, for press-and-hold comparison. */
+const ORIGINAL = computeUniforms({ ...DEFAULT_LOOK, enhance: false, adjust: NEUTRAL }, IDENTITY_LEVELS);
 
 function useElementSize(ref: React.RefObject<HTMLElement | null>) {
   const [size, setSize] = React.useState({ width: 0, height: 0 });
@@ -185,8 +204,9 @@ function OverlayToggle({
       title={label}
       onClick={onClick}
       className={cn(
-        "inline-flex h-8 min-w-8 items-center justify-center gap-1.5 rounded-full px-2 text-xs font-medium backdrop-blur-sm transition-colors outline-none focus-visible:ring-3 focus-visible:ring-white/60 [&_svg]:size-4",
-        pressed ? "bg-white text-neutral-900 hover:bg-white/90" : "bg-black/45 text-white hover:bg-black/60"
+        "inline-flex h-8 min-w-8 items-center justify-center gap-1.5 rounded-full px-2 text-xs font-medium shadow-[0_1px_3px_rgba(0,0,0,0.3)] backdrop-blur-sm transition-colors outline-none focus-visible:ring-3 focus-visible:ring-white/60 [&_svg]:size-4",
+        // The outline keeps a switched-on (white) button visible against a white wall.
+        pressed ? "bg-white text-neutral-900 ring-1 ring-black/20 hover:bg-white/90" : "bg-black/45 text-white hover:bg-black/60"
       )}
     >
       {children}
@@ -196,11 +216,15 @@ function OverlayToggle({
 }
 
 export default function Camera() {
-  const [storedLook, setStoredLook] = usePersistentState<Look>("camera-look", DEFAULT_LOOK);
+  // Settings are remembered on this device; the filter and the Adjust sliders
+  // start fresh on every visit, as in a phone's camera app, so an extreme
+  // setting from last time never makes the camera look wrong today.
+  const [lookState, setLookState] = React.useState<Look>(DEFAULT_LOOK);
   const [storedPrefs, setStoredPrefs] = usePersistentState<Prefs>("camera-prefs", DEFAULT_PREFS);
-  const look = React.useMemo(() => normaliseLook(storedLook), [storedLook]);
   const prefs = React.useMemo(() => ({ ...DEFAULT_PREFS, ...storedPrefs }), [storedPrefs]);
-  const setLook = setStoredLook;
+  const look = React.useMemo(() => ({ ...lookState, enhance: prefs.enhance }), [lookState, prefs.enhance]);
+  /** Filter, strength and sliders. Enhance is a setting (setPref("enhance")). */
+  const setLook = setLookState;
   const setPref = React.useCallback(
     <K extends keyof Prefs>(key: K, value: Prefs[K]) => setStoredPrefs((p) => ({ ...DEFAULT_PREFS, ...p, [key]: value })),
     [setStoredPrefs]
@@ -229,10 +253,25 @@ export default function Camera() {
   const [thumbs, setThumbs] = React.useState<Record<string, string>>({});
   const [flash, setFlash] = React.useState(0);
   const [zipping, setZipping] = React.useState(false);
+  /** Full-screen camera, laid out like a phone's camera app. */
+  const [immersive, setImmersive] = React.useState(false);
+  /** Options sheet open in full screen. */
+  const [sheet, setSheet] = React.useState<Panel | null>(null);
+  /** Photo or video open in the full-screen viewer. */
+  const [fsViewer, setFsViewer] = React.useState<string | null>(null);
+  /** True while the picture is pressed: show it without any look. */
+  const [comparing, setComparing] = React.useState(false);
+  const [faceState, setFaceState] = React.useState<"off" | "loading" | "ready" | "unavailable">("off");
+  /** Face frames drawn over the preview, in 0 … 1 coordinates of the picture. */
+  const [faceBoxes, setFaceBoxes] = React.useState<Face[]>([]);
 
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const canvasRef = React.useRef<HTMLCanvasElement>(null);
   const stageRef = React.useRef<HTMLDivElement>(null);
+  const shellRef = React.useRef<HTMLDivElement>(null);
+  /** Whether the browser's own full screen is in use (not available on iPhone). */
+  const nativeFsRef = React.useRef(false);
+  const shutterRef = React.useRef<() => void>(() => {});
   const fileRef = React.useRef<HTMLInputElement>(null);
   const streamRef = React.useRef<MediaStream | null>(null);
   const rendererRef = React.useRef<LookRenderer | null>(null);
@@ -244,16 +283,19 @@ export default function Camera() {
   const resumeOnShowRef = React.useRef(false);
   const shotsRef = React.useRef<Shot[]>([]);
   const mountedRef = React.useRef(true);
+  /** Faces in the current camera frame, 0 … 1 of the whole frame. */
+  const facesRef = React.useRef<(Face & { miss?: number })[]>([]);
   /** Bumped by every start, so a slower earlier start cannot win the race. */
   const startIdRef = React.useRef(0);
 
   const mirror = prefs.mirror && actualFacing === "user";
+  const facesOn = prefs.faces === "auto" ? !lowEnd : prefs.faces;
 
   // Values the render loop and async handlers read without restarting.
-  const live = React.useRef({ look, prefs, mirror, quality, facing, panel });
+  const live = React.useRef({ look, prefs, mirror, quality, facing, panel, comparing });
   React.useEffect(() => {
-    live.current = { look, prefs, mirror, quality, facing, panel };
-  }, [look, prefs, mirror, quality, facing, panel]);
+    live.current = { look, prefs, mirror, quality, facing, panel, comparing };
+  }, [look, prefs, mirror, quality, facing, panel, comparing]);
   React.useEffect(() => {
     shotsRef.current = shots;
   }, [shots]);
@@ -373,12 +415,13 @@ export default function Camera() {
   // access was already refused: the start screen then explains how to allow it.
   React.useEffect(() => {
     let cancelled = false;
+    // Steps aside if the camera was already started another way.
     const open = async () => {
-      if (!cameraSupported()) return;
+      if (!cameraSupported() || startIdRef.current > 0) return;
       try {
         const permission = await navigator.permissions?.query({ name: "camera" as PermissionName });
         if (permission?.state === "denied") {
-          if (!cancelled) {
+          if (!cancelled && startIdRef.current === 0) {
             setStatus("error");
             setError(mediaErrorMessage(new DOMException("", "NotAllowedError")));
           }
@@ -387,7 +430,7 @@ export default function Camera() {
       } catch {
         /* Not every browser can report the camera permission; just try. */
       }
-      if (!cancelled && !streamRef.current) void startCamera();
+      if (!cancelled && startIdRef.current === 0) void startCamera();
     };
     const onVisible = () => {
       if (document.visibilityState !== "visible") return;
@@ -411,6 +454,12 @@ export default function Camera() {
     let cancelled = false;
     let handle = 0;
     let lastMeasure = 0;
+    let lastNow = 0;
+    let measured = false;
+    // The last few measurements are averaged, and the picture only starts to
+    // change when the average moves by a visible amount. Then it glides there
+    // at the same speed whatever the frame rate: steady, with no flicker.
+    const recent: Levels[] = [];
     let target = levelsRef.current;
     const useVfc = typeof video.requestVideoFrameCallback === "function";
 
@@ -422,18 +471,28 @@ export default function Camera() {
         setDims((d) => (d && d.w === w && d.h === h ? d : { w, h }));
         const { look: lk, prefs: pf, mirror: mr, quality: q } = live.current;
         const c = cropForShape(w, h, pf.shape);
+        const dt = lastNow ? Math.min(0.25, (now - lastNow) / 1000) : 0;
+        lastNow = now;
         if (lk.enhance) {
-          if (now - lastMeasure > 400) {
+          if (now - lastMeasure > 250) {
             lastMeasure = now;
             try {
-              target = measureLevels(samplePixels(video, c));
+              const sample = samplePixels(video, c);
+              recent.push(measureLevels(sample.data, sample.width, facesInCrop(facesRef.current, c)));
+              if (recent.length > 4) recent.shift();
+              const avg = averageLevels(recent);
+              if (!measured || levelsDistance(avg, target) > 0.02) target = avg;
+              if (!measured) levelsRef.current = target;
+              measured = true;
             } catch {
               /* frame not readable yet */
             }
           }
-          levelsRef.current = blendLevels(levelsRef.current, target, 0.15);
+          levelsRef.current = blendLevels(levelsRef.current, target, dt ? 1 - Math.exp(-dt / 0.45) : 0);
         } else {
           levelsRef.current = IDENTITY_LEVELS;
+          measured = false;
+          recent.length = 0;
         }
         if (renderer && !renderer.lost) {
           // Keep the size fixed while recording so the video does not change shape.
@@ -441,7 +500,11 @@ export default function Camera() {
             const size = cropPixels(w, h, c, Math.min(PREVIEW_MAX, Math.max(QUALITY[q].width, QUALITY[q].height)));
             renderer.resize(size.width, size.height);
           }
-          renderer.render(video, computeUniforms(lk, levelsRef.current), { crop: c, mirror: mr });
+          renderer.render(video, live.current.comparing ? ORIGINAL : computeUniforms(lk, levelsRef.current), {
+            crop: c,
+            mirror: mr,
+            faces: facesInCrop(facesRef.current, c, mr),
+          });
         }
       }
       schedule();
@@ -464,8 +527,62 @@ export default function Camera() {
     if (!renderer) return;
     const { width, height } = cropPixels(editing.source.width, editing.source.height, FULL_CROP, PREVIEW_MAX);
     renderer.resize(width, height);
-    renderer.render(editing.source, computeUniforms(look, look.enhance ? editing.levels : IDENTITY_LEVELS));
-  }, [editing, look, getPreviewRenderer]);
+    renderer.render(
+      editing.source,
+      comparing ? ORIGINAL : computeUniforms(look, look.enhance ? editing.levels : IDENTITY_LEVELS),
+      { faces: editing.faces }
+    );
+  }, [editing, look, comparing, getPreviewRenderer]);
+
+  // Face detection: loads the detector the first time it is needed, then
+  // looks for faces a few times a second. Each pass takes a few milliseconds
+  // on a phone; the next one waits at least five times as long as the last
+  // took, so a slow phone simply checks less often and the preview stays smooth.
+  React.useEffect(() => {
+    if (status !== "live" || editing || !facesOn) {
+      facesRef.current = [];
+      return;
+    }
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const start = setTimeout(async () => {
+      setFaceState((s) => (s === "ready" ? s : "loading"));
+      const detector = await loadFaceDetector();
+      if (cancelled) return;
+      if (!detector) {
+        setFaceState("unavailable");
+        return;
+      }
+      setFaceState("ready");
+      const loop = () => {
+        if (cancelled) return;
+        const video = videoRef.current;
+        let cost = 0;
+        if (video?.videoWidth && !document.hidden) {
+          const t0 = performance.now();
+          try {
+            facesRef.current = smoothFaces(facesRef.current, detectFaces(detector, video, t0));
+          } catch {
+            facesRef.current = [];
+          }
+          cost = performance.now() - t0;
+          const { prefs: pf, mirror: mr } = live.current;
+          const c = cropForShape(video.videoWidth, video.videoHeight, pf.shape);
+          const boxes = facesInCrop(facesRef.current, c, mr);
+          setFaceBoxes((prev) => (prev.length === 0 && boxes.length === 0 ? prev : boxes));
+        }
+        timer = setTimeout(loop, Math.max(180, cost * 5));
+      };
+      loop();
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(start);
+      clearTimeout(timer);
+      facesRef.current = [];
+      setFaceBoxes([]);
+    };
+  }, [status, editing, facesOn]);
 
   // Filter swatches: every filter applied to the current scene.
   React.useEffect(() => {
@@ -493,7 +610,8 @@ export default function Camera() {
       img.decode().then(() => {
         small.getContext("2d")!.drawImage(img, 0, 0);
         const enhance = live.current.look.enhance;
-        const levels = enhance ? measureLevels(samplePixels(small, FULL_CROP)) : IDENTITY_LEVELS;
+        const sample = samplePixels(small, FULL_CROP);
+        const levels = enhance ? measureLevels(sample.data, sample.width) : IDENTITY_LEVELS;
         r.resize(96, 96);
         if (!r.upload(small)) return;
         const out: Record<string, string> = {};
@@ -566,11 +684,11 @@ export default function Camera() {
 
   /** Renders a frame through a look at full size and returns the JPEG and a thumbnail. */
   const renderPhoto = React.useCallback(
-    async (source: HTMLCanvasElement, c: Crop, mirrored: boolean, lk: Look, levels: Levels) => {
+    async (source: HTMLCanvasElement, c: Crop, mirrored: boolean, lk: Look, levels: Levels, faces: Face[] = []) => {
       const r = getCaptureRenderer();
       const size = cropPixels(source.width, source.height, c, r?.maxSize ?? 4096);
       let out: HTMLCanvasElement;
-      if (r && (r.resize(size.width, size.height), r.render(source, computeUniforms(lk, levels), { crop: c, mirror: mirrored }))) {
+      if (r && (r.resize(size.width, size.height), r.render(source, computeUniforms(lk, levels), { crop: c, mirror: mirrored, faces }))) {
         out = r.canvas;
       } else {
         // No WebGL: save the frame as it is.
@@ -637,9 +755,22 @@ export default function Camera() {
         }
         setBusy("Saving…");
         const c = cropForShape(frame.width, frame.height, pf.shape);
-        const levels = lk.enhance ? measureLevels(samplePixels(frame, c)) : IDENTITY_LEVELS;
+        // The photo uses the same corrections as the preview it was taken from,
+        // so it looks exactly like what was on screen.
+        let levels = IDENTITY_LEVELS;
+        if (lk.enhance) {
+          const shown = levelsRef.current;
+          if (shown !== IDENTITY_LEVELS) levels = shown;
+          else {
+            const sample = samplePixels(frame, c);
+            levels = measureLevels(sample.data, sample.width, facesInCrop(facesRef.current, c));
+          }
+          // A merged low-light frame has far less grain to smooth.
+          if (allowLowLight && pf.lowLight) levels = { ...levels, noise: levels.noise * 0.7, denoise: levels.denoise * 0.4 };
+        }
+        const faces = facesInCrop(facesRef.current, c, mr);
         // Both JPEGs encode at the same time (browsers encode off the main thread).
-        const [photo, original] = await Promise.all([renderPhoto(frame, c, mr, lk, levels), originalOf(frame, c, mr)]);
+        const [photo, original] = await Promise.all([renderPhoto(frame, c, mr, lk, levels, faces), originalOf(frame, c, mr)]);
         addShot({
           kind: "photo",
           blob: photo.blob,
@@ -866,6 +997,9 @@ export default function Camera() {
     }
     withTimer(() => void takePhoto());
   };
+  React.useEffect(() => {
+    shutterRef.current = onShutter;
+  });
 
   // ------------------------------------------------------------ controls
 
@@ -893,26 +1027,37 @@ export default function Camera() {
   // ------------------------------------------------------------ editing
 
   const beginEdit = React.useCallback(
-    (draft: Omit<Editing, "restoreLook" | "resumeCamera" | "levels">, startLook: Look) => {
+    async (draft: Omit<Editing, "restoreLook" | "resumeCamera" | "levels" | "faces">, startLook: Look) => {
       const resume = status === "live";
       stopCamera();
       if (resume) setStatus("idle");
+      let faces: Face[] = [];
+      if (facesOn) {
+        const detector = await loadFaceDetector();
+        try {
+          if (detector) faces = detectFaces(detector, draft.source, performance.now());
+        } catch {
+          /* edit without face-aware corrections */
+        }
+      }
+      const sample = samplePixels(draft.source, FULL_CROP);
       setEditing({
         ...draft,
-        levels: measureLevels(samplePixels(draft.source, FULL_CROP)),
+        faces,
+        levels: measureLevels(sample.data, sample.width, faces),
         restoreLook: look,
         resumeCamera: resume,
       });
       setLook(startLook);
     },
-    [status, stopCamera, look, setLook]
+    [status, stopCamera, look, setLook, facesOn]
   );
 
   const editShot = async (shot: Shot) => {
     if (recRef.current) return;
     try {
       const source = await loadPhoto(shot.source ?? shot.blob);
-      beginEdit({ shotId: shot.id, source, original: shot.source ?? shot.blob, name: shot.name }, normaliseLook(shot.look));
+      await beginEdit({ shotId: shot.id, source, original: shot.source ?? shot.blob, name: shot.name }, normaliseLook(shot.look));
     } catch {
       toast.error("This photo could not be opened for editing.");
     }
@@ -927,7 +1072,7 @@ export default function Camera() {
       setBusy("Opening photo…");
       const source = await loadPhoto(file);
       const base = file.name.replace(/\.[^.]+$/, "").replace(/[^\w.-]+/g, "-").slice(0, 60) || "photo";
-      beginEdit({ shotId: null, source, original: file, name: `${base}-edited.jpg` }, { ...look, filter: "original", intensity: 1, adjust: NEUTRAL });
+      await beginEdit({ shotId: null, source, original: file, name: `${base}-edited.jpg` }, { ...look, filter: "original", intensity: 1, adjust: NEUTRAL });
     } catch {
       toast.error("This photo could not be opened. Your browser may not support its format.");
       markToolError("photo_open_failed");
@@ -950,7 +1095,7 @@ export default function Camera() {
     const ed = editing;
     setBusy("Saving…");
     try {
-      const photo = await renderPhoto(ed.source, FULL_CROP, false, look, look.enhance ? ed.levels : IDENTITY_LEVELS);
+      const photo = await renderPhoto(ed.source, FULL_CROP, false, look, look.enhance ? ed.levels : IDENTITY_LEVELS, ed.faces);
       const url = URL.createObjectURL(photo.blob);
       if (ed.shotId) {
         setShots((prev) =>
@@ -1046,6 +1191,11 @@ export default function Camera() {
   }, [unsaved]);
 
   React.useEffect(() => {
+    // Looks were saved between visits by an earlier version; drop them.
+    clearSavedToolState("camera-look");
+  }, []);
+
+  React.useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
@@ -1068,6 +1218,68 @@ export default function Camera() {
     };
   }, []);
 
+  // ------------------------------------------------------------ full screen
+
+  const enterFullscreen = () => {
+    setImmersive(true);
+    // The browser's full screen also hides its own bars (Android, desktop).
+    // iPhone Safari does not allow it; the camera then fills the page instead.
+    const el = shellRef.current;
+    if (el && typeof el.requestFullscreen === "function") {
+      el.requestFullscreen({ navigationUI: "hide" })
+        .then(() => {
+          nativeFsRef.current = true;
+        })
+        .catch(() => {});
+    }
+  };
+
+  const exitFullscreen = React.useCallback(() => {
+    setImmersive(false);
+    setSheet(null);
+    setFsViewer(null);
+    if (document.fullscreenElement) {
+      nativeFsRef.current = false;
+      void document.exitFullscreen().catch(() => {});
+    }
+  }, []);
+
+  React.useEffect(() => {
+    if (!immersive) return;
+    const root = document.documentElement;
+    const overflow = root.style.overflow;
+    root.style.overflow = "hidden";
+    // Leaving the browser's full screen (Esc, back gesture) leaves ours too.
+    const onFsChange = () => {
+      if (!document.fullscreenElement && nativeFsRef.current) {
+        nativeFsRef.current = false;
+        setImmersive(false);
+        setSheet(null);
+        setFsViewer(null);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && !document.fullscreenElement) {
+        exitFullscreen();
+        return;
+      }
+      // Space or Enter takes the picture, as in desktop camera apps, unless
+      // a control has focus.
+      const target = e.target instanceof Element ? e.target : null;
+      if ((e.key === " " || e.key === "Enter") && !target?.closest("button, input, select, textarea, video, a, [role=slider]")) {
+        e.preventDefault();
+        shutterRef.current();
+      }
+    };
+    document.addEventListener("fullscreenchange", onFsChange);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      root.style.overflow = overflow;
+      document.removeEventListener("fullscreenchange", onFsChange);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [immersive, exitFullscreen]);
+
   // ------------------------------------------------------------------ view
 
   const recording = !!recUi;
@@ -1086,19 +1298,129 @@ export default function Camera() {
           : "Start recording"
         : "Take photo";
 
+  const viewing = immersive && fsViewer ? shots.find((s) => s.id === fsViewer) ?? null : null;
+  const viewingIndex = viewing ? shots.indexOf(viewing) : -1;
+
+  const settingsPanel = (
+    <ToolSection title={immersive ? undefined : "Settings"}>
+      <div className="space-y-4">
+        <ToggleRow
+          id="cam-enhance"
+          label="Enhance"
+          description="Balances brightness and colour and sharpens edges, the way a phone's camera app does."
+          checked={look.enhance}
+          onCheckedChange={(v) => setPref("enhance", v)}
+        />
+        <ToggleRow
+          id="cam-lowlight"
+          label="Low light"
+          description="Merges several frames into one photo to cut grain in dim light. Hold still for a moment."
+          checked={prefs.lowLight}
+          onCheckedChange={(v) => setPref("lowLight", v)}
+        />
+        <div className="space-y-1">
+          <ToggleRow
+            id="cam-faces"
+            label="Face detection"
+            description="Sets brightness and colour for faces and keeps skin natural. Works best for faces within about 2 metres. It only finds faces; it does not recognise anyone, and it runs on this device."
+            checked={facesOn}
+            onCheckedChange={(v) => setPref("faces", v)}
+          />
+          {facesOn && faceState === "loading" && (
+            <p className="text-xs text-muted-foreground" role="status">
+              Loading face detection (about 3.5 MB, only the first time)…
+            </p>
+          )}
+          {facesOn && faceState === "unavailable" && (
+            <p className="text-xs text-warning" role="status">
+              Face detection could not start in this browser. Everything else works as normal.
+            </p>
+          )}
+          {facesOn && faceState === "ready" && isLive && (
+            <p className="text-xs text-muted-foreground" role="status">
+              {faceBoxes.length === 0 ? "No faces in view." : faceBoxes.length === 1 ? "1 face found." : `${faceBoxes.length} faces found.`}
+            </p>
+          )}
+        </div>
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium text-foreground">Quality</p>
+          <Segmented
+            fill
+            size="sm"
+            ariaLabel="Quality"
+            value={quality}
+            onChange={(q) => changeQuality(q)}
+            options={(Object.keys(QUALITY) as Quality[]).map((q) => ({ value: q, label: QUALITY[q].label }))}
+          />
+          <p className="text-xs text-muted-foreground">
+            {QUALITY[quality].hint}
+            {dims && isLive ? ` Camera: ${dims.w} × ${dims.h}.` : ""}
+          </p>
+        </div>
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium text-foreground">Photo shape</p>
+          <Segmented fill size="sm" ariaLabel="Photo shape" value={prefs.shape} onChange={(s) => setPref("shape", s)} options={SHAPES} />
+        </div>
+        <ToggleRow
+          id="cam-mirror"
+          label="Mirror front camera"
+          description="Save selfies the way you see them in the preview."
+          checked={prefs.mirror}
+          onCheckedChange={(v) => setPref("mirror", v)}
+        />
+        <ToggleRow
+          id="cam-mic"
+          label="Record sound"
+          description="Uses the microphone for videos. Asked for only when you start recording."
+          checked={prefs.mic}
+          onCheckedChange={(v) => setPref("mic", v)}
+        />
+      </div>
+    </ToolSection>
+  );
+
+  const panelContent = (p: Panel) =>
+    p === "filters" ? (
+      <FilterPanel look={look} onChange={setLook} thumbs={thumbs} strip={immersive} />
+    ) : p === "adjust" ? (
+      <AdjustPanel look={look} onChange={setLook} />
+    ) : (
+      settingsPanel
+    );
+
+  const PANELS: { value: Panel; label: string }[] = [
+    { value: "filters", label: "Filters" },
+    { value: "adjust", label: "Adjust" },
+    { value: "settings", label: "Settings" },
+  ];
+
   return (
     <div className="space-y-8">
       <div className="grid gap-6 @4xl:grid-cols-[minmax(0,1fr)_19rem] @5xl:grid-cols-[minmax(0,1fr)_21rem]">
-        <div className="min-w-0 space-y-4">
+        {/* The camera. In full screen this same element fills the screen, so
+            the camera, its drawing surface and any recording carry on. */}
+        <div
+          ref={shellRef}
+          role={immersive ? "dialog" : undefined}
+          aria-modal={immersive || undefined}
+          aria-label={immersive ? "Camera, full screen" : undefined}
+          className={cn(
+            immersive
+              ? "dark fixed inset-0 z-[60] flex h-dvh flex-col bg-black text-foreground [@media(orientation:landscape)_and_(max-height:540px)]:flex-row"
+              : "min-w-0 space-y-4"
+          )}
+        >
           {/* Viewfinder */}
           <div
             ref={stageRef}
             className={cn(
-              "relative flex w-full items-center justify-center overflow-hidden rounded-xl border bg-muted/60 dark:bg-muted/25",
-              "max-h-[min(72svh,40rem)] min-h-64",
-              !contentAspect && "aspect-[3/4] @xl:aspect-[4/3]"
+              "relative flex w-full items-center justify-center overflow-hidden",
+              immersive
+                ? "min-h-0 flex-1 bg-black"
+                : "max-h-[min(72svh,40rem)] min-h-64 rounded-xl border bg-muted/60 dark:bg-muted/25",
+              !immersive && !contentAspect && "aspect-[3/4] @xl:aspect-[4/3]"
             )}
-            style={contentAspect ? { aspectRatio: String(contentAspect) } : undefined}
+            style={!immersive && contentAspect ? { aspectRatio: String(contentAspect) } : undefined}
           >
             {/* The camera feed. Kept in the page (not display:none) because
                 some browsers stop updating hidden videos. */}
@@ -1114,7 +1436,17 @@ export default function Camera() {
                 glFailed && mirror && "-scale-x-100"
               )}
             />
-            <div className="relative" style={fit}>
+            <div
+              className="relative touch-none select-none [-webkit-touch-callout:none]"
+              style={fit}
+              onPointerDown={(e) => {
+                if (e.button === 0 && (isLive || editing)) setComparing(true);
+              }}
+              onPointerUp={() => setComparing(false)}
+              onPointerLeave={() => setComparing(false)}
+              onPointerCancel={() => setComparing(false)}
+              onContextMenu={(e) => e.preventDefault()}
+            >
               <canvas
                 ref={canvasRef}
                 aria-label={editing ? "Photo being edited" : "Camera preview"}
@@ -1129,6 +1461,16 @@ export default function Camera() {
                   <div className="absolute inset-x-0 top-2/3 h-px bg-white/45 shadow-[0_0_1px_rgba(0,0,0,0.4)]" />
                 </div>
               )}
+              {isLive &&
+                facesOn &&
+                faceBoxes.map((f, i) => (
+                  <div
+                    key={i}
+                    aria-hidden="true"
+                    className="pointer-events-none absolute rounded-xl border-2 border-white/80 shadow-[0_0_0_1px_rgba(0,0,0,0.18)] transition-[left,top,width,height] duration-200 ease-out motion-reduce:transition-none"
+                    style={{ left: `${f.x * 100}%`, top: `${f.y * 100}%`, width: `${f.w * 100}%`, height: `${f.h * 100}%` }}
+                  />
+                ))}
               {flash > 0 && isLive && (
                 <div
                   key={flash}
@@ -1139,53 +1481,93 @@ export default function Camera() {
             </div>
 
             {/* Quick toggles over the picture */}
-            {isLive && !recording && (
-              <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-2.5">
+            {(isLive || immersive) && (
+              <div
+                className={cn(
+                  "absolute inset-x-0 top-0 flex items-start justify-between gap-2 p-2.5",
+                  immersive && "pt-[max(0.625rem,env(safe-area-inset-top))]"
+                )}
+              >
                 <div className="flex gap-1.5">
-                  <OverlayToggle
-                    pressed={look.enhance}
-                    onClick={() => setLook((l) => ({ ...normaliseLook(l), enhance: !normaliseLook(l).enhance }))}
-                    label="Enhance: auto brightness, colour and sharpness"
-                    text="Enhance"
-                  >
-                    <Sparkles aria-hidden="true" />
-                  </OverlayToggle>
-                  {prefs.mode === "photo" && (
+                  {immersive && (
+                    <OverlayToggle onClick={exitFullscreen} label="Exit full screen">
+                      <X aria-hidden="true" />
+                    </OverlayToggle>
+                  )}
+                  {isLive && !recording && (
+                    <>
+                      <OverlayToggle
+                        pressed={look.enhance}
+                        onClick={() => setPref("enhance", !prefs.enhance)}
+                        label="Enhance: auto brightness, colour and sharpness"
+                        text="Enhance"
+                      >
+                        <Sparkles aria-hidden="true" />
+                      </OverlayToggle>
+                      {prefs.mode === "photo" && (
+                        <OverlayToggle
+                          pressed={prefs.lowLight}
+                          onClick={() => setPref("lowLight", !prefs.lowLight)}
+                          label="Low light: merges several frames for a cleaner photo"
+                          text="Low light"
+                        >
+                          <Moon aria-hidden="true" />
+                        </OverlayToggle>
+                      )}
+                    </>
+                  )}
+                </div>
+                {isLive && !recording && (
+                  <div className="flex gap-1.5">
                     <OverlayToggle
-                      pressed={prefs.lowLight}
-                      onClick={() => setPref("lowLight", !prefs.lowLight)}
-                      label="Low light: merges several frames for a cleaner photo"
-                      text="Low light"
+                      pressed={prefs.timer > 0}
+                      onClick={() => setPref("timer", prefs.timer === 0 ? 3 : prefs.timer === 3 ? 10 : 0)}
+                      label={prefs.timer ? `Timer: ${prefs.timer} seconds` : "Timer: off"}
                     >
-                      <Moon aria-hidden="true" />
+                      <Timer aria-hidden="true" />
+                      {prefs.timer > 0 && <span className="pr-0.5 tabular-nums">{prefs.timer}s</span>}
                     </OverlayToggle>
-                  )}
-                </div>
-                <div className="flex gap-1.5">
-                  <OverlayToggle
-                    pressed={prefs.timer > 0}
-                    onClick={() => setPref("timer", prefs.timer === 0 ? 3 : prefs.timer === 3 ? 10 : 0)}
-                    label={prefs.timer ? `Timer: ${prefs.timer} seconds` : "Timer: off"}
-                  >
-                    <Timer aria-hidden="true" />
-                    {prefs.timer > 0 && <span className="pr-0.5 tabular-nums">{prefs.timer}s</span>}
-                  </OverlayToggle>
-                  <OverlayToggle pressed={prefs.grid} onClick={() => setPref("grid", !prefs.grid)} label="Grid">
-                    <Grid3x3 aria-hidden="true" />
-                  </OverlayToggle>
-                  {features.torch && (
-                    <OverlayToggle pressed={torchOn} onClick={toggleTorch} label={torchOn ? "Light: on" : "Light: off"}>
-                      {torchOn ? <Zap aria-hidden="true" /> : <ZapOff aria-hidden="true" />}
+                    <OverlayToggle
+                      pressed={facesOn}
+                      onClick={() => setPref("faces", !facesOn)}
+                      label={facesOn ? "Face detection: on" : "Face detection: off"}
+                    >
+                      <ScanFace aria-hidden="true" />
                     </OverlayToggle>
-                  )}
-                </div>
+                    <OverlayToggle pressed={prefs.grid} onClick={() => setPref("grid", !prefs.grid)} label="Grid">
+                      <Grid3x3 aria-hidden="true" />
+                    </OverlayToggle>
+                    {features.torch && (
+                      <OverlayToggle pressed={torchOn} onClick={toggleTorch} label={torchOn ? "Light: on" : "Light: off"}>
+                        {torchOn ? <Zap aria-hidden="true" /> : <ZapOff aria-hidden="true" />}
+                      </OverlayToggle>
+                    )}
+                  </div>
+                )}
               </div>
+            )}
+
+            {!immersive && isLive && (
+              <div className="absolute right-2.5 bottom-2.5">
+                <OverlayToggle onClick={enterFullscreen} label="Full screen" text="Full screen">
+                  <Maximize2 aria-hidden="true" />
+                </OverlayToggle>
+              </div>
+            )}
+
+            {comparing && (isLive || editing) && (
+              <span className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white backdrop-blur-sm">
+                Original
+              </span>
             )}
 
             {recUi && (
               <div
                 role="status"
-                className="absolute top-2.5 left-1/2 inline-flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/55 px-3 py-1 text-sm font-medium text-white tabular-nums backdrop-blur-sm"
+                className={cn(
+                  "absolute top-2.5 left-1/2 inline-flex -translate-x-1/2 items-center gap-2 rounded-full bg-black/55 px-3 py-1 text-sm font-medium text-white tabular-nums backdrop-blur-sm",
+                  immersive && "top-[max(0.625rem,env(safe-area-inset-top))]"
+                )}
               >
                 <span
                   aria-hidden="true"
@@ -1262,9 +1644,11 @@ export default function Camera() {
                         <Button size="lg" onClick={() => void startCamera()}>
                           <CameraIcon aria-hidden="true" /> {status === "error" ? "Try again" : "Start camera"}
                         </Button>
-                        <Button size="lg" variant="outline" onClick={() => fileRef.current?.click()}>
-                          <ImageUp aria-hidden="true" /> Edit a photo
-                        </Button>
+                        {!immersive && (
+                          <Button size="lg" variant="outline" onClick={() => fileRef.current?.click()}>
+                            <ImageUp aria-hidden="true" /> Edit a photo
+                          </Button>
+                        )}
                       </div>
                     </>
                   )}
@@ -1273,7 +1657,7 @@ export default function Camera() {
             )}
           </div>
 
-          {glFailed && isLive && (
+          {glFailed && isLive && !immersive && (
             <Notice tone="warning">
               This browser cannot draw the filters (WebGL is turned off or unavailable), so photos and videos are saved
               without them.
@@ -1281,168 +1665,206 @@ export default function Camera() {
           )}
 
           {/* Capture controls */}
-          {editing ? (
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              <Button variant="outline" size="lg" onClick={() => endEdit(editing)} disabled={!!busy}>
-                Cancel
-              </Button>
-              <Button size="lg" onClick={saveEdit} disabled={!!busy}>
-                {editing.shotId ? "Save changes" : "Save photo"}
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="flex justify-center">
-                <Segmented
-                  size="sm"
-                  ariaLabel="Camera mode"
-                  value={prefs.mode}
-                  onChange={(m) => {
-                    if (!recording) setPref("mode", m);
-                  }}
-                  options={[
-                    { value: "photo", label: "Photo" },
-                    { value: "video", label: "Video" },
-                  ]}
-                />
+          <div
+            className={cn(
+              immersive &&
+                "relative shrink-0 space-y-3 bg-black px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))] [@media(orientation:landscape)_and_(max-height:540px)]:flex [@media(orientation:landscape)_and_(max-height:540px)]:w-72 [@media(orientation:landscape)_and_(max-height:540px)]:flex-col [@media(orientation:landscape)_and_(max-height:540px)]:justify-end [@media(orientation:landscape)_and_(max-height:540px)]:overflow-y-auto [@media(orientation:landscape)_and_(max-height:540px)]:pt-[max(1rem,env(safe-area-inset-top))]"
+            )}
+          >
+            {immersive && sheet && (
+              // Slides over the bottom of the picture, as in a phone's camera
+              // app, so the picture keeps its size. Beside the controls when
+              // a phone is held sideways.
+              <div className="absolute inset-x-3 bottom-full mb-3 max-h-[42dvh] overflow-y-auto rounded-2xl bg-neutral-900/95 p-4 ring-1 ring-white/10 backdrop-blur [@media(orientation:landscape)_and_(max-height:540px)]:static [@media(orientation:landscape)_and_(max-height:540px)]:mb-0 [@media(orientation:landscape)_and_(max-height:540px)]:max-h-none [@media(orientation:landscape)_and_(max-height:540px)]:min-h-0 [@media(orientation:landscape)_and_(max-height:540px)]:flex-1">
+                {panelContent(sheet)}
               </div>
-              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-                <div className="flex justify-start">
-                  {recording ? (
-                    <Button variant="outline" size="icon-lg" onClick={togglePause} aria-label={recUi?.paused ? "Resume recording" : "Pause recording"}>
-                      {recUi?.paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
-                    </Button>
-                  ) : latest ? (
-                    <button
-                      type="button"
-                      onClick={() => setOpenShot(latest.id)}
-                      aria-label="Open your latest photo or video"
-                      className="size-11 overflow-hidden rounded-lg bg-muted ring-1 ring-border outline-none transition-shadow hover:ring-foreground/25 focus-visible:ring-3 focus-visible:ring-ring/50"
+            )}
+            {immersive && (
+              <div role="group" aria-label="Camera options" className="flex justify-center gap-1.5">
+                {PANELS.map((p) => (
+                  <button
+                    key={p.value}
+                    type="button"
+                    aria-pressed={sheet === p.value}
+                    onClick={() => setSheet((s) => (s === p.value ? null : p.value))}
+                    className={cn(
+                      "h-8 rounded-full px-3.5 text-xs font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-white/50",
+                      sheet === p.value ? "bg-white text-neutral-900" : "bg-white/10 text-white hover:bg-white/20"
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {editing ? (
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <Button variant="outline" size="lg" onClick={() => endEdit(editing)} disabled={!!busy}>
+                  Cancel
+                </Button>
+                <Button size="lg" onClick={saveEdit} disabled={!!busy}>
+                  {editing.shotId ? "Save changes" : "Save photo"}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex justify-center">
+                  <Segmented
+                    size="sm"
+                    ariaLabel="Camera mode"
+                    value={prefs.mode}
+                    onChange={(m) => {
+                      if (!recording) setPref("mode", m);
+                    }}
+                    options={[
+                      { value: "photo", label: "Photo" },
+                      { value: "video", label: "Video" },
+                    ]}
+                  />
+                </div>
+                <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+                  <div className="flex justify-start">
+                    {recording ? (
+                      <Button variant="outline" size="icon-lg" onClick={togglePause} aria-label={recUi?.paused ? "Resume recording" : "Pause recording"}>
+                        {recUi?.paused ? <Play aria-hidden="true" /> : <Pause aria-hidden="true" />}
+                      </Button>
+                    ) : latest ? (
+                      <button
+                        type="button"
+                        onClick={() => (immersive ? setFsViewer(latest.id) : setOpenShot(latest.id))}
+                        aria-label="Open your latest photo or video"
+                        className="size-11 overflow-hidden rounded-lg bg-muted ring-1 ring-border outline-none transition-shadow hover:ring-foreground/25 focus-visible:ring-3 focus-visible:ring-ring/50"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={latest.thumb} alt="" className="size-full object-cover" />
+                      </button>
+                    ) : immersive ? null : (
+                      <Button variant="outline" size="icon-lg" onClick={() => fileRef.current?.click()} aria-label="Edit a photo from this device" title="Edit a photo">
+                        <ImageUp aria-hidden="true" />
+                      </Button>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={onShutter}
+                    disabled={!isLive || (!!busy && !recording)}
+                    aria-label={shutterLabel}
+                    title={shutterLabel}
+                    className="group grid size-16 place-items-center rounded-full border-4 border-foreground/15 bg-background outline-none transition-transform focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <span
+                      className={cn(
+                        "block transition-all duration-200",
+                        countdown !== null
+                          ? "size-6 rounded-md bg-foreground/70"
+                          : prefs.mode === "video"
+                            ? recording
+                              ? "size-6 rounded-md bg-red-600"
+                              : "size-12 rounded-full bg-red-600 group-hover:bg-red-700"
+                            : "size-12 rounded-full bg-primary group-hover:bg-primary/85"
+                      )}
+                    />
+                  </button>
+
+                  <div className="flex justify-end">
+                    {recording ? (
+                      <Button variant="outline" size="icon-lg" onClick={() => void takePhoto({ allowLowLight: false })} aria-label="Take a photo while recording" title="Take a photo">
+                        <CameraIcon aria-hidden="true" />
+                      </Button>
+                    ) : multipleCameras && isLive ? (
+                      <Button variant="outline" size="icon-lg" onClick={switchCamera} aria-label="Switch camera" title="Switch camera">
+                        <SwitchCamera aria-hidden="true" />
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Photo and video viewer inside full screen (dialogs cannot show
+              over the browser's full screen). */}
+          {viewing && (
+            <div className="absolute inset-0 z-20 flex flex-col bg-black" role="group" aria-label="Your photos and videos">
+              <div className="flex items-center justify-between gap-2 p-2.5 pt-[max(0.625rem,env(safe-area-inset-top))]">
+                <OverlayToggle onClick={() => setFsViewer(null)} label="Back to the camera">
+                  <ChevronLeft aria-hidden="true" />
+                </OverlayToggle>
+                <span className="text-sm text-white/80 tabular-nums">
+                  {viewingIndex + 1} of {shots.length}
+                </span>
+                <span className="size-8" aria-hidden="true" />
+              </div>
+              <div className="relative flex min-h-0 flex-1 items-center justify-center px-2">
+                {viewing.kind === "video" ? (
+                  <video key={viewing.id} src={viewing.url} controls playsInline className="max-h-full max-w-full" />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={viewing.id} src={viewing.url} alt="Your photo" className="max-h-full max-w-full object-contain" />
+                )}
+                {viewingIndex > 0 && (
+                  <div className="absolute top-1/2 left-2 -translate-y-1/2">
+                    <OverlayToggle onClick={() => setFsViewer(shots[viewingIndex - 1].id)} label="Newer">
+                      <ChevronLeft aria-hidden="true" />
+                    </OverlayToggle>
+                  </div>
+                )}
+                {viewingIndex < shots.length - 1 && (
+                  <div className="absolute top-1/2 right-2 -translate-y-1/2">
+                    <OverlayToggle onClick={() => setFsViewer(shots[viewingIndex + 1].id)} label="Older">
+                      <ChevronRight aria-hidden="true" />
+                    </OverlayToggle>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center justify-between gap-2 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
+                <Button
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
+                  onClick={() => {
+                    const next = shots[viewingIndex + 1] ?? shots[viewingIndex - 1];
+                    deleteShot(viewing);
+                    setFsViewer(next ? next.id : null);
+                  }}
+                >
+                  <Trash2 aria-hidden="true" /> Delete
+                </Button>
+                <div className="flex gap-2">
+                  {viewing.kind === "photo" && (
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        const shot = viewing;
+                        exitFullscreen();
+                        void editShot(shot);
+                      }}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={latest.thumb} alt="" className="size-full object-cover" />
-                    </button>
-                  ) : (
-                    <Button variant="outline" size="icon-lg" onClick={() => fileRef.current?.click()} aria-label="Edit a photo from this device" title="Edit a photo">
-                      <ImageUp aria-hidden="true" />
+                      <Pencil aria-hidden="true" /> Edit
                     </Button>
                   )}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={onShutter}
-                  disabled={!isLive || (!!busy && !recording)}
-                  aria-label={shutterLabel}
-                  title={shutterLabel}
-                  className="group grid size-16 place-items-center rounded-full border-4 border-foreground/15 bg-background outline-none transition-transform focus-visible:ring-3 focus-visible:ring-ring/50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <span
-                    className={cn(
-                      "block transition-all duration-200",
-                      countdown !== null
-                        ? "size-6 rounded-md bg-foreground/70"
-                        : prefs.mode === "video"
-                          ? recording
-                            ? "size-6 rounded-md bg-red-600"
-                            : "size-12 rounded-full bg-red-600 group-hover:bg-red-700"
-                          : "size-12 rounded-full bg-primary group-hover:bg-primary/85"
-                    )}
-                  />
-                </button>
-
-                <div className="flex justify-end">
-                  {recording ? (
-                    <Button variant="outline" size="icon-lg" onClick={() => void takePhoto({ allowLowLight: false })} aria-label="Take a photo while recording" title="Take a photo">
-                      <CameraIcon aria-hidden="true" />
-                    </Button>
-                  ) : multipleCameras && isLive ? (
-                    <Button variant="outline" size="icon-lg" onClick={switchCamera} aria-label="Switch camera" title="Switch camera">
-                      <SwitchCamera aria-hidden="true" />
-                    </Button>
-                  ) : null}
+                  <Button onClick={() => download(viewing)}>
+                    <Download aria-hidden="true" /> Download
+                  </Button>
                 </div>
               </div>
             </div>
           )}
         </div>
 
-        {/* Look and settings */}
-        <aside className="min-w-0 space-y-5" aria-label="Camera options">
-          <Segmented
-            fill
-            ariaLabel="Options"
-            value={panel}
-            onChange={setPanel}
-            options={[
-              { value: "filters", label: "Filters" },
-              { value: "adjust", label: "Adjust" },
-              { value: "settings", label: "Settings" },
-            ]}
-          />
-          {panel === "filters" && <FilterPanel look={look} onChange={setLook} thumbs={thumbs} />}
-          {panel === "adjust" && <AdjustPanel look={look} onChange={setLook} />}
-          {panel === "settings" && (
-            <ToolSection title="Settings">
-              <div className="space-y-4">
-                <ToggleRow
-                  id="cam-enhance"
-                  label="Enhance"
-                  description="Balances brightness and colour and sharpens edges, the way a phone's camera app does."
-                  checked={look.enhance}
-                  onCheckedChange={(v) => setLook((l) => ({ ...normaliseLook(l), enhance: v }))}
-                />
-                <ToggleRow
-                  id="cam-lowlight"
-                  label="Low light"
-                  description="Merges several frames into one photo to cut grain in dim light. Hold still for a moment."
-                  checked={prefs.lowLight}
-                  onCheckedChange={(v) => setPref("lowLight", v)}
-                />
-                <div className="space-y-1.5">
-                  <p className="text-sm font-medium text-foreground" id="cam-quality">
-                    Quality
-                  </p>
-                  <Segmented
-                    fill
-                    size="sm"
-                    ariaLabel="Quality"
-                    value={quality}
-                    onChange={(q) => changeQuality(q)}
-                    options={(Object.keys(QUALITY) as Quality[]).map((q) => ({ value: q, label: QUALITY[q].label }))}
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    {QUALITY[quality].hint}
-                    {dims && isLive ? ` Camera: ${dims.w} × ${dims.h}.` : ""}
-                  </p>
-                </div>
-                <div className="space-y-1.5">
-                  <p className="text-sm font-medium text-foreground">Photo shape</p>
-                  <Segmented fill size="sm" ariaLabel="Photo shape" value={prefs.shape} onChange={(s) => setPref("shape", s)} options={SHAPES} />
-                </div>
-                <ToggleRow
-                  id="cam-mirror"
-                  label="Mirror front camera"
-                  description="Save selfies the way you see them in the preview."
-                  checked={prefs.mirror}
-                  onCheckedChange={(v) => setPref("mirror", v)}
-                />
-                <ToggleRow
-                  id="cam-mic"
-                  label="Record sound"
-                  description="Uses the microphone for videos. Asked for only when you start recording."
-                  checked={prefs.mic}
-                  onCheckedChange={(v) => setPref("mic", v)}
-                />
-              </div>
-            </ToolSection>
-          )}
-          {!editing && (
-            <Button variant="outline" className="w-full" onClick={() => fileRef.current?.click()}>
-              <ImageUp aria-hidden="true" /> Edit a photo from this device
-            </Button>
-          )}
-        </aside>
+        {/* Look and settings. In full screen the same options are in sheets. */}
+        {!immersive && (
+          <aside className="min-w-0 space-y-5" aria-label="Camera options">
+            <Segmented fill ariaLabel="Options" value={panel} onChange={setPanel} options={PANELS} />
+            {panelContent(panel)}
+            {!editing && (
+              <Button variant="outline" className="w-full" onClick={() => fileRef.current?.click()}>
+                <ImageUp aria-hidden="true" /> Edit a photo from this device
+              </Button>
+            )}
+          </aside>
+        )}
       </div>
 
       <input

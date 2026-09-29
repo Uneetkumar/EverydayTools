@@ -488,14 +488,14 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "slug": "jwt-decoder",
     "name": "JWT Decoder",
     "shortName": "JWT Decoder",
-    "tagline": "Decode a JWT's header and payload and check when it expires.",
+    "tagline": "Decode a JWT, see what each claim means, and verify its signature.",
     "category": "developer",
-    "description": "Decode JSON Web Tokens (Header, Payload, Signature) and inspect expiration timestamps safely in your browser.",
-    "longDescription": "Debug JWT authentication tokens client-side. Inspect user claims, issuer, algorithm, and check whether the token is expired or valid.",
+    "description": "Decode JSON Web Tokens, see every claim explained and whether the token has expired, verify the signature with a secret or public key, and create test tokens.",
+    "longDescription": "Debug JWT authentication in your browser: decode the header and payload, read each claim in plain words with dates in your time zone, check expiry, and verify HS256, RS256, ES256, PS256 or EdDSA signatures with a secret, PEM key, JWK or JWKS. Create and sign test tokens too.",
     "iconName": "KeySquare",
     "privacy": "local",
-    "metaTitle": "JWT Decoder | TabBench",
-    "metaDescription": "Decode and inspect JSON Web Tokens (JWT) headers and payloads. Check token expiration status securely with zero network transmission.",
+    "metaTitle": "JWT Decoder & Signature Verifier | TabBench",
+    "metaDescription": "Free JWT decoder: explains every claim, checks expiry, verifies HS256, RS256 and ES256 signatures with a secret, PEM or JWKS, and creates test tokens. Nothing leaves your browser.",
     "keywords": [
       "jwt decoder",
       "decode jwt",
@@ -505,7 +505,10 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "json web token decoder",
       "jwt debugger",
       "auth token viewer",
-      "bearer token decoder"
+      "bearer token decoder",
+      "jwt signature verify",
+      "jwt generator",
+      "rs256 jwt verify"
     ],
     "aliases": [
       "json web token",
@@ -513,10 +516,12 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "decode token"
     ],
     "features": [
-      "Decodes Header and Payload",
-      "Formatted JSON inspection",
-      "Live token expiration status",
-      "Zero network transmission"
+      "Decodes header and payload, including JWE headers",
+      "Every claim explained, with dates in your time zone",
+      "Live status: valid, expired or not yet valid",
+      "Signature check for HS, RS, PS, ES and EdDSA",
+      "Accepts PEM, JWK and JWKS keys",
+      "Create and sign test tokens"
     ],
     "faqs": [
       {
@@ -539,14 +544,14 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "slug": "uuid-generator",
     "name": "UUID Generator",
     "shortName": "UUID Generator",
-    "tagline": "Generate random v4 UUIDs one at a time or in bulk.",
+    "tagline": "Generate v4 and time-ordered v7 UUIDs in bulk, or inspect any UUID.",
     "category": "developer",
-    "description": "Generate cryptographically secure Version 4 UUIDs (GUIDs) in bulk with uppercase, hyphen, and quote formatting.",
-    "longDescription": "Generate random v4 UUIDs for database primary keys, API tokens, and unique identifiers. Bulk generation up to 100 UUIDs at once.",
+    "description": "Generate UUIDs (GUIDs) — random v4, time-ordered v7, name-based v5 and more — up to 1,000 at a time, and read the version and creation time of any UUID.",
+    "longDescription": "Generate RFC 9562 UUIDs for database keys and identifiers: random v4, time-ordered v7 that sort by creation time, name-based v5 and v3, and legacy v1 with a random node. Make up to 1,000 at once as lines, CSV, JSON or SQL, download them, or paste any UUID to see its version, variant and timestamp.",
     "iconName": "Hash",
     "privacy": "local",
     "metaTitle": "UUID & GUID Generator | TabBench",
-    "metaDescription": "Generate cryptographically secure Version 4 UUIDs (GUIDs) individually or in bulk. Customize hyphens, uppercase, and quote formatting.",
+    "metaDescription": "Free UUID generator: v4, time-ordered v7, name-based v5 and v1 UUIDs, up to 1,000 at once as text, JSON or SQL. Paste a UUID to decode its version and creation time.",
     "keywords": [
       "uuid generator",
       "random uuid generator",
@@ -557,7 +562,11 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "unique identifier generator",
       "random guid",
       "generate uuid v4",
-      "online guid maker"
+      "online guid maker",
+      "uuid v7 generator",
+      "uuid v5 generator",
+      "uuid decoder",
+      "uuid validator"
     ],
     "aliases": [
       "guid",
@@ -565,15 +574,21 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "random id"
     ],
     "features": [
-      "RFC 4122 compliant v4 UUIDs",
-      "Bulk generation (1 to 100)",
-      "Hyphen and uppercase options",
-      "One-click copy all"
+      "RFC 9562 versions 4, 7, 5, 3 and 1",
+      "Time-ordered v7 that stay sorted, even in bulk",
+      "Up to 1,000 at once; copy or download",
+      "Lines, comma-separated, JSON or SQL output",
+      "Braces, URN, no-hyphen and upper-case styles",
+      "Inspect any UUID: version, variant and creation time"
     ],
     "faqs": [
       {
         "question": "What is a UUID v4?",
         "answer": "A Version 4 UUID is a 128-bit number generated using cryptographically random numbers."
+      },
+      {
+        "question": "Should I use UUID v4 or v7?",
+        "answer": "Use v7 for database primary keys: it starts with the creation time, so new rows are added at the end of the index instead of scattered through it, which keeps inserts fast. Use v4 when an ID must reveal nothing, not even when it was made."
       }
     ],
     "relatedToolSlugs": [
@@ -2039,14 +2054,14 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "slug": "hash-generator",
     "name": "Hash Generator",
     "shortName": "Hash Generator",
-    "tagline": "Create MD5, SHA-1, SHA-256 and SHA-512 hashes of any text.",
+    "tagline": "Hash text or files and check them against a published checksum.",
     "category": "security",
-    "description": "Generate MD5, SHA-1, SHA-256, and SHA-512 cryptographic hashes client-side in real-time.",
-    "longDescription": "Compute secure cryptographic checksums and hashes for text strings using standard cryptographic algorithms right in your browser.",
+    "description": "Hash text or files of any size with MD5, SHA-256, SHA-512, SHA-3 and more, check them against a published hash, and create HMAC signatures.",
+    "longDescription": "Compute MD5, SHA-1, SHA-256, SHA-384, SHA-512, SHA3-256, SHA3-512 and CRC32 hashes of text or of files of any size, read in chunks in your browser. Paste a published checksum to confirm a download matches, or turn on HMAC to check webhook signatures.",
     "iconName": "Fingerprint",
     "privacy": "local",
-    "metaTitle": "Hash Generator | TabBench",
-    "metaDescription": "Generate cryptographic MD5, SHA-1, SHA-256, and SHA-512 hashes instantly in your browser. Secure, fast, and private client-side hashing.",
+    "metaTitle": "Hash Generator & File Checksum Checker | TabBench",
+    "metaDescription": "Free hash generator: MD5, SHA-256, SHA-512, SHA-3 and CRC32 for text or files of any size, checksum verification against a published hash, and HMAC. Nothing is uploaded.",
     "keywords": [
       "hash generator",
       "sha256 generator",
@@ -2057,7 +2072,11 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "md5 hash online",
       "sha512 checksum",
       "sha1 generator",
-      "crypto hash maker"
+      "crypto hash maker",
+      "file checksum checker",
+      "verify sha256 checksum",
+      "hmac generator",
+      "sha3 hash online"
     ],
     "aliases": [
       "md5",
@@ -2066,15 +2085,20 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "checksum"
     ],
     "features": [
-      "MD5, SHA-1, SHA-256, SHA-512 algorithms",
-      "Live real-time hash generation",
-      "One-click copy hash",
-      "Uppercase and lowercase hex"
+      "Text or files of any size, hashed in chunks",
+      "MD5, SHA-1, SHA-256, SHA-384, SHA-512, SHA-3 and CRC32",
+      "Check against a published hash or sha256sum line",
+      "HMAC signatures with a secret key",
+      "Hex, upper-case hex or Base64 output"
     ],
     "faqs": [
       {
         "question": "Can a hash be decrypted?",
         "answer": "No, cryptographic hash functions are one-way functions."
+      },
+      {
+        "question": "How do I verify a downloaded file's checksum?",
+        "answer": "Choose File, drop in the download, and paste the SHA-256 (or other) hash from the download page into the check box. If it matches, the file is exactly the one that was published; if not, download it again from the official source."
       }
     ],
     "relatedToolSlugs": [
@@ -3702,19 +3726,22 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "shortName": "Cron Explainer",
     "tagline": "Read cron schedules in plain English and build new ones.",
     "category": "developer",
-    "description": "Translate complex cron expressions into plain English schedules and build cron strings interactively.",
-    "longDescription": "Understand and debug 5-part cron syntax with clear English explanations, field breakdowns, and common schedule presets for cron jobs.",
+    "description": "Read any cron expression in plain English, see its next run times, and build new schedules without memorising the syntax.",
+    "longDescription": "Paste a cron expression to get a plain-English description, a field-by-field breakdown and the next run times in your time zone or UTC. It checks every field, explains the mistakes that make jobs run at the wrong time, and reads Linux crontab, GitHub Actions, Kubernetes, Spring, Quartz and AWS EventBridge schedules. A builder writes new expressions from a few choices.",
     "iconName": "CalendarClock",
     "privacy": "local",
     "metaTitle": "Cron Expression Explainer & Builder | TabBench",
-    "metaDescription": "Translate cron expressions into plain English explanations. Includes 5-field syntax breakdown and common schedule presets.",
+    "metaDescription": "Free cron expression explainer and builder: plain-English meaning, next run times in your time zone or UTC, error checks, and support for crontab, Quartz and AWS cron.",
     "keywords": [
       "cron explainer",
       "cron expression builder",
       "cron generator",
       "cron schedule explainer",
       "crontab guru alternative",
-      "explain cron syntax"
+      "explain cron syntax",
+      "cron next run time",
+      "quartz cron expression",
+      "aws cron expression"
     ],
     "aliases": [
       "crontab",
@@ -3722,15 +3749,21 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "cron builder"
     ],
     "features": [
-      "Plain English schedule translation",
-      "5-field breakdown (Minute, Hour, Day, Month, Weekday)",
-      "Common schedule preset library",
-      "Instant copy to clipboard"
+      "Plain-English description of any schedule",
+      "Next 8 run times in your time zone or UTC",
+      "Checks every field and explains common mistakes",
+      "Reads crontab, GitHub Actions, Spring, Quartz and AWS cron",
+      "Builder for minute, hourly, daily, weekly and monthly schedules",
+      "Names (MON, JAN), @daily shortcuts and L, W, # support"
     ],
     "faqs": [
       {
         "question": "What do the 5 asterisks in a cron expression mean?",
         "answer": "The 5 fields represent: Minute (0-59), Hour (0-23), Day of the Month (1-31), Month (1-12), and Day of the Week (0-6, with 0 being Sunday)."
+      },
+      {
+        "question": "Why does my 6-field cron expression mean something different?",
+        "answer": "Six fields come in two layouts. Spring, node-cron and Quartz put seconds first; AWS EventBridge puts a year last. Quartz and AWS also count Sunday as 1 instead of 0. Choose the scheduler under Read as and the description and run times follow its rules."
       }
     ],
     "relatedToolSlugs": [
@@ -3749,12 +3782,12 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "shortName": "UTM Builder",
     "tagline": "Build campaign tracking links, or strip tracking from a URL.",
     "category": "business",
-    "description": "Build marketing campaign tracking URLs and clean tracking parameters from existing links.",
-    "longDescription": "Generate standardized UTM campaign tracking links for Google Analytics with utm_source, utm_medium, utm_campaign, utm_term, and utm_content. Also strips trackers for clean URLs.",
+    "description": "Build campaign tracking links for Google Analytics, see which channel each one will count under, and check or clean any tagged link.",
+    "longDescription": "Build UTM tracking links with all nine tags Google Analytics 4 reads, starting from presets for Instagram, WhatsApp, newsletters, Google Ads and more. The builder shows the GA4 channel each link will be counted under, warns about mistakes that spoil reports (a site in the Medium field, mixed capitals, personal data), and can check any link and remove tracking IDs such as fbclid and gclid.",
     "iconName": "Megaphone",
     "privacy": "local",
     "metaTitle": "UTM Campaign Builder & URL Cleaner | TabBench",
-    "metaDescription": "Create Google Analytics UTM campaign tracking URLs and strip tracking parameters for clean links. Free, client-side digital marketing tool.",
+    "metaDescription": "Free UTM builder: create Google Analytics campaign links with presets, see the GA4 channel they count under, catch tagging mistakes, and clean tracking from any link.",
     "keywords": [
       "utm builder",
       "utm generator",
@@ -3770,10 +3803,12 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "remove utm"
     ],
     "features": [
-      "Complete 5-parameter UTM generator",
-      "Paste-to-parse existing URLs",
-      "One-click tracker stripper (Clean URL)",
-      "Instant copy to clipboard"
+      "All nine UTM tags GA4 reads, with presets for common platforms",
+      "Shows the Google Analytics 4 channel each link counts under",
+      "Warns about a wrong medium, mixed capitals and personal data",
+      "Check any link and remove tracking IDs like fbclid and gclid",
+      "Make a QR code for the link in one click",
+      "Recent links kept on your device, with CSV export"
     ],
     "faqs": [
       {
@@ -4589,7 +4624,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "shortName": "Camera",
     "tagline": "Take clearer photos and videos in your browser, with filters.",
     "category": "image-media",
-    "description": "Take photos and record videos with your phone or webcam, with automatic enhancement, a low-light mode and natural-looking filters.",
+    "description": "Take photos and record videos with your phone or webcam, with automatic enhancement, face-aware exposure, a low-light mode and natural-looking filters.",
     "longDescription": "A camera that runs in your browser. Enhance balances brightness and colour and sharpens edges; Low light merges several frames into one cleaner photo; ten subtle filters and manual adjustments are applied live and saved with each photo and video. Photos and recordings stay on your device until you download them.",
     "iconName": "Aperture",
     "privacy": "local",
@@ -4618,11 +4653,12 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "camera filters"
     ],
     "features": [
-      "Auto-enhance for brightness, colour and sharpness",
+      "Auto-enhance for brightness, colour, clarity and sharpness",
+      "Face detection that exposes faces well and keeps skin natural",
       "Low-light mode that merges frames to cut grain",
       "Ten natural filters plus manual adjustments",
       "Video recording with sound, pause and resume",
-      "Timer, grid, mirror, zoom and flashlight where supported",
+      "Full-screen mode that works like a phone's camera app",
       "Photos and videos stay on your device"
     ],
     "faqs": [
@@ -4633,6 +4669,10 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       {
         "question": "Why does the browser ask for camera permission?",
         "answer": "Browsers always ask before a website can use the camera or microphone. The microphone is only requested when you start a video with Record sound turned on."
+      },
+      {
+        "question": "Does face detection recognise who is in the picture?",
+        "answer": "No. It only finds where faces are, so brightness and colour can be set for them and skin is not over-sharpened. It cannot tell people apart, and it runs on your device."
       }
     ],
     "relatedToolSlugs": [

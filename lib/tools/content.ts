@@ -347,14 +347,15 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "jwt-decoder": {
     intro:
-      "A JSON Web Token is three Base64URL-encoded segments separated by dots: a header describing the signing algorithm, a payload of claims, and a signature. The first two are readable by anyone — a JWT is signed, not encrypted. This decoder splits and pretty-prints the header and payload so you can check claims like expiry, issuer, and audience while debugging an auth flow, entirely inside your browser.",
+      "A JSON Web Token is three Base64URL-encoded segments separated by dots: a header describing the signing algorithm, a payload of claims, and a signature. The first two are readable by anyone — a JWT is signed, not encrypted. This tool decodes the header and payload, explains every claim in plain words, shows whether the token is valid, expired or not yet valid, and verifies the signature when you give it the secret or the issuer's public key (HS, RS, PS, ES and EdDSA algorithms, with PEM, JWK or JWKS keys). It can also create and sign test tokens. Everything happens in your browser with its built-in Web Crypto; tokens and keys are never sent anywhere.",
     howTo: {
-      title: "How to decode a JWT",
+      title: "How to decode and verify a JWT",
       steps: [
-        "Paste the full token, including both dots and all three segments.",
-        "Read the decoded header to see the signing algorithm ('alg') and key id ('kid').",
-        "Read the payload for the claims that matter: 'exp' for expiry, 'iat' for issue time, 'sub' for subject, 'iss' for issuer, and 'aud' for audience.",
-        "Convert the numeric timestamps — they are Unix seconds, not milliseconds — to check whether the token has expired.",
+        "Paste the token. A “Bearer ” prefix, quotes or line breaks copied along with it are ignored.",
+        "Check the status: whether it has expired or isn't valid yet, when it was issued and how long it lasts.",
+        "Read the claims table — each value is explained, and times are shown as dates in your time zone.",
+        "To confirm it's genuine, enter the secret (for HS256) or paste the issuer's public key or JWKS (for RS256, ES256 and others). A matching signature proves the token hasn't been changed.",
+        "To make a test token instead, switch to Create a token, edit the claims and sign it with a secret or a generated test key.",
       ],
     },
     useCases: [
@@ -384,7 +385,7 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
       {
         question: "Does decoding a JWT verify its signature?",
         answer:
-          "No, and this is the most important thing to understand about JWTs. Decoding only reverses the Base64URL encoding of the header and payload. Verifying the signature requires the issuer's secret or public key and must happen server-side. A token can decode perfectly and still be forged.",
+          "No, and this is the most important thing to understand about JWTs. Decoding only reverses the Base64URL encoding of the header and payload; anyone can do it. Verifying the signature needs the issuer's secret or public key. You can check it here with that key, but your servers must always verify every token themselves — a token can decode perfectly and still be forged.",
       },
       {
         question: "Is it safe to paste a token here?",
@@ -411,14 +412,14 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "uuid-generator": {
     intro:
-      "A UUID is a 128-bit identifier you can generate independently on any machine with a vanishing probability of collision — no coordination, no central sequence, no database round trip. Version 4 UUIDs, the kind this tool produces, are 122 bits of randomness. That is enough that generating a billion per second for a century still leaves the odds of a duplicate negligible. Generation uses the browser's cryptographic random source and happens entirely on your device.",
+      "A UUID is a 128-bit identifier you can generate independently on any machine with a vanishing probability of collision — no coordination, no central sequence, no database round trip. This generator follows RFC 9562, the 2024 standard that replaced RFC 4122. Version 4 is 122 bits of randomness; version 7 starts with the creation time, so IDs sort in the order they were made, which keeps database indexes fast; versions 5 and 3 turn a namespace and a name into the same UUID every time. Make up to 1,000 at once in the format your code needs, or paste any UUID to see which version it is and, for time-based ones, when it was created. Everything uses your browser's cryptographic random source and stays on your device.",
     howTo: {
       title: "How to generate a UUID",
       steps: [
-        "Choose how many identifiers you need — one for a quick test, or a batch for seeding fixtures.",
-        "Click Generate. Each UUID appears in the canonical 8-4-4-4-12 hyphenated form.",
-        "Copy an individual value, or copy the whole batch at once for pasting into a seed script.",
-        "Regenerate freely; every click produces entirely fresh values.",
+        "Pick a version: 4 for general use, 7 for database primary keys, 5 to derive an ID from a name such as a domain or URL.",
+        "Choose how many you need — one for a quick test, or up to 1,000 for seed data. For version 5, type one name per line instead.",
+        "Choose the format: standard, no hyphens, braces or urn:uuid:, and list them one per line, comma-separated, as JSON or as SQL values.",
+        "Copy one, copy them all, or download the list. To check an existing UUID, switch to Inspect a UUID and paste it.",
       ],
     },
     useCases: [
@@ -1901,14 +1902,14 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
   },
   "hash-generator": {
     intro:
-      "A cryptographic hash reduces any input to a fixed-length fingerprint. The same input always produces the same hash, and any change — even a single bit — produces a completely different one. Hashes are used to verify file integrity, deduplicate content, and index data. This generator produces MD5, SHA-1, SHA-256, and SHA-512 digests in your browser, so the input is never transmitted.",
+      "A cryptographic hash reduces any input to a fixed-length fingerprint. The same input always produces the same hash, and any change — even a single bit — produces a completely different one. Hashes are used to verify downloads, detect changes, deduplicate content and sign messages. This generator hashes text or files of any size with MD5, SHA-1, SHA-256, SHA-384, SHA-512, SHA-3 and CRC32, and checks the result against a hash you paste from a download page. It can also produce HMAC signatures for checking webhooks. Files are read a few megabytes at a time in your browser, so even a multi-gigabyte download is never uploaded or held in memory at once.",
     howTo: {
-      title: "How to generate a hash",
+      title: "How to check a file's hash",
       steps: [
-        "Enter or paste the text you want to hash.",
-        "Choose the algorithm. SHA-256 is the sensible default for anything security-related.",
-        "Read the resulting hexadecimal digest and copy it.",
-        "To verify a download, compare your computed hash against the one published by the source — they must match exactly, character for character.",
+        "Choose File and drop in the download, or choose Text and type or paste what you want to hash.",
+        "Turn on the algorithms you need. SHA-256 is the usual choice; the one the publisher used is the one to compare.",
+        "Paste the published hash into Check against a published hash. The matching row turns green, or you are told it doesn't match.",
+        "Copy any hash in hex, upper-case hex or Base64. For webhook signatures, turn on HMAC and enter the secret key.",
       ],
     },
     useCases: [
@@ -1932,6 +1933,7 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
       "Hashing is one-way by design. There is no operation that recovers the input from the digest.",
       "MD5 and SHA-1 are both cryptographically broken — collisions can be constructed deliberately. Use them only for non-security checks like cache keys, never for signatures or integrity guarantees.",
       "Hashes are case-insensitive in hex representation but compare them exactly; a single differing character means a different input.",
+      "A text hash that doesn't match is usually a line break: echo \"text\" | sha256sum hashes the text plus a newline. Use echo -n, or printf, to match what you type here.",
       "Never hash passwords with a plain hash function. Password storage requires a slow, salted algorithm such as bcrypt, scrypt, or Argon2.",
     ],
     extraFaqs: [
@@ -3930,15 +3932,15 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "cron-explainer": {
     intro:
-      "Cron expressions schedule jobs on Linux servers, in CI pipelines, cloud schedulers and many web frameworks, but five fields of numbers and asterisks are hard to read correctly. Paste an expression like 30 2 * * 1-5 and this explainer translates it into plain English — \"at 02:30, Monday to Friday\" — and breaks down what each field means. It understands lists, ranges and step values, and includes presets for the schedules people use most, so you can start from a known-good expression.",
+      "Cron expressions schedule jobs on Linux servers, in CI pipelines, cloud schedulers and many web frameworks, but five fields of numbers and asterisks are hard to read correctly. Paste an expression like 30 2 * * 1-5 and this explainer translates it into plain English — \"at 02:30 on weekdays\" — breaks down each field, and lists the next times it will run in your time zone or in UTC. It checks every value, warns about the mistakes that make jobs run at the wrong time, and understands names, @daily shortcuts and the L, W and # characters. Because the same text means different things in different schedulers, it can read an expression the way Linux crontab, Spring, Quartz or AWS EventBridge would. To write a new one, switch to the builder and pick how often it should run.",
     howTo: {
       title: "How to read a cron expression",
       steps: [
-        "Paste or type a five-field cron expression: minute, hour, day of month, month and day of week.",
-        "Read the plain-English description to confirm it runs when you intend.",
-        "Check the field-by-field breakdown to see how each part is interpreted.",
-        "Start from a preset such as every 15 minutes, daily at midnight or weekdays at 9:00 and adjust it.",
-        "Copy the expression into your crontab, workflow file or scheduler.",
+        "Paste or type a cron expression: minute, hour, day of month, month and day of week. Six- and seven-field expressions with seconds or a year are recognised too.",
+        "If it came from Spring, Quartz or AWS, check that Read as shows the right scheduler — they number weekdays differently.",
+        "Read the plain-English description and the field-by-field breakdown, and fix anything marked as an error or warning.",
+        "Check the next run times, in your time zone or in UTC for GitHub Actions and cloud schedulers.",
+        "Or switch to Build a schedule, choose how often it runs, and copy the expression into your crontab, workflow file or scheduler.",
       ],
     },
     useCases: [
@@ -3961,7 +3963,8 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
     tips: [
       "Most cron systems run in UTC unless configured otherwise. 30 3 * * * in UTC is 9:00 a.m. in India.",
       "When both day of month and day of week are set, classic cron runs the job when either matches, not only when both do.",
-      "*/15 in the minute field means every 15 minutes starting at :00, not every 15 minutes from when the job was installed.",
+      "*/15 in the minute field means every 15 minutes starting at :00, not every 15 minutes from when the job was installed. A step that doesn't divide 60, such as */7, leaves a short gap at the end of each hour.",
+      "GitHub Actions runs scheduled workflows at most every 5 minutes, in UTC, and may start them a few minutes late when it's busy.",
       "Avoid scheduling many jobs at exactly midnight or on the hour; spreading them by a few minutes reduces load spikes.",
     ],
     extraFaqs: [
@@ -3985,15 +3988,15 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "utm-builder": {
     intro:
-      "UTM parameters are the five tags — utm_source, utm_medium, utm_campaign, utm_term and utm_content — that analytics tools read from a link to tell you where a visit came from. Without them, a click from your newsletter and a click from an Instagram bio both show up as unhelpful \"direct\" or \"referral\" traffic. This builder assembles a correctly encoded tracking link from the fields you fill in, can read an existing tagged link back into the form, and can also do the opposite job: strip utm_ tags and click IDs such as fbclid and gclid to give you a clean link to share.",
+      "UTM parameters are the tags — utm_source, utm_medium and utm_campaign, plus utm_content, utm_term and four newer ones that Google Analytics 4 reads — that tell your analytics where a visit came from. Without them, a click from your newsletter and a click from an Instagram bio both show up as unhelpful \"direct\" or \"referral\" traffic. This builder assembles a correctly encoded tracking link, starting from presets for the places people share links, shows which Google Analytics 4 channel the visits will be counted under, and warns about the mistakes that quietly spoil reports. It can also do the opposite job: explain every tag and tracking ID in a link someone sent you, and give you a clean copy without them.",
     howTo: {
       title: "How to build a UTM tracking link",
       steps: [
-        "Paste the page you want people to land on into the website URL field, for example https://example.com/pricing.",
-        "Fill in Source (who sends the traffic: google, newsletter, instagram), Medium (the channel: cpc, email, social) and Campaign (the promotion: diwali_sale_2026).",
-        "Add Term for paid-search keywords and Content to tell apart two links in the same campaign, such as header_button and footer_link.",
-        "Copy the finished link. Spaces and special characters are encoded for you, so the link works when pasted anywhere.",
-        "To tidy a link someone sent you, paste it in and use the clean option: every utm_ tag and ad click ID is removed and the rest of the address is kept.",
+        "Paste the page you want people to land on into the website address field, for example https://example.com/pricing. A link that already has tags is read back into the fields.",
+        "Choose where you will share it — Instagram, WhatsApp, a newsletter, Google Ads — to fill in Source and Medium, or type your own.",
+        "Name the Campaign (diwali_sale_2026), and add Content to tell apart two links in the same campaign, such as header_button and footer_link.",
+        "Check the Google Analytics 4 channel shown under the link and fix anything the tool warns about, then copy the link, test it or turn it into a QR code.",
+        "To see what a link someone sent you contains, switch to Check or clean a link: every tag and tracking ID is explained, and you can copy a clean version.",
       ],
     },
     useCases: [
@@ -4015,6 +4018,8 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
     ],
     tips: [
       "Analytics treats Email and email as two different sources. Pick one style — lowercase with underscores is the most common — and use it for every link.",
+      "Medium decides the channel in Google Analytics 4. A site name such as facebook belongs in Source; putting it in Medium sends the visits to Unassigned.",
+      "Never put email addresses, phone numbers or names in UTM tags. They end up in your analytics reports, which Google Analytics does not allow.",
       "Never add UTM tags to links between pages of your own site. They restart the session and credit the visit to your own campaign, wiping out the real source.",
       "Keep a simple sheet of the source, medium and campaign names your team uses, so the same campaign is not spelled three different ways.",
       "Long tagged links look untidy in posts. Put a short link or QR code in front of them; the tags still reach your analytics after the redirect.",
@@ -4772,7 +4777,7 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "online-camera": {
     intro:
-      "Laptop webcams and many phone browsers produce flat, grainy pictures: the camera hands the browser a raw video stream without the processing a phone's own camera app adds. This camera puts some of that processing back. Enhance measures every frame and gently corrects brightness, contrast and colour cast, then sharpens edges without sharpening grain. Low light merges several frames into one photo, which cuts noise in dim rooms while keeping anything that moved sharp. Ten restrained filters and manual sliders let you set a look before you shoot, and videos are recorded exactly as you see them. Everything runs on your device and nothing is uploaded.",
+      "Laptop webcams and many phone browsers produce flat, grainy pictures: the camera hands the browser a raw video stream without the processing a phone's own camera app adds. This camera puts some of that processing back. Enhance measures every frame and gently corrects brightness, contrast and colour cast, then sharpens edges without sharpening grain. Low light merges several frames into one photo, which cuts noise in dim rooms while keeping anything that moved sharp. Face detection sets the exposure for the people in the picture, so a face in front of a bright window is not left in shadow, and keeps skin from being over-sharpened. Ten restrained filters and manual sliders let you set a look before you shoot, videos are recorded exactly as you see them, and full-screen mode turns the page into a camera app. Everything runs on your device and nothing is uploaded.",
     howTo: {
       title: "How to take better photos and videos in your browser",
       steps: [
@@ -4780,6 +4785,7 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
         "Leave Enhance on for balanced, sharper pictures. In a dim room, turn on Low light and hold still for a moment after pressing the shutter.",
         "Pick a filter under Filters and set its strength, or fine-tune brightness, contrast, warmth and more under Adjust.",
         "Press the shutter for a photo, or switch to Video and press record. Use the timer for group shots and the grid to line up the horizon.",
+        "Choose Full screen to use it like a phone's camera app, with filters and settings a tap away. Press and hold the picture at any time to compare with the original.",
         "Open a photo or video from Your photos and videos to check it, change a photo's filter later, or download everything as a ZIP.",
       ],
     },
@@ -4806,6 +4812,7 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
       "On older phones choose Standard quality in Settings for a smoother preview and smaller videos.",
       "Photos and videos are kept only while the page is open. Download the ones you want to keep before you leave.",
       "Photos saved here contain no location or device details, so they are safe to share as they are.",
+      "Face detection is built for faces within about two metres, as in selfies and video calls. It downloads about 3.5 MB the first time and is off by default on phones with little memory.",
     ],
     extraFaqs: [
       {

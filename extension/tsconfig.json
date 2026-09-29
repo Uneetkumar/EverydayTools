@@ -11,5 +11,5 @@
     "skipLibCheck": true,
     "types": ["chrome"]
   },
-  "include": ["src/**/*.ts", "../lib/tools/search.ts"]
+  "include": ["src/**/*.ts", "../lib/tools/search.ts", "../lib/url/tracking.ts"]
 }

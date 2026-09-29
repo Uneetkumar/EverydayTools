@@ -44,3 +44,6 @@ next-env.d.ts
 /extension/dist*/
 /extension/release/
 /extension/src/generated/
+
+# Copied from node_modules by scripts/copy-vendor.mjs
+/public/vendor/

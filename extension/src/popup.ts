@@ -4,7 +4,7 @@
  */
 import QRCode from "qrcode";
 import { siteUrl } from "./shared/config";
-import { cleanUrl } from "./shared/clean-url";
+import { cleanUrl } from "../../lib/url/tracking";
 import type { ExtensionMessage, HandoffPayload } from "./shared/handoff";
 import { applyTheme, clearRecent, getRecent, getSettings, saveSettings, type Settings } from "./shared/storage";
 import { POPULAR, TOOLS, getTool, search, type ExtTool } from "./shared/tools";

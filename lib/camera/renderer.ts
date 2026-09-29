@@ -3,9 +3,10 @@
  *
  * WebGL 1 rather than WebGL 2 or a canvas 2D `filter`: it runs on practically
  * every phone from the last decade, while canvas filters are still missing in
- * Safari. One fragment shader does everything in a single pass — five texture
- * reads per pixel — so a 720p preview stays at the camera's frame rate on
- * old GPUs, and the same code renders the full-size photo.
+ * Safari. One fragment shader does everything in a single pass — at most 13
+ * texture reads per pixel, 1 when enhancement and sharpening are off — so a
+ * 720p preview stays at the camera's frame rate on old GPUs, and the same
+ * code renders the full-size photo.
  */
 
 import type { Uniforms } from "./filters";
@@ -19,6 +20,13 @@ export interface Crop {
 }
 
 export const FULL_CROP: Crop = { x: 0, y: 0, w: 1, h: 1 };
+
+export interface DrawOptions {
+  crop?: Crop;
+  mirror?: boolean;
+  /** Faces as boxes in 0 … 1 coordinates of the output (after crop and mirror). */
+  faces?: { x: number; y: number; w: number; h: number }[];
+}
 
 const VERTEX = `
 attribute vec2 a_pos;
@@ -42,6 +50,10 @@ varying vec2 v_pos;
 uniform sampler2D u_image;
 uniform vec2 u_texel;
 uniform float u_sharpen;
+uniform float u_clarity;
+uniform float u_denoise;
+uniform float u_noise;
+uniform vec4 u_faces[4];
 uniform vec3 u_black;
 uniform vec3 u_scale;
 uniform float u_gamma;
@@ -54,18 +66,50 @@ uniform float u_fade;
 uniform float u_vignette;
 const vec3 LUMA = vec3(0.2126, 0.7152, 0.0722);
 
+// 1 away from faces; lower on skin, so pores and grain are not sharpened.
+float skinWeight() {
+  vec2 p = vec2(v_pos.x * 0.5 + 0.5, 0.5 - v_pos.y * 0.5);
+  float w = 1.0;
+  for (int i = 0; i < 4; i++) {
+    vec4 f = u_faces[i];
+    if (f.z > 0.0) {
+      float d = length((p - f.xy) / f.zw);
+      w = min(w, mix(0.35, 1.0, smoothstep(0.75, 1.1, d)));
+    }
+  }
+  return w;
+}
+
 void main() {
   vec3 c = texture2D(u_image, v_uv).rgb;
-  if (u_sharpen > 0.0) {
-    vec3 blur = (texture2D(u_image, v_uv + vec2(u_texel.x, 0.0)).rgb
-      + texture2D(u_image, v_uv - vec2(u_texel.x, 0.0)).rgb
-      + texture2D(u_image, v_uv + vec2(0.0, u_texel.y)).rgb
-      + texture2D(u_image, v_uv - vec2(0.0, u_texel.y)).rgb) * 0.25;
-    vec3 d = c - blur;
-    // Ignore differences smaller than sensor grain, so edges get crisper
-    // but flat areas do not get noisier.
-    d = sign(d) * max(abs(d) - 0.012, 0.0);
-    c += d * u_sharpen;
+  if (u_sharpen > 0.0 || u_denoise > 0.0 || u_clarity > 0.0) {
+    vec2 tx = vec2(u_texel.x, 0.0);
+    vec2 ty = vec2(0.0, u_texel.y);
+    vec3 n = texture2D(u_image, v_uv + tx).rgb + texture2D(u_image, v_uv - tx).rgb
+      + texture2D(u_image, v_uv + ty).rgb + texture2D(u_image, v_uv - ty).rgb;
+    vec3 dg = texture2D(u_image, v_uv + tx + ty).rgb + texture2D(u_image, v_uv + tx - ty).rgb
+      + texture2D(u_image, v_uv - tx + ty).rgb + texture2D(u_image, v_uv - tx - ty).rgb;
+    vec3 blur = (c * 4.0 + n * 2.0 + dg) / 16.0;
+    float skin = skinWeight();
+    float yc = dot(c, LUMA);
+    float diff = yc - dot(blur, LUMA);
+    // Grain: differences the size of sensor noise are smoothed away...
+    float grain = 1.0 - smoothstep(u_noise, u_noise * 3.0, abs(diff));
+    c = mix(c, blur, clamp(u_denoise * grain * (2.0 - skin), 0.0, 1.0));
+    // ...and only real edges are sharpened, on brightness alone so colours
+    // do not fringe.
+    float edge = sign(diff) * max(abs(diff) - u_noise, 0.0);
+    c += edge * u_sharpen * skin;
+    if (u_clarity > 0.0) {
+      vec2 r = u_texel * 4.0;
+      vec3 wide = (texture2D(u_image, v_uv + r).rgb + texture2D(u_image, v_uv - r).rgb
+        + texture2D(u_image, v_uv + vec2(r.x, -r.y)).rgb + texture2D(u_image, v_uv + vec2(-r.x, r.y)).rgb
+        + blur) * 0.2;
+      // Local contrast, strongest in the midtones so shadows and highlights
+      // are not pushed to black or white.
+      float mid = 1.0 - abs(yc * 2.0 - 1.0);
+      c += (yc - dot(wide, LUMA)) * u_clarity * 1.6 * mid * skin;
+    }
   }
   c = clamp((c - u_black) * u_scale, 0.0, 1.0);
   c = pow(c, vec3(u_gamma));
@@ -148,7 +192,8 @@ export class LookRenderer {
     gl.vertexAttribPointer(pos, 2, gl.FLOAT, false, 0, 0);
 
     for (const name of [
-      "u_crop", "u_image", "u_texel", "u_sharpen", "u_black", "u_scale", "u_gamma", "u_exposure",
+      "u_crop", "u_image", "u_texel", "u_sharpen", "u_clarity", "u_denoise", "u_noise", "u_faces",
+      "u_black", "u_scale", "u_gamma", "u_exposure",
       "u_contrast", "u_vibrance", "u_matrix", "u_offset", "u_fade", "u_vignette",
     ]) {
       this.loc[name] = gl.getUniformLocation(prog, name);
@@ -199,7 +244,7 @@ export class LookRenderer {
    * Draws the uploaded source into the canvas. `crop` selects part of it (for
    * a square photo, say) and `mirror` flips it for the front camera.
    */
-  draw(u: Uniforms, { crop = FULL_CROP, mirror = false }: { crop?: Crop; mirror?: boolean } = {}) {
+  draw(u: Uniforms, { crop = FULL_CROP, mirror = false, faces = [] }: DrawOptions = {}) {
     if (this.lost) return;
     const gl = this.gl;
     const { width, height } = this.canvas;
@@ -210,6 +255,15 @@ export class LookRenderer {
     // so sharpening works at the scale the result is seen at.
     gl.uniform2f(l.u_texel, Math.max(1 / this.srcW, crop.w / width), Math.max(1 / this.srcH, crop.h / height));
     gl.uniform1f(l.u_sharpen, u.sharpen);
+    gl.uniform1f(l.u_clarity, u.clarity);
+    gl.uniform1f(l.u_denoise, u.denoise);
+    gl.uniform1f(l.u_noise, u.noise);
+    const f = new Float32Array(16);
+    faces.slice(0, 4).forEach((face, i) => {
+      // Ellipse centre and radii, in output coordinates.
+      f.set([face.x + face.w / 2, face.y + face.h / 2, face.w * 0.62, face.h * 0.72], i * 4);
+    });
+    gl.uniform4fv(l.u_faces, f);
     gl.uniform3fv(l.u_black, u.black);
     gl.uniform3fv(l.u_scale, u.scale);
     gl.uniform1f(l.u_gamma, u.gamma);
@@ -223,7 +277,7 @@ export class LookRenderer {
     gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
   }
 
-  render(source: TexImageSource, u: Uniforms, opts?: { crop?: Crop; mirror?: boolean }): boolean {
+  render(source: TexImageSource, u: Uniforms, opts?: DrawOptions): boolean {
     if (!this.upload(source)) return false;
     this.draw(u, opts);
     return true;

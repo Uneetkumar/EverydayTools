@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { toast } from "sonner";
+import { takeHandoff } from "@/lib/tools/handoff";
 
 /**
  * Receives content sent from the TabBench browser extension ("Summarise",
@@ -13,6 +14,9 @@ import { toast } from "sonner";
  * text goes into the workspace's first text box, a link into its URL field,
  * and a file into the first file picker that accepts it — exactly as if the
  * visitor had pasted or dropped it.
+ *
+ * It also receives results passed from another tool on the site (see
+ * lib/tools/handoff.ts), the same way.
  */
 
 type Payload =
@@ -132,6 +136,16 @@ export function ExtensionHandoff() {
       });
     };
     window.addEventListener("message", onMessage);
+
+    // A result passed from another tool in this tab ("Make a QR code").
+    const slug = window.location.pathname.match(/^\/tools\/([^/]+)/)?.[1];
+    const fromTool = slug ? takeHandoff(slug) : null;
+    if (fromTool) {
+      void deliver(fromTool.payload).then((ok) => {
+        if (ok) toast.success(`Added from ${fromTool.from}`);
+      });
+    }
+
     document.documentElement.dataset.tbHandoff = "ready";
     window.postMessage({ source: "tabbench-site", type: "handoff-ready" }, window.location.origin);
     return () => {

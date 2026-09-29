@@ -56,7 +56,7 @@ function scratchCanvas(w: number, h: number): CanvasRenderingContext2D {
 }
 
 /** A small RGBA copy of the cropped source, for measuring levels. */
-export function samplePixels(source: CanvasImageSource, crop: Crop, width = 64): Uint8ClampedArray {
+export function samplePixels(source: CanvasImageSource, crop: Crop, width = 96): { data: Uint8ClampedArray; width: number } {
   const { width: sw, height: sh } = sourceSize(source);
   const cw = sw * crop.w;
   const ch = sh * crop.h;
@@ -64,7 +64,7 @@ export function samplePixels(source: CanvasImageSource, crop: Crop, width = 64):
   const h = Math.max(8, Math.round((w * ch) / Math.max(cw, 1)));
   const ctx = scratchCanvas(w, h);
   ctx.drawImage(source, sw * crop.x, sh * crop.y, cw, ch, 0, 0, w, h);
-  return ctx.getImageData(0, 0, w, h).data;
+  return { data: ctx.getImageData(0, 0, w, h).data, width: w };
 }
 
 /** Square, centre-cropped JPEG thumbnail as a data URL. */
