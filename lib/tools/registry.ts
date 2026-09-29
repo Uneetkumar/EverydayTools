@@ -183,6 +183,7 @@ export const POPULAR_TOOL_SLUGS = [
 
 /** Recently added. */
 export const NEW_TOOL_SLUGS = [
+  "online-camera",
   "png-to-svg",
   "text-sorter",
   "unit-converter",
@@ -4580,6 +4581,71 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "text-diff-checker",
       "case-converter",
       "word-counter"
+    ]
+  },
+  "online-camera": {
+    "slug": "online-camera",
+    "name": "Online Camera",
+    "shortName": "Camera",
+    "tagline": "Take clearer photos and videos in your browser, with filters.",
+    "category": "image-media",
+    "description": "Take photos and record videos with your phone or webcam, with automatic enhancement, a low-light mode and natural-looking filters.",
+    "longDescription": "A camera that runs in your browser. Enhance balances brightness and colour and sharpens edges; Low light merges several frames into one cleaner photo; ten subtle filters and manual adjustments are applied live and saved with each photo and video. Photos and recordings stay on your device until you download them.",
+    "iconName": "Aperture",
+    "privacy": "local",
+    "metaTitle": "Online Camera with Filters & Video Recorder | TabBench",
+    "metaDescription": "Free online camera: take clearer photos with auto-enhance and low-light mode, add natural filters, and record video from your webcam or phone. Nothing is uploaded.",
+    "keywords": [
+      "online camera",
+      "webcam online",
+      "camera with filters",
+      "take photo online",
+      "webcam recorder",
+      "record video online",
+      "online video recorder",
+      "selfie camera online",
+      "webcam photo"
+    ],
+    "aliases": [
+      "camera",
+      "webcam",
+      "take a photo",
+      "take picture",
+      "selfie",
+      "video recorder",
+      "record video",
+      "photo filters",
+      "camera filters"
+    ],
+    "features": [
+      "Auto-enhance for brightness, colour and sharpness",
+      "Low-light mode that merges frames to cut grain",
+      "Ten natural filters plus manual adjustments",
+      "Video recording with sound, pause and resume",
+      "Timer, grid, mirror, zoom and flashlight where supported",
+      "Photos and videos stay on your device"
+    ],
+    "faqs": [
+      {
+        "question": "Are my photos or videos uploaded?",
+        "answer": "No. The camera feed is processed in your browser and photos and videos are kept in the page's memory until you download them. Nothing is sent to TabBench or anyone else."
+      },
+      {
+        "question": "Why does the browser ask for camera permission?",
+        "answer": "Browsers always ask before a website can use the camera or microphone. The microphone is only requested when you start a video with Record sound turned on."
+      }
+    ],
+    "relatedToolSlugs": [
+      "exif-viewer",
+      "image-compressor",
+      "crop-image",
+      "video-cutter"
+    ],
+    "nextSteps": [
+      "image-compressor",
+      "crop-image",
+      "image-to-pdf",
+      "video-cutter"
     ]
   }
 };

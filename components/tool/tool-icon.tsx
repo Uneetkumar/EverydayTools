@@ -1,6 +1,7 @@
 import { createElement } from "react";
 import type { LucideIcon, LucideProps } from "lucide-react";
 import {
+  Aperture,
   AppWindow,
   ArrowDownAZ,
   ArrowRightLeft,
@@ -97,6 +98,7 @@ import {
  * wrench rather than a misleading calculator.
  */
 const ICONS: Record<string, LucideIcon> = {
+  Aperture,
   AppWindow,
   ArrowDownAZ,
   ArrowRightLeft,

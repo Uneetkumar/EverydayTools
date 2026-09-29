@@ -92,6 +92,7 @@ const UnitConverter = dynamic(() => import("@/components/tools/UnitConverter"), 
 const StopwatchTimer = dynamic(() => import("@/components/tools/StopwatchTimer"), { loading });
 const TextSorter = dynamic(() => import("@/components/tools/TextSorter"), { loading });
 const PngToSvg = dynamic(() => import("@/components/tools/PngToSvg"), { loading });
+const Camera = dynamic(() => import("@/components/tools/Camera"), { loading });
 
 export function ToolRenderer({ slug }: { slug: string }) {
   switch (slug) {
@@ -257,6 +258,8 @@ export function ToolRenderer({ slug }: { slug: string }) {
       return <TextSorter />;
     case "png-to-svg":
       return <PngToSvg />;
+    case "online-camera":
+      return <Camera />;
     default:
       // A registry entry with no loader. Previously this fell through to the
       // Percentage Calculator, silently rendering the wrong tool.

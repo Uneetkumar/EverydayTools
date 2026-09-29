@@ -33,6 +33,7 @@
     "crypto-js": "^4.2.0",
     "docx": "^9.7.1",
     "firebase": "^12.17.1",
+    "fix-webm-duration": "^1.0.6",
     "jsbarcode": "^3.12.3",
     "jsqr": "^1.4.0",
     "jszip": "^3.10.1",

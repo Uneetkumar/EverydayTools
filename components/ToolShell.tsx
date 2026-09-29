@@ -69,6 +69,7 @@ const WIDE_LAYOUT_TOOLS = new Set([
   "png-to-svg",
   "calculator",
   "sample-file-generator",
+  "online-camera",
 ]);
 
 /**

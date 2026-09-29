@@ -4770,6 +4770,62 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
     ],
   },
 
+  "online-camera": {
+    intro:
+      "Laptop webcams and many phone browsers produce flat, grainy pictures: the camera hands the browser a raw video stream without the processing a phone's own camera app adds. This camera puts some of that processing back. Enhance measures every frame and gently corrects brightness, contrast and colour cast, then sharpens edges without sharpening grain. Low light merges several frames into one photo, which cuts noise in dim rooms while keeping anything that moved sharp. Ten restrained filters and manual sliders let you set a look before you shoot, and videos are recorded exactly as you see them. Everything runs on your device and nothing is uploaded.",
+    howTo: {
+      title: "How to take better photos and videos in your browser",
+      steps: [
+        "Choose Start camera and allow access when your browser asks. On a phone, the back camera opens first; use the switch button for the front one.",
+        "Leave Enhance on for balanced, sharper pictures. In a dim room, turn on Low light and hold still for a moment after pressing the shutter.",
+        "Pick a filter under Filters and set its strength, or fine-tune brightness, contrast, warmth and more under Adjust.",
+        "Press the shutter for a photo, or switch to Video and press record. Use the timer for group shots and the grid to line up the horizon.",
+        "Open a photo or video from Your photos and videos to check it, change a photo's filter later, or download everything as a ZIP.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Clearer pictures from a laptop webcam",
+        body:
+          "Webcams struggle under indoor lighting: faces look grey and backgrounds noisy. Enhance lifts the midtones and removes colour casts from ceiling lights, and Low light cleans up the grain, which makes a real difference for profile pictures, document snaps and quick product shots.",
+      },
+      {
+        title: "Recording a short clip or message",
+        body:
+          "Record a video greeting, a how-to clip or a quick update for a team without installing an app. Pause and resume while recording, and the video is saved as MP4 in browsers that support it so it plays on any phone.",
+      },
+      {
+        title: "Giving an existing photo a consistent look",
+        body:
+          "Choose Edit a photo to apply the same filters and adjustments to a picture already on your device. Saving creates a new copy, and the camera, location and other details stored in the original file are not carried over.",
+      },
+    ],
+    tips: [
+      "Light matters more than any setting: face a window rather than sitting with it behind you.",
+      "Low light works best when the camera is steady. People who move keep the detail from the first frame instead of leaving a ghost.",
+      "On older phones choose Standard quality in Settings for a smoother preview and smaller videos.",
+      "Photos and videos are kept only while the page is open. Download the ones you want to keep before you leave.",
+      "Photos saved here contain no location or device details, so they are safe to share as they are.",
+    ],
+    extraFaqs: [
+      {
+        question: "Does this camera make photos sharper than my phone's camera app?",
+        answer:
+          "Usually not: a phone's own app has direct access to the sensor and years of tuning. This tool closes much of the gap for webcams and in-browser cameras, which normally get none of that processing.",
+      },
+      {
+        question: "What format are the videos?",
+        answer:
+          "MP4 in Safari and recent versions of Chrome and Edge, which plays everywhere. Firefox and older Chrome record WebM, which plays in most browsers and in VLC.",
+      },
+      {
+        question: "Why is there no flash or zoom button?",
+        answer:
+          "Browsers only expose the flashlight and optical zoom on some Android phones, mostly in Chrome. When your camera supports them, the buttons appear on the preview.",
+      },
+    ],
+  },
+
 };
 
 /** Returns the long-form content for a tool, if any has been written. */
