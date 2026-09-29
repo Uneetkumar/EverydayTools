@@ -22,6 +22,19 @@
         "--no-clipboard"
       ],
       "port": 3100
+    },
+    {
+      "name": "ext-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "--yes",
+        "serve@14",
+        "extension/dist-preview",
+        "-l",
+        "3200",
+        "--no-clipboard"
+      ],
+      "port": 3200
     }
   ]
 }

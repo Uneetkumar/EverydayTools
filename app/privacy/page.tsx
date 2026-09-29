@@ -30,7 +30,7 @@ export default function PrivacyPage() {
       <ProsePage
         breadcrumb="Privacy Policy"
         title="Privacy Policy"
-        updated="September 28, 2026"
+        updated="September 29, 2026"
         lead="Most TabBench tools never see your data: the file you open or the text you type is processed in your own browser. This page lists the exceptions, everything the site stores on your device, and what the analytics and advertising services receive."
       >
         <h2 id="processing">1. Your files and text</h2>
@@ -169,15 +169,40 @@ export default function PrivacyPage() {
           only what you choose to send, and use it only to reply and to fix what you reported.
         </p>
 
-        <h2 id="children">7. Children</h2>
+        <h2 id="extension">7. The TabBench browser extension</h2>
+        <p>
+          The optional TabBench extension for Chrome and other Chromium browsers collects no data and sends
+          nothing to us. It reads a page only when you use it:
+        </p>
+        <ul>
+          <li>
+            When you open its menu, the current page&apos;s address and title, to make a QR code or a clean link.
+            These stay in the extension.
+          </li>
+          <li>
+            When you right-click and choose a tool, the text, link or image you picked — or, for &ldquo;Summarise
+            this page&rdquo;, the page&apos;s readable text. It is held in your browser&apos;s memory for a few
+            seconds, handed to the tool on tabbench.com and deleted. It is never put in a web address.
+          </li>
+          <li>
+            To read an image from another website, the extension asks for your permission for that site first. You
+            can remove it at any time in the extension&apos;s settings.
+          </li>
+        </ul>
+        <p>
+          The extension stores your settings (theme, how tools open) and the tools you used recently, in your
+          browser only. Tool pages it opens are ordinary TabBench pages, covered by the rest of this policy.
+        </p>
+
+        <h2 id="children">8. Children</h2>
         <p>TabBench is a general-audience site and is not directed at children under 13.</p>
 
-        <h2 id="changes">8. Changes to this policy</h2>
+        <h2 id="changes">9. Changes to this policy</h2>
         <p>
           When what the site collects changes, this page is updated and the date at the top changes with it.
         </p>
 
-        <h2 id="erase">9. Erasing your local data</h2>
+        <h2 id="erase">10. Erasing your local data</h2>
         <ClearLocalData />
       </ProsePage>
     </>

@@ -2175,8 +2175,8 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     ],
     "faqs": [
       {
-        "question": "What topics can the AI explain?",
-        "answer": "Calculators, percentages, margin vs markup, GST, loan amortization, JSON syntax, and regex patterns."
+        "question": "What can it explain?",
+        "answer": "Ask anything about a formula, calculation, spreadsheet function, regex or code snippet and Google Gemini answers it. Hand-written explanations of common formulas — margin and markup, percentage change, compound interest, loan EMI, GST, SIP, BMI and JWT — work instantly and offline."
       }
     ],
     "relatedToolSlugs": [
@@ -3956,14 +3956,14 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "slug": "exif-viewer",
     "name": "EXIF Metadata Viewer",
     "shortName": "EXIF Viewer",
-    "tagline": "See the camera, date and size details stored in a photo.",
+    "tagline": "See the camera, date and location hidden in a photo, and remove them.",
     "category": "image-media",
-    "description": "Inspect camera EXIF data, dimensions, ISO, and file metadata completely in your browser.",
-    "longDescription": "View embedded photo metadata including camera model, dimensions, file size, modification dates, and color profiles without uploading files to any server.",
+    "description": "Read camera EXIF data, GPS location and other hidden details in photos, and remove them without losing quality.",
+    "longDescription": "View the metadata stored in JPEG, PNG, WebP, HEIC and TIFF photos — camera and lens, exposure settings, date taken, GPS location, serial numbers and embedded previews — and download a copy with it removed. Runs on your device; photos are never uploaded.",
     "iconName": "Camera",
     "privacy": "local",
     "metaTitle": "EXIF & Image Metadata Viewer | TabBench",
-    "metaDescription": "Inspect photo EXIF metadata, camera info, dimensions, and file specs. 100% private client-side image analyzer.",
+    "metaDescription": "Free EXIF viewer: see camera settings, date and GPS location in any photo, spot personal details, and remove metadata losslessly. Photos never leave your device.",
     "keywords": [
       "exif viewer",
       "image metadata viewer",
@@ -3979,15 +3979,15 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "exif data"
     ],
     "features": [
-      "File size, format, and exact dimensions",
-      "Modification timestamp diagnostics",
-      "100% client-side privacy",
-      "Photo preview container"
+      "Camera, lens, exposure, date and GPS details",
+      "Flags location, serial numbers and names",
+      "Lossless metadata removal for JPEG, PNG and WebP",
+      "Photos are read on your device, never uploaded"
     ],
     "faqs": [
       {
         "question": "Are my photos uploaded to a server to read EXIF?",
-        "answer": "No. The inspection runs entirely in your browser's local memory using FileReader API. Your images never leave your device."
+        "answer": "No. The file is read in your browser's memory and never sent anywhere, including when you download the copy with metadata removed."
       }
     ],
     "relatedToolSlugs": [
@@ -4028,10 +4028,10 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "github table"
     ],
     "features": [
-      "Interactive visual spreadsheet grid",
-      "Column alignment controls (Left, Center, Right)",
-      "Simultaneous Markdown and HTML code outputs",
-      "One-click copy to clipboard"
+      "Spreadsheet-style grid with row and column controls",
+      "Paste cells straight from Excel or Google Sheets",
+      "Left, centre and right column alignment",
+      "Markdown and HTML output, pipes escaped for you"
     ],
     "faqs": [
       {
@@ -4061,7 +4061,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "iconName": "ListCollapse",
     "privacy": "cloud-optional",
     "metaTitle": "AI Text Summarizer | TabBench",
-    "metaDescription": "Summarize long articles, essays, and documents into concise summaries and key bullet points. 100% private in-browser AI processing.",
+    "metaDescription": "Summarise articles, reports and email threads into a short paragraph or bullet points. Private on-device by default, with an optional Google Gemini mode.",
     "keywords": [
       "ai text summarizer",
       "summarize text online",
@@ -4087,11 +4087,11 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "faqs": [
       {
         "question": "Is my text uploaded to a server?",
-        "answer": "By default, On-Device AI runs entirely within your browser memory. Text is never sent to external servers."
+        "answer": "Not with the default on-device engine, which runs entirely in your browser. Only if you choose Cloud AI is the text sent to Google Gemini to write the summary."
       },
       {
         "question": "Is there a limit on text length?",
-        "answer": "You can summarize articles up to 4,000 characters per run for optimal in-browser performance."
+        "answer": "There is no hard limit. Above about 8,000 characters a note suggests splitting the text, because very long input is slower and gives a less focused summary."
       }
     ],
     "relatedToolSlugs": [
@@ -4113,11 +4113,11 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "tagline": "Rewrite text in a professional, friendly, concise or formal tone.",
     "category": "ai-tools",
     "description": "Rewrite text in professional, friendly, concise, formal, or casual tones while preserving core meaning.",
-    "longDescription": "Intelligent in-browser text rewriter and paraphrasing tool that transforms tone, polishes vocabulary, and enhances clarity with zero server costs.",
+    "longDescription": "Change the tone of emails, messages and paragraphs. The on-device engine makes safe, reviewable edits in your browser; the optional Cloud AI mode rewrites the whole text with Google Gemini.",
     "iconName": "PenLine",
     "privacy": "cloud-optional",
     "metaTitle": "AI Text Rewriter | TabBench",
-    "metaDescription": "Rewrite emails, essays, and text in professional, friendly, concise, or formal tones. Private client-side paraphrasing tool.",
+    "metaDescription": "Change the tone of emails and messages: professional, formal, friendly, casual, concise or simple. Reviewable on-device edits, or a full rewrite with Google Gemini.",
     "keywords": [
       "ai text rewriter",
       "paraphrasing tool online",
@@ -4133,10 +4133,10 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "change tone"
     ],
     "features": [
-      "6 Tone styles (Professional, Friendly, Concise, Formal, Casual, Simple)",
-      "Preserves facts, dates, and numbers",
-      "One-click copy and text download",
-      "Instant private processing"
+      "6 tones: professional, formal, friendly, casual, concise, simple",
+      "Show changes: every edit highlighted",
+      "Keeps facts, numbers, names and dates",
+      "Private on-device mode, optional Gemini rewrite"
     ],
     "faqs": [
       {
@@ -4167,7 +4167,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "iconName": "WandSparkles",
     "privacy": "cloud-optional",
     "metaTitle": "AI Text Simplifier | TabBench",
-    "metaDescription": "Simplify legal, academic, and complex technical text into plain English. Free in-browser readability tool with instant jargon replacement.",
+    "metaDescription": "Turn legal, technical and official text into plain English, with reading-ease scores before and after. Runs on your device, with an optional Gemini rewrite.",
     "keywords": [
       "ai text simplifier",
       "plain english translator",
@@ -4183,15 +4183,15 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "explain simply"
     ],
     "features": [
-      "Automated complex jargon replacement",
-      "Flesch-Kincaid readability index",
-      "Passive voice and convoluted phrase reduction",
-      "Zero signup required"
+      "Plain-English replacements for 150+ wordy phrases and words",
+      "Reading ease and school grade, before and after",
+      "Flags sentences over 25 words",
+      "Optional full rewrite with Google Gemini"
     ],
     "faqs": [
       {
-        "question": "What reading level does this target?",
-        "answer": "It targets an accessible 8th-grade plain-English reading standard suitable for general audiences."
+        "question": "What reading level does this aim for?",
+        "answer": "Plain English, which is a Flesch reading ease of 60 or more — roughly what a 13- to 15-year-old reads comfortably. The tool shows the score before and after so you can see how close you are."
       }
     ],
     "relatedToolSlugs": [
@@ -4216,7 +4216,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "iconName": "Tags",
     "privacy": "cloud-optional",
     "metaTitle": "AI Keyword Extractor | TabBench",
-    "metaDescription": "Extract primary keywords, secondary tags, and key phrases from text in your browser. Free client-side SEO utility.",
+    "metaDescription": "Find the main keywords and key phrases in any text, with counts and density. Runs in your browser, with an optional Google Gemini mode.",
     "keywords": [
       "ai keyword extractor",
       "extract keywords from text",
@@ -4265,7 +4265,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "iconName": "TextSearch",
     "privacy": "cloud-optional",
     "metaTitle": "AI JSON Explainer | TabBench",
-    "metaDescription": "Explain JSON structures, object hierarchies, data types, and security insights in plain English. Fast, private in-browser analysis.",
+    "metaDescription": "Understand any JSON: every field, type and format mapped, secrets and personal data flagged, and an optional plain-English explanation from Gemini.",
     "keywords": [
       "ai json explainer",
       "explain json payload",

@@ -23,7 +23,7 @@ const endsWithOperator = (expr: string) => OPERATORS.some((op) => expr.endsWith(
 type KeyKind = "digit" | "fn" | "op" | "eq";
 
 const KEY_BASE =
-  "flex h-12 items-center justify-center rounded-xl tabular-nums transition-colors outline-none select-none active:scale-[0.97] focus-visible:ring-3 focus-visible:ring-ring/50 sm:h-13";
+  "flex h-12 items-center justify-center rounded-xl tabular-nums @2xl:h-11 transition-colors outline-none select-none active:scale-[0.97] focus-visible:ring-3 focus-visible:ring-ring/50";
 const KEY_KIND: Record<KeyKind, string> = {
   digit: "border bg-background text-xl font-medium text-foreground hover:bg-muted dark:bg-input/30 dark:hover:bg-input/60",
   fn: "bg-muted text-base font-medium text-foreground hover:bg-muted/70 dark:bg-muted/60 dark:hover:bg-muted",
@@ -74,11 +74,13 @@ function SciKey({
   ariaLabel,
   onClick,
   active,
+  className,
 }: {
   label: React.ReactNode;
   ariaLabel?: string;
   onClick: () => void;
   active?: boolean;
+  className?: string;
 }) {
   return (
     <button
@@ -87,10 +89,13 @@ function SciKey({
       aria-label={ariaLabel}
       aria-pressed={active}
       className={cn(
-        "flex h-10 items-center justify-center rounded-lg text-sm font-medium transition-colors outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50",
+        // Fixed height when stacked above the keypad; stretches to the keypad's
+        // row height when the panel sits beside it.
+        "flex h-10 items-center justify-center rounded-lg text-sm font-medium transition-colors outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/50 @2xl:h-auto @2xl:text-base",
         active
           ? "bg-brand-subtle text-brand-subtle-foreground"
-          : "text-foreground hover:bg-muted"
+          : "text-foreground hover:bg-muted",
+        className
       )}
     >
       {label}
@@ -666,10 +671,10 @@ export default function Calculator() {
   // The operator waiting for its second number, highlighted on the keypad.
   const pendingOp = entryInExpr && endsWithOperator(expression) ? expression.slice(-1) : null;
   const shown = formatDisplay(display);
-  const displaySize = shown.length > 16 ? "text-2xl" : shown.length > 11 ? "text-3xl" : "text-4xl sm:text-5xl";
+  const displaySize = shown.length > 16 ? "text-2xl" : shown.length > 11 ? "text-3xl" : "text-4xl";
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-4">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Segmented
@@ -713,12 +718,26 @@ export default function Calculator() {
         </div>
       </div>
 
-      <div className={cn("flex flex-col gap-5", isTapeOpen && "lg:flex-row lg:items-start lg:justify-center")}>
+      {/* History docks beside the calculator only when the container has room
+          for both; otherwise it stacks below. Container queries, not viewport
+          breakpoints, because the tool column is narrower than the window. */}
+      <div
+        className={cn(
+          "flex flex-col gap-5",
+          isTapeOpen && (mode === "scientific" ? "@5xl:flex-row @5xl:items-start @5xl:justify-center" : "@2xl:flex-row @2xl:items-start @2xl:justify-center")
+        )}
+      >
         {/* Calculator */}
-        <div className={cn("mx-auto w-full max-w-sm space-y-3", isTapeOpen && "lg:mx-0")}>
+        <div
+          className={cn(
+            "mx-auto w-full max-w-sm space-y-3",
+            mode === "scientific" && "@2xl:max-w-2xl",
+            isTapeOpen && (mode === "scientific" ? "@5xl:mx-0" : "@2xl:mx-0")
+          )}
+        >
           {/* Display */}
-          <div className="rounded-xl border bg-muted/40 px-4 pt-2.5 pb-3">
-            <div className="flex h-7 items-center justify-between gap-2">
+          <div className="rounded-xl border bg-muted/40 px-4 pt-2 pb-2.5">
+            <div className="flex h-6 items-center justify-between gap-2">
               <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
                 {mode === "scientific" && <span className="rounded bg-background px-1.5 py-0.5 dark:bg-input/40">{angleUnit}</span>}
                 {memory !== 0 && (
@@ -775,7 +794,7 @@ export default function Calculator() {
                 aria-label={btn.aria}
                 title={btn.aria}
                 className={cn(
-                  "h-8 rounded-md text-xs font-medium text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40",
+                  "h-7 rounded-md text-xs font-medium text-muted-foreground transition-colors outline-none hover:bg-muted hover:text-foreground focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-40",
                   lastKeyPressed === btn.id && "bg-muted text-foreground"
                 )}
               >
@@ -784,34 +803,45 @@ export default function Calculator() {
             ))}
           </div>
 
-          {/* Scientific functions */}
+          <div className={cn(mode === "scientific" && "space-y-3 @2xl:grid @2xl:grid-cols-[minmax(0,3fr)_minmax(0,4fr)] @2xl:gap-3 @2xl:space-y-0")}>
+          {/* Scientific functions. DOM order suits the 3 × 5 grid beside the
+              keypad; the order-* classes restore the familiar 5 × 3 layout
+              when the panel is stacked above it. */}
           {mode === "scientific" && (
-            <div className="grid grid-cols-5 gap-1 rounded-xl border p-1.5" role="group" aria-label="Scientific functions">
-              <SciKey label="2nd" ariaLabel="Second functions" active={isSecondFunc} onClick={() => setIsSecondFunc(!isSecondFunc)} />
+            <div
+              className="grid grid-cols-5 gap-1 rounded-xl border p-1.5 @2xl:grid-cols-3 @2xl:grid-rows-5 @2xl:gap-1.5"
+              role="group"
+              aria-label="Scientific functions"
+            >
+              <SciKey className="order-1 @2xl:order-none" label="2nd" ariaLabel="Second functions" active={isSecondFunc} onClick={() => setIsSecondFunc(!isSecondFunc)} />
               <SciKey
+                className="order-2 @2xl:order-none"
                 label={angleUnit}
                 ariaLabel={`Angle unit: ${angleUnit === "DEG" ? "degrees" : "radians"}. Switch`}
                 onClick={() => setAngleUnit(angleUnit === "DEG" ? "RAD" : "DEG")}
               />
-              <SciKey label={isSecondFunc ? "sin⁻¹" : "sin"} ariaLabel={isSecondFunc ? "Inverse sine" : "Sine"} onClick={() => handleInstantMath("sin")} />
-              <SciKey label={isSecondFunc ? "cos⁻¹" : "cos"} ariaLabel={isSecondFunc ? "Inverse cosine" : "Cosine"} onClick={() => handleInstantMath("cos")} />
-              <SciKey label={isSecondFunc ? "tan⁻¹" : "tan"} ariaLabel={isSecondFunc ? "Inverse tangent" : "Tangent"} onClick={() => handleInstantMath("tan")} />
+              <SciKey className="order-11 @2xl:order-none" label="π" ariaLabel="Pi" onClick={() => handleInstantMath("pi")} />
 
-              <SciKey label={isSecondFunc ? "eˣ" : "ln"} ariaLabel={isSecondFunc ? "e to the power of x" : "Natural logarithm"} onClick={() => handleInstantMath("ln")} />
-              <SciKey label={isSecondFunc ? "10ˣ" : "log"} ariaLabel={isSecondFunc ? "10 to the power of x" : "Logarithm base 10"} onClick={() => handleInstantMath("log")} />
-              <SciKey label="xʸ" ariaLabel="Power" onClick={() => handleOperator("^", "^")} />
+              <SciKey className="order-3 @2xl:order-none" label={isSecondFunc ? "sin⁻¹" : "sin"} ariaLabel={isSecondFunc ? "Inverse sine" : "Sine"} onClick={() => handleInstantMath("sin")} />
+              <SciKey className="order-4 @2xl:order-none" label={isSecondFunc ? "cos⁻¹" : "cos"} ariaLabel={isSecondFunc ? "Inverse cosine" : "Cosine"} onClick={() => handleInstantMath("cos")} />
+              <SciKey className="order-5 @2xl:order-none" label={isSecondFunc ? "tan⁻¹" : "tan"} ariaLabel={isSecondFunc ? "Inverse tangent" : "Tangent"} onClick={() => handleInstantMath("tan")} />
+
+              <SciKey className="order-6 @2xl:order-none" label={isSecondFunc ? "eˣ" : "ln"} ariaLabel={isSecondFunc ? "e to the power of x" : "Natural logarithm"} onClick={() => handleInstantMath("ln")} />
+              <SciKey className="order-7 @2xl:order-none" label={isSecondFunc ? "10ˣ" : "log"} ariaLabel={isSecondFunc ? "10 to the power of x" : "Logarithm base 10"} onClick={() => handleInstantMath("log")} />
+              <SciKey className="order-12 @2xl:order-none" label="e" ariaLabel="Euler's number" onClick={() => handleInstantMath("e")} />
+
+              <SciKey className="order-8 @2xl:order-none" label="xʸ" ariaLabel="Power" onClick={() => handleOperator("^", "^")} />
               <SciKey
+                className="order-9 @2xl:order-none"
                 label={isSecondFunc ? "∛x" : "x³"}
                 ariaLabel={isSecondFunc ? "Cube root" : "Cube"}
                 onClick={() => handleInstantMath(isSecondFunc ? "cbrt" : "cube")}
               />
-              <SciKey label="x!" ariaLabel="Factorial" onClick={() => handleInstantMath("fact")} />
+              <SciKey className="order-10 @2xl:order-none" label="x!" ariaLabel="Factorial" onClick={() => handleInstantMath("fact")} />
 
-              <SciKey label="π" ariaLabel="Pi" onClick={() => handleInstantMath("pi")} />
-              <SciKey label="e" ariaLabel="Euler's number" onClick={() => handleInstantMath("e")} />
-              <SciKey label="(" ariaLabel="Open bracket" onClick={() => handleParen("(")} />
-              <SciKey label=")" ariaLabel="Close bracket" onClick={() => handleParen(")")} />
-              <SciKey label="|x|" ariaLabel="Absolute value" onClick={() => handleInstantMath("abs")} />
+              <SciKey className="order-[13] @2xl:order-none" label="(" ariaLabel="Open bracket" onClick={() => handleParen("(")} />
+              <SciKey className="order-[14] @2xl:order-none" label=")" ariaLabel="Close bracket" onClick={() => handleParen(")")} />
+              <SciKey className="order-[15] @2xl:order-none" label="|x|" ariaLabel="Absolute value" onClick={() => handleInstantMath("abs")} />
             </div>
           )}
 
@@ -853,6 +883,7 @@ export default function Calculator() {
             <Key kind="digit" label="." ariaLabel="Decimal point" onClick={handleDecimal} pressed={lastKeyPressed === "."} />
             <Key kind="eq" label="=" ariaLabel="Equals" onClick={handleEquals} pressed={lastKeyPressed === "="} />
           </div>
+          </div>
         </div>
 
         {/* History */}
@@ -860,7 +891,10 @@ export default function Calculator() {
           <section
             id="calc-history"
             aria-label="Calculation history"
-            className="mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-xl border lg:mx-0 lg:h-[34rem] lg:w-72"
+            className={cn(
+              "mx-auto flex w-full max-w-sm flex-col overflow-hidden rounded-xl border",
+              mode === "scientific" ? "@5xl:mx-0 @5xl:h-[30rem] @5xl:w-72" : "@2xl:mx-0 @2xl:h-[30rem] @2xl:w-72"
+            )}
           >
             <div className="flex items-center justify-between border-b px-3.5 py-2.5">
               <h3 className="text-sm font-semibold text-foreground">History</h3>
@@ -876,7 +910,7 @@ export default function Calculator() {
               </div>
             </div>
 
-            <div className="max-h-80 flex-1 overflow-y-auto p-1.5 lg:max-h-none">
+            <div className="max-h-80 flex-1 overflow-y-auto p-1.5 @2xl:max-h-none">
               {history.length === 0 ? (
                 <div className="flex h-full min-h-40 flex-col items-center justify-center gap-1 p-6 text-center">
                   <CalcIcon className="size-6 text-muted-foreground/60" aria-hidden="true" />

@@ -1207,6 +1207,8 @@ export async function generateVideo(
 
   try {
     await new Promise<void>((resolve, reject) => {
+      // `let`, not `const`: onAbort reads it and can run before it is assigned.
+      // eslint-disable-next-line prefer-const
       let timeoutId: NodeJS.Timeout | number | undefined;
 
       const onAbort = () => {

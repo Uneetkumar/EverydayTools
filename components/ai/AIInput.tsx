@@ -36,7 +36,7 @@ export default function AIInput({
   sampleLabel = "Try an example",
   maxChars = 8000,
   disabled,
-  minRows = 8,
+  minRows = 6,
   mono = false,
   accept = ".txt,.md,.json,.csv,.html,.xml,.log",
   invalid,

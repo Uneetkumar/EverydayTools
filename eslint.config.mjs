@@ -13,6 +13,10 @@ const eslintConfig = defineConfig([
     "build/**",
     "public/**",
     "next-env.d.ts",
+    // Browser extension build output and generated data.
+    "extension/dist*/**",
+    "extension/release/**",
+    "extension/src/generated/**",
   ]),
 ]);
 

@@ -178,6 +178,8 @@ export async function inspectVideoMetadata(
   timeoutMs = 15000
 ): Promise<VideoMetadata> {
   return new Promise(async (resolve, reject) => {
+    // `let`, not `const`: cleanup reads it and can run before it is assigned.
+    // eslint-disable-next-line prefer-const
     let timer: NodeJS.Timeout | undefined;
     let video: HTMLVideoElement | null = null;
     let isResolved = false;

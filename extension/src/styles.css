@@ -1,0 +1,126 @@
+/*
+ * Extension styles: the site's design tokens and Tailwind v4, so the popup
+ * reads as part of TabBench. Token values are copied from app/globals.css —
+ * keep the two in step when the site's palette changes.
+ */
+@import "tailwindcss" source(none);
+@source "./";
+@source "./generated/";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@font-face {
+  font-family: "Geist";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("fonts/geist-latin.woff2") format("woff2");
+}
+@font-face {
+  font-family: "Geist Mono";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("fonts/geist-mono-latin.woff2") format("woff2");
+}
+
+:root {
+  --radius: 0.625rem;
+  --background: oklch(0.982 0.002 265);
+  --foreground: oklch(0.22 0.008 265);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.22 0.008 265);
+  --popover: oklch(1 0 0);
+  --primary: oklch(0.546 0.245 262.881);
+  --primary-foreground: oklch(1 0 0);
+  --link: oklch(0.546 0.245 262.881);
+  --brand-subtle: oklch(0.97 0.014 254.604);
+  --brand-subtle-foreground: oklch(0.488 0.243 264.376);
+  --secondary: oklch(0.962 0.004 265);
+  --secondary-foreground: oklch(0.22 0.008 265);
+  --muted: oklch(0.962 0.004 265);
+  --muted-foreground: oklch(0.5 0.012 265);
+  --success: oklch(0.508 0.118 165.612);
+  --warning: oklch(0.555 0.163 48.998);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.92 0.004 265);
+  --input: oklch(0.87 0.006 265);
+  --ring: oklch(0.623 0.214 259.815);
+}
+
+.dark {
+  --background: oklch(0.155 0.004 265);
+  --foreground: oklch(0.93 0.004 265);
+  --card: oklch(0.195 0.005 265);
+  --card-foreground: oklch(0.93 0.004 265);
+  --popover: oklch(0.215 0.005 265);
+  --primary: oklch(0.546 0.245 262.881);
+  --primary-foreground: oklch(1 0 0);
+  --link: oklch(0.707 0.165 254.624);
+  --brand-subtle: oklch(0.282 0.091 267.935 / 0.35);
+  --brand-subtle-foreground: oklch(0.809 0.105 251.813);
+  --secondary: oklch(0.245 0.006 265);
+  --secondary-foreground: oklch(0.93 0.004 265);
+  --muted: oklch(0.245 0.006 265);
+  --muted-foreground: oklch(0.705 0.012 265);
+  --success: oklch(0.765 0.177 163.223);
+  --warning: oklch(0.828 0.189 84.429);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 0.08);
+  --input: oklch(1 0 0 / 0.14);
+  --ring: oklch(0.623 0.214 259.815);
+}
+
+@theme inline {
+  --font-sans: "Geist", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-link: var(--link);
+  --color-brand-subtle: var(--brand-subtle);
+  --color-brand-subtle-foreground: var(--brand-subtle-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html {
+    -webkit-font-smoothing: antialiased;
+  }
+  body {
+    background: var(--color-background);
+    font-size: 14px;
+    line-height: 1.45;
+  }
+  /* The native clear button on search inputs does not match the design. */
+  input[type="search"]::-webkit-search-cancel-button {
+    display: none;
+  }
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 8px;
+  }
+}

@@ -2033,10 +2033,11 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
     howTo: {
       title: "How to get an explanation",
       steps: [
-        "Enter the formula, metric, or pattern you want explained — for example a regex, a margin calculation, or an amortisation formula.",
-        "Submit and read the breakdown, which separates what the expression computes from why it is built that way.",
-        "Work through the example with your own numbers to confirm you have followed it.",
-        "Follow the linked calculator to apply it to a real case.",
+        "Type a question, or paste a formula, spreadsheet function, regex or code snippet. Free-form questions are answered by Google Gemini, so they need an internet connection.",
+        "Press Explain, or Ctrl + Enter, and read the answer as it is written.",
+        "Check anything you will rely on, especially numbers: AI answers can be confidently wrong.",
+        "For common formulas — margin and markup, percentage change, compound interest, EMI, GST, SIP, BMI, JWT — pick a topic under \"Common formulas, explained\" for a checked explanation that works offline.",
+        "Follow the link under each explanation to the matching calculator and try it with your own numbers.",
       ],
     },
     useCases: [
@@ -2202,7 +2203,7 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
       {
         title: "Email campaigns & newsletter templates",
         body:
-          "Some older email clients (such as legacy Outlook) do not render WebP images. Converting to JPG guarantees 100% inbox compatibility.",
+          "Some older email clients (such as legacy Outlook) do not render WebP images. Converting to JPG makes the image display in every email client.",
       },
       {
         title: "Social media and photo print kiosks",
@@ -3337,261 +3338,386 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "bmi-calculator": {
     intro:
-      "Body Mass Index (BMI) is a standardized screening metric used by the World Health Organization (WHO) and healthcare professionals to assess whether an individual has a healthy body weight relative to their height. This calculator provides instant BMI scores, classification categories, and healthy weight targets for both metric and imperial measurements.",
+      "Body mass index compares your weight with your height to give one number that doctors use as a first screen for underweight, healthy weight, overweight and obesity. Enter your height and weight in metric or imperial units and this calculator shows your BMI, its WHO category, the healthy weight range for your height and your BMI Prime — your BMI divided by 25, the top of the normal range. It is a quick screening measure, not a diagnosis, and the notes below explain where it is and is not reliable.",
     howTo: {
       title: "How to calculate your BMI",
       steps: [
-        "Select your preferred measurement unit: Metric (cm / kg) or Imperial (ft-in / lbs).",
-        "Enter your current age and gender.",
-        "Input your exact height and body weight.",
-        "View your BMI score, WHO weight category badge, and ideal healthy weight range.",
+        "Choose metric (centimetres and kilograms) or imperial (feet, inches and pounds).",
+        "Enter your height and your weight, ideally measured in the morning without shoes.",
+        "Read your BMI and the category it falls in.",
+        "Check the healthy weight range for your height to see how far you are from it, if at all.",
+        "Use BMI Prime to see the figure as a share of the upper healthy limit: 1.00 is exactly at the limit.",
       ],
     },
     useCases: [
       {
-        title: "Personal fitness & weight management",
+        title: "A quick health check",
         body:
-          "Track progress towards a healthy weight range during diet or fitness programs.",
+          "Someone 170 cm tall and weighing 72 kg has a BMI of 24.9 — just inside the WHO healthy range, but above the 23 threshold many doctors use for South Asian adults. Knowing both numbers is a good prompt for a conversation with a doctor.",
       },
       {
-        title: "Health screening & wellness checkups",
+        title: "Setting a realistic target",
         body:
-          "Quickly assess whether your weight falls into underweight, normal, overweight, or obesity classifications.",
+          "The healthy weight range for 170 cm is about 53.5 to 72 kg. Seeing the range, rather than a single ideal number, makes it easier to set a goal that is achievable and sustainable.",
+      },
+      {
+        title: "Tracking change over time",
+        body:
+          "BMI changes in the same direction as weight for adults, so recording it every few weeks shows the trend without needing any equipment beyond a scale.",
       },
     ],
     tips: [
-      "BMI is an effective population-level screening metric, but does not distinguish between muscle mass and fat tissue.",
-      "Athletes and bodybuilders with high muscle mass may register as 'overweight' despite having low body fat percentages.",
-      "For comprehensive health evaluation, combine BMI with waist-to-hip ratio and medical consultations.",
+      "BMI does not distinguish muscle from fat. Athletes and people who do heavy strength training can have a high BMI with little body fat.",
+      "For South Asian adults, many doctors and Indian guidelines treat 23 or more as overweight and 25 or more as obese, because diabetes and heart risks rise at lower BMI.",
+      "Waist size adds information BMI misses: a waist above about 90 cm for men or 80 cm for women in Asian populations suggests excess abdominal fat.",
+      "Adult BMI categories do not apply to children and teenagers, who are assessed on age- and sex-specific growth charts.",
     ],
     extraFaqs: [
       {
-        question: "What are the WHO BMI weight categories for adults?",
+        question: "What is the BMI formula?",
         answer:
-          "Underweight: < 18.5 | Normal weight: 18.5 – 24.9 | Overweight: 25.0 – 29.9 | Obesity Class I: 30.0 – 34.9 | Severe Obesity Class II+: ≥ 35.0.",
+          "BMI = weight in kilograms ÷ (height in metres)². For 70 kg and 1.75 m that is 70 ÷ 3.0625 = 22.9. In imperial units the formula is 703 × weight in pounds ÷ (height in inches)².",
+      },
+      {
+        question: "What are the WHO BMI categories?",
+        answer:
+          "Below 18.5 is underweight, 18.5 to 24.9 is normal, 25 to 29.9 is overweight and 30 or above is obese, with obesity further divided into classes I (30–34.9), II (35–39.9) and III (40 and above).",
+      },
+      {
+        question: "Is BMI accurate during pregnancy or for older adults?",
+        answer:
+          "No, not on its own. Pregnancy weight gain is assessed differently, and in older adults a slightly higher BMI can be protective. Use the number as a starting point and ask a doctor what applies to you.",
       },
     ],
   },
 
   "lorem-ipsum-generator": {
     intro:
-      "Lorem Ipsum has been the printing and typesetting industry's standard dummy text since the 1500s. It provides natural-looking distribution of letters without readable content distracting from layout and typography design. Generate clean paragraphs, sentences, words, or unordered list items with optional HTML markup.",
+      "Lorem ipsum is scrambled Latin used as placeholder text, so a layout can be judged on its shape and typography without readers getting distracted by the words. This generator produces any amount of it — paragraphs, sentences, single words or list items — optionally wrapped in <p> or <li> tags for pasting straight into HTML, and optionally starting with the classic \"Lorem ipsum dolor sit amet\". Live word and character counts help you match the length of the real content that will replace it.",
     howTo: {
-      title: "How to generate Lorem Ipsum dummy text",
+      title: "How to generate placeholder text",
       steps: [
-        "Choose whether you want paragraphs, individual sentences, words, or a bulleted list.",
-        "Set the desired quantity using the count box.",
-        "Toggle whether to start with the classic 'Lorem ipsum dolor sit amet' opening sentence.",
-        "Optionally enable HTML tags (<p>, <ul>) for immediate insertion into web code.",
-        "Click Copy Text to transfer the generated dummy copy to your clipboard.",
+        "Choose what to generate: paragraphs, sentences, words or list items.",
+        "Set how many you need.",
+        "Switch on HTML tags if you are pasting into code, so paragraphs arrive as <p> and list items as <li>.",
+        "Choose whether the text starts with \"Lorem ipsum dolor sit amet…\".",
+        "Copy the text, checking the word and character counts against the space it has to fill.",
       ],
     },
     useCases: [
       {
-        title: "Website layout wireframing & prototyping",
+        title: "Page layouts and mock-ups",
         body:
-          "Fill placeholder areas in Figma, Sketch, or frontend web code to preview typography and spacing.",
+          "Filling a blog template with three paragraphs of realistic length shows how line length, spacing and headings work before any real article exists.",
       },
       {
-        title: "Graphic design & print mockups",
+        title: "Testing components with long text",
         body:
-          "Demonstrate magazine, brochure, or flyer formatting to clients before final copy is drafted.",
+          "Cards, buttons and table cells often break when text is longer than expected. Generating 40 words for a field designed for 10 is a quick way to find overflow bugs.",
+      },
+      {
+        title: "Seeding demo data",
+        body:
+          "Product descriptions, comments and profile bios in a demo database look more convincing with varied placeholder text than with the same test sentence repeated.",
       },
     ],
     tips: [
-      "Using dummy text prevents stakeholders from focusing on copy typos instead of visual hierarchy during design reviews.",
-      "Enable HTML tags when copying directly into CMS editors or template code.",
+      "Match the placeholder to the real content: marketing pages have short paragraphs, documentation has long ones.",
+      "Replace placeholder text before anything goes live; search engines treat pages full of lorem ipsum as unfinished.",
+      "Test with real text in other languages too. German words are longer and Hindi needs different line spacing, which lorem ipsum will not reveal.",
+      "For forms and tables, use realistic sample data (names, amounts, dates) rather than Latin, so reviewers can judge the design properly.",
     ],
     extraFaqs: [
       {
-        question: "Is Lorem Ipsum completely random Latin?",
+        question: "What does lorem ipsum mean?",
         answer:
-          "No. It is derived from sections of Cicero's 45 BC philosophical treatise 'De finibus bonorum et malorum', altered to make the words nonsensical.",
+          "Very little. It is a scrambled passage from Cicero's De finibus bonorum et malorum, written in 45 BC, with words cut and altered so it reads like Latin without making sense.",
+      },
+      {
+        question: "Why use Latin instead of \"text text text\"?",
+        answer:
+          "Repeated words create an unnatural pattern of word lengths. Lorem ipsum has a mix of short and long words similar to English, so paragraphs look like real text.",
+      },
+      {
+        question: "Can I use the generated text in commercial projects?",
+        answer:
+          "Yes. Lorem ipsum is not copyrighted, and the generated text is free to use anywhere.",
       },
     ],
   },
 
   "slug-generator": {
     intro:
-      "URL slugs are human-readable identifiers that form the end part of a web address. A clean, optimized slug improves search engine rankings, readability, and click-through rates. This tool converts any headline or title into a standardized, URL-safe slug with accent stripping, lowercase normalization, and stopword filtering.",
+      "A slug is the readable part of a web address that identifies a page, such as best-budget-phones-2026 in example.com/blog/best-budget-phones-2026. Good slugs are short, lowercase, use hyphens between words and contain no spaces, accents or punctuation, because those get turned into unreadable codes like %20 when the link is shared. This generator converts any title into a clean slug as you type: it lowercases the text, turns accented letters into plain ones, removes symbols, can drop filler words like \"the\" and \"and\", and lets you choose hyphens, underscores or dots between words.",
     howTo: {
-      title: "How to generate an SEO URL slug",
+      title: "How to create an SEO-friendly URL slug",
       steps: [
-        "Paste or type your article headline, product title, or page name into the input box.",
-        "Choose your separator character: Hyphen (-), Underscore (_), or Slash (/).",
-        "Toggle options for lowercase enforcement, number stripping, or stopword removal.",
-        "Copy the generated clean slug with a single click.",
+        "Paste or type the title of the article, product or page.",
+        "Watch the slug update live: letters are lowercased, accents are removed and punctuation disappears.",
+        "Switch on stop-word removal to shorten long titles by dropping words such as a, the, of and and.",
+        "Choose the separator. Hyphens are the standard for web addresses; underscores or dots suit file names and identifiers.",
+        "Copy the slug and paste it into your CMS or file name.",
       ],
     },
     useCases: [
       {
-        title: "Blog posts & article permalinks",
+        title: "Blog posts and articles",
         body:
-          "Convert long blog post titles into clean, concise permalinks for WordPress, Ghost, or Next.js blogs.",
+          "A title like \"10 Tips for Saving Money on Groceries (2026 Edition!)\" becomes 10-tips-saving-money-groceries-2026-edition, which is short enough to read in search results and describes the page clearly.",
       },
       {
-        title: "E-commerce product URLs",
+        title: "Product pages",
         body:
-          "Generate clean product catalog URL structures that search engines can easily index.",
+          "E-commerce platforms build product addresses from names that often include symbols and sizes. Cleaning them up first gives consistent, readable links across the catalogue.",
+      },
+      {
+        title: "File and folder names",
+        body:
+          "Slugs are also safe file names: no spaces, no characters that break on another operating system, and they sort predictably. Use underscores if your team prefers them for files.",
       },
     ],
     tips: [
-      "Keep slugs between 3 to 5 words long for maximum SEO readability.",
-      "Always use hyphens rather than underscores in URLs, as search engines treat hyphens as word spaces.",
+      "Keep slugs to about three to five meaningful words. Long slugs are cut off in search results and are harder to share.",
+      "Do not change the slug of a page that is already published and indexed without setting up a 301 redirect from the old address.",
+      "Leave dates out of slugs for content you plan to update, so the address does not look out of date next year.",
+      "Google treats hyphens as word separators but joins words linked by underscores, which is why hyphens are recommended for web addresses.",
     ],
     extraFaqs: [
       {
-        question: "Why should I remove stop words from URL slugs?",
+        question: "Do URL slugs affect SEO?",
         answer:
-          "Removing filler words like 'a', 'the', and 'in' keeps the URL concise and focused on primary target keywords.",
+          "A little. A descriptive slug helps people decide to click and gives search engines a small hint about the topic, but it is a minor factor compared with the page's content. The bigger benefit is a clean, trustworthy-looking link.",
+      },
+      {
+        question: "What happens to accented and non-English characters?",
+        answer:
+          "Accented Latin letters are converted to their plain forms, so café becomes cafe and über becomes uber. Other symbols are removed. If your audience searches in another script, you may prefer to keep native characters in the address; browsers support them.",
+      },
+      {
+        question: "Should I remove stop words?",
+        answer:
+          "For long titles, yes: dropping words such as the, a and of makes slugs shorter without losing meaning. Keep them when removing them changes the sense, as in \"to-do\" or a brand name.",
       },
     ],
   },
 
   "json-to-csv": {
     intro:
-      "JSON is the standard format for modern web APIs, while CSV is the universal standard for spreadsheets like Excel, Google Sheets, and databases. This bidirectional tool converts JSON arrays to CSV spreadsheets and parses CSV files back to clean JSON with full delimiter flexibility, running entirely in your local browser memory.",
+      "APIs speak JSON, but spreadsheets, finance teams and many import tools want CSV. This converter turns a JSON array of objects into a CSV table — one row per object and one column per key, collected from every object so no field is lost — and converts CSV back into JSON. You can choose a comma, semicolon, tab or pipe delimiter, open .json and .csv files directly, and copy or download the result. Everything runs in your browser, so customer exports and internal data stay on your computer.",
     howTo: {
-      title: "How to convert JSON to CSV and CSV to JSON",
+      title: "How to convert JSON to CSV (and back)",
       steps: [
-        "Select your conversion direction: JSON to CSV or CSV to JSON.",
-        "Paste your data directly into the input area or upload a .json / .csv file.",
-        "Choose your column delimiter: Comma, Semicolon, Tab, or Pipe.",
-        "Inspect the converted output in real-time, copy to clipboard, or download as a standalone file.",
+        "Choose the direction: JSON to CSV or CSV to JSON.",
+        "Paste your data or open a .json or .csv file.",
+        "Pick the delimiter your target program expects: comma for most tools, semicolon for Excel in many European locales, tab for pasting into sheets.",
+        "Check the output. For JSON to CSV, the header row lists every key found in the data.",
+        "Copy the result or download it as a file.",
       ],
     },
     useCases: [
       {
-        title: "Exporting API responses to Excel or Google Sheets",
+        title: "Opening an API export in Excel or Google Sheets",
         body:
-          "Turn complex API response payloads into structured spreadsheet tables for business analysis.",
+          "An array of orders from an API becomes a sheet with one order per row, ready for filters, pivot tables and charts, without writing a script.",
       },
       {
-        title: "Importing spreadsheet tables into database seed files",
+        title: "Preparing a bulk import",
         body:
-          "Convert exported CSV tables into structured JSON arrays for populating database fixtures and tests.",
+          "Many CRMs, email tools and e-commerce platforms import contacts or products only as CSV. Converting JSON from another system is often the missing step in a migration.",
+      },
+      {
+        title: "Turning a spreadsheet into test data",
+        body:
+          "Going the other way, a sheet of sample users exported as CSV becomes a JSON array you can use as fixtures or seed data.",
       },
     ],
     tips: [
-      "Nested JSON objects are automatically flattened into quoted string representations.",
-      "The parser automatically handles quotes and escaped delimiters according to RFC 4180 CSV specifications.",
+      "Nested objects and arrays are written into a single cell as JSON text. Flatten deeply nested data first if you need each value in its own column.",
+      "Values containing the delimiter, quotes or line breaks are wrapped in quotes automatically, which is the CSV standard.",
+      "If Excel shows everything in one column, it expected a different delimiter; try semicolon or use its Data → From Text import.",
+      "Spreadsheets drop leading zeros from things like PIN codes and phone numbers. Format those columns as text when importing.",
     ],
     extraFaqs: [
       {
-        question: "Can I convert large CSV or JSON files?",
+        question: "What JSON shape does the converter expect?",
         answer:
-          "Yes. Files up to several megabytes process in milliseconds because everything executes client-side without network upload bottlenecks.",
+          "An array of objects, such as [{\"name\": \"Asha\", \"city\": \"Pune\"}, …], where each object becomes a row. Objects do not need identical keys; missing values are left empty.",
+      },
+      {
+        question: "Are numbers and true/false kept when converting CSV to JSON?",
+        answer:
+          "CSV has no data types, so every value arrives as text. Check the JSON output and convert numbers and booleans in your code if the difference matters.",
+      },
+      {
+        question: "Is there a size limit?",
+        answer:
+          "Only your device's memory. Files of a few megabytes convert instantly; very large files of tens of megabytes may make the tab pause while they are processed.",
       },
     ],
   },
 
   "regex-tester": {
     intro:
-      "Regular expressions (regex) are essential pattern-matching sequences used in programming, data validation, and text processing. This interactive regex debugger provides instant live match highlighting, capture group extraction, flag customization, and syntax error diagnostics using your browser's native JavaScript regex engine.",
+      "Regular expressions are compact patterns for finding and validating text — an email address, a date, every number in a log — but a single misplaced character changes what they match. This tester runs your pattern against sample text as you type, highlights every match, lists each one with its position and numbered capture groups, and lets you switch the g, i, m, s and u flags on and off. It uses your browser's own JavaScript regex engine, so a pattern that works here behaves the same in JavaScript and TypeScript code.",
     howTo: {
-      title: "How to test and debug regular expressions",
+      title: "How to test a regular expression",
       steps: [
-        "Type your regular expression pattern between the delimiter slashes.",
-        "Toggle matching flags such as Global (g), Case-Insensitive (i), or Multiline (m).",
-        "Paste your target test string in the text editor area.",
-        "Review highlighted matches in real-time and inspect capture groups ($1, $2) in the match breakdown drawer.",
+        "Type your pattern into the regular expression field, without the surrounding slashes.",
+        "Paste sample text into the test string box: include text that should match and text that should not.",
+        "Toggle the flags you need: g for every match, i to ignore case, m so ^ and $ work per line, s so . also matches newlines, u for full Unicode.",
+        "Check the highlighted matches, then read the match list to see what each capture group caught.",
+        "Use the cheat sheet for syntax you do not remember, and adjust the pattern until only the right text is highlighted.",
       ],
     },
     useCases: [
       {
-        title: "Validating user input forms (Email, Phone, Postal Code)",
+        title: "Validating form input",
         body:
-          "Test and refine regex patterns before embedding them into frontend validation schemas or backend API handlers.",
+          "An Indian PIN code is six digits not starting with 0: ^[1-9][0-9]{5}$. Testing it against 560001, 056001 and 5600011 confirms it accepts the first and rejects the others before the pattern goes into your form.",
       },
       {
-        title: "Log parsing & data extraction",
+        title: "Extracting data from logs",
         body:
-          "Extract IP addresses, timestamps, error codes, and request IDs from server logs.",
+          "A pattern such as (\\d{3}) (\\d+)ms with the g flag pulls every status code and response time out of a pasted access log, with each part in its own capture group ready for your script.",
+      },
+      {
+        title: "Find and replace in an editor",
+        body:
+          "VS Code and most editors support the same syntax. Getting the pattern and its groups right here first avoids a replace-all that rewrites the wrong lines.",
       },
     ],
     tips: [
-      "Always enable the Global (g) flag if you want to find all occurrences in a multi-line document.",
-      "Use non-capturing groups (?:...) when you need grouping logic without creating extra capture group outputs.",
+      "Anchor validation patterns with ^ and $. Without them, [0-9]{6} also matches the first six digits of a ten-digit number.",
+      "Quantifiers are greedy: <.+> matches from the first < to the last > on the line. Use <.+?> to stop at the nearest >.",
+      "Escape characters that have special meaning when you want them literally: \\. for a dot, \\( for a bracket, \\$ for a dollar sign.",
+      "Patterns with nested repeats such as (a+)+ can take exponential time on long input. Keep repeats simple for anything that runs on user data.",
+      "Other languages differ in details — lookbehind support, named-group syntax, Unicode classes — so re-test patterns that will run outside JavaScript.",
     ],
     extraFaqs: [
       {
-        question: "What does the 's' (dotAll) flag do?",
+        question: "Why does my pattern only find the first match?",
         answer:
-          "The 's' flag allows the dot (.) character in your regex pattern to match newline characters as well as standard characters.",
+          "Without the g (global) flag a JavaScript regex stops after the first match. Switch g on to find every occurrence in the text.",
+      },
+      {
+        question: "What is a capture group?",
+        answer:
+          "Anything inside plain round brackets is captured separately, so in (\\d{4})-(\\d{2}) the year is group 1 and the month is group 2. Use (?:...) when you need brackets for grouping but not a capture, and (?<name>...) to name a group.",
+      },
+      {
+        question: "Is my test text sent anywhere?",
+        answer:
+          "No. Matching runs in your browser, so you can safely test patterns against real logs or data.",
       },
     ],
   },
 
   "html-entity-converter": {
     intro:
-      "HTML entities are used to display reserved characters (like <, >, &) that would otherwise be interpreted as HTML markup by web browsers. This utility encodes plain text characters into safe HTML entities (named, decimal, or hex) and decodes entity strings back to readable text with 100% client-side privacy.",
+      "Some characters mean something to HTML: < starts a tag, & starts an entity and \" ends an attribute. To show them as text, or to paste code into a web page, they have to be written as entities such as &lt; and &amp;. This converter encodes text into HTML entities and decodes entities back into readable text, and lets you choose named entities (&amp;), decimal codes (&#38;) or hexadecimal codes (&#x26;). It runs in your browser, so you can paste private snippets safely.",
     howTo: {
-      title: "How to encode and decode HTML entities",
+      title: "How to encode or decode HTML entities",
       steps: [
-        "Select Encode mode to escape characters, or Decode mode to unescape entities.",
-        "Paste your raw HTML or encoded text into the left input area.",
-        "Choose your entity format: Named (&amp;), Decimal (&#38;), or Hex (&#x26;).",
-        "Copy the transformed output instantly to your clipboard.",
+        "Choose whether you want to encode text into entities or decode entities into text.",
+        "Paste your text or HTML into the input box.",
+        "When encoding, pick named, decimal or hexadecimal entities.",
+        "Check the converted output and the character counts.",
+        "Copy the result into your page, template or email.",
       ],
     },
     useCases: [
       {
-        title: "Displaying code snippets on websites",
+        title: "Showing code on a web page",
         body:
-          "Escape HTML source code so that browsers render the literal markup inside <pre> and <code> blocks without executing it.",
+          "To display <div class=\"card\"> in a tutorial, the angle brackets must be encoded or the browser will treat it as a real element and the example will disappear.",
       },
       {
-        title: "Sanitizing user inputs against XSS",
+        title: "Reading escaped text from an API or database",
         body:
-          "Convert angle brackets and quotes into safe entities before rendering user-submitted text.",
+          "Data that has been escaped more than once turns into strings like &amp;amp;quot;. Decoding shows the real text and reveals where the double escaping happened.",
+      },
+      {
+        title: "Special characters in email templates",
+        body:
+          "Some email clients handle raw non-ASCII symbols badly. Encoding characters such as ₹, © and — as numeric entities makes them display reliably.",
       },
     ],
     tips: [
-      "Named entities like &copy; and &euro; are easiest to read in source code, while hex entities offer universal XML compatibility.",
-      "The five fundamental XML entities are: &amp; (&), &lt; (<), &gt; (>), &quot; (\"), and &apos; (').",
+      "In ordinary page text you only must escape & and <. Inside attribute values, also escape the quote character you used to wrap the value.",
+      "Named entities are easier to read; numeric entities work for every Unicode character, including ones without a name.",
+      "Escaping output is only one part of preventing XSS. Frameworks such as React escape text automatically; the danger is in code that inserts raw HTML.",
+      "Do not encode text twice. If you see &amp;lt; on a page, something escaped already-escaped text.",
     ],
     extraFaqs: [
       {
-        question: "What is the difference between decimal and hexadecimal HTML entities?",
+        question: "What is the difference between &amp;, &#38; and &#x26;?",
         answer:
-          "Decimal entities use base-10 Unicode code points (&#60;), while hex entities use base-16 hexadecimal notation (&#x3C;). Both render identically.",
+          "They all produce the same & character. The first is a named entity, the second the character's decimal code point and the third its hexadecimal code point. Browsers treat them identically.",
+      },
+      {
+        question: "Do I need entities for ₹ or emoji if my page is UTF-8?",
+        answer:
+          "Not in a correctly served UTF-8 page, which almost every modern site is; you can type the characters directly. Entities are still useful in systems that mangle non-ASCII text, such as some email and legacy tools.",
+      },
+      {
+        question: "Is &nbsp; the same as a space?",
+        answer:
+          "No. &nbsp; is a non-breaking space: it looks like a space but stops the line from wrapping at that point, which is useful between a number and its unit, such as 10&nbsp;kg.",
       },
     ],
   },
 
   "color-converter": {
     intro:
-      "Designers and frontend engineers frequently need to translate colors across HEX, RGB, HSL, and CMYK formats for web stylesheets, UI frameworks, and print graphics. This comprehensive tool converts color representations, computes WCAG luminance contrast, generates CSS custom properties, and creates harmonic color palettes.",
+      "The same colour is written differently depending on where it is used: HEX and RGB in CSS and design tools, HSL when you want to adjust lightness or saturation, and CMYK for print. This converter takes a colour in any of these formats, or from the colour picker, and shows it in all of them at once, ready to copy — including as a CSS custom property. It also suggests complementary, analogous and triadic harmonies, which are a quick starting point for a palette.",
     howTo: {
-      title: "How to convert colors and generate palettes",
+      title: "How to convert a colour",
       steps: [
-        "Click the color preview swatch to pick a color, or type any valid HEX, RGB, or HSL value.",
-        "Instantly view converted values in HEX, RGB, HSL, CMYK, CSS variables, and normalized GL coordinates.",
-        "Click the copy icon next to any format to copy it to your clipboard.",
-        "Explore complementary, analogous, and triadic harmonic palettes at the bottom.",
+        "Enter a colour as HEX (#1a73e8), RGB (rgb(26, 115, 232)) or HSL, or pick one with the colour picker.",
+        "Read the same colour in HEX, RGB, HSL and CMYK.",
+        "Copy the format you need with one click, including a ready-made CSS variable.",
+        "Look at the harmony swatches for colours that go well with it.",
+        "Click a harmony colour to convert that one as well.",
       ],
     },
     useCases: [
       {
-        title: "CSS design token generation",
+        title: "Handing designs to developers",
         body:
-          "Convert brand HEX colors into HSL or CSS custom variables for modern responsive design systems.",
+          "A designer's HEX value can be turned into HSL for a stylesheet, which makes it easy to create lighter and darker shades by changing only the lightness value.",
       },
       {
-        title: "Print & digital media conversion",
+        title: "Preparing artwork for print",
         body:
-          "Check corresponding CMYK values when preparing digital web graphics for commercial printing.",
+          "Screens mix light (RGB) and printers mix ink (CMYK). Converting a brand colour to CMYK gives the printer a starting value, although it should be checked against a printed proof, because some bright screen colours cannot be printed exactly.",
+      },
+      {
+        title: "Building a small palette",
+        body:
+          "Complementary colours sit opposite each other on the colour wheel and make strong accents; analogous colours sit next to each other and feel calm. Using one of these as a starting point gives a palette that holds together.",
       },
     ],
     tips: [
-      "HSL (Hue, Saturation, Lightness) is often the most intuitive model for building hover and active color variations.",
-      "Hexadecimal colors can be written in 3-character shorthand (#FFF) or full 6-character format (#FFFFFF).",
+      "HEX and RGB describe exactly the same colours; HEX is just the three RGB values written in base 16.",
+      "Adjusting the L in HSL is the easiest way to make hover and pressed states for a button colour.",
+      "CMYK conversions here are device-independent approximations. For accurate print colour, use the ICC profile your printer provides.",
+      "Check text colours with a contrast checker as well: a pleasing palette is not automatically readable.",
     ],
     extraFaqs: [
       {
-        question: "How do alpha / opacity channels work in CSS colors?",
+        question: "What is the difference between HEX and RGB?",
         answer:
-          "In modern CSS, RGB and HSL accept alpha values using slash syntax: rgb(59 130 246 / 0.5) or rgba(59, 130, 246, 0.5).",
+          "None in the colour itself. rgb(255, 99, 71) and #FF6347 are the same tomato red: each pair of hex digits is one of the red, green and blue values from 0 to 255.",
+      },
+      {
+        question: "Why does my colour look different in print?",
+        answer:
+          "Screens can show bright, saturated colours that ink cannot reproduce, especially vivid blues and greens. When converted to CMYK they are brought into the printable range, so they look duller on paper.",
+      },
+      {
+        question: "What is HSL good for?",
+        answer:
+          "HSL describes colour as hue (the angle on the colour wheel), saturation and lightness, which matches how people think about colour. Changing one value gives a predictable result, unlike adjusting three RGB channels.",
       },
     ],
   },
@@ -3639,574 +3765,825 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "working-days-calculator": {
     intro:
-      "Calculating the exact number of business days between two dates is essential for project management sprint planning, legal contract fulfillment, payroll processing, and delivery estimates. This tool calculates total working days and working hours between any two dates with customizable weekend schedules and public holiday exclusions.",
+      "Counting working days by hand means remembering which days are weekends, which dates are holidays, and whether the first and last days count. This calculator does all of it: pick a start and end date, choose your weekend pattern (Saturday–Sunday, Sunday only, or Friday–Saturday for the Gulf), add the public holidays that apply to you, and it returns the number of working days, the weekend and holiday days it excluded, and the total working hours at the daily hours you set. Both the start and end dates are included, which is how most leave policies and contracts count.",
     howTo: {
-      title: "How to calculate business working days",
+      title: "How to count working days between two dates",
       steps: [
-        "Select your Start Date and End Date.",
-        "Choose your weekend schedule: Standard Saturday & Sunday, Sunday-only, or Friday & Saturday.",
-        "Optionally set standard working hours per day (e.g. 8 hours/day).",
-        "Add custom dates to the holiday exclusion list to omit public holidays.",
-        "View the total working days, working hours, and calendar day breakdown.",
+        "Choose the start date and the end date. Both days are included in the count.",
+        "Pick the weekend that applies: Saturday and Sunday, Sunday only (common for six-day weeks in India), or Friday and Saturday.",
+        "Add each public or company holiday that falls in the range. Holidays that land on a weekend are not subtracted twice.",
+        "Set the working hours per day if you want a total in hours, for example 8 or 9.",
+        "Read the working days, the breakdown of calendar, weekend and holiday days, and the total hours.",
       ],
     },
     useCases: [
       {
-        title: "Project management & milestone planning",
+        title: "Planning leave",
         body:
-          "Calculate true working capacity for engineering sprints and delivery milestones excluding non-working days.",
+          "Taking 23 December to 2 January off looks like eleven days, but with two weekends and two public holidays it may use only five or six days of leave. Counting before you apply tells you exactly how much of your balance a trip will use.",
       },
       {
-        title: "Payroll, attendance & leave calculation",
+        title: "Project and delivery deadlines",
         body:
-          "Determine exact working days in a pay period or billing cycle for contract freelancers.",
+          "When a client asks for delivery within 15 working days, counting forward over a festival week with a six-day work pattern gives a very different date from counting over an ordinary fortnight. The breakdown makes the date easy to explain.",
+      },
+      {
+        title: "Payroll and attendance",
+        body:
+          "Salary for a partial month, overtime thresholds and attendance percentages are all based on working days in the period. Getting the base number right avoids small errors that repeat every month.",
       },
     ],
     tips: [
-      "Both start and end dates are counted inclusively in the date range.",
-      "Custom added holidays that fall on existing weekend days are automatically deduplicated.",
+      "Public holidays differ by state and by employer in India. Add the list your company publishes rather than a national one.",
+      "If your contract counts only one of the two end dates, subtract one day from the result.",
+      "For notice periods, check whether your contract says working days or calendar days; the difference can be two weeks.",
+      "A Friday–Saturday weekend is standard in several Gulf countries, while the UAE moved to Saturday–Sunday in 2022. Pick the pattern that matches the office, not the country's old rule.",
     ],
     extraFaqs: [
       {
-        question: "How many working days are in an average calendar year?",
+        question: "Are the start and end dates both counted?",
         answer:
-          "A standard 365-day year with Monday-to-Friday schedules has approximately 260 to 262 working days before subtracting public holidays.",
+          "Yes. A range from Monday to Friday of the same week gives five working days. This matches how leave and delivery periods are normally counted. If you need an exclusive count, subtract one.",
+      },
+      {
+        question: "What happens if a holiday falls on a weekend?",
+        answer:
+          "It is only removed once. The day is already excluded as a weekend day, so it does not reduce the working days again. Whether your employer gives a substitute day off is a policy question the calculator cannot know, so add that day as a holiday yourself.",
+      },
+      {
+        question: "How are working hours calculated?",
+        answer:
+          "Working days multiplied by the hours per day you enter. It assumes the same hours every day; half days and shift patterns need to be adjusted by hand.",
       },
     ],
   },
 
   "unix-timestamp-converter": {
     intro:
-      "Unix epoch time represents the number of elapsed seconds since January 1, 1970 UTC. It is the universal standard for logging timestamps, database records, and distributed API communications. This utility converts Unix epoch timestamps to formatted UTC and local dates in real-time, complete with a live ticking epoch clock and reverse date-to-epoch converter.",
+      "A Unix timestamp is the number of seconds since 00:00:00 UTC on 1 January 1970 — the way most servers, databases and APIs store time, because it is a single number with no time zone attached. This converter turns a timestamp into a readable date in UTC, ISO 8601 and your local time, with a relative description such as \"3 hours ago\", and turns a date and time back into a timestamp. It recognises whether a number is in seconds or milliseconds from its length, and shows the current timestamp ticking live.",
     howTo: {
-      title: "How to convert Unix timestamps and dates",
+      title: "How to convert a Unix timestamp",
       steps: [
-        "Enter any Unix epoch timestamp in seconds or milliseconds.",
-        "Or use the date-time picker to convert a calendar date into epoch seconds.",
-        "Click 'Use Current' to immediately populate the current live timestamp.",
-        "Inspect decoded UTC, ISO 8601, local time, and relative duration strings with single-click copying.",
+        "Paste a timestamp into the timestamp field. A 10-digit number is read as seconds; a 13-digit number as milliseconds, which is what JavaScript and many APIs use.",
+        "Read the result in UTC, in ISO 8601 format for code and logs, and in your own time zone.",
+        "Check the relative time to see at a glance whether the moment is in the past or future and how far away it is.",
+        "To go the other way, pick a date and time and copy the timestamp in seconds or milliseconds.",
+        "Use the live clock to grab the current timestamp for tests and database queries.",
       ],
     },
     useCases: [
       {
-        title: "Debugging database records & server logs",
+        title: "Reading logs and API responses",
         body:
-          "Translate raw integer timestamps from PostgreSQL, MongoDB, or Redis into readable calendar dates.",
+          "Values like created_at: 1767225600 are meaningless at a glance. Converting them shows that this one is 1 January 2026 at 00:00 UTC — 5:30 in the morning in India — which is often the clue that explains an off-by-one-day bug.",
       },
       {
-        title: "API integration & JWT expiration verification",
+        title: "Setting expiry times",
         body:
-          "Inspect token 'iat' (issued at) and 'exp' (expiration) integer claims during authentication development.",
+          "Tokens, cookies and signed URLs expire at a timestamp. Picking a date and copying its timestamp is faster and less error-prone than adding 86,400 seconds per day by hand.",
+      },
+      {
+        title: "Checking a JWT's exp claim",
+        body:
+          "The exp and iat fields in a JSON Web Token are Unix timestamps in seconds. Paste one here to see exactly when a token was issued and when it stops working.",
       },
     ],
     tips: [
-      "10-digit timestamps represent seconds (e.g. 1741000000), while 13-digit timestamps represent milliseconds.",
-      "The tool automatically detects whether an entered number represents seconds or milliseconds.",
+      "Mixing seconds and milliseconds is the most common timestamp bug: a seconds value read as milliseconds lands in January 1970, and the reverse lands tens of thousands of years in the future.",
+      "Store and transmit time as UTC timestamps, and convert to local time only when showing it to a person.",
+      "32-bit signed timestamps run out on 19 January 2038. Use 64-bit integers for anything that must last beyond that date.",
+      "ISO 8601 strings such as 2026-01-01T00:00:00Z sort correctly as text and are easy to read in logs, which is why many APIs use them instead of raw numbers.",
     ],
     extraFaqs: [
       {
-        question: "What is the Year 2038 Problem (Y2K38)?",
+        question: "Do Unix timestamps depend on the time zone?",
         answer:
-          "On January 19, 2038, 32-bit signed integers will overflow past 2,147,483,647 seconds. Modern 64-bit systems resolve this with timestamps valid for billions of years.",
+          "No. A timestamp counts seconds from a fixed moment in UTC, so the same instant has the same timestamp everywhere in the world. Time zones only matter when the number is turned into a date for display.",
+      },
+      {
+        question: "How do I tell if a timestamp is in seconds or milliseconds?",
+        answer:
+          "For current dates, seconds have 10 digits and milliseconds have 13. The converter detects this automatically. JavaScript's Date.now() returns milliseconds; most Unix tools, PHP and Python's time.time() return seconds.",
+      },
+      {
+        question: "What does Unix time do with leap seconds?",
+        answer:
+          "It ignores them. Every day is treated as exactly 86,400 seconds, which keeps date arithmetic simple. The difference from astronomical time is handled by clock synchronisation, not by the timestamp.",
       },
     ],
   },
 
   "json-to-typescript": {
     intro:
-      "Typing API response payloads manually is slow and error-prone. This developer tool parses any JSON object or array and automatically generates clean, strongly typed TypeScript interfaces or type aliases with customizable root naming, optional property toggles, and readonly modifiers.",
+      "Writing TypeScript types by hand for an API response is slow and easy to get wrong, especially when objects are nested three levels deep. Paste a sample of the JSON and this tool generates matching interfaces or type aliases: nested objects become their own named types, arrays get the type of their items, and you can mark every property optional or readonly and choose the name of the root type. The conversion runs in your browser, so internal API payloads never leave your machine.",
     howTo: {
       title: "How to generate TypeScript interfaces from JSON",
       steps: [
-        "Paste your raw JSON payload into the input editor.",
-        "Specify the name of the root interface (e.g. UserProfile, ApiResponse).",
-        "Choose between Interface or Type Alias declarations.",
-        "Toggle optional (?) or readonly modifiers as needed for your codebase.",
-        "Copy the generated TypeScript definitions or download as a standalone .ts file.",
+        "Paste a JSON object or array into the input box — ideally a real response that includes every field you expect.",
+        "Set the root type name, for example UserResponse, so the generated code fits your naming.",
+        "Choose interfaces or type aliases, and switch on optional or readonly properties if your code style needs them.",
+        "Review the output: nested objects are extracted into separately named types that you can reuse.",
+        "Copy the code or download it as a .ts file and drop it into your project.",
       ],
     },
     useCases: [
       {
-        title: "Frontend API client typing",
+        title: "Typing a third-party API",
         body:
-          "Quickly generate TypeScript types for REST and GraphQL API responses in React, Next.js, and Vue applications.",
+          "When a service publishes JSON examples but no TypeScript types, generating them from a real response gives you autocompletion and compile-time checks in minutes, instead of discovering a misspelt field name in production.",
       },
       {
-        title: "Data model scaffolding",
+        title: "Starting a type from a config file",
         body:
-          "Turn sample JSON payloads into clean contract interfaces during system architecture design.",
+          "Settings files and fixtures grow over time. Generating a type from the current file documents its shape and makes the compiler warn you when code reads a key that no longer exists.",
+      },
+      {
+        title: "Reviewing an unfamiliar payload",
+        body:
+          "The generated types are also a compact outline of the data. Reading ten lines of interfaces is quicker than scrolling through five hundred lines of nested JSON.",
       },
     ],
     tips: [
-      "Nested JSON structures are automatically converted into separate, reusable exported interfaces.",
-      "Unquoted keys with special characters are automatically wrapped in safe quotes.",
+      "Types are inferred from the sample you paste. A field that happens to be null or missing in the sample cannot be typed correctly, so use a response with every field filled in.",
+      "Numbers that are sometimes sent as strings (\"25\") will be typed as string. Fix the type or the API, not both.",
+      "Treat the output as a first draft: add union types for known string values, such as status: \"active\" | \"cancelled\", by hand.",
+      "For data you do not control, validate it at runtime as well; TypeScript types disappear when the code is compiled and cannot stop a malformed response.",
     ],
     extraFaqs: [
       {
-        question: "How does the generator handle null or unknown array types?",
+        question: "Should I use interface or type?",
         answer:
-          "Empty arrays default to unknown[], while fields with null values are typed as null or optional based on your selected settings.",
+          "For plain object shapes they behave almost identically. Interfaces can be extended and merged, which suits public APIs; type aliases can also describe unions and mapped types. Follow whatever your codebase already uses.",
+      },
+      {
+        question: "How are arrays of objects handled?",
+        answer:
+          "The item type is generated from the objects in the array and the property is typed as an array of it, for example items: Item[]. An empty array cannot reveal its item type, so include at least one item in the sample.",
+      },
+      {
+        question: "Is my JSON uploaded anywhere?",
+        answer:
+          "No. Parsing and code generation happen in your browser, so you can safely paste responses that contain internal field names or real data.",
       },
     ],
   },
 
   "cron-explainer": {
     intro:
-      "Cron expressions configure recurring automated tasks in Unix, Linux, GitHub Actions, AWS EventBridge, and Cloudflare Workers. However, cryptic 5-part cron syntax (* * * * *) is notoriously easy to misconfigure. This tool translates any cron string into clear English explanations and provides common schedule presets.",
+      "Cron expressions schedule jobs on Linux servers, in CI pipelines, cloud schedulers and many web frameworks, but five fields of numbers and asterisks are hard to read correctly. Paste an expression like 30 2 * * 1-5 and this explainer translates it into plain English — \"at 02:30, Monday to Friday\" — and breaks down what each field means. It understands lists, ranges and step values, and includes presets for the schedules people use most, so you can start from a known-good expression.",
     howTo: {
-      title: "How to explain and build cron expressions",
+      title: "How to read a cron expression",
       steps: [
-        "Enter any standard 5-field cron expression into the input field.",
-        "Inspect the 5-field breakdown: Minute, Hour, Day of Month, Month, and Day of Week.",
-        "Read the generated plain English sentence explaining exactly when the task runs.",
-        "Click any common preset (e.g. Every Day at Midnight, Every Weekday) for instant configuration.",
+        "Paste or type a five-field cron expression: minute, hour, day of month, month and day of week.",
+        "Read the plain-English description to confirm it runs when you intend.",
+        "Check the field-by-field breakdown to see how each part is interpreted.",
+        "Start from a preset such as every 15 minutes, daily at midnight or weekdays at 9:00 and adjust it.",
+        "Copy the expression into your crontab, workflow file or scheduler.",
       ],
     },
     useCases: [
       {
-        title: "Configuring server backup & maintenance jobs",
+        title: "Checking a schedule before deploying",
         body:
-          "Ensure database backup scripts and log rotation crons trigger at intended off-peak hours.",
+          "A backup job meant for 2 a.m. daily written as * 2 * * * actually runs every minute between 2:00 and 2:59 — sixty times. Reading the explanation before deploying catches that kind of mistake.",
       },
       {
-        title: "GitHub Actions & cloud scheduler workflows",
+        title: "Understanding someone else's crontab",
         body:
-          "Verify schedule triggers for CI/CD pipelines, automated report generators, and heartbeat pings.",
+          "Inherited servers often have dozens of undocumented jobs. Translating each line tells you what runs when, which is the first step to cleaning them up.",
+      },
+      {
+        title: "Writing CI and cloud schedules",
+        body:
+          "GitHub Actions, Kubernetes CronJobs and most cloud schedulers use the same five-field syntax. Build the expression here, then paste it into the workflow file.",
       },
     ],
     tips: [
-      "Day of week uses 0 for Sunday through 6 for Saturday in standard POSIX cron syntax.",
-      "Use commas to specify multiple values (e.g. 1,15 for days 1 and 15) and hyphens for ranges (e.g. 1-5 for Mon-Fri).",
+      "Most cron systems run in UTC unless configured otherwise. 30 3 * * * in UTC is 9:00 a.m. in India.",
+      "When both day of month and day of week are set, classic cron runs the job when either matches, not only when both do.",
+      "*/15 in the minute field means every 15 minutes starting at :00, not every 15 minutes from when the job was installed.",
+      "Avoid scheduling many jobs at exactly midnight or on the hour; spreading them by a few minutes reduces load spikes.",
     ],
     extraFaqs: [
       {
-        question: "What does '*/15 * * * *' mean in cron?",
+        question: "What do the symbols * , - and / mean?",
         answer:
-          "It means 'every 15 minutes', triggering at minutes 0, 15, 30, and 45 past every hour of every day.",
+          "* means every value, a comma separates a list (1,15), a hyphen gives a range (1-5 is Monday to Friday in the weekday field) and a slash gives a step (*/10 is every tenth value). They can be combined, for example 0-30/10.",
+      },
+      {
+        question: "Is Sunday 0 or 7?",
+        answer:
+          "Both work in most implementations: the day-of-week field accepts 0 to 6 with 0 as Sunday, and many also accept 7 as Sunday. Using 0 is the most portable choice.",
+      },
+      {
+        question: "Can cron run a job every 30 seconds?",
+        answer:
+          "Not in standard five-field cron, whose smallest unit is one minute. Some systems such as Quartz and certain cloud schedulers add a seconds field, but that syntax is not portable to Linux crontab.",
       },
     ],
   },
 
   "utm-builder": {
     intro:
-      "Urchin Tracking Module (UTM) parameters are standardized query string tags added to URLs to track the effectiveness of online marketing campaigns across Google Analytics and advertising platforms. This tool builds compliant tracking URLs and strips messy tracking parameters to create clean links.",
+      "UTM parameters are the five tags — utm_source, utm_medium, utm_campaign, utm_term and utm_content — that analytics tools read from a link to tell you where a visit came from. Without them, a click from your newsletter and a click from an Instagram bio both show up as unhelpful \"direct\" or \"referral\" traffic. This builder assembles a correctly encoded tracking link from the fields you fill in, can read an existing tagged link back into the form, and can also do the opposite job: strip utm_ tags and click IDs such as fbclid and gclid to give you a clean link to share.",
     howTo: {
-      title: "How to build and clean UTM campaign URLs",
+      title: "How to build a UTM tracking link",
       steps: [
-        "Enter your destination landing page URL.",
-        "Fill in the required campaign tags: Source (e.g. google, newsletter), Medium (e.g. cpc, email), and Campaign Name.",
-        "Optionally add Term (keywords) and Content (ad variant / CTA location).",
-        "Copy the generated tagged URL for your advertising campaign, or copy the clean stripped URL for sharing.",
+        "Paste the page you want people to land on into the website URL field, for example https://example.com/pricing.",
+        "Fill in Source (who sends the traffic: google, newsletter, instagram), Medium (the channel: cpc, email, social) and Campaign (the promotion: diwali_sale_2026).",
+        "Add Term for paid-search keywords and Content to tell apart two links in the same campaign, such as header_button and footer_link.",
+        "Copy the finished link. Spaces and special characters are encoded for you, so the link works when pasted anywhere.",
+        "To tidy a link someone sent you, paste it in and use the clean option: every utm_ tag and ad click ID is removed and the rest of the address is kept.",
       ],
     },
     useCases: [
       {
-        title: "Social media marketing & ad campaigns",
+        title: "Knowing which newsletter link people click",
         body:
-          "Measure exact conversion sources from Twitter, LinkedIn, Facebook, and Instagram ads.",
+          "Give every link in an email the same source and campaign but a different utm_content (hero_image, main_button, ps_link). In Google Analytics you can then see which placement actually drove visits and sign-ups instead of guessing.",
       },
       {
-        title: "Email newsletter link tracking",
+        title: "Comparing paid and organic social posts",
         body:
-          "Identify which email campaigns and call-to-action buttons generate the highest user engagement.",
+          "Tag the link in a boosted post with medium=paid_social and the same link in an ordinary post with medium=social. Both come from the same platform, but the reports keep them apart, so you can see what the ad spend added.",
+      },
+      {
+        title: "Offline campaigns with QR codes",
+        body:
+          "Posters, flyers and packaging have no referrer at all, so their visits are invisible without tags. Build a link with source=poster and a campaign name, then turn it into a QR code, and every scan is counted under that campaign.",
       },
     ],
     tips: [
-      "Keep UTM tags lowercase to prevent duplicate campaign rows in Google Analytics reports.",
-      "Use underscores or hyphens instead of spaces in parameter values.",
+      "Analytics treats Email and email as two different sources. Pick one style — lowercase with underscores is the most common — and use it for every link.",
+      "Never add UTM tags to links between pages of your own site. They restart the session and credit the visit to your own campaign, wiping out the real source.",
+      "Keep a simple sheet of the source, medium and campaign names your team uses, so the same campaign is not spelled three different ways.",
+      "Long tagged links look untidy in posts. Put a short link or QR code in front of them; the tags still reach your analytics after the redirect.",
     ],
     extraFaqs: [
       {
-        question: "Will adding UTM parameters affect SEO rankings?",
+        question: "Which UTM parameters are required?",
         answer:
-          "No, as long as your destination pages contain proper canonical tags pointing to the base clean URL.",
+          "Google Analytics needs utm_source to attribute a visit, and in practice you should always set utm_medium and utm_campaign as well, because reports group by them. utm_term and utm_content are optional and only worth adding when you need that extra detail.",
+      },
+      {
+        question: "Will UTM tags hurt my SEO?",
+        answer:
+          "Not when your pages have a canonical tag pointing to the clean address, which most sites and platforms add automatically. Search engines then treat the tagged and untagged links as the same page. Do not use tagged links in your own navigation or sitemap.",
+      },
+      {
+        question: "What are fbclid and gclid, and is it safe to remove them?",
+        answer:
+          "They are click identifiers that Facebook and Google Ads append to links so they can match a click to an ad. Removing them from a link you are sharing is safe — the page still opens normally — and it stops the link carrying tracking data to whoever you send it to.",
       },
     ],
   },
 
   "break-even-calculator": {
     intro:
-      "Break-even analysis is a fundamental financial calculation that determines the exact sales volume and revenue required for a business to cover total costs. Below the break-even point is a loss; above it is profit. This tool calculates break-even units, break-even revenue, contribution margins, and projected ROI %.",
+      "The break-even point is the sales volume at which your income exactly covers your costs: below it every month is a loss, above it every extra sale is profit. This calculator works it out from three numbers you already know — monthly fixed costs, the variable cost of each unit, and your selling price — and shows the break-even quantity, the break-even revenue, the contribution each unit makes, and the profit or loss at the sales volume you expect. It is the quickest way to test whether a price, a new rent or a new hire still leaves the business viable.",
     howTo: {
-      title: "How to calculate business break-even points",
+      title: "How to calculate your break-even point",
       steps: [
-        "Enter your total fixed business overhead costs (rent, payroll, utilities).",
-        "Enter your variable cost per unit (materials, manufacturing, shipping).",
-        "Enter your selling price per unit.",
-        "Set your expected sales volume to project net profit and Return on Investment (ROI).",
+        "Enter your fixed costs for the period: rent, salaries, software, loan repayments — anything you pay whether you sell one unit or a thousand.",
+        "Enter the variable cost per unit: materials, packaging, shipping, payment fees and commission that rise with every sale.",
+        "Enter the selling price per unit, after any discount you normally give.",
+        "Read the break-even units and revenue. If the price is not above the variable cost, no volume can break even and the calculator tells you so.",
+        "Enter the sales volume you expect to see the resulting profit or loss and the return on the costs involved.",
       ],
     },
     useCases: [
       {
-        title: "Product pricing & margin strategy",
+        title: "Checking a price before launch",
         body:
-          "Determine whether a proposed unit selling price yields achievable sales volume targets.",
+          "A candle maker with ₹60,000 of monthly fixed costs, ₹180 of materials per candle and a ₹450 price contributes ₹270 per candle, so needs 223 sales a month to break even. If that is more than the market can take, the price, the costs or the plan has to change before launch, not after.",
       },
       {
-        title: "Startup business plans & investor pitches",
+        title: "Deciding whether a new cost is affordable",
         body:
-          "Demonstrate clear timelines and unit economics to reach operating profitability.",
+          "Adding a ₹25,000-a-month employee to the business above raises the break-even point by about 93 candles a month. Seeing the extra volume needed in units makes it easy to judge whether the hire will pay for itself.",
+      },
+      {
+        title: "Presenting a business plan",
+        body:
+          "Lenders and investors ask how many sales it takes to stop losing money. A break-even figure built from clear fixed and variable costs answers that directly and shows you understand your own unit economics.",
       },
     ],
     tips: [
-      "Lowering fixed costs or negotiating cheaper variable costs directly reduces the number of units needed to break even.",
-      "The contribution margin ratio represents the percentage of each sales dollar that contributes to paying fixed overhead.",
+      "The contribution margin (price minus variable cost) is the number to watch. Raising the price or cutting a variable cost increases it and lowers the break-even point immediately.",
+      "Include every per-sale cost in the variable cost: payment gateway fees of 2%, marketplace commission and returns add up and are easy to forget.",
+      "Break-even assumes you can sell the volume at that price. Compare the result with realistic demand, not with the capacity of your workshop.",
+      "Run the numbers for your best and worst months. A seasonal business can break even over the year while losing money for several months in a row.",
     ],
     extraFaqs: [
       {
-        question: "What is the difference between fixed and variable costs?",
+        question: "What is the break-even formula?",
         answer:
-          "Fixed costs remain constant regardless of production volume (e.g., rent, insurance), while variable costs increase proportionally with each unit produced (e.g., raw materials, packaging).",
+          "Break-even units = fixed costs ÷ (selling price − variable cost per unit). Break-even revenue = break-even units × selling price, or fixed costs ÷ contribution margin ratio. The part in brackets is the contribution margin: what each sale leaves over to pay fixed costs.",
+      },
+      {
+        question: "Why does the calculator say I can never break even?",
+        answer:
+          "Because your selling price is at or below the variable cost of each unit. Every sale then loses money or makes nothing towards fixed costs, so selling more only makes the loss larger. The price has to rise or the unit cost has to fall.",
+      },
+      {
+        question: "Should break-even include my own salary?",
+        answer:
+          "Yes, if you want the business to pay you. Add the amount you need to draw as a fixed cost. Otherwise the break-even point shows when the business stops losing money, not when it supports you.",
       },
     ],
   },
 
   "contrast-checker": {
     intro:
-      "Web Content Accessibility Guidelines (WCAG 2.1) require sufficient contrast between text and background colors so users with visual impairments can read content comfortably. This tool calculates exact luminance contrast ratios, evaluates AA and AAA compliance ratings, and previews colors under Protanopia, Deuteranopia, and Tritanopia color blindness.",
+      "Text that is too close in colour to its background is hard to read for everyone and impossible for many people with low vision or colour blindness. This checker calculates the WCAG 2.1 contrast ratio between a text colour and a background colour, shows whether the pair passes AA and AAA for normal and large text, and previews real headings and paragraphs in those colours. It also simulates protanopia, deuteranopia and tritanopia, so you can see how the pair looks to people with the most common forms of colour blindness.",
     howTo: {
-      title: "How to check color contrast accessibility",
+      title: "How to check colour contrast",
       steps: [
-        "Pick or enter your text foreground color and background color.",
-        "Check the calculated contrast ratio score.",
-        "Review the compliance status badges for WCAG Level AA and AAA across normal and large text.",
-        "Inspect the live heading and paragraph preview box and color blindness filter simulations.",
+        "Enter the text colour and the background colour as HEX values, or pick them.",
+        "Read the contrast ratio, from 1:1 (identical colours) to 21:1 (black on white).",
+        "Check the AA and AAA results for normal text and for large text.",
+        "Look at the preview to judge readability with real text, not just a number.",
+        "Switch on the colour-blindness simulations to make sure important text and states are still distinguishable.",
       ],
     },
     useCases: [
       {
-        title: "Website UI/UX accessibility compliance (ADA / Section 508 / WCAG)",
+        title: "Checking brand colours before launch",
         body:
-          "Verify design system color palettes before shipping production code to avoid legal and usability accessibility violations.",
+          "A light brand green on white often scores around 2.5:1 — fine for decoration but failing for body text. Finding this early lets you pick a darker shade for text and keep the bright one for backgrounds and icons.",
       },
       {
-        title: "Design system color token auditing",
+        title: "Meeting accessibility requirements",
         body:
-          "Audit primary, secondary, and muted button text contrasts in both dark and light UI themes.",
+          "Public-sector and many corporate sites must meet WCAG AA. Checking every text and background pair in your design system before build is much cheaper than fixing it after an audit.",
+      },
+      {
+        title: "Buttons and form states",
+        body:
+          "Placeholder text, disabled buttons and error messages are the usual failures. Checking them — and checking that errors are not shown by colour alone — makes forms usable for more people.",
       },
     ],
     tips: [
-      "WCAG 2.1 Level AA requires at least 4.5:1 for regular body text and at least 3.0:1 for large text (18pt+ or 14pt+ bold).",
-      "Level AAA represents the highest accessibility standard, requiring at least 7.0:1 for normal text.",
+      "AA needs 4.5:1 for normal text and 3:1 for large text (24 px, or about 19 px bold). AAA needs 7:1 and 4.5:1.",
+      "Icons, input borders and focus rings are non-text elements and need at least 3:1 against what is next to them.",
+      "Never rely on colour alone for meaning: add an icon or text to red error and green success states.",
+      "Pure black on pure white is the maximum 21:1, but very dark grey on white (around 15:1) is often more comfortable for long reading.",
     ],
     extraFaqs: [
       {
-        question: "What is considered 'large text' in WCAG guidelines?",
+        question: "How is the contrast ratio calculated?",
         answer:
-          "Large text is defined as text that is at least 18 points (24px) regular weight, or 14 points (approx 18.66px) with bold weight.",
+          "Each colour's relative luminance is computed from its RGB values, then the ratio is (lighter + 0.05) ÷ (darker + 0.05). The result runs from 1:1 to 21:1 and does not depend on which colour is the text.",
+      },
+      {
+        question: "What counts as large text in WCAG?",
+        answer:
+          "At least 18 points (24 CSS pixels) regular, or 14 points (about 18.7 CSS pixels) bold. Large text only needs 3:1 for AA because bigger letters are easier to read.",
+      },
+      {
+        question: "Does WCAG 3 change these rules?",
+        answer:
+          "WCAG 3 is still a draft and proposes a different contrast method (APCA). WCAG 2.1 and 2.2 AA remain the standard that laws and procurement rules refer to, so check against them.",
       },
     ],
   },
 
   "aspect-ratio-calculator": {
     intro:
-      "Aspect ratio describes the proportional relationship between an image or video's width and height. Maintaining exact aspect ratios is vital when resizing media for YouTube, Instagram, TikTok, Twitter, and responsive web designs. This calculator simplifies dimensions into standard ratios and computes missing dimensions instantly.",
+      "Aspect ratio is the proportion of width to height — 16:9 for most video, 4:5 for tall Instagram posts, 9:16 for Reels and Shorts. This calculator reduces any pixel size to its simplest ratio (1920 × 1080 becomes 16:9) and works out the missing side when you resize, so a 1600-pixel-wide image keeps its shape at exactly 900 pixels tall. Presets cover common video resolutions and social media formats, and a preview box shows the shape before you commit to it.",
     howTo: {
-      title: "How to calculate and resize aspect ratios",
+      title: "How to calculate an aspect ratio",
       steps: [
-        "Enter your original media width and height in pixels.",
-        "View the simplified aspect ratio (e.g. 16:9, 4:3, 1:1) and decimal ratio.",
-        "Enter a new width or new height in the resize calculator to automatically compute the matching dimension.",
-        "Click any standard preset (e.g. YouTube 16:9, Instagram 1:1) for one-click configuration.",
+        "Enter the original width and height in pixels to see the simplified ratio.",
+        "To resize, type the new width and the matching height is calculated, or type the height to get the width.",
+        "Pick a preset such as 1080p, 4K, Instagram portrait or YouTube thumbnail to fill in standard sizes.",
+        "Check the preview box to see the proportions at a glance.",
+        "Copy the dimensions into your editor, export settings or CSS.",
       ],
     },
     useCases: [
       {
-        title: "Video editing & social media thumbnail creation",
+        title: "Resizing for social media",
         body:
-          "Resize assets to exact platform resolutions (1920x1080 for YouTube, 1080x1920 for Reels/Shorts) without distortion.",
+          "A 3000 × 2000 photo is 3:2, which Instagram crops when posted as a 4:5 portrait. Knowing the ratio first tells you whether to crop, pad or choose a different format before you upload.",
       },
       {
-        title: "Responsive web design & CSS aspect-ratio properties",
+        title: "Video exports and thumbnails",
         body:
-          "Calculate width and height attributes for <img> and <video> tags to prevent layout shifts (CLS).",
+          "YouTube expects 16:9. A 1280 × 720 thumbnail and a 3840 × 2160 video share that ratio, so neither is letterboxed. Checking the ratio avoids black bars and stretched faces.",
+      },
+      {
+        title: "Responsive web layouts",
+        body:
+          "Reserving space for images and embeds with the CSS aspect-ratio property stops the page jumping as they load. Calculate the ratio of your media once and use it in the stylesheet.",
       },
     ],
     tips: [
-      "Modern CSS supports the `aspect-ratio: 16 / 9;` property to maintain responsive containers automatically.",
-      "Dividing width by height gives the decimal aspect ratio (e.g. 1920 / 1080 = 1.777...).",
+      "Scaling an image down keeps quality; scaling up beyond the original pixel size makes it blurry whatever the ratio.",
+      "Changing the ratio always means cropping or adding bars. Decide which part of the picture matters before converting 16:9 to 9:16.",
+      "Screens are 16:9 or 16:10, most phone cameras shoot 4:3 photos, and most DSLRs shoot 3:2.",
+      "For print, the ratio of the paper matters too: A-series paper is about 1:1.414, which neither 4:3 nor 3:2 matches exactly.",
     ],
     extraFaqs: [
       {
-        question: "What is the standard aspect ratio for high-definition video?",
+        question: "How is an aspect ratio simplified?",
         answer:
-          "16:9 is the universal standard aspect ratio for high-definition television, YouTube videos, and computer displays.",
+          "By dividing both sides by their greatest common divisor. For 1920 × 1080 the divisor is 120, giving 16:9. Some sizes do not reduce to familiar numbers; 1366 × 768 is really 683:384, which is approximately 16:9.",
+      },
+      {
+        question: "What size should an Instagram post be?",
+        answer:
+          "Square posts are 1:1 (1080 × 1080), portrait posts 4:5 (1080 × 1350) and Reels and Stories 9:16 (1080 × 1920). Portrait takes up the most space in the feed.",
+      },
+      {
+        question: "Is 16:9 the same as 1.78:1?",
+        answer:
+          "Yes. A ratio can be written as two whole numbers or as width divided by height: 16 ÷ 9 = 1.78. Cinema formats are usually written the second way, such as 2.39:1.",
       },
     ],
   },
 
   "exif-viewer": {
     intro:
-      "Exchangeable Image File Format (EXIF) metadata contains technical shooting data embedded in digital photos, including camera model, lens, shutter speed, ISO, focal length, date taken, and dimensions. This browser-based inspector extracts photo metadata locally on your device without uploading your personal photos to any server.",
+      "Most photos carry hidden details written by the camera or phone: the make and model, lens, shutter speed, aperture and ISO, the exact date and time, the software used to edit it and, often, the GPS location where it was taken. This viewer reads that EXIF data from JPEG, PNG, WebP, HEIC and TIFF files, highlights anything personal — location, serial numbers, your name — and shows the small preview some cameras embed. It can also save a copy with the metadata removed, without re-compressing the image. The photo is read on your device and never uploaded.",
     howTo: {
-      title: "How to view photo EXIF metadata",
+      title: "How to view and remove photo metadata",
       steps: [
-        "Drag and drop a photo into the upload dropzone, or click 'Choose Photo'.",
-        "Supports JPG, PNG, WEBP, and TIFF image formats.",
-        "Instantly view file size, MIME type, exact pixel dimensions, and camera parameters.",
-        "Verify your privacy: your images never leave your browser memory.",
+        "Drop a photo onto the box or choose one from your device. JPEG, PNG, WebP, HEIC and TIFF are supported.",
+        "Read \"What this photo reveals\" for a summary of the personal details it contains.",
+        "Check the grouped details: camera and lens, exposure settings, date and time, and image properties. Open All tags for the complete list.",
+        "If the photo has a location, see the coordinates and open them in OpenStreetMap.",
+        "Choose Download without metadata to save a clean copy. The picture data is copied unchanged, so there is no quality loss.",
       ],
     },
     useCases: [
       {
-        title: "Photography camera settings analysis",
+        title: "Checking a photo before posting it",
         body:
-          "Inspect the aperture, ISO, and shutter speed used for a specific photo to learn and replicate shooting techniques.",
+          "A picture taken at home on a phone with location turned on records the house's coordinates to within a few metres. Some sites strip this on upload and some do not; checking first, and removing it, means you do not have to rely on them.",
       },
       {
-        title: "Privacy verification before sharing photos online",
+        title: "Selling items online",
         body:
-          "Check whether an image contains embedded timestamps or metadata before posting to public forums.",
+          "Marketplace photos are often taken at home. Removing the metadata before uploading keeps your address, phone model and the date out of the listing.",
+      },
+      {
+        title: "Learning from camera settings",
+        body:
+          "Photographers can see the exact shutter speed, aperture, ISO and focal length behind a shot they like, which is one of the fastest ways to learn exposure.",
       },
     ],
     tips: [
-      "Most social media platforms (like Twitter and Instagram) automatically strip EXIF metadata when you upload images.",
-      "EXIF data is stored directly in the image file header bytes.",
+      "WhatsApp, Instagram and Facebook remove most metadata from photos they publish, but files sent as documents or by email keep all of it.",
+      "Cropping a photo does not always update the embedded preview. If the preview shows the uncropped image, remove the metadata before sharing.",
+      "Removing metadata keeps the colour profile and, by default, the orientation, so the photo still looks the same and is not turned sideways.",
+      "To stop location being recorded in the first place, turn off location access for your camera app.",
     ],
     extraFaqs: [
       {
-        question: "Why do some images have no camera EXIF data?",
+        question: "Is my photo uploaded to read the EXIF data?",
         answer:
-          "Images saved from web browsers, screenshots, or graphics exported from design software often omit camera EXIF metadata to reduce file size.",
+          "No. The file is read in your browser's memory and never sent anywhere, including when you download the cleaned copy.",
+      },
+      {
+        question: "Does removing metadata reduce image quality?",
+        answer:
+          "No. For JPEG, PNG and WebP the tool removes only the metadata sections and copies the compressed picture data byte for byte, so the image is identical.",
+      },
+      {
+        question: "Why does my screenshot show no EXIF data?",
+        answer:
+          "Screenshots, most PNG images and pictures saved from social networks usually contain no camera metadata. That is normal and means there is nothing personal stored in the file.",
       },
     ],
   },
 
   "markdown-table-generator": {
     intro:
-      "Writing markdown tables by hand with pipes (|) and hyphens (---) is tedious and error-prone. This visual spreadsheet grid editor lets you build, format, and align table rows and columns effortlessly, outputting both clean GitHub Flavored Markdown and standard semantic HTML <table> markup.",
+      "Markdown tables are fiddly to type by hand: every row needs the right number of pipes, and one missing separator breaks the whole table. This generator gives you a spreadsheet-style grid instead. Type into the cells or paste a block copied from Excel or Google Sheets, add or remove rows and columns, set each column to left, centre or right alignment, and copy neatly aligned Markdown or an equivalent HTML table, ready for a README, a GitHub issue, documentation or a blog post.",
     howTo: {
-      title: "How to generate Markdown and HTML tables",
+      title: "How to make a Markdown table",
       steps: [
-        "Use the interactive spreadsheet grid to enter header names and cell values.",
-        "Click '+ Add Column' or '+ Add Row' to expand the table size.",
-        "Use the alignment toggles (Left, Center, Right) on any column header.",
-        "Copy the generated Markdown code or HTML table code with a single click.",
+        "Type your column headings into the first row of the grid.",
+        "Fill in the cells, or paste a block of cells from a spreadsheet into any cell. Use the Row and Column buttons to grow the table.",
+        "Click the alignment button in each heading to switch between left, centre and right: left for text, right for numbers, centre for short labels.",
+        "Check the code below the grid, and switch between Markdown and HTML.",
+        "Copy the output and paste it into your README, issue, wiki or editor.",
       ],
     },
     useCases: [
       {
-        title: "GitHub README & documentation tables",
+        title: "README files and documentation",
         body:
-          "Create feature comparison tables and API endpoint specs for GitHub repositories and README.md files.",
+          "Configuration options, command flags and supported versions are all easier to scan as a table. The grid makes it easy to keep columns consistent as the list grows.",
       },
       {
-        title: "Static site blogs (Hugo, Jekyll, Astro, Next.js)",
+        title: "Comparisons in issues and pull requests",
         body:
-          "Format tabular data for markdown-powered static blogs and documentation sites.",
+          "Before-and-after benchmarks, browser support and option comparisons read far better as a table in a GitHub comment than as a list of sentences.",
+      },
+      {
+        title: "Tables for sites that do not accept Markdown",
+        body:
+          "Some CMS editors and email tools need HTML. The HTML output gives a plain, unstyled table that inherits your site's styles.",
       },
     ],
     tips: [
-      "Markdown tables require at least one header row and one delimiter row with at least 3 hyphens per column.",
-      "Colon placement in the header row defines alignment: `:---` (left), `:---:` (center), `---:` (right).",
+      "Right-align columns of numbers so the digits line up and are easy to compare.",
+      "Pipes and line breaks inside cells are escaped for you, so a value such as A | B stays in one cell.",
+      "Markdown tables cannot merge cells or hold multiple paragraphs in one cell. For complex layouts, use the HTML output and edit it.",
+      "Keep cells short. Long text makes the raw Markdown hard to edit, even though it renders fine.",
     ],
     extraFaqs: [
       {
-        question: "Does GitHub Flavored Markdown (GFM) support cell line breaks?",
+        question: "How do you align columns in a Markdown table?",
         answer:
-          "Standard markdown does not support multi-line text inside a single cell, but you can use `<br>` tags inside table cells for line breaks.",
+          "With colons in the separator row under the headings: :--- aligns left, :---: centres and ---: aligns right. The generator writes these for you from the alignment buttons.",
+      },
+      {
+        question: "Does this work with GitHub Flavored Markdown?",
+        answer:
+          "Yes. Tables are part of GitHub Flavored Markdown and are also supported by GitLab, Bitbucket, Notion, Obsidian, Docusaurus and most static site generators.",
+      },
+      {
+        question: "Can I put bold text or links in a cell?",
+        answer:
+          "Yes. Ordinary inline Markdown such as **bold**, `code` and [links](https://example.com) works inside table cells; block elements such as lists and headings do not.",
       },
     ],
   },
 
   "ai-text-summarizer": {
     intro:
-      "Long-form reports, research papers, and news articles often contain critical takeaways buried under thousands of words. This AI Text Summarizer extracts central themes and condensed bullet points in seconds. Running on-device by default, your reading material is processed entirely within your browser tab with zero cloud upload and zero subscription walls.",
+      "Long reports, articles and email threads usually make three or four points. This summariser finds them for you, in two ways. The on-device engine runs in your browser: it scores every sentence by how much of the text's key vocabulary it contains, favours sentences that open paragraphs, avoids picking two that say the same thing, and returns the most informative ones in their original order — nothing leaves your device. The optional Cloud AI mode sends the text to Google Gemini, which writes a new summary in its own words, as a paragraph or as bullet points.",
     howTo: {
-      title: "How to summarize text online",
+      title: "How to summarise text",
       steps: [
-        "Paste your article, essay, or meeting transcript into the input workspace.",
-        "Select your preferred summary length (Short, Medium, or Detailed).",
-        "Toggle bullet points if you prefer structured key takeaways.",
-        "Click 'Summarize Text' to generate instant local conclusions.",
-        "Copy or download the summarized output for your notes.",
+        "Choose the engine: On-device for private, instant summaries, or Cloud AI for a rewritten summary from Google Gemini.",
+        "Paste your text or open a .txt or .md file. A few paragraphs or more gives the best results.",
+        "Pick the length — Short, Medium or Detailed — and whether you want a paragraph or bullet points.",
+        "Press Summarise, or Ctrl + Enter.",
+        "Check the word counts to see how much shorter the summary is, then copy it or save it as a text file.",
       ],
     },
     useCases: [
       {
-        title: "Executive briefing & document reading",
+        title: "Getting through long reading",
         body:
-          "Condense 10-page market analyses or team updates into rapid 30-second bullet summaries before meetings.",
+          "A 2,000-word report takes about nine minutes to read. A medium summary gives you the main points in under one, so you can decide whether the full document deserves your time.",
       },
       {
-        title: "Academic paper research",
+        title: "Meeting notes and email threads",
         body:
-          "Quickly review key findings across dozens of abstracts to determine which research papers require full reading.",
+          "Paste a long thread or a transcript and ask for bullet points to get the decisions and open questions without re-reading every message.",
       },
       {
-        title: "Newsletter & content curation",
+        title: "Studying and research",
         body:
-          "Extract key insights from long source articles to compose weekly roundups or social summaries.",
+          "Summarising each section of a chapter in turn is a quick way to build revision notes. Use the on-device engine for exact sentences you can quote, and Cloud AI when you want a shorter paraphrase.",
       },
     ],
     tips: [
-      "For best results, ensure the input text contains complete paragraphs rather than broken bullet fragments.",
-      "Use 'Short' mode when preparing slide deck bullet points or quick summaries.",
-      "Switch to 'Detailed' mode when condensing technical reports where sub-conclusions matter.",
+      "The on-device summary only uses sentences from your text, so it never invents facts. Cloud AI writes new sentences; check names and numbers against the original.",
+      "Very short texts cannot be summarised much. If every sentence is kept, the text is already about as short as it can be.",
+      "Remove headers, footers and navigation text before pasting a web page, or they will compete with the real content.",
+      "For documents longer than a few thousand words, summarise section by section for better results.",
     ],
     extraFaqs: [
       {
-        question: "How does on-device summarization work?",
+        question: "What is the difference between the two engines?",
         answer:
-          "The on-device engine uses statistical sentence scoring and lexical analysis to rank sentences based on term frequency and information density without sending data across the network.",
+          "On-device is extractive: it selects the most important sentences from your text, instantly and privately. Cloud AI is abstractive: Google Gemini reads the text and writes a new, usually shorter, summary. The first is exact; the second reads more naturally.",
+      },
+      {
+        question: "Is my text stored or used for training?",
+        answer:
+          "On-device, the text never leaves your browser. In Cloud AI mode it is sent to Google's Gemini API to produce the summary and is handled under Google's API terms; TabBench does not store it.",
+      },
+      {
+        question: "Does it work for languages other than English?",
+        answer:
+          "Cloud AI summarises most major languages, including Hindi. The on-device engine is tuned for English: it will still pick sentences in other languages, but its choice of key words is less reliable.",
       },
     ],
   },
 
   "ai-text-rewriter": {
     intro:
-      "Finding the right tone is essential whether you are drafting a critical customer email, presenting a formal proposal, or shortening a wordy memo. This AI Text Rewriter transforms your writing across six distinct styles — Professional, Friendly, Concise, Formal, Casual, and Simple — while preserving your core factual data, figures, and dates.",
+      "The same message can come across as careless, stiff or friendly depending on a few words. This rewriter adjusts the tone of your text — professional, formal, friendly, casual, concise or simple — in two ways. The on-device engine makes safe, rule-based edits in your browser: it fixes slang and text-speak, expands or adds contractions, removes filler and wordy phrases, and softens stiff openings, then shows every change so you can review it. The optional Cloud AI mode sends the text to Google Gemini, which rewrites it in the chosen tone while keeping the facts.",
     howTo: {
-      title: "How to rewrite text for different tones",
+      title: "How to change the tone of your writing",
       steps: [
-        "Enter or paste your draft message into the text box.",
-        "Choose the tone style that fits your audience (e.g. Professional or Concise).",
-        "Click 'Rewrite Text' to generate the updated version.",
-        "Review the transformed draft and copy or save the result.",
+        "Choose the engine: On-device for private edits you can review, or Cloud AI for a full rewrite.",
+        "Paste your email, message or paragraph.",
+        "Pick a tone. The line under the tones describes what it does.",
+        "Press Rewrite, or Ctrl + Enter.",
+        "Use Show changes to see each edit highlighted, then copy the result.",
       ],
     },
     useCases: [
       {
-        title: "Polishing workplace emails",
+        title: "Polishing a quick message to your manager",
         body:
-          "Convert quick conversational notes or abrupt messages into polished, professional workplace communications.",
+          "\"Hey boss, I'm gonna be late, gotta reschedule our 1-on-1\" becomes \"Hello boss, I'm going to be late, we have to reschedule our one-to-one\" in the professional tone — the same message, without the slang.",
       },
       {
-        title: "Eliminating wordiness & fluff",
+        title: "Making formal letters warmer",
         body:
-          "Use the 'Concise' tone to cut filler phrases and improve readability for busy stakeholders.",
+          "Customer emails that start \"Dear Sir/Madam, we regret to inform you that…\" read as cold. The friendly tone turns that into \"Hi there, unfortunately…\" and adds natural contractions.",
       },
       {
-        title: "Customer support responses",
+        title: "Cutting word count",
         body:
-          "Draft empathetic, friendly replies to customer inquiries while maintaining company policy clarity.",
+          "The concise tone removes phrases such as \"in order to\", \"due to the fact that\" and \"at this point in time\", which is useful for word-limited forms, abstracts and social posts.",
       },
     ],
     tips: [
-      "Select 'Concise' when you need to fit strict character limits or mobile chat messages.",
-      "Names, URLs, and numbers are protected so you don't need to manually re-verify data.",
+      "Always read the result before sending. Tone depends on context that no tool can fully judge.",
+      "On-device edits are deliberately conservative: they only change words where the new version means the same thing. If nothing needs changing, the tool says so rather than altering your text.",
+      "Cloud AI keeps facts, numbers, names and dates, but check them anyway when the message matters.",
+      "For very important emails, rewrite once, then edit by hand; two passes through any tool can drift from what you meant.",
     ],
     extraFaqs: [
       {
-        question: "Is there a limit on how many times I can rewrite?",
+        question: "Why did the on-device engine make only a few changes?",
         answer:
-          "No. On-device rewriting runs in your browser without artificial quotas or payment barriers.",
+          "Because it only changes words and phrases it can replace safely without understanding the whole sentence, such as slang, contractions and wordy phrases. For a rewrite that restructures sentences, switch to Cloud AI.",
+      },
+      {
+        question: "Will the rewritten text pass as my own writing?",
+        answer:
+          "On-device edits keep your sentences and only swap a few words, so the text stays yours. Cloud AI rewrites more heavily. If your school or employer has rules about AI-assisted writing, follow them.",
+      },
+      {
+        question: "Is my text sent anywhere?",
+        answer:
+          "Not in on-device mode. In Cloud AI mode it is sent to Google Gemini to produce the rewrite and is not stored by TabBench.",
       },
     ],
   },
 
   "ai-text-simplifier": {
     intro:
-      "Legal contracts, terms of service, and dense technical manuals often use obscure jargon and convoluted sentence structures. The AI Text Simplifier translates difficult prose into clear, plain 8th-grade English while keeping instructions, numbers, and core legal meaning intact.",
+      "Legal clauses, policies and technical documents are often written in long sentences full of words like \"notwithstanding\" and \"subsequent to\". This simplifier turns them into plain English and measures the difference with the Flesch reading-ease score and school grade level. The on-device engine replaces more than 150 wordy phrases and formal words with plain ones and splits sentences joined by semicolons, all in your browser. The optional Cloud AI mode sends the text to Google Gemini for a full plain-English rewrite. Both show before-and-after scores and flag sentences that are still too long.",
     howTo: {
       title: "How to simplify complex text",
       steps: [
-        "Paste your contract clause, academic abstract, or technical guide.",
-        "Click 'Simplify to Plain English'.",
-        "Review the simplified output alongside the automated readability score.",
-        "Copy or download the plain-English text with one click.",
+        "Choose On-device for private word and phrase replacement, or Cloud AI for a full rewrite.",
+        "Paste the text. The current reading-ease score appears under the box as you type.",
+        "Press Simplify, or Ctrl + Enter.",
+        "Compare the reading ease and grade before and after, and open Show changes to review each edit.",
+        "Split any sentences listed under \"Still long\", then copy the result.",
       ],
     },
     useCases: [
       {
-        title: "Understanding legal agreements & terms",
+        title: "Understanding a contract or policy",
         body:
-          "Translate complex terms of service clauses into straightforward statements you can easily understand.",
+          "\"Notwithstanding the aforementioned stipulations, the contractor shall endeavour to expeditiously facilitate…\" becomes \"Despite the above conditions, the contractor must try to quickly help…\" — the obligation is suddenly clear.",
       },
       {
-        title: "Accessible customer documentation",
+        title: "Writing for customers",
         body:
-          "Simplify technical user manuals and FAQs so everyday users can follow instructions without confusion.",
+          "Help articles, notices and instructions work best at a reading ease of 60 or above. Measuring a draft and replacing jargon gets it there without dumbing down the content.",
+      },
+      {
+        title: "Accessible public information",
+        body:
+          "Government and health guidance is read by people with a wide range of reading skills and by many who read English as a second language. Plain words and short sentences help all of them.",
       },
     ],
     tips: [
-      "Check the Flesch-Kincaid readability score to gauge reading ease.",
-      "Jargon terms like 'aforementioned', 'heretofore', and 'utilize' are automatically mapped to conversational equivalents.",
+      "A reading ease of 60–70 is plain English; 30–50 is typical of academic writing; below 30 is very hard going.",
+      "Sentences under about 20 words are easiest to follow. The tool lists anything over 25 words so you can split it.",
+      "Keep technical terms your readers must know, but explain them the first time they appear.",
+      "For legal text, use the simplified version to understand the meaning, and rely on the original wording for anything binding.",
     ],
     extraFaqs: [
       {
-        question: "Does simplifying change legal validity?",
+        question: "How is the reading-ease score calculated?",
         answer:
-          "The simplifier aims to clarify meaning for comprehension; always consult qualified legal counsel for binding legal decisions.",
+          "Flesch reading ease = 206.835 − 1.015 × (words ÷ sentences) − 84.6 × (syllables ÷ words). Long sentences and long words both lower the score. The grade level uses the related Flesch–Kincaid formula and approximates a US school grade.",
+      },
+      {
+        question: "Why did my score barely change?",
+        answer:
+          "The on-device engine replaces words and phrases but cannot restructure long sentences, which have the biggest effect on the score. Split the sentences listed as still long, or use Cloud AI for a fuller rewrite.",
+      },
+      {
+        question: "Does simplifying change the meaning?",
+        answer:
+          "It should not: the on-device replacements are chosen to mean the same thing in context, and Cloud AI is instructed to keep every fact and obligation. Still compare the two versions when accuracy matters.",
       },
     ],
   },
 
   "ai-keyword-extractor": {
     intro:
-      "Effective search optimization and content organization depend on discovering high-impact keywords and search tags. This AI Keyword Extractor scans your text to surface primary keywords, secondary tags, and multi-word key phrases using statistical relevance scoring.",
+      "Keywords tell you what a piece of text is actually about — useful for SEO, tagging, research and checking that a page covers the topic you intended. This extractor lists the most important single words with how often each appears and its share of the text, and the key multi-word phrases. The on-device engine counts terms in your browser, folding plurals together and ignoring filler words, and finds phrases using the RAKE method. The optional Cloud AI mode asks Google Gemini to pick keywords by meaning and explain why each one matters.",
     howTo: {
       title: "How to extract keywords from text",
       steps: [
-        "Paste your article, product description, or blog post.",
-        "Select your desired keyword limit (e.g. 10 or 15 keywords).",
-        "Click 'Extract Keywords' to view ranked single words and multi-word phrases.",
-        "Copy the tag list directly into your CMS, SEO tool, or document.",
+        "Choose On-device for private, instant counts, or Cloud AI for keywords chosen by meaning.",
+        "Paste an article, product description or page copy.",
+        "Pick how many keywords you want: 6, 10, 15 or 20.",
+        "Press Extract keywords, or Ctrl + Enter.",
+        "Read the keywords and key phrases, then copy them as comma-separated tags or save the list.",
       ],
     },
     useCases: [
       {
-        title: "Blog & SEO meta tag optimization",
+        title: "Checking a page before publishing",
         body:
-          "Discover high-frequency search keywords to include in title tags, headings, and meta descriptions.",
+          "If a guide to home solar power lists \"solar\", \"panels\" and \"electricity\" as its top keywords, it is on topic. If \"company\" and \"offer\" come first, the content is drifting into sales copy.",
       },
       {
-        title: "Content indexing & tagging",
+        title: "Tagging articles and products",
         body:
-          "Generate taxonomy tags for large document archives, articles, or product catalogs automatically.",
+          "The key phrases make good starting tags and categories. Copying them as comma-separated tags saves retyping them into a CMS or shop.",
+      },
+      {
+        title: "Researching a topic",
+        body:
+          "Running several competing articles through the extractor shows which terms and sub-topics they all cover, and which ones your own piece is missing.",
       },
     ],
     tips: [
-      "Longer text inputs (150+ words) produce more accurate statistical frequency distributions.",
-      "Multi-word key phrases (bigrams/trigrams) often make the most effective long-tail SEO targets.",
+      "Density above about 3% for one keyword in a long article often reads as repetitive. Write for the reader, not the count.",
+      "Repeated phrases are usually more meaningful than single words: \"battery storage\" says more than \"battery\".",
+      "Remove navigation, footers and boilerplate before pasting a web page so they do not skew the counts.",
+      "Keywords show what a text is about, not what people search for. Pair them with search volume data before making SEO decisions.",
     ],
     extraFaqs: [
       {
-        question: "Are common words like 'the' and 'is' excluded?",
+        question: "How are keywords ranked on-device?",
         answer:
-          "Yes. Common English stopwords are automatically filtered so only meaningful keywords are ranked.",
+          "By how often each word appears after removing common filler words and treating plurals as the same word. Phrases are scored with RAKE, which favours words that tend to appear inside longer phrases, and phrases that repeat get a bonus.",
+      },
+      {
+        question: "What is keyword density?",
+        answer:
+          "The share of all words in the text taken by one keyword, as a percentage. If \"solar\" appears 5 times in 108 words, its density is 4.6%.",
+      },
+      {
+        question: "Why do Cloud AI results differ?",
+        answer:
+          "Gemini chooses keywords by meaning, so it can pick an important term that appears only once, or a concept that is described but never named. The on-device counts are exact but purely statistical.",
       },
     ],
   },
 
   "ai-json-explainer": {
     intro:
-      "Complex nested JSON responses from REST and GraphQL APIs can be difficult to interpret quickly. The AI JSON Explainer parses JSON documents deterministically with native AST engines to visualize data types, nesting depths, field descriptions, and architectural insights in plain English.",
+      "Opening an unfamiliar API response or config file often means scrolling through hundreds of lines to work out what is in it. This explainer maps the whole structure in your browser: every field path with its type, the format of its values (dates, emails, URLs, IDs, IP addresses, tokens), what the field most likely means, and which fields are optional because only some items in a list have them. It also flags secrets and personal data, mixed types and numbers stored as text. Choose Cloud AI to add a written explanation from Google Gemini.",
     howTo: {
-      title: "How to explain JSON payloads",
+      title: "How to understand a JSON document",
       steps: [
-        "Paste your JSON object, array, or API response into the editor.",
-        "Click 'Explain JSON Structure'.",
-        "Read the plain-English overview, field breakdown, and architectural insights.",
-        "Export the generated documentation as Markdown or text.",
+        "Paste JSON or open a .json file. Use Format JSON to indent a minified payload.",
+        "Leave the engine on On-device for a private structural analysis, or pick Cloud AI to add a written explanation.",
+        "Press Explain JSON, or Ctrl + Enter. If the JSON is invalid, the exact line and column of the error are shown.",
+        "Read the overview and the \"Worth knowing\" notes: secrets, personal data, inconsistent types and optional fields.",
+        "Scan the field table, then copy or save the whole analysis as Markdown.",
       ],
     },
     useCases: [
       {
-        title: "Onboarding developers to new APIs",
+        title: "Integrating a new API",
         body:
-          "Quickly generate plain-English documentation for undocumented endpoints and webhook payloads.",
+          "The field table shows at once that invoices[].amount is sometimes a number and sometimes a string, and that note is present in only some invoices. Those are exactly the details that cause bugs when you write code against the API.",
       },
       {
-        title: "Debugging nested payloads",
+        title: "Reviewing data before sharing it",
         body:
-          "Identify hierarchy depth and nested models without manually clicking through complex JSON trees.",
+          "Before pasting a payload into a ticket, a chat or an AI tool, the explainer flags fields like api_key and email so you can remove them first.",
       },
       {
-        title: "Security auditing",
+        title: "Documenting a payload",
         body:
-          "Detect unmasked tokens, secret keys, or passwords embedded within client-facing JSON objects.",
+          "Saving the analysis as Markdown gives you a ready-made field reference for a README or wiki page, with types and examples filled in.",
       },
     ],
     tips: [
-      "Paste valid JSON for complete field-by-field schema breakdown.",
-      "Check the insights section for warnings regarding excessive nesting depth or sensitive keys.",
+      "Paste a real, complete sample. Fields that are missing or null in the sample cannot be described fully.",
+      "\"[]\" in a path means every item of a list, so orders[].total is the total of each order.",
+      "Field meanings are inferred from names and values. Treat them as a strong hint, and confirm with the API's documentation where it exists.",
+      "Cloud AI sends the JSON to Google. Leave it on On-device, or remove sensitive values first, for production data.",
     ],
     extraFaqs: [
       {
-        question: "Is my JSON private?",
+        question: "Is my JSON checked by an AI model?",
         answer:
-          "Yes. Parsing and explanation happen 100% inside your local browser memory.",
+          "No. Validation and the structural analysis use the browser's own JSON parser and run on your device, so the error positions and field list are exact. Only the optional written explanation comes from Google Gemini.",
+      },
+      {
+        question: "How does it decide a field is sensitive?",
+        answer:
+          "From the words in its name (password, secret, token, api_key, authorization and similar) and from its value, such as a signed JWT. Personal data is flagged from names like email, phone and address, and from values that look like emails, phone numbers or IP addresses.",
+      },
+      {
+        question: "How large a file can it handle?",
+        answer:
+          "Several megabytes comfortably. For very large arrays the first 500 items are analysed, which is plenty to capture the shape of the data, and the notes say when that limit was reached.",
       },
     ],
   },

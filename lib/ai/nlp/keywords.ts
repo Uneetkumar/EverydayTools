@@ -19,6 +19,20 @@ const EXTRA_STOPWORDS = new Set([
 
 const isStop = (w: string) => STOPWORDS.has(w) || EXTRA_STOPWORDS.has(w) || w.length < 3 || /^\d+$/.test(w);
 
+/**
+ * Common verbs end a key phrase: "net metering lets homeowners" should give
+ * "net metering", not a phrase with the verb glued on. They still count as
+ * keywords on their own.
+ */
+const PHRASE_BREAKS = new Set(
+  (
+    "allow allows allowed become becomes check checks convert converts converted cost costs cut cuts get gets got " +
+    "give gives help helps include includes including install installing installed keep keeps let lets lower lowers " +
+    "make makes making offer offers pay pays provide provides reduce reduces run runs sell sells show shows start starts " +
+    "turn turns use uses using used lets mean means require requires required"
+  ).split(" ")
+);
+
 const singular = (w: string) =>
   w.length > 4 && w.endsWith("ies")
     ? `${w.slice(0, -3)}y`
@@ -106,7 +120,7 @@ export function extractKeywordsLocally(text: string, topN = 10): KeywordExtracti
   };
   for (const t of tokens) {
     const lower = t.toLowerCase();
-    if (!/[\p{L}\p{N}]/u.test(t) || isStop(lower)) flush();
+    if (!/[\p{L}\p{N}]/u.test(t) || isStop(lower) || PHRASE_BREAKS.has(lower)) flush();
     else {
       current.push(singular(lower));
       currentSurface.push(t);
@@ -137,7 +151,11 @@ export function extractKeywordsLocally(text: string, topN = 10): KeywordExtracti
     .map(({ words: ws, count, surface: shown }) => ({
       phrase: shown,
       count,
-      score: Math.round((ws.reduce((n, w) => n + wordScore(w), 0) + (count - 1) * 2) * 10) / 10,
+      // Repeated phrases, and phrases made of the text's frequent words, first.
+      score:
+        Math.round(
+          (ws.reduce((n, w) => n + wordScore(w) + ((counts.get(w) ?? 0) > 1 ? 2 : 0), 0) + (count - 1) * 3) * 10
+        ) / 10,
     }))
     .sort((a, b) => b.score - a.score || b.count - a.count)
     .slice(0, 8);

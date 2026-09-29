@@ -5,7 +5,7 @@ import AIWorkspace from "@/components/ai/AIWorkspace";
 import AIInput from "@/components/ai/AIInput";
 import AIOutput from "@/components/ai/AIOutput";
 import { useAiTask } from "@/components/ai/useAiTask";
-import { Field, Notice, OptionCards } from "@/components/tool/kit";
+import { Chips, Field, Notice } from "@/components/tool/kit";
 import type { RewriteResult, ToneType } from "@/lib/ai/nlp/rewriter";
 
 const SAMPLE_TEXT = `Hey boss, I'm gonna be a bit late to the morning sync because my train got stuck. Gonna try to jump on the call from my phone if I can. Let me know if we gotta reschedule our 1-on-1 talk for later today. Thanks a lot!!`;
@@ -52,14 +52,11 @@ export default function AiTextRewriter() {
           disabled={ai.busy}
         />
 
-        <Field label="Tone" hint={ai.provider === "local" ? `On-device: ${toneInfo.local.toLowerCase()}.` : undefined}>
-          <OptionCards
-            ariaLabel="Tone"
-            value={tone}
-            onChange={setTone}
-            className="grid-cols-2 @2xl:grid-cols-3"
-            options={TONES.map((t) => ({ value: t.value, label: t.label, description: t.description }))}
-          />
+        <Field
+          label="Tone"
+          hint={`${toneInfo.description}.${ai.provider === "local" ? ` On-device: ${toneInfo.local.toLowerCase()}.` : ""}`}
+        >
+          <Chips ariaLabel="Tone" value={tone} onChange={setTone} options={TONES.map((t) => ({ value: t.value, label: t.label }))} />
         </Field>
       </AIWorkspace>
 

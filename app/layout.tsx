@@ -52,7 +52,7 @@ export const metadata: Metadata = {
   creator: "TabBench",
   publisher: "TabBench",
   keywords: [
-    "100% free online tools",
+    "free online tools",
     "free tools for all",
     "free online calculators",
     "free image converter",

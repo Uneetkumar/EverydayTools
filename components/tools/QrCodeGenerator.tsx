@@ -681,35 +681,36 @@ Payment Service,upi,upi://pay?pa=merchant@bank&pn=TabBenchStore&am=250.00`;
 
   return (
     <div className="space-y-6">
-      {/* What to encode */}
-      <div role="radiogroup" aria-label="QR code type" className="grid grid-cols-3 gap-1.5 @md:grid-cols-4 @2xl:grid-cols-6">
-        {TYPES.map((t) => {
-          const Icon = t.icon;
-          const active = tab === t.id;
-          return (
-            <button
-              key={t.id}
-              type="button"
-              role="radio"
-              aria-checked={active}
-              onClick={() => setTab(t.id)}
-              className={cn(
-                "flex h-10 items-center justify-center gap-1.5 rounded-lg border px-2 text-sm font-medium transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
-                active
-                  ? "border-primary/50 bg-brand-subtle text-brand-subtle-foreground"
-                  : "bg-background text-muted-foreground hover:bg-muted hover:text-foreground dark:bg-input/20"
-              )}
-            >
-              <Icon className="size-4 shrink-0" aria-hidden="true" />
-              <span className="truncate">{t.label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="grid grid-cols-1 items-start gap-8 @4xl:grid-cols-12">
+      <div className="grid grid-cols-1 items-start gap-x-8 gap-y-6 @4xl:grid-cols-12">
         {/* Settings */}
-        <div className="@container space-y-6 @4xl:col-span-7">
+        <div className="@container space-y-6 @4xl:col-span-7 @4xl:row-start-1">
+          {/* What to encode. Inside the settings column so the preview and
+              download buttons start at the top of the tool. */}
+          <div role="radiogroup" aria-label="QR code type" className="grid grid-cols-3 gap-1.5 @md:grid-cols-4 @2xl:grid-cols-6">
+            {TYPES.map((t) => {
+              const Icon = t.icon;
+              const active = tab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  onClick={() => setTab(t.id)}
+                  className={cn(
+                    "flex h-10 items-center justify-center gap-1.5 rounded-lg border px-2 text-sm font-medium transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+                    active
+                      ? "border-primary/50 bg-brand-subtle text-brand-subtle-foreground"
+                      : "bg-background text-muted-foreground hover:bg-muted hover:text-foreground dark:bg-input/20"
+                  )}
+                >
+                  <Icon className="size-4 shrink-0" aria-hidden="true" />
+                  <span className="truncate">{t.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
           <ToolSection title="Content">
             {tab === "url" && (
               <Field label="Website address" htmlFor="qr-url" hint="Links without http(s):// get https:// added.">
@@ -1037,6 +1038,146 @@ Payment Service,upi,upi://pay?pa=merchant@bank&pn=TabBenchStore&am=250.00`;
             )}
           </ToolSection>
 
+        </div>
+
+        {/* Preview & download. Second in the DOM so that on narrow screens it
+            follows the content fields instead of every setting; on wide screens
+            it spans both rows of the right column. */}
+        <div className="space-y-4 @4xl:sticky @4xl:top-24 @4xl:col-span-5 @4xl:col-start-8 @4xl:row-span-2 @4xl:row-start-1">
+          <div className="space-y-4 rounded-xl border bg-muted/30 p-4">
+            <div className="flex min-h-64 items-center justify-center">
+              {!hasContent ? (
+                <div className="flex flex-col items-center gap-2 text-center">
+                  <QrCode className="size-10 text-muted-foreground/50" aria-hidden="true" />
+                  <p className="text-sm text-muted-foreground">Fill in the content to see your QR code.</p>
+                </div>
+              ) : tooLong ? (
+                <Notice tone="warning">
+                  This is too much content for one QR code. Shorten it, or lower the error correction under Advanced.
+                </Notice>
+              ) : (
+                <div
+                  className={cn(
+                    "flex w-full max-w-[300px] flex-col items-center rounded-xl",
+                    frameStyle !== "none" && "shadow-sm",
+                    transparentBg &&
+                      "bg-[length:16px_16px] bg-[position:0_0,0_8px,8px_-8px,-8px_0] bg-[linear-gradient(45deg,#cbd5e1_25%,transparent_25%),linear-gradient(-45deg,#cbd5e1_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#cbd5e1_75%),linear-gradient(-45deg,transparent_75%,#cbd5e1_75%)]"
+                  )}
+                  style={{
+                    backgroundColor: transparentBg ? undefined : bgColor,
+                    padding: frameStyle === "card" ? "22px 20px 18px" : frameStyle === "badge" ? "18px" : "12px",
+                    border: transparentBg ? "1px dashed #94a3b8" : `1px solid ${frameStyle === "none" ? "var(--border)" : fgColor + "20"}`,
+                  }}
+                >
+                  {frameStyle === "badge" && (
+                    <div
+                      className="mb-4 rounded-full px-4 py-1.5 text-sm font-semibold tracking-wide uppercase"
+                      style={{ backgroundColor: fgColor, color: transparentBg ? "#ffffff" : bgColor }}
+                    >
+                      {frameText}
+                    </div>
+                  )}
+                  {frameStyle === "card" && (
+                    <div className="mb-3 text-center text-sm font-semibold tracking-wide uppercase" style={{ color: fgColor }}>
+                      {frameText}
+                    </div>
+                  )}
+                  <div className="flex w-full max-w-[240px] items-center justify-center">
+                    <QRCodeCanvas
+                      value={payload}
+                      // 2× the display box so the canvas is downscaled, keeping module edges crisp.
+                      size={520}
+                      fgColor={fgColor}
+                      bgColor={transparentBg ? "rgba(0,0,0,0)" : bgColor}
+                      level={errorLevel}
+                      marginSize={marginSize}
+                      imageSettings={activeLogoSrc ? { src: activeLogoSrc, height: 520 * logoRatio, width: 520 * logoRatio, excavate: true } : undefined}
+                      // qrcode.react sets an inline pixel width/height; override it so the canvas stays square.
+                      style={{ width: "100%", height: "auto" }}
+                      role="img"
+                      aria-label="QR code preview"
+                    />
+                  </div>
+                  {frameStyle === "card" && frameSubtext && (
+                    <div className="mt-3 text-center text-xs font-medium opacity-80" style={{ color: fgColor }}>
+                      {frameSubtext}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Full-resolution canvas and SVG used only as export sources. */}
+            {hasContent && !tooLong && (
+              <>
+                <div ref={exportCanvasRef} className="hidden">
+                  <QRCodeCanvas
+                    value={payload}
+                    size={downloadRes}
+                    fgColor={fgColor}
+                    bgColor={transparentBg ? "rgba(0,0,0,0)" : bgColor}
+                    level={errorLevel}
+                    marginSize={marginSize}
+                    imageSettings={activeLogoSrc ? { src: activeLogoSrc, height: Math.round(downloadRes * logoRatio), width: Math.round(downloadRes * logoRatio), excavate: true } : undefined}
+                  />
+                </div>
+                <div ref={svgContainerRef} className="hidden">
+                  <QRCodeSVG
+                    value={payload}
+                    size={1024}
+                    fgColor={fgColor}
+                    bgColor={transparentBg ? "rgba(0,0,0,0)" : bgColor}
+                    level={errorLevel}
+                    marginSize={marginSize}
+                    imageSettings={activeLogoSrc ? { src: activeLogoSrc, height: 1024 * logoRatio, width: 1024 * logoRatio, excavate: true } : undefined}
+                  />
+                </div>
+              </>
+            )}
+
+            {hasContent && (
+              <p className="truncate text-center font-mono text-xs text-muted-foreground" title={payload}>
+                {payload.split("\n")[0]}
+                {payload.includes("\n") ? " …" : ""}
+              </p>
+            )}
+
+            <Field label="PNG size">
+              <Segmented
+                value={String(downloadRes)}
+                onChange={(v) => setDownloadRes(Number(v))}
+                ariaLabel="PNG size"
+                size="sm"
+                fill
+                options={[512, 1024, 2048].map((r) => ({ value: String(r), label: `${r} px` }))}
+              />
+            </Field>
+
+            <div className="space-y-2">
+              <Button type="button" size="lg" className="h-10 w-full" onClick={handleDownloadPng} disabled={!canExport}>
+                <Download aria-hidden="true" />
+                Download PNG
+              </Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button type="button" variant="outline" onClick={handleDownloadSvg} disabled={!canExport}>
+                  <Download aria-hidden="true" />
+                  SVG
+                </Button>
+                <Button type="button" variant="outline" onClick={handleCopyImage} disabled={!canExport}>
+                  {copiedImage ? <Check aria-hidden="true" className="text-success" /> : <Copy aria-hidden="true" />}
+                  {copiedImage ? "Copied" : "Copy image"}
+                </Button>
+              </div>
+              <Button type="button" variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={handleCopySvg} disabled={!canExport}>
+                {copiedSvg ? <Check aria-hidden="true" className="text-success" /> : <Copy aria-hidden="true" />}
+                {copiedSvg ? "SVG code copied" : "Copy SVG code"}
+              </Button>
+              {frameStyle !== "none" && <p className="text-center text-xs text-muted-foreground">The frame is added to the PNG only; SVG and copy give the plain code.</p>}
+            </div>
+          </div>
+        </div>
+
+        <div className="@container space-y-6 @4xl:col-span-7 @4xl:row-start-2">
           <ToolDivider />
 
           <ToolSection
@@ -1251,140 +1392,6 @@ Payment Service,upi,upi://pay?pa=merchant@bank&pn=TabBenchStore&am=250.00`;
           </ToolSection>
         </div>
 
-        {/* Preview & download */}
-        <div className="space-y-4 @4xl:sticky @4xl:top-24 @4xl:col-span-5">
-          <div className="space-y-5 rounded-xl border bg-muted/30 p-5">
-            <div className="flex min-h-72 items-center justify-center">
-              {!hasContent ? (
-                <div className="flex flex-col items-center gap-2 text-center">
-                  <QrCode className="size-10 text-muted-foreground/50" aria-hidden="true" />
-                  <p className="text-sm text-muted-foreground">Fill in the content to see your QR code.</p>
-                </div>
-              ) : tooLong ? (
-                <Notice tone="warning">
-                  This is too much content for one QR code. Shorten it, or lower the error correction under Advanced.
-                </Notice>
-              ) : (
-                <div
-                  className={cn(
-                    "flex w-full max-w-[300px] flex-col items-center rounded-xl",
-                    frameStyle !== "none" && "shadow-sm",
-                    transparentBg &&
-                      "bg-[length:16px_16px] bg-[position:0_0,0_8px,8px_-8px,-8px_0] bg-[linear-gradient(45deg,#cbd5e1_25%,transparent_25%),linear-gradient(-45deg,#cbd5e1_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#cbd5e1_75%),linear-gradient(-45deg,transparent_75%,#cbd5e1_75%)]"
-                  )}
-                  style={{
-                    backgroundColor: transparentBg ? undefined : bgColor,
-                    padding: frameStyle === "card" ? "22px 20px 18px" : frameStyle === "badge" ? "18px" : "12px",
-                    border: transparentBg ? "1px dashed #94a3b8" : `1px solid ${frameStyle === "none" ? "var(--border)" : fgColor + "20"}`,
-                  }}
-                >
-                  {frameStyle === "badge" && (
-                    <div
-                      className="mb-4 rounded-full px-4 py-1.5 text-sm font-semibold tracking-wide uppercase"
-                      style={{ backgroundColor: fgColor, color: transparentBg ? "#ffffff" : bgColor }}
-                    >
-                      {frameText}
-                    </div>
-                  )}
-                  {frameStyle === "card" && (
-                    <div className="mb-3 text-center text-sm font-semibold tracking-wide uppercase" style={{ color: fgColor }}>
-                      {frameText}
-                    </div>
-                  )}
-                  <div className="flex w-full max-w-[260px] items-center justify-center">
-                    <QRCodeCanvas
-                      value={payload}
-                      // 2× the display box so the canvas is downscaled, keeping module edges crisp.
-                      size={520}
-                      fgColor={fgColor}
-                      bgColor={transparentBg ? "rgba(0,0,0,0)" : bgColor}
-                      level={errorLevel}
-                      marginSize={marginSize}
-                      imageSettings={activeLogoSrc ? { src: activeLogoSrc, height: 520 * logoRatio, width: 520 * logoRatio, excavate: true } : undefined}
-                      // qrcode.react sets an inline pixel width/height; override it so the canvas stays square.
-                      style={{ width: "100%", height: "auto" }}
-                      role="img"
-                      aria-label="QR code preview"
-                    />
-                  </div>
-                  {frameStyle === "card" && frameSubtext && (
-                    <div className="mt-3 text-center text-xs font-medium opacity-80" style={{ color: fgColor }}>
-                      {frameSubtext}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Full-resolution canvas and SVG used only as export sources. */}
-            {hasContent && !tooLong && (
-              <>
-                <div ref={exportCanvasRef} className="hidden">
-                  <QRCodeCanvas
-                    value={payload}
-                    size={downloadRes}
-                    fgColor={fgColor}
-                    bgColor={transparentBg ? "rgba(0,0,0,0)" : bgColor}
-                    level={errorLevel}
-                    marginSize={marginSize}
-                    imageSettings={activeLogoSrc ? { src: activeLogoSrc, height: Math.round(downloadRes * logoRatio), width: Math.round(downloadRes * logoRatio), excavate: true } : undefined}
-                  />
-                </div>
-                <div ref={svgContainerRef} className="hidden">
-                  <QRCodeSVG
-                    value={payload}
-                    size={1024}
-                    fgColor={fgColor}
-                    bgColor={transparentBg ? "rgba(0,0,0,0)" : bgColor}
-                    level={errorLevel}
-                    marginSize={marginSize}
-                    imageSettings={activeLogoSrc ? { src: activeLogoSrc, height: 1024 * logoRatio, width: 1024 * logoRatio, excavate: true } : undefined}
-                  />
-                </div>
-              </>
-            )}
-
-            {hasContent && (
-              <p className="truncate text-center font-mono text-xs text-muted-foreground" title={payload}>
-                {payload.split("\n")[0]}
-                {payload.includes("\n") ? " …" : ""}
-              </p>
-            )}
-
-            <Field label="PNG size">
-              <Segmented
-                value={String(downloadRes)}
-                onChange={(v) => setDownloadRes(Number(v))}
-                ariaLabel="PNG size"
-                size="sm"
-                fill
-                options={[512, 1024, 2048].map((r) => ({ value: String(r), label: `${r} px` }))}
-              />
-            </Field>
-
-            <div className="space-y-2">
-              <Button type="button" size="lg" className="h-10 w-full" onClick={handleDownloadPng} disabled={!canExport}>
-                <Download aria-hidden="true" />
-                Download PNG
-              </Button>
-              <div className="grid grid-cols-2 gap-2">
-                <Button type="button" variant="outline" onClick={handleDownloadSvg} disabled={!canExport}>
-                  <Download aria-hidden="true" />
-                  SVG
-                </Button>
-                <Button type="button" variant="outline" onClick={handleCopyImage} disabled={!canExport}>
-                  {copiedImage ? <Check aria-hidden="true" className="text-success" /> : <Copy aria-hidden="true" />}
-                  {copiedImage ? "Copied" : "Copy image"}
-                </Button>
-              </div>
-              <Button type="button" variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={handleCopySvg} disabled={!canExport}>
-                {copiedSvg ? <Check aria-hidden="true" className="text-success" /> : <Copy aria-hidden="true" />}
-                {copiedSvg ? "SVG code copied" : "Copy SVG code"}
-              </Button>
-              {frameStyle !== "none" && <p className="text-center text-xs text-muted-foreground">The frame is added to the PNG only; SVG and copy give the plain code.</p>}
-            </div>
-          </div>
-        </div>
       </div>
 
       {recentQrs && recentQrs.length > 0 && (

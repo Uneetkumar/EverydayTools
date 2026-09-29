@@ -15,6 +15,7 @@ import FormulaBox from "./FormulaBox";
 import FaqSection from "./FaqSection";
 import RelatedTools from "./RelatedTools";
 import AdSlot from "./AdSlot";
+import { ExtensionHandoff } from "@/components/tool/extension-handoff";
 import {
   ContentSection,
   ToolIntro,
@@ -105,6 +106,7 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
   return (
     <div className="page-container py-5 md:py-8">
       <TrackToolVisit slug={tool.slug} name={tool.name} category={tool.category} />
+      <ExtensionHandoff />
 
       <Breadcrumbs
         items={[
@@ -130,7 +132,7 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
               <ShareButton title={tool.name} path={`/tools/${tool.slug}`} />
             </div>
           </div>
-          <p className="mt-2 max-w-2xl type-body text-muted-foreground">{tool.description}</p>
+          <p className="mt-2 max-w-3xl type-body text-muted-foreground">{tool.description}</p>
           <PrivacyNote tool={tool} className="mt-2.5" />
         </div>
       </header>

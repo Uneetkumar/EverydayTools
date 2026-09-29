@@ -46,16 +46,37 @@ export default function AdSlot({ placement, className }: AdSlotProps) {
   const wideEnough = useMediaQuery(`(min-width: ${minViewport ?? 0}px)`);
   const allowed = minViewport === undefined || wideEnough;
 
+  const insRef = useRef<HTMLModElement>(null);
+
   useEffect(() => {
     if (!allowed || !isValidSlotId(slotId) || pushed.current) return;
+    const ins = insRef.current;
     // The adsbygoogle array is a queue: pushing before the script loads is
     // the documented pattern, and the script drains it on arrival.
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-      pushed.current = true;
-    } catch {
-      // A failed push must never break the page around it.
+    const push = () => {
+      if (pushed.current) return;
+      try {
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+        pushed.current = true;
+      } catch {
+        // A failed push must never break the page around it.
+      }
+    };
+    // A unit pushed while it has no width (a hidden tab, a collapsed parent)
+    // fails with "No slot size for availableWidth=0" and never retries, so
+    // wait until the slot is actually laid out.
+    if (!ins || ins.offsetWidth > 0) {
+      push();
+      return;
     }
+    const ro = new ResizeObserver(() => {
+      if (ins.offsetWidth > 0) {
+        ro.disconnect();
+        push();
+      }
+    });
+    ro.observe(ins);
+    return () => ro.disconnect();
   }, [allowed, slotId]);
 
   // No real slot ID configured: render nothing. AdSense prohibits
@@ -79,6 +100,7 @@ export default function AdSlot({ placement, className }: AdSlotProps) {
         Advertisement
       </span>
       <ins
+        ref={insRef}
         className={cn("adsbygoogle block w-full", config.heightClass)}
         style={{
           display: "block",

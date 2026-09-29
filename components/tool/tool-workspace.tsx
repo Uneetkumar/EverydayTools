@@ -39,6 +39,7 @@ export function ToolWorkspace({ name, children }: { name: string; children: Reac
     <section
       ref={ref}
       aria-label={name}
+      data-tool-workspace=""
       className="@container rounded-2xl border bg-card p-4 text-card-foreground shadow-soft sm:p-6"
     >
       <ToolErrorBoundary>{children}</ToolErrorBoundary>

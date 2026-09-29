@@ -422,8 +422,8 @@ Compact Item,EAN8,96385074`;
         ]}
       />
 
-      <div className="grid grid-cols-1 items-start gap-8 @4xl:grid-cols-12">
-        <div className="@container space-y-6 @4xl:col-span-7">
+      <div className="grid grid-cols-1 items-start gap-x-8 gap-y-6 @4xl:grid-cols-12">
+        <div className="@container space-y-6 @4xl:col-span-7 @4xl:row-start-1">
           {mode === "single" ? (
             <ToolSection title="Barcode">
               <Field label="Type" htmlFor="bc-format" hint={info.use}>
@@ -581,6 +581,89 @@ Compact Item,EAN8,96385074`;
             </ToolSection>
           )}
 
+        </div>
+
+        {/* Preview & download. Second in the DOM so that on narrow screens it
+            follows the content fields instead of every setting; on wide screens
+            it spans both rows of the right column. */}
+        <div className="space-y-4 @4xl:sticky @4xl:top-24 @4xl:col-span-5 @4xl:col-start-8 @4xl:row-span-2 @4xl:row-start-1">
+          <div className="space-y-5 rounded-xl border bg-muted/30 p-5">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-foreground">Preview</span>
+              <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">{info.label}</span>
+            </div>
+            <div className="flex min-h-48 items-center justify-center">
+              {rendered.svg ? (
+                <div
+                  className={cn(
+                    "flex w-full items-center justify-center overflow-hidden rounded-lg border p-4",
+                    transparentBg &&
+                      "bg-[length:16px_16px] bg-[position:0_0,0_8px,8px_-8px,-8px_0] bg-[linear-gradient(45deg,#cbd5e1_25%,transparent_25%),linear-gradient(-45deg,#cbd5e1_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#cbd5e1_75%),linear-gradient(-45deg,transparent_75%,#cbd5e1_75%)]"
+                  )}
+                  style={{ backgroundColor: transparentBg ? undefined : bgColor }}
+                >
+                  <div
+                    role="img"
+                    aria-label={`${info.label} barcode for ${val}`}
+                    className="max-w-full [&>svg]:h-auto [&>svg]:max-w-full"
+                    dangerouslySetInnerHTML={{ __html: rendered.svg }}
+                  />
+                </div>
+              ) : (
+                <div className="flex flex-col items-center gap-2 text-center">
+                  <Barcode className="size-10 text-muted-foreground/50" aria-hidden="true" />
+                  <p className="max-w-60 text-sm text-muted-foreground">
+                    {rendered.error === "invalid" ? "Fix the value to see the barcode." : "Enter a value to see the barcode."}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <Field label="PNG size">
+              <Segmented
+                value={String(exportScale)}
+                onChange={(v) => setExportScale(Number(v))}
+                ariaLabel="PNG size"
+                size="sm"
+                fill
+                options={[
+                  { value: "1", label: "1× screen" },
+                  { value: "2", label: "2× print" },
+                  { value: "4", label: "4× large" },
+                ]}
+              />
+            </Field>
+
+            <div className="space-y-2">
+              <Button type="button" size="lg" className="h-10 w-full" onClick={handleDownloadPng} disabled={!canExport}>
+                <Download aria-hidden="true" />
+                Download PNG
+              </Button>
+              <div className="grid grid-cols-2 gap-2">
+                <Button type="button" variant="outline" onClick={handleDownloadSvg} disabled={!canExport}>
+                  <Download aria-hidden="true" />
+                  SVG
+                </Button>
+                <Button type="button" variant="outline" onClick={handleCopyPng} disabled={!canExport}>
+                  {copiedPng ? <Check aria-hidden="true" className="text-success" /> : <Copy aria-hidden="true" />}
+                  {copiedPng ? "Copied" : "Copy image"}
+                </Button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={handlePrint} disabled={!canExport}>
+                  <Printer aria-hidden="true" />
+                  Print
+                </Button>
+                <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={handleCopySvg} disabled={!canExport}>
+                  {copiedSvg ? <Check aria-hidden="true" className="text-success" /> : <Copy aria-hidden="true" />}
+                  {copiedSvg ? "SVG code copied" : "Copy SVG code"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="@container space-y-6 @4xl:col-span-7 @4xl:row-start-2">
           <ToolDivider />
 
           <ToolSection title="Size">
@@ -677,83 +760,6 @@ Compact Item,EAN8,96385074`;
           </ToolSection>
         </div>
 
-        {/* Preview & download */}
-        <div className="space-y-4 @4xl:sticky @4xl:top-24 @4xl:col-span-5">
-          <div className="space-y-5 rounded-xl border bg-muted/30 p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-foreground">Preview</span>
-              <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">{info.label}</span>
-            </div>
-            <div className="flex min-h-48 items-center justify-center">
-              {rendered.svg ? (
-                <div
-                  className={cn(
-                    "flex w-full items-center justify-center overflow-hidden rounded-lg border p-4",
-                    transparentBg &&
-                      "bg-[length:16px_16px] bg-[position:0_0,0_8px,8px_-8px,-8px_0] bg-[linear-gradient(45deg,#cbd5e1_25%,transparent_25%),linear-gradient(-45deg,#cbd5e1_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#cbd5e1_75%),linear-gradient(-45deg,transparent_75%,#cbd5e1_75%)]"
-                  )}
-                  style={{ backgroundColor: transparentBg ? undefined : bgColor }}
-                >
-                  <div
-                    role="img"
-                    aria-label={`${info.label} barcode for ${val}`}
-                    className="max-w-full [&>svg]:h-auto [&>svg]:max-w-full"
-                    dangerouslySetInnerHTML={{ __html: rendered.svg }}
-                  />
-                </div>
-              ) : (
-                <div className="flex flex-col items-center gap-2 text-center">
-                  <Barcode className="size-10 text-muted-foreground/50" aria-hidden="true" />
-                  <p className="max-w-60 text-sm text-muted-foreground">
-                    {rendered.error === "invalid" ? "Fix the value to see the barcode." : "Enter a value to see the barcode."}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            <Field label="PNG size">
-              <Segmented
-                value={String(exportScale)}
-                onChange={(v) => setExportScale(Number(v))}
-                ariaLabel="PNG size"
-                size="sm"
-                fill
-                options={[
-                  { value: "1", label: "1× screen" },
-                  { value: "2", label: "2× print" },
-                  { value: "4", label: "4× large" },
-                ]}
-              />
-            </Field>
-
-            <div className="space-y-2">
-              <Button type="button" size="lg" className="h-10 w-full" onClick={handleDownloadPng} disabled={!canExport}>
-                <Download aria-hidden="true" />
-                Download PNG
-              </Button>
-              <div className="grid grid-cols-2 gap-2">
-                <Button type="button" variant="outline" onClick={handleDownloadSvg} disabled={!canExport}>
-                  <Download aria-hidden="true" />
-                  SVG
-                </Button>
-                <Button type="button" variant="outline" onClick={handleCopyPng} disabled={!canExport}>
-                  {copiedPng ? <Check aria-hidden="true" className="text-success" /> : <Copy aria-hidden="true" />}
-                  {copiedPng ? "Copied" : "Copy image"}
-                </Button>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={handlePrint} disabled={!canExport}>
-                  <Printer aria-hidden="true" />
-                  Print
-                </Button>
-                <Button type="button" variant="ghost" size="sm" className="text-muted-foreground" onClick={handleCopySvg} disabled={!canExport}>
-                  {copiedSvg ? <Check aria-hidden="true" className="text-success" /> : <Copy aria-hidden="true" />}
-                  {copiedSvg ? "SVG code copied" : "Copy SVG code"}
-                </Button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       {history && history.length > 0 && (

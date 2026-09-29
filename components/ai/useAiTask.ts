@@ -16,8 +16,11 @@ const gemini = new GeminiProvider();
  * "Show changes" view compares against what was actually processed, not
  * whatever the box holds now.
  */
-export function useAiTask(task: AIInput["task"], { stream = true }: { stream?: boolean } = {}) {
-  const [provider, setProvider] = useState<AIProviderType>("local");
+export function useAiTask(
+  task: AIInput["task"],
+  { stream = true, initialProvider = "local" }: { stream?: boolean; initialProvider?: AIProviderType } = {}
+) {
+  const [provider, setProvider] = useState<AIProviderType>(initialProvider);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [output, setOutput] = useState<(AIOutput & { input: string }) | null>(null);
