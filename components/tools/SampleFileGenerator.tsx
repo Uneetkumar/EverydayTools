@@ -1197,7 +1197,7 @@ export default function SampleFileGenerator({
 
             {showAdvancedVideo && (
               <div className="mt-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-3 animate-in fade-in duration-200">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div>
                     <span className="block text-sm font-medium text-foreground">
                       Frame Rate (FPS)
@@ -1206,7 +1206,7 @@ export default function SampleFileGenerator({
                       Higher FPS gives smoother motion
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     {VIDEO_FPS_PRESETS.map((fps) => (
                       <button
                         key={fps}
@@ -1320,7 +1320,7 @@ export default function SampleFileGenerator({
 
       {/* 7. Quantity Selector (For Non-Video Types) */}
       {kind !== "video" && (
-        <div className="flex items-center justify-between p-3 sm:p-4 rounded-xl border bg-muted/30">
+        <div className="flex flex-wrap items-center justify-between gap-3 p-3 sm:p-4 rounded-xl border bg-muted/30">
           <div>
             <span className="text-sm block font-medium text-foreground">
               Generate Multiple Files in Batch
@@ -1329,7 +1329,7 @@ export default function SampleFileGenerator({
               Select how many unique sample files to produce at once
             </span>
           </div>
-          <div className="flex items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             {[1, 2, 4, 8].map((c) => (
               <button
                 key={c}

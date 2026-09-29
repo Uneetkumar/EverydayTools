@@ -1,33 +1,25 @@
 import React from "react";
 import Link from "next/link";
 import { constructPageMetadata } from "@/lib/seo/metadata";
-import { generateBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { ProsePage } from "@/components/layout/prose-page";
 import ClearLocalData from "@/components/ClearLocalData";
 import { getAllTools } from "@/lib/tools/registry";
 
 export const metadata = constructPageMetadata({
-  title: "Privacy Policy - What We Store & What We Never See",
+  title: "Privacy Policy: What We Store and Never See",
   description: "Your files are processed in your browser and never uploaded. Read exactly what is saved on your own device, for how long, and how to erase it.",
   path: "/privacy",
 });
 
 export default function PrivacyPage() {
-  const breadcrumbSchema = generateBreadcrumbJsonLd([
-    { name: "Home", path: "" },
-    { name: "Privacy Policy", path: "/privacy" },
-  ]);
 
   const tools = getAllTools();
   const cloud = tools.filter((t) => t.privacy === "cloud-optional");
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
       <ProsePage
+        path="/privacy"
         breadcrumb="Privacy Policy"
         title="Privacy Policy"
         updated="September 29, 2026"

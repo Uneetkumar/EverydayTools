@@ -1,3 +1,5 @@
+import { CANONICAL_ORIGIN } from "./config";
+
 /**
  * Inline guard that keeps only tabbench.com indexable.
  *
@@ -27,7 +29,7 @@
  * production, which is exactly the failure mode of the "add noindex" advice
  * that circulates for this problem.
  */
-export const CANONICAL_HOST = "https://tabbench.com";
+export const CANONICAL_HOST = CANONICAL_ORIGIN;
 
 export const CANONICAL_HOST_SCRIPT = [
   "(function(){try{",

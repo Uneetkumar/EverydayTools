@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
 import { constructPageMetadata } from "@/lib/seo/metadata";
-import { generateBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { ProsePage } from "@/components/layout/prose-page";
 import { TOOL_CATEGORIES, getAllTools, getToolsByCategory } from "@/lib/tools/registry";
 import { GUIDES } from "@/lib/guides/content";
@@ -14,10 +13,6 @@ export const metadata = constructPageMetadata({
 });
 
 export default function AboutPage() {
-  const breadcrumbSchema = generateBreadcrumbJsonLd([
-    { name: "Home", path: "" },
-    { name: "About Us", path: "/about" },
-  ]);
 
   const tools = getAllTools();
   const cloud = tools.filter((t) => t.privacy === "cloud-optional");
@@ -26,11 +21,8 @@ export default function AboutPage() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
       <ProsePage
+        path="/about"
         breadcrumb="About Us"
         title="About TabBench"
         lead={`TabBench is a collection of ${tools.length} free tools for everyday tasks — working out a percentage, shrinking a photo, merging PDFs, formatting JSON — that open instantly in your browser with no account and, for almost all of them, no upload.`}

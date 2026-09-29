@@ -111,9 +111,9 @@ export default function SalaryCalculator() {
             aria-label="Provident Fund"
             className="w-full"
           >
-            <ToggleGroupItem value="full" className="flex-1">12% of basic</ToggleGroupItem>
-            <ToggleGroupItem value="capped" className="flex-1">₹1,800 / month</ToggleGroupItem>
-            <ToggleGroupItem value="none" className="flex-1">No PF</ToggleGroupItem>
+            <ToggleGroupItem value="full" className="h-auto min-h-8 flex-1 shrink py-1 leading-tight whitespace-normal">12% of basic</ToggleGroupItem>
+            <ToggleGroupItem value="capped" className="h-auto min-h-8 flex-1 shrink py-1 leading-tight whitespace-normal">₹1,800 / month</ToggleGroupItem>
+            <ToggleGroupItem value="none" className="h-auto min-h-8 flex-1 shrink py-1 leading-tight whitespace-normal">No PF</ToggleGroupItem>
           </ToggleGroup>
         </fieldset>
 

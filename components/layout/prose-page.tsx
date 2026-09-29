@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
  */
 export function ProsePage({
   breadcrumb,
+  path,
   title,
   lead,
   updated,
@@ -17,6 +18,8 @@ export function ProsePage({
   className,
 }: {
   breadcrumb: string;
+  /** This page’s path, used as the last crumb’s URL in the breadcrumb JSON-LD. */
+  path?: string;
   title: string;
   lead?: React.ReactNode;
   /** Human-readable date, e.g. "September 28, 2026". */
@@ -26,7 +29,7 @@ export function ProsePage({
 }) {
   return (
     <div className="page-container py-8 md:py-12">
-      <Breadcrumbs items={[{ name: breadcrumb }]} />
+      <Breadcrumbs items={[{ name: breadcrumb, url: path }]} />
       <header className="mt-6 max-w-3xl">
         <h1 className="type-h1 text-foreground">{title}</h1>
         {lead && <p className="mt-4 type-body text-muted-foreground md:text-lg">{lead}</p>}

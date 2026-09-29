@@ -1,143 +1,163 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { Copy, Check, ArrowRightLeft, Code, Trash2 } from "lucide-react";
+import React, { useId, useMemo, useState } from "react";
+import { ArrowUpDown, Copy } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Field, Notice, Segmented, TextArea, ToolDivider, ToolSection } from "@/components/tool/kit";
+import { usePersistentState } from "@/lib/hooks/usePersistentState";
+import { useIsClient } from "@/lib/hooks/useIsClient";
 import { copyText } from "@/lib/utils/clipboard";
+import {
+  countReferences,
+  decodeEntities,
+  encodeEntities,
+  looksDoubleEncoded,
+  type EncodeScope,
+  type EncodeStyle,
+} from "@/lib/text/entities";
+
+interface Options {
+  scope: EncodeScope;
+  style: EncodeStyle;
+}
+
+const EXAMPLE = '<p class="note">Tom & Jerry\'s café — 5 < 10 © 2026 😀</p>';
 
 export default function HtmlEntityConverter() {
+  const id = useId();
+  const isClient = useIsClient();
   const [mode, setMode] = useState<"encode" | "decode">("encode");
-  const [input, setInput] = useState<string>('<div class="hero-card">\n  <h1>TabBench & "Everyday Tools" © 2026</h1>\n  <p>Price: $19.99 < $50.00 & save 50%</p>\n</div>');
-  const [format, setFormat] = useState<"named" | "decimal" | "hex">("named");
-  const [copied, setCopied] = useState<boolean>(false);
+  const [input, setInput] = useState("");
+  const [opts, setOpts] = usePersistentState<Options>("html-entity-options", { scope: "unsafe", style: "named" });
 
-  const output = useMemo(() => {
-    if (!input) return "";
+  const result = useMemo(() => {
+    if (!input) return { text: "", count: 0 };
+    if (mode === "encode") return encodeEntities(input, opts.scope, opts.style);
+    // Decoding uses the browser's HTML parser, so it waits for the page to load.
+    if (!isClient) return { text: "", count: 0 };
+    return { text: decodeEntities(input), count: countReferences(input) };
+  }, [input, mode, opts.scope, opts.style, isClient]);
 
-    if (mode === "encode") {
-      if (format === "named") {
-        return input
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;")
-          .replace(/"/g, "&quot;")
-          .replace(/'/g, "&apos;")
-          .replace(/©/g, "&copy;")
-          .replace(/®/g, "&reg;")
-          .replace(/™/g, "&trade;")
-          .replace(/€/g, "&euro;")
-          .replace(/£/g, "&pound;")
-          .replace(/¥/g, "&yen;");
-      } else if (format === "decimal") {
-        return input.replace(/[\u00A0-\u9999<>&"']/g, (c) => `&#${c.charCodeAt(0)};`);
-      } else {
-        return input.replace(/[\u00A0-\u9999<>&"']/g, (c) => `&#x${c.charCodeAt(0).toString(16).toUpperCase()};`);
-      }
-    } else {
-      // Decode
-      const doc = new DOMParser().parseFromString(input, "text/html");
-      return doc.documentElement.textContent || "";
-    }
-  }, [input, mode, format]);
+  const twice = mode === "decode" && !!result.text && looksDoubleEncoded(result.text);
 
-  const handleCopy = () => {
-    if (!output) return;
-    copyText(output);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
-  const handleModeSwitch = () => {
-    if (mode === "encode") {
-      setMode("decode");
-      setInput(output || "&lt;h1&gt;TabBench &amp; Tools&lt;/h1&gt;");
-    } else {
-      setMode("encode");
-      setInput(output || "<h1>TabBench & Tools</h1>");
-    }
+  const swap = () => {
+    setInput(result.text);
+    setMode(mode === "encode" ? "decode" : "encode");
   };
 
   return (
-    <div className="space-y-6">
-      {/* Control Bar */}
-      <div className="flex flex-wrap gap-3 items-center justify-between p-4 rounded-xl border bg-muted/30">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={handleModeSwitch}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs transition-colors bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
-          >
-            <ArrowRightLeft className="w-3.5 h-3.5" />
-            {mode === "encode" ? "Encode HTML Entities" : "Decode HTML Entities"}
-          </button>
-        </div>
+    <div className="space-y-8">
+      <Segmented
+        ariaLabel="What do you want to do?"
+        value={mode}
+        onChange={setMode}
+        options={[
+          { value: "encode", label: "Encode text for HTML" },
+          { value: "decode", label: "Decode entities" },
+        ]}
+      />
 
-        {mode === "encode" && (
-          <div className="flex items-center gap-2 text-xs font-semibold">
-            <span className="text-slate-500 dark:text-slate-400">Format</span>
-            <div className="flex bg-slate-200/70 dark:bg-slate-800 p-0.5 rounded-lg">
-              {(["named", "decimal", "hex"] as const).map((fmt) => (
-                <button
-                  key={fmt}
-                  onClick={() => setFormat(fmt)}
-                  className={`px-2.5 py-1 rounded-md capitalize transition-all ${
-                    format === fmt
-                      ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  }`}
-                >
-                  {fmt === "named" ? "Named (&lt;)" : fmt === "decimal" ? "Decimal (&#60;)" : "Hex (&#x3C;)"}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <button aria-label="Clear"
-          onClick={() => setInput("")}
-          className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors ml-auto"
-          title="Clear"
+      <ToolSection
+        title={mode === "encode" ? "Text" : "HTML with entities"}
+        actions={
+          <Button variant="ghost" size="sm" onClick={() => setInput(mode === "encode" ? EXAMPLE : encodeEntities(EXAMPLE, "non-ascii", "named").text)}>
+            Try an example
+          </Button>
+        }
+      >
+        <Field
+          label={mode === "encode" ? "Text to encode" : "Text to decode"}
+          htmlFor={`${id}-in`}
+          hint={mode === "decode" ? "Every named entity in the HTML standard works, as do &#233; and &#xE9;. Tags are left as they are." : undefined}
         >
-          <Trash2 className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Dual Column Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Input */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center text-sm font-medium text-foreground">
-            <span>{mode === "encode" ? "Raw HTML / Plain Text" : "Encoded HTML String"}</span>
-            <span className="font-mono text-xs text-slate-500 dark:text-slate-400">{input.length} chars</span>
-          </div>
-          <textarea aria-label="HTML or text input"
+          <TextArea
+            id={`${id}-in`}
+            rows={6}
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            rows={12}
-            placeholder="Type or paste HTML string here..."
-            className="w-full p-4 font-mono resize-y text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+            placeholder={mode === "encode" ? '<p>Fish & chips — "£5"</p>' : "&lt;p&gt;Fish &amp; chips &mdash; &quot;&pound;5&quot;&lt;/p&gt;"}
+            spellCheck={false}
+            className="font-mono"
           />
-        </div>
+        </Field>
 
-        {/* Output */}
-        <div className="space-y-2">
-          <div className="flex justify-between items-center text-sm font-medium text-foreground">
-            <span>{mode === "encode" ? "Escaped HTML Output" : "Decoded Plain Text Output"}</span>
-            <button
-              onClick={handleCopy}
-              disabled={!output}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs disabled:opacity-50 transition-colors bg-primary text-primary-foreground hover:bg-primary/90 font-medium"
-            >
-              {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              {copied ? "Copied" : "Copy Result"}
-            </button>
+        {mode === "encode" && (
+          <div className="grid gap-4 @lg:grid-cols-2">
+            <Field label="Encode">
+              <Segmented
+                size="sm"
+                ariaLabel="Which characters to encode"
+                value={opts.scope}
+                onChange={(scope) => setOpts({ ...opts, scope })}
+                options={[
+                  { value: "unsafe", label: "& < > \" '" },
+                  { value: "non-ascii", label: "+ non-ASCII" },
+                  { value: "all", label: "Everything" },
+                ]}
+              />
+            </Field>
+            <Field label="Write as">
+              <Segmented
+                size="sm"
+                ariaLabel="Entity style"
+                value={opts.style}
+                onChange={(style) => setOpts({ ...opts, style })}
+                options={[
+                  { value: "named", label: "&copy;" },
+                  { value: "decimal", label: "&#169;" },
+                  { value: "hex", label: "&#xA9;" },
+                ]}
+              />
+            </Field>
           </div>
-          <textarea aria-label="Converted output"
-            readOnly
-            value={output}
-            rows={12}
-            className="w-full p-4 font-mono resize-y text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-          />
+        )}
+        {mode === "encode" && (
+          <p className="text-xs text-muted-foreground">
+            {opts.scope === "unsafe"
+              ? "Enough to show any text safely inside HTML or a quoted attribute. Other characters stay readable."
+              : opts.scope === "non-ascii"
+                ? "Also writes accents, symbols and emoji as references, for places that only accept plain ASCII."
+                : "Every character except spaces and line breaks — sometimes used to hide an email address from simple scrapers."}
+          </p>
+        )}
+      </ToolSection>
+
+      <ToolDivider />
+
+      <ToolSection
+        title="Result"
+        description={
+          result.text
+            ? mode === "encode"
+              ? `${result.count.toLocaleString()} character${result.count === 1 ? "" : "s"} encoded.`
+              : `${result.count.toLocaleString()} entit${result.count === 1 ? "y" : "ies"} decoded.`
+            : undefined
+        }
+      >
+        <TextArea aria-label="Result" readOnly rows={6} value={result.text} className="font-mono" placeholder="The result appears here." />
+        {twice && (
+          <Notice tone="info">
+            <span>The result still contains entities such as &amp;amp;, so the text was probably encoded twice. </span>
+            <Button variant="outline" size="sm" className="mt-2" onClick={() => setInput(result.text)}>
+              Decode again
+            </Button>
+          </Notice>
+        )}
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="outline" onClick={swap} disabled={!result.text}>
+            <ArrowUpDown aria-hidden="true" /> Use as input
+          </Button>
+          <Button
+            onClick={async () => {
+              if (await copyText(result.text)) toast.success("Copied");
+            }}
+            disabled={!result.text}
+          >
+            <Copy aria-hidden="true" /> Copy
+          </Button>
         </div>
-      </div>
+      </ToolSection>
     </div>
   );
 }

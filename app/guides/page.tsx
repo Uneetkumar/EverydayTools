@@ -2,8 +2,10 @@ import React from "react";
 import Link from "next/link";
 import type { Metadata } from "next";
 import { GUIDES } from "@/lib/guides/content";
-import { constructPageMetadata, SITE_CONFIG } from "@/lib/seo/metadata";
-import { generateBreadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { constructPageMetadata } from "@/lib/seo/metadata";
+import { absoluteUrl } from "@/lib/seo/config";
+import { generateCollectionJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/json-ld";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { ArrowRight } from "lucide-react";
 
@@ -12,41 +14,22 @@ export const metadata: Metadata = constructPageMetadata({
   description:
     "Step-by-step guides for the file problems people actually hit: compressing photos to 50KB for forms, shrinking PDFs, and converting documents.",
   path: "/guides",
-  keywords: ["how to compress image", "how to reduce pdf size", "file conversion guides"],
 });
 
 export default function GuidesIndexPage() {
-  const breadcrumbSchema = generateBreadcrumbJsonLd([
-    { name: "Home", path: "" },
-    { name: "Guides", path: "/guides" },
-  ]);
-  const listSchema = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
+  const listSchema = generateCollectionJsonLd({
     name: "TabBench Guides",
-    url: `${SITE_CONFIG.domain}/guides`,
-    isPartOf: { "@id": `${SITE_CONFIG.domain}/#website` },
-    mainEntity: {
-      "@type": "ItemList",
-      numberOfItems: GUIDES.length,
-      itemListElement: GUIDES.map((g, i) => ({
-        "@type": "ListItem",
-        position: i + 1,
-        name: g.title,
-        url: `${SITE_CONFIG.domain}/guides/${g.slug}`,
-      })),
-    },
-  };
+    description: "Step-by-step guides to the problems TabBench tools solve.",
+    url: absoluteUrl("/guides"),
+    items: GUIDES.map((g) => ({ name: g.title, path: `/guides/${g.slug}` })),
+  });
 
   return (
     <>
-      <script type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      <script type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(listSchema) }} />
+      <JsonLd data={listSchema} />
 
       <div className="page-container py-8 md:py-12">
-        <Breadcrumbs items={[{ name: "Guides" }]} />
+        <Breadcrumbs items={[{ name: "Guides", url: "/guides" }]} />
 
         <header className="mt-6 max-w-3xl">
           <h1 className="type-h1 text-foreground">Guides</h1>

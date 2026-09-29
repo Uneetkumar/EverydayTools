@@ -113,7 +113,7 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
         items={[
           { name: "All tools", url: "/tools" },
           { name: tool.categoryName, url: `/categories/${tool.category}` },
-          { name: tool.name },
+          { name: tool.name, url: `/tools/${tool.slug}` },
         ]}
       />
 

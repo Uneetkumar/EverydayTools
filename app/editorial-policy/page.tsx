@@ -1,7 +1,6 @@
 import React from "react";
 import Link from "next/link";
 import { constructPageMetadata } from "@/lib/seo/metadata";
-import { generateBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { ProsePage } from "@/components/layout/prose-page";
 import { EDITORIAL_EMAIL } from "@/lib/contact";
 
@@ -12,18 +11,11 @@ export const metadata = constructPageMetadata({
 });
 
 export default function EditorialPolicyPage() {
-  const breadcrumbSchema = generateBreadcrumbJsonLd([
-    { name: "Home", path: "" },
-    { name: "Editorial Policy", path: "/editorial-policy" },
-  ]);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
       <ProsePage
+        path="/editorial-policy"
         breadcrumb="Editorial & Accuracy Policy"
         title="Editorial & Accuracy Policy"
         updated="September 28, 2026"

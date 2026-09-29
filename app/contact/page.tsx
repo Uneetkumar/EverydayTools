@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { constructPageMetadata } from "@/lib/seo/metadata";
-import { generateBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { ProsePage } from "@/components/layout/prose-page";
 import { EDITORIAL_EMAIL, SUPPORT_EMAIL } from "@/lib/contact";
 import ContactForm from "./ContactForm";
@@ -17,22 +16,14 @@ export const metadata: Metadata = constructPageMetadata({
   description:
     "Report a bug or a wrong result, or ask for a new tool. How to reach TabBench, and what to include so we can help quickly.",
   path: "/contact",
-  keywords: ["contact tabbench", "report a bug", "request a tool", "support"],
 });
 
 export default function ContactPage() {
-  const breadcrumbSchema = generateBreadcrumbJsonLd([
-    { name: "Home", path: "" },
-    { name: "Contact & Support", path: "/contact" },
-  ]);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
       <ProsePage
+        path="/contact"
         breadcrumb="Contact & Support"
         title="Contact TabBench"
         lead="Found a bug, got a result that looks wrong, or need a tool we don't have yet? Tell us — every message is read, and requests decide much of what gets built next."

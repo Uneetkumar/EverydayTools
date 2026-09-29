@@ -283,14 +283,15 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "base64-converter": {
     intro:
-      "Base64 encodes arbitrary bytes using 64 printable ASCII characters, which lets binary data survive channels that only accept text — email bodies, JSON fields, data URIs, HTTP headers. It is an encoding, not encryption: anyone can decode it instantly, and it offers no confidentiality whatsoever. This converter runs both directions in your browser, so credentials and tokens you decode for debugging never touch a server.",
+      "Base64 encodes arbitrary bytes using 64 printable ASCII characters, which lets binary data survive channels that only accept text — email bodies, JSON fields, data URIs, HTTP headers. It is an encoding, not encryption: anyone can decode it instantly, and it offers no confidentiality whatsoever. This converter encodes text or any file, as plain Base64 or a ready-to-use data: URI, and decodes Base64 back to text, an image preview or a file you can download. It all runs in your browser, so credentials and files you decode for debugging never touch a server.",
     howTo: {
       title: "How to encode and decode Base64",
       steps: [
-        "Choose a direction — Encode turns plain text into Base64, Decode turns Base64 back into text.",
-        "Paste your input. Leading and trailing whitespace is ignored.",
-        "Read the result and copy it. Conversion happens as you type.",
-        "If decoding fails, check for missing '=' padding at the end or for URL-safe characters ('-' and '_') that need converting back to '+' and '/'.",
+        "Choose Encode to Base64 or Decode Base64.",
+        "To encode, type text or switch to File and drop in an image, font or PDF. For files, keep “As a data: URI” on to paste it straight into src= or url().",
+        "Turn on URL-safe for values that go in URLs or file names, or line breaks for email (MIME).",
+        "To decode, paste Base64 or a data: URI. Text is shown directly; images get a preview, and any file can be downloaded.",
+        "If decoding fails, the message points to the character or length problem, such as a missing character at the end of a copied value.",
       ],
     },
     useCases: [
@@ -476,14 +477,15 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "url-encoder-decoder": {
     intro:
-      "URLs may only contain a restricted set of ASCII characters, so anything else — spaces, ampersands, accented letters, emoji — must be percent-encoded to survive the trip. Get this wrong and a query parameter silently truncates at the first '&', or a redirect drops half its target. This tool encodes and decodes both full URLs and individual components, so you can pick the behaviour you actually need.",
+      "URLs may only contain a restricted set of ASCII characters, so anything else — spaces, ampersands, accented letters, emoji — must be percent-encoded to survive the trip. Get this wrong and a query parameter silently truncates at the first '&', or a redirect drops half its target. This tool encodes text the right way for where it's going — a single value, a whole URL, or HTML form data with + for spaces — and decodes percent-encoded text without giving up on the first broken escape. It also spots double encoding and breaks any URL into its parts, with every query parameter decoded.",
     howTo: {
       title: "How to encode or decode a URL",
       steps: [
-        "Choose Encode to make text safe for a URL, or Decode to turn percent-escapes back into readable characters.",
-        "Decide whether you are handling a whole URL or a single parameter value — this matters, because a full URL must keep its ':', '/', and '?' intact while a parameter value must escape them.",
-        "Paste your input and read the converted result.",
-        "Check the output for '%25' sequences, which indicate the input was already encoded once.",
+        "Choose Encode, Decode or Break down a URL.",
+        "When encoding, say what the text is: a single value or path part (which must escape / ? & =), a whole URL (which must keep them), or form data (spaces become +).",
+        "When decoding, keep “+ means a space” on for query strings and turn it off for paths.",
+        "Read the result. If it still contains escapes like %20, it was encoded twice — use Decode again.",
+        "To inspect a link, use Break down a URL to see the host, path and each query parameter in plain text.",
       ],
     },
     useCases: [
@@ -2554,14 +2556,14 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "favicon-generator": {
     intro:
-      "A favicon is the small icon in a browser tab, a bookmark list, and a phone home screen — and modern platforms request it at a surprising number of sizes. Rather than exporting each one by hand, this generator renders your logo at every size browsers actually ask for and packages them as a ZIP with a ready-to-paste HTML snippet. Everything is drawn on a canvas in your browser.",
+      "A favicon is the small icon in a browser tab, a bookmark list, a search result and a phone home screen. Current best practice needs only a handful of files: a favicon.ico for browsers and search engines, an SVG if your logo is one, a 180px Apple touch icon on a solid background (iOS shows transparent areas as black), and 192px and 512px icons plus a padded maskable icon for Android's web app manifest. This generator makes all of them from your logo, or from a letter or emoji if you don't have one, previews them in a browser tab, on an iPhone home screen and in Android's round crop, and packages everything with the manifest and the HTML to paste. It all happens in your browser.",
     howTo: {
       title: "How to generate a favicon",
       steps: [
-        "Upload a square logo. At least 512×512 gives the best result at every output size.",
-        "Choose a background — transparent for PNG-style logos, or a solid colour if your mark needs one behind it.",
-        "Review the previews. Pay particular attention to 16px, which is what most people actually see.",
-        "Download the ZIP and drop the files at the root of your site, then paste the snippet from README.txt into your <head>.",
+        "Upload your logo — an SVG or a square PNG of at least 512×512 is best — or switch to text and type a letter or emoji.",
+        "Choose a background, shape and padding. Check the 16px tab preview: it's the size most people actually see.",
+        "Look at the iPhone and Android previews; those icons always get a solid background and extra padding so nothing is cut off.",
+        "Download the ZIP, put the files at the root of your site so /favicon.ico works, and paste the tags into your page's <head>.",
       ],
     },
     useCases: [
@@ -3450,15 +3452,15 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "slug-generator": {
     intro:
-      "A slug is the readable part of a web address that identifies a page, such as best-budget-phones-2026 in example.com/blog/best-budget-phones-2026. Good slugs are short, lowercase, use hyphens between words and contain no spaces, accents or punctuation, because those get turned into unreadable codes like %20 when the link is shared. This generator converts any title into a clean slug as you type: it lowercases the text, turns accented letters into plain ones, removes symbols, can drop filler words like \"the\" and \"and\", and lets you choose hyphens, underscores or dots between words.",
+      "A slug is the readable part of a web address that identifies a page, such as best-budget-phones-2026 in example.com/blog/best-budget-phones-2026. Good slugs are short, lowercase, use hyphens between words and contain no spaces, accents or punctuation, because those get turned into unreadable codes like %20 when the link is shared. This generator converts titles into clean slugs as you type — one per line, so you can do a whole list at once. It removes accents, spells out letters such as ß and Ł, transliterates Cyrillic, Greek and Hindi (नमस्ते भारत becomes namaste-bharat), turns & into and, and can drop filler words or cut long slugs at a word boundary. If you'd rather keep Hindi or another script in the address, it can do that too.",
     howTo: {
       title: "How to create an SEO-friendly URL slug",
       steps: [
-        "Paste or type the title of the article, product or page.",
-        "Watch the slug update live: letters are lowercased, accents are removed and punctuation disappears.",
-        "Switch on stop-word removal to shorten long titles by dropping words such as a, the, of and and.",
-        "Choose the separator. Hyphens are the standard for web addresses; underscores or dots suit file names and identifiers.",
-        "Copy the slug and paste it into your CMS or file name.",
+        "Paste or type the title of the article, product or page — or several titles, one per line.",
+        "Watch the slugs update live: letters are lowercased, accents are removed and punctuation disappears.",
+        "Switch on Drop small words to shorten long titles, or set a maximum length; slugs are cut between words.",
+        "For titles in Hindi or another script, choose whether to convert them to Latin letters or keep them as they are.",
+        "Add your site address to preview the full URL, then copy one slug or all of them.",
       ],
     },
     useCases: [
@@ -3560,15 +3562,15 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "regex-tester": {
     intro:
-      "Regular expressions are compact patterns for finding and validating text — an email address, a date, every number in a log — but a single misplaced character changes what they match. This tester runs your pattern against sample text as you type, highlights every match, lists each one with its position and numbered capture groups, and lets you switch the g, i, m, s and u flags on and off. It uses your browser's own JavaScript regex engine, so a pattern that works here behaves the same in JavaScript and TypeScript code.",
+      "Regular expressions are compact patterns for finding and validating text — an email address, a date, every number in a log — but a single misplaced character changes what they match. This tester runs your pattern against sample text as you type, highlights every match, lists each one with its position and its numbered and named capture groups, and previews replacements and splits. A line-by-line explanation says in plain English what each part of the pattern does. Patterns run in a background worker, so one that backtracks catastrophically is stopped after a moment instead of freezing the page. It uses your browser's own JavaScript regex engine, and includes ready patterns for common formats such as email, URLs, Indian mobile numbers, PIN codes, PAN, GSTIN and IFSC.",
     howTo: {
       title: "How to test a regular expression",
       steps: [
-        "Type your pattern into the regular expression field, without the surrounding slashes.",
-        "Paste sample text into the test string box: include text that should match and text that should not.",
-        "Toggle the flags you need: g for every match, i to ignore case, m so ^ and $ work per line, s so . also matches newlines, u for full Unicode.",
-        "Check the highlighted matches, then read the match list to see what each capture group caught.",
-        "Use the cheat sheet for syntax you do not remember, and adjust the pattern until only the right text is highlighted.",
+        "Type your pattern between the slashes, or start from one of the common patterns.",
+        "Paste sample text: include text that should match and text that should not.",
+        "Turn on the flags you need: g for every match, i to ignore case, m so ^ and $ work per line, s so . also matches line breaks, u for full Unicode.",
+        "Check the highlighted matches, then switch to List to see each capture group, or to Replace and Split to try those operations.",
+        "Read “What this pattern means” to check each part does what you intended, then copy the pattern as a JavaScript literal or new RegExp().",
       ],
     },
     useCases: [
@@ -3616,15 +3618,15 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "html-entity-converter": {
     intro:
-      "Some characters mean something to HTML: < starts a tag, & starts an entity and \" ends an attribute. To show them as text, or to paste code into a web page, they have to be written as entities such as &lt; and &amp;. This converter encodes text into HTML entities and decodes entities back into readable text, and lets you choose named entities (&amp;), decimal codes (&#38;) or hexadecimal codes (&#x26;). It runs in your browser, so you can paste private snippets safely.",
+      "Some characters mean something to HTML: < starts a tag, & starts an entity and \" ends an attribute. To show them as text, or to paste code into a web page, they have to be written as entities such as &lt; and &amp;. This converter encodes just those characters, every non-ASCII character as well, or everything, as named entities (&amp;), decimal codes (&#38;) or hexadecimal codes (&#x26;) — emoji included, as a single code each. Decoding understands every named entity in the HTML standard, leaves tags untouched, and tells you when text was encoded twice. It runs in your browser, so you can paste private snippets safely.",
     howTo: {
       title: "How to encode or decode HTML entities",
       steps: [
-        "Choose whether you want to encode text into entities or decode entities into text.",
+        "Choose Encode text for HTML or Decode entities.",
         "Paste your text or HTML into the input box.",
-        "When encoding, pick named, decimal or hexadecimal entities.",
-        "Check the converted output and the character counts.",
-        "Copy the result into your page, template or email.",
+        "When encoding, choose which characters to encode — only & < > \" ' is enough to show text safely in a page — and whether to write them as named, decimal or hex entities.",
+        "Check the result. If decoding leaves entities like &amp;amp; behind, use Decode again: the text was encoded twice.",
+        "Copy the result into your page, template or email, or use it as the input to go the other way.",
       ],
     },
     useCases: [
@@ -3671,15 +3673,14 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "color-converter": {
     intro:
-      "The same colour is written differently depending on where it is used: HEX and RGB in CSS and design tools, HSL when you want to adjust lightness or saturation, and CMYK for print. This converter takes a colour in any of these formats, or from the colour picker, and shows it in all of them at once, ready to copy — including as a CSS custom property. It also suggests complementary, analogous and triadic harmonies, which are a quick starting point for a palette.",
+      "The same colour is written differently depending on where it is used: HEX and RGB in CSS and design tools, HSL or OKLCH when you want to adjust lightness, and CMYK for print. This converter reads a colour in any CSS syntax — HEX, rgb(), hsl(), hwb(), oklch(), oklab() or a name like tomato — and shows it in all of these at once, transparency included. OKLCH, the perceptual colour space in modern CSS, is used to build an 11-step shade scale like Tailwind's 50–950 and harmonies that keep the same lightness, and the whole scale can be copied as CSS variables.",
     howTo: {
       title: "How to convert a colour",
       steps: [
-        "Enter a colour as HEX (#1a73e8), RGB (rgb(26, 115, 232)) or HSL, or pick one with the colour picker.",
-        "Read the same colour in HEX, RGB, HSL and CMYK.",
-        "Copy the format you need with one click, including a ready-made CSS variable.",
-        "Look at the harmony swatches for colours that go well with it.",
-        "Click a harmony colour to convert that one as well.",
+        "Type or paste a colour in any CSS format, or pick one with the colour picker.",
+        "Copy the format you need — HEX, RGB, HSL, OKLCH and more — with one click.",
+        "Use the shade scale for lighter and darker versions, and copy it as CSS variables with your own name.",
+        "Click a harmony or shade swatch to convert that colour as well.",
       ],
     },
     useCases: [
@@ -3822,15 +3823,14 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "unix-timestamp-converter": {
     intro:
-      "A Unix timestamp is the number of seconds since 00:00:00 UTC on 1 January 1970 — the way most servers, databases and APIs store time, because it is a single number with no time zone attached. This converter turns a timestamp into a readable date in UTC, ISO 8601 and your local time, with a relative description such as \"3 hours ago\", and turns a date and time back into a timestamp. It recognises whether a number is in seconds or milliseconds from its length, and shows the current timestamp ticking live.",
+      "A Unix timestamp is the number of seconds since 00:00:00 UTC on 1 January 1970 — the way most servers, databases and APIs store time, because it is a single number with no time zone attached. Not every system counts in seconds, though: JavaScript uses milliseconds, Python and PostgreSQL often microseconds, and Go and many logs nanoseconds. This converter recognises the unit from the number of digits, shows the moment in your time zone, UTC and any other, in ISO 8601, RFC 2822 and SQL formats, and converts dates typed in almost any format back into timestamps. A batch mode converts a whole list from a log file at once.",
     howTo: {
       title: "How to convert a Unix timestamp",
       steps: [
-        "Paste a timestamp into the timestamp field. A 10-digit number is read as seconds; a 13-digit number as milliseconds, which is what JavaScript and many APIs use.",
-        "Read the result in UTC, in ISO 8601 format for code and logs, and in your own time zone.",
-        "Check the relative time to see at a glance whether the moment is in the past or future and how far away it is.",
-        "To go the other way, pick a date and time and copy the timestamp in seconds or milliseconds.",
-        "Use the live clock to grab the current timestamp for tests and database queries.",
+        "Paste a timestamp: 10 digits is read as seconds, 13 as milliseconds, 16 as microseconds and 19 as nanoseconds — or choose the unit yourself.",
+        "Or type a date, such as 2026-09-29T14:30:00Z or 2026-09-29 20:00; dates without a zone are read in the time zone you choose.",
+        "Read the result in your time, UTC and the chosen zone, and copy ISO 8601, RFC 2822, SQL or the timestamp in any unit.",
+        "To convert many at once, open Convert many at once and paste one timestamp per line.",
       ],
     },
     useCases: [
@@ -3877,14 +3877,14 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "json-to-typescript": {
     intro:
-      "Writing TypeScript types by hand for an API response is slow and easy to get wrong, especially when objects are nested three levels deep. Paste a sample of the JSON and this tool generates matching interfaces or type aliases: nested objects become their own named types, arrays get the type of their items, and you can mark every property optional or readonly and choose the name of the root type. The conversion runs in your browser, so internal API payloads never leave your machine.",
+      "Writing TypeScript types by hand for an API response is slow and easy to get wrong, especially when objects are nested and arrays hold items that differ. Paste a sample of the JSON and this tool generates matching interfaces, type aliases or Zod schemas. Unlike tools that look only at the first item of an array, it reads every item: keys that some items lack become optional, fields that hold different kinds of value become unions, and null becomes | null. Objects with the same shape share one type, different shapes get distinct names, and awkward keys such as user-name are quoted correctly. The conversion runs in your browser, so internal API payloads never leave your machine.",
     howTo: {
-      title: "How to generate TypeScript interfaces from JSON",
+      title: "How to generate TypeScript types from JSON",
       steps: [
-        "Paste a JSON object or array into the input box — ideally a real response that includes every field you expect.",
-        "Set the root type name, for example UserResponse, so the generated code fits your naming.",
-        "Choose interfaces or type aliases, and switch on optional or readonly properties if your code style needs them.",
-        "Review the output: nested objects are extracted into separately named types that you can reuse.",
+        "Paste a JSON object or array — ideally a real response, with several items in each array if they differ.",
+        "Set the name of the top-level type, for example UserResponse.",
+        "Choose interfaces, type aliases or a Zod schema, and switch on readonly or all-optional fields if your code style needs them.",
+        "Review the output: nested objects become separately named types, and optional fields are marked with ?.",
         "Copy the code or download it as a .ts file and drop it into your project.",
       ],
     },
@@ -4100,15 +4100,14 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "contrast-checker": {
     intro:
-      "Text that is too close in colour to its background is hard to read for everyone and impossible for many people with low vision or colour blindness. This checker calculates the WCAG 2.1 contrast ratio between a text colour and a background colour, shows whether the pair passes AA and AAA for normal and large text, and previews real headings and paragraphs in those colours. It also simulates protanopia, deuteranopia and tritanopia, so you can see how the pair looks to people with the most common forms of colour blindness.",
+      "Text that is too close in colour to its background is hard to read for everyone and impossible for many people with low vision or colour blindness. This checker calculates the WCAG 2.2 contrast ratio between any two CSS colours — including transparent ones, which are checked as they actually appear — and shows whether the pair passes AA and AAA for normal text, large text and interface components. If it fails, it suggests the nearest text or background colour that passes while keeping the same hue. Ratios are cut rather than rounded, so a pair at 4.49:1 never looks like a pass. Previews show the pair for the main kinds of colour blindness.",
     howTo: {
       title: "How to check colour contrast",
       steps: [
-        "Enter the text colour and the background colour as HEX values, or pick them.",
-        "Read the contrast ratio, from 1:1 (identical colours) to 21:1 (black on white).",
-        "Check the AA and AAA results for normal text and for large text.",
-        "Look at the preview to judge readability with real text, not just a number.",
-        "Switch on the colour-blindness simulations to make sure important text and states are still distinguishable.",
+        "Enter the text colour and the background colour in any CSS format, or pick them.",
+        "Read the contrast ratio, from 1:1 (identical colours) to 21:1 (black on white), and the pass or fail for each WCAG check.",
+        "If it fails, choose AA or AAA under Fix it and use the suggested text or background colour.",
+        "Look at the preview with real text and a button outline, then at the colour-vision previews.",
       ],
     },
     useCases: [

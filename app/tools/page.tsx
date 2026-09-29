@@ -5,11 +5,10 @@ import {
   getToolsByCategory,
   TOOL_CATEGORIES,
 } from "@/lib/tools/registry";
-import { constructPageMetadata, SITE_CONFIG } from "@/lib/seo/metadata";
-import {
-  generateCollectionJsonLd,
-  generateBreadcrumbJsonLd,
-} from "@/lib/seo/jsonld";
+import { constructPageMetadata } from "@/lib/seo/metadata";
+import { absoluteUrl } from "@/lib/seo/config";
+import { generateCollectionJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/json-ld";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { FileSpreadsheet } from "lucide-react";
 import { ToolDirectory } from "@/components/tool/tool-directory";
@@ -17,16 +16,8 @@ import { ToolDirectory } from "@/components/tool/tool-directory";
 export const metadata: Metadata = constructPageMetadata({
   title: "All Free Online Tools - Full Directory",
   description:
-    `Browse all ${getAllTools().length} free online tools: PDF converters, image compressors, calculators, and developer utilities. Every tool runs in your browser with no signup and no upload.`,
+    `Browse all ${getAllTools().length} free online tools: PDF converters, image compressors, calculators and developer utilities. No signup, and most run entirely in your browser.`,
   path: "/tools",
-  keywords: [
-    "all online tools",
-    "free tools directory",
-    "online utilities list",
-    "browser tools",
-    "free pdf tools",
-    "free image tools",
-  ],
 });
 
 export default function ToolsIndexPage() {
@@ -36,14 +27,9 @@ export default function ToolsIndexPage() {
     name: "All Free Online Tools",
     description:
       "Complete directory of free browser-based calculators, converters, and developer utilities.",
-    url: `${SITE_CONFIG.domain}/tools`,
-    tools: allTools,
+    url: absoluteUrl("/tools"),
+    items: allTools.map((t) => ({ name: t.name, path: `/tools/${t.slug}` })),
   });
-
-  const breadcrumbSchema = generateBreadcrumbJsonLd([
-    { name: "Home", path: "" },
-    { name: "All Tools", path: "/tools" },
-  ]);
 
   const populatedCategories = TOOL_CATEGORIES.map((cat) => ({
     ...cat,
@@ -52,17 +38,10 @@ export default function ToolsIndexPage() {
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
+      <JsonLd data={collectionSchema} />
 
       <div className="page-container py-6 md:py-10">
-        <Breadcrumbs items={[{ name: "All tools" }]} />
+        <Breadcrumbs items={[{ name: "All tools", url: "/tools" }]} />
 
         <header className="mt-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">

@@ -10,11 +10,9 @@ import { Toaster } from "@/components/ui/sonner";
 import ThemeProvider from "@/components/ThemeProvider";
 import FirebaseAnalytics from "@/components/FirebaseAnalytics";
 import PwaManager from "@/components/PwaManager";
-import { SITE_CONFIG } from "@/lib/seo/metadata";
-import {
-  generateWebsiteJsonLd,
-  generateOrganizationJsonLd,
-} from "@/lib/seo/jsonld";
+import { SEO_CONFIG } from "@/lib/seo/config";
+import { generateSiteGraph } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/json-ld";
 import { getAllTools } from "@/lib/tools/registry";
 import { CANONICAL_HOST_SCRIPT } from "@/lib/seo/canonical-host";
 
@@ -40,65 +38,38 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL(SITE_CONFIG.domain),
+  metadataBase: new URL(SEO_CONFIG.origin),
   title: {
-    default: "TabBench - Free Online Calculators & Web Tools",
+    default: "TabBench – Free Online Calculators, PDF & Image Tools",
     template: "%s | TabBench",
   },
-  description:
-    "Free online calculators, file converters, image compressors, PDF utilities, and developer tools. Fast, private in-browser tools with zero signups.",
-  applicationName: "TabBench",
-  authors: [{ name: "TabBench Team", url: SITE_CONFIG.domain }],
-  creator: "TabBench",
-  publisher: "TabBench",
-  keywords: [
-    "free online tools",
-    "free tools for all",
-    "free online calculators",
-    "free image converter",
-    "free pdf editor",
-    "free image compressor to 50kb",
-    "pdf to word converter free",
-    "percentage calculator free",
-    "qr code generator free",
-    "password generator free",
-    "age calculator",
-    "gst calculator",
-    "loan emi calculator",
-    "json formatter online free",
-    "base64 encoder free",
-    "uuid generator",
-    "jwt decoder free",
-    "no login tools",
-  ],
-  icons: {
-    icon: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-    ],
-    apple: [
-      { url: "/icon.svg", type: "image/svg+xml" },
-    ],
-  },
+  description: SEO_CONFIG.description,
+  applicationName: SEO_CONFIG.siteName,
+  authors: [{ name: SEO_CONFIG.siteName, url: SEO_CONFIG.origin }],
+  creator: SEO_CONFIG.siteName,
+  publisher: SEO_CONFIG.siteName,
+  // No site-wide `alternates.canonical` on purpose. It used to point at the
+  // homepage, so any page that forgot its own canonical would silently tell
+  // Google it was a duplicate of the homepage. Every indexable page now sets
+  // its own (lib/seo/metadata.ts); scripts/seo-check.mjs fails the build if
+  // one is missing.
+  //
+  // No `icons` either: app/favicon.ico, app/icon.svg and app/apple-icon.tsx
+  // (a real PNG — iOS ignores SVG touch icons) are picked up by convention.
+  // No `keywords`: Google ignores the tag.
   openGraph: {
-    title: "TabBench - Fast, Free & Private Online Calculators and Utilities",
-    description:
-      `${TOOL_COUNT} free tools: image compressor, PDF to Word, QR generator, calculators and developer utilities. Everything runs in your browser — no upload, no signup.`,
-    url: SITE_CONFIG.domain,
-    siteName: "TabBench",
-    locale: "en_US",
+    title: "TabBench – Fast, Free & Private Online Calculators and Utilities",
+    description: `${TOOL_COUNT} free tools: image compressor, PDF to Word, QR generator, calculators and developer utilities. Everything runs in your browser — no upload, no signup.`,
+    url: SEO_CONFIG.origin,
+    siteName: SEO_CONFIG.siteName,
+    locale: SEO_CONFIG.locale,
     type: "website",
-    // Images come from app/opengraph-image.tsx (a real PNG). Setting them
-    // here would override that convention.
+    // Images come from app/opengraph-image.tsx (a real PNG).
   },
   twitter: {
     card: "summary_large_image",
-    title: "TabBench - Fast, Free & Private Online Calculators and Utilities",
-    description:
-      `${TOOL_COUNT} free browser tools: image compressor, PDF to Word, QR generator, calculators and developer utilities.`,
-    creator: SITE_CONFIG.twitterHandle,
-  },
-  alternates: {
-    canonical: SITE_CONFIG.domain,
+    title: "TabBench – Fast, Free & Private Online Calculators and Utilities",
+    description: `${TOOL_COUNT} free browser tools: image compressor, PDF to Word, QR generator, calculators and developer utilities.`,
   },
   robots: {
     index: true,
@@ -111,9 +82,15 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
-  // Add the verification token issued for the tabbench.com Search Console
-  // property here. The previous token belonged to everydaytools-s.web.app and
-  // will not validate on the new domain.
+  appleWebApp: {
+    capable: true,
+    title: SEO_CONFIG.siteName,
+    statusBarStyle: "default",
+  },
+  // Search Console: verify tabbench.com as a Domain property (DNS TXT record),
+  // which needs nothing here. If you use the HTML-tag method instead, add
+  // `verification: { google: "<token>" }`. The old token belonged to
+  // everydaytools-s.web.app and will not validate on the new domain.
 };
 
 export default function RootLayout({
@@ -121,13 +98,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Emitted as a @graph so the WebSite and Organization nodes can reference
-  // each other by @id instead of repeating the publisher block on every page.
-  const siteSchema = {
-    "@context": "https://schema.org",
-    "@graph": [generateOrganizationJsonLd(), generateWebsiteJsonLd()],
-  };
-
   return (
     <html
       lang="en"
@@ -135,20 +105,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full`}
     >
       <head>
-        <meta charSet="utf-8" />
-        <meta httpEquiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="rating" content="general" />
-        <meta name="distribution" content="global" />
-        <meta name="revisit-after" content="2 days" />
-
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="TabBench" />
+        {/* charset, viewport, theme-color, manifest and icons are emitted by
+            Next from `metadata`/`viewport` and the app/ icon files. They were
+            also hand-written here, so every page shipped two charsets, two
+            viewports, two manifests and an SVG apple-touch-icon iOS ignores.
+            `appleWebApp` also emits mobile-web-app-capable. */}
         <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossOrigin="anonymous" />
-        <link rel="apple-touch-icon" href="/icon.svg" />
-        <link rel="manifest" href="/manifest.webmanifest" />
 
         {/* reCAPTCHA Enterprise is no longer loaded here. It was a
             synchronous, render-blocking script on every page for a check only
@@ -197,10 +159,7 @@ export default function RootLayout({
           }}
         />
 
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(siteSchema) }}
-        />
+        <JsonLd data={generateSiteGraph()} />
 
         <ThemeProvider
           attribute="class"

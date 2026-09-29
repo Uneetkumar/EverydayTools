@@ -161,7 +161,11 @@ function CommandItem({
       {...props}
     >
       {children}
-      <CheckIcon className="ml-auto opacity-0 group-has-data-[slot=command-shortcut]/command-item:hidden group-data-[checked=true]/command-item:opacity-100" />
+      {/* Out of the layout unless the item is checked. As an invisible
+          `ml-auto` element it split the free space with a row's own trailing
+          icon, so the → arrows in the search dialog sat at a different x on
+          every row. */}
+      <CheckIcon className="ml-auto hidden group-has-data-[slot=command-shortcut]/command-item:hidden group-data-[checked=true]/command-item:block" />
     </CommandPrimitive.Item>
   )
 }

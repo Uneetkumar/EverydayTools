@@ -1,153 +1,163 @@
-import { ToolDefinition } from "@/lib/tools/registry";
-import { ToolContent } from "@/lib/tools/content";
-import { SITE_CONFIG, CONTENT_LAST_UPDATED } from "./metadata";
+import type { ToolCategoryId, ToolDefinition } from "@/lib/tools/registry";
+import type { ToolContent } from "@/lib/tools/content";
+import type { Guide } from "@/lib/guides/content";
+import { SEO_CONFIG, absoluteUrl } from "./config";
+import { getLastmod, guidePath, toolPath } from "./routes";
 
 /**
- * NOTE ON RATINGS: we deliberately do not emit `aggregateRating`. Google's
- * structured data policy prohibits self-serving review markup that is not
- * backed by genuine, collected reviews, and fabricated ratings are a common
- * cause of manual actions. If real reviews are ever collected, this is where
- * the markup belongs.
+ * JSON-LD generators. Rules every generator here follows:
+ *
+ * - Describe only what is visibly on the page. FAQ markup mirrors the FAQ
+ *   the page renders; breadcrumbs come from the visible trail
+ *   (components/Breadcrumbs.tsx).
+ * - No invented facts. No `aggregateRating`/`review` (there are no collected
+ *   reviews — self-serving review markup is a manual-action risk), no made-up
+ *   `softwareVersion`, and dates only where they are real: guide dates are
+ *   editorial, `dateModified` comes from lib/seo/lastmod.json.
+ * - Entities are linked by @id (#organization, #website) instead of repeating
+ *   the publisher on every page.
+ *
+ * Tool pages use WebApplication. Google only shows software rich results
+ * with ratings, so these will not produce a rich result — they are there so
+ * the page is understood as a free, in-browser application.
  */
 
-export function generateToolJsonLd(tool: ToolDefinition, content?: ToolContent) {
-  const toolUrl = `${SITE_CONFIG.domain}/tools/${tool.slug}`;
+const ORG_ID = `${SEO_CONFIG.origin}/#organization`;
+const WEBSITE_ID = `${SEO_CONFIG.origin}/#website`;
 
-  const webAppSchema = {
-    "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "@id": `${toolUrl}#app`,
-    name: tool.name,
-    url: toolUrl,
-    description: tool.description,
-    applicationCategory: "UtilityApplication",
-    applicationSubCategory: tool.categoryName,
-    operatingSystem: "All",
-    browserRequirements: "Requires JavaScript. Requires HTML5.",
-    softwareVersion: "1.0",
-    image: `${SITE_CONFIG.domain}/tools/${tool.slug}/opengraph-image`,
-    isAccessibleForFree: true,
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "USD",
-      availability: "https://schema.org/InStock",
-    },
-    featureList: tool.features,
-    inLanguage: "en",
-    datePublished: CONTENT_LAST_UPDATED,
-    dateModified: CONTENT_LAST_UPDATED,
-    author: { "@id": `${SITE_CONFIG.domain}/#organization` },
-    publisher: {
-      "@id": `${SITE_CONFIG.domain}/#organization`,
-    },
-    // Declares the tool page itself as the primary entity, which helps Google
-    // treat the page as being *about* the application rather than merely
-    // mentioning it.
-    mainEntityOfPage: { "@type": "WebPage", "@id": toolUrl },
-  };
+type JsonLdNode = Record<string, unknown>;
 
-  const breadcrumbSchema = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      {
-        "@type": "ListItem",
-        position: 1,
-        name: "Home",
-        item: SITE_CONFIG.domain,
-      },
-      {
-        "@type": "ListItem",
-        position: 2,
-        name: "All Tools",
-        item: `${SITE_CONFIG.domain}/tools`,
-      },
-      {
-        "@type": "ListItem",
-        position: 3,
-        name: tool.categoryName,
-        item: `${SITE_CONFIG.domain}/categories/${tool.category}`,
-      },
-      {
-        "@type": "ListItem",
-        position: 4,
-        name: tool.name,
-        item: toolUrl,
-      },
-    ],
-  };
-
-  // Registry FAQs plus the long-form ones, so the markup matches what is
-  // actually rendered on the page — required for FAQ rich results.
-  const allFaqs = [...tool.faqs, ...(content?.extraFaqs ?? [])];
-
-  const faqSchema =
-    allFaqs.length > 0
-      ? {
-          "@context": "https://schema.org",
-          "@type": "FAQPage",
-          "@id": `${toolUrl}#faq`,
-          mainEntity: allFaqs.map((faq) => ({
-            "@type": "Question",
-            name: faq.question,
-            acceptedAnswer: {
-              "@type": "Answer",
-              text: faq.answer,
-            },
-          })),
-        }
-      : null;
-
-  return {
-    webAppSchema,
-    breadcrumbSchema,
-    faqSchema,
-  };
+/**
+ * JSON for a <script type="application/ld+json">. Escapes `<`, `>` and `&`
+ * so no string in the data (a FAQ answer mentioning "</script>", say) can
+ * close the tag early and inject markup.
+ */
+export function serializeJsonLd(data: unknown): string {
+  // U+2028/U+2029 are valid in JSON but end a line in older JS parsers.
+  const LS = String.fromCharCode(0x2028);
+  const PS = String.fromCharCode(0x2029);
+  return JSON.stringify(data)
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .split(LS).join("\\u2028")
+    .split(PS).join("\\u2029");
 }
 
-export function generateOrganizationJsonLd() {
+export function generateOrganizationJsonLd(): JsonLdNode {
   return {
-    "@context": "https://schema.org",
     "@type": "Organization",
-    "@id": `${SITE_CONFIG.domain}/#organization`,
-    name: SITE_CONFIG.name,
-    legalName: SITE_CONFIG.legalName,
-    url: SITE_CONFIG.domain,
-    description: SITE_CONFIG.description,
+    "@id": ORG_ID,
+    name: SEO_CONFIG.siteName,
+    url: SEO_CONFIG.origin,
+    description: SEO_CONFIG.description,
     logo: {
       "@type": "ImageObject",
-      url: `${SITE_CONFIG.domain}/icon.svg`,
+      url: absoluteUrl(SEO_CONFIG.logoPath),
+      width: 512,
+      height: 512,
     },
     contactPoint: {
       "@type": "ContactPoint",
       contactType: "customer support",
-      url: `${SITE_CONFIG.domain}/contact`,
+      url: absoluteUrl("/contact"),
       availableLanguage: ["English"],
+    },
+    ...(SEO_CONFIG.sameAs.length ? { sameAs: [...SEO_CONFIG.sameAs] } : {}),
+  };
+}
+
+export function generateWebsiteJsonLd(): JsonLdNode {
+  return {
+    "@type": "WebSite",
+    "@id": WEBSITE_ID,
+    name: SEO_CONFIG.siteName,
+    url: SEO_CONFIG.origin,
+    description: SEO_CONFIG.description,
+    inLanguage: SEO_CONFIG.language,
+    publisher: { "@id": ORG_ID },
+    // /tools reads ?q= and filters the directory (components/tool/tool-directory.tsx).
+    potentialAction: {
+      "@type": "SearchAction",
+      target: { "@type": "EntryPoint", urlTemplate: `${SEO_CONFIG.origin}/tools?q={search_term_string}` },
+      "query-input": "required name=search_term_string",
     },
   };
 }
 
-export function generateWebsiteJsonLd() {
+/** The site-wide graph, emitted once per page by the root layout. */
+export function generateSiteGraph(): JsonLdNode {
+  return { "@context": "https://schema.org", "@graph": [generateOrganizationJsonLd(), generateWebsiteJsonLd()] };
+}
+
+/** schema.org applicationCategory values Google documents for software apps. */
+const APP_CATEGORY: Record<ToolCategoryId, string> = {
+  calculators: "UtilitiesApplication",
+  business: "BusinessApplication",
+  "date-time": "UtilitiesApplication",
+  text: "UtilitiesApplication",
+  developer: "DeveloperApplication",
+  "image-media": "MultimediaApplication",
+  "pdf-docs": "UtilitiesApplication",
+  security: "SecurityApplication",
+  "ai-tools": "UtilitiesApplication",
+};
+
+export function generateToolJsonLd(tool: ToolDefinition, content?: ToolContent) {
+  const url = absoluteUrl(toolPath(tool.slug));
+  const dateModified = getLastmod(toolPath(tool.slug));
+
+  const webAppSchema: JsonLdNode = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "@id": `${url}#app`,
+    name: tool.name,
+    url,
+    description: tool.description,
+    applicationCategory: APP_CATEGORY[tool.category] ?? "UtilitiesApplication",
+    applicationSubCategory: tool.categoryName,
+    operatingSystem: "Any",
+    browserRequirements: "Requires JavaScript. Requires HTML5.",
+    image: absoluteUrl(`${toolPath(tool.slug)}/opengraph-image`),
+    isAccessibleForFree: true,
+    // Every tool is free with no paid tier; this is a statement of fact.
+    offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+    featureList: tool.features,
+    inLanguage: SEO_CONFIG.language,
+    ...(dateModified ? { dateModified } : {}),
+    author: { "@id": ORG_ID },
+    publisher: { "@id": ORG_ID },
+    isPartOf: { "@id": WEBSITE_ID },
+    mainEntityOfPage: url,
+  };
+
+  // Registry FAQs plus the long-form ones — exactly what ToolShell renders.
+  const faqSchema = generateFaqJsonLd([...tool.faqs, ...(content?.extraFaqs ?? [])], url);
+
+  return { webAppSchema, faqSchema };
+}
+
+export function generateArticleJsonLd(guide: Guide): JsonLdNode {
+  const path = guidePath(guide.slug);
+  const url = absoluteUrl(path);
+  // The sitemap date also moves when the guide text changes without a bumped
+  // `updated`; use whichever is later so the two never disagree.
+  const modified = [guide.updated, getLastmod(path)].filter((d): d is string => !!d).sort().at(-1);
   return {
     "@context": "https://schema.org",
-    "@type": "WebSite",
-    "@id": `${SITE_CONFIG.domain}/#website`,
-    name: SITE_CONFIG.name,
-    url: SITE_CONFIG.domain,
-    description: SITE_CONFIG.description,
-    inLanguage: "en",
-    publisher: {
-      "@id": `${SITE_CONFIG.domain}/#organization`,
-    },
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${SITE_CONFIG.domain}/tools?q={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
+    "@type": "Article",
+    "@id": `${url}#article`,
+    headline: guide.title,
+    description: guide.metaDescription,
+    url,
+    image: absoluteUrl(`${path}/opengraph-image`),
+    datePublished: guide.published,
+    dateModified: modified,
+    inLanguage: SEO_CONFIG.language,
+    author: { "@id": ORG_ID },
+    publisher: { "@id": ORG_ID },
+    isPartOf: { "@id": WEBSITE_ID },
+    mainEntityOfPage: url,
   };
 }
 
@@ -156,37 +166,35 @@ export function generateCollectionJsonLd({
   name,
   description,
   url,
-  tools,
+  items,
 }: {
   name: string;
   description: string;
   url: string;
-  tools: ToolDefinition[];
-}) {
+  items: { name: string; path: string }[];
+}): JsonLdNode {
   return {
     "@context": "https://schema.org",
     "@type": "CollectionPage",
+    "@id": `${url}#collection`,
     name,
     description,
     url,
-    isPartOf: { "@id": `${SITE_CONFIG.domain}/#website` },
+    isPartOf: { "@id": WEBSITE_ID },
     mainEntity: {
       "@type": "ItemList",
-      numberOfItems: tools.length,
-      itemListElement: tools.map((tool, index) => ({
+      numberOfItems: items.length,
+      itemListElement: items.map((item, index) => ({
         "@type": "ListItem",
         position: index + 1,
-        name: tool.name,
-        url: `${SITE_CONFIG.domain}/tools/${tool.slug}`,
+        name: item.name,
+        url: absoluteUrl(item.path),
       })),
     },
   };
 }
 
-export function generateFaqJsonLd(
-  faqs: { question: string; answer: string }[],
-  pageUrl: string
-) {
+export function generateFaqJsonLd(faqs: { question: string; answer: string }[], pageUrl: string): JsonLdNode | null {
   if (!faqs.length) return null;
   return {
     "@context": "https://schema.org",
@@ -200,9 +208,12 @@ export function generateFaqJsonLd(
   };
 }
 
-export function generateBreadcrumbJsonLd(
-  crumbs: { name: string; path: string }[]
-) {
+/**
+ * BreadcrumbList for a visible trail. Called by components/Breadcrumbs.tsx
+ * with the same items it renders, so the two cannot drift apart. The last
+ * crumb (the current page) may omit its URL, as Google's spec allows.
+ */
+export function generateBreadcrumbJsonLd(crumbs: { name: string; path?: string }[]): JsonLdNode {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -210,7 +221,7 @@ export function generateBreadcrumbJsonLd(
       "@type": "ListItem",
       position: index + 1,
       name: crumb.name,
-      item: `${SITE_CONFIG.domain}${crumb.path}`,
+      ...(crumb.path !== undefined ? { item: absoluteUrl(crumb.path) } : {}),
     })),
   };
 }

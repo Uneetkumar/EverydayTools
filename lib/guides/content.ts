@@ -31,6 +31,8 @@ export interface Guide {
   /** Practical notes rendered as a bullet list. */
   notes: string[];
   faqs: { question: string; answer: string }[];
+  /** ISO date the guide first went live (from git history). Never changes. */
+  published: string;
   /** ISO date. Bump when the guide is meaningfully revised. */
   updated: string;
 }
@@ -53,6 +55,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "image-compressor",
     toolLabel: "Image Compressor",
+    published: "2026-08-19",
     updated: "2026-08-19",
     intro: [
       "A 50KB limit is one of the tightest you will meet online, and it is the standard on Indian exam portals — SSC, UPSC, IBPS, railway and state recruitment boards all cap photographs at or near it. A photo straight from a phone camera is typically 3–5MB, so you need roughly a 99% reduction.",
@@ -121,6 +124,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "image-compressor",
     toolLabel: "Image Compressor",
+    published: "2026-08-19",
     updated: "2026-08-19",
     intro: [
       "100KB is the common ceiling for bank KYC, visa applications, and university admissions — noticeably more generous than the 50KB exam portals demand. At this budget you can keep a genuinely sharp image, so the goal shifts from survival to quality.",
@@ -183,6 +187,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "image-compressor",
     toolLabel: "Image Compressor",
+    published: "2026-08-19",
     updated: "2026-08-19",
     intro: [
       "A 20KB limit almost always means a signature field rather than a photograph. Exam and banking portals typically ask for a signature between 10KB and 20KB, often at around 140×60 pixels, and they reject anything larger without explanation.",
@@ -245,6 +250,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "split-pdf",
     toolLabel: "Split PDF tool",
+    published: "2026-08-19",
     updated: "2026-08-19",
     intro: [
       "Government and university portals routinely cap PDF uploads at 100KB, 200KB, or 2MB, and a scanned document sails past all three. A ten-page scan at 300 DPI is commonly 15–40MB, so this is not a small adjustment.",
@@ -312,6 +318,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "image-resizer",
     toolLabel: "Image Resizer",
+    published: "2026-08-19",
     updated: "2026-08-19",
     intro: [
       "\"Without losing quality\" is not quite achievable in the literal sense — every lossy compression discards something. What is achievable, and what people actually mean, is losing nothing you can see at the size the image will be viewed.",
@@ -375,6 +382,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "pdf-to-word",
     toolLabel: "PDF to Word Converter",
+    published: "2026-08-19",
     updated: "2026-08-19",
     intro: [
       "PDFs are designed to look identical everywhere, and that is exactly what makes them awkward to edit. The format stores positioned glyphs — this character, at this coordinate, in this font — rather than paragraphs, tables, or headings. A converter has to infer all of that structure back.",
@@ -438,6 +446,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "speech-to-text",
     toolLabel: "Voice to Text tool",
+    published: "2026-08-19",
     updated: "2026-08-19",
     intro: [
       "Typing in Hindi, Tamil, or Bengali on a normal keyboard is genuinely awkward. You either install a language layout and relearn where every character sits, or you type phonetically in English and hope the transliteration guesses right. Most people give up and switch to English.",
@@ -511,6 +520,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "webp-to-jpg",
     toolLabel: "WebP to JPG Converter",
+    published: "2026-08-19",
     updated: "2026-08-19",
     intro: [
       "Saving an image from the web increasingly gives you a .webp file, and then something refuses it — an upload form, an older photo editor, a printing service, a government portal. WebP is a genuinely better format, but support outside browsers is still patchy.",
@@ -583,6 +593,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "percentage-calculator",
     toolLabel: "Percentage Calculator",
+    published: "2026-09-13",
     updated: "2026-09-13",
     intro: [
       "Percentage change measures how much a value grows or shrinks relative to where it started. It is one of the most widely used mathematical concepts in finance, retail, science, and everyday life — whether you are tracking sales growth, comparing discounts, or analyzing quarterly inflation.",
@@ -655,6 +666,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "emi-calculator",
     toolLabel: "EMI Calculator",
+    published: "2026-09-13",
     updated: "2026-09-13",
     intro: [
       "An Equated Monthly Installment (EMI) is the fixed monthly amount a borrower pays to a lender on a specified calendar date. Every EMI installment covers both the monthly interest accrued on the remaining balance and a partial repayment of the original loan principal.",
@@ -727,6 +739,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "sip-calculator",
     toolLabel: "SIP Calculator",
+    published: "2026-09-13",
     updated: "2026-09-13",
     intro: [
       "When building wealth in mutual funds or index ETFs, investors typically choose between investing a single lump sum or setting up a Systematic Investment Plan (SIP) that transfers a fixed dollar amount at regular intervals.",
@@ -788,7 +801,7 @@ export const GUIDES: Guide[] = [
     title: "How to calculate GST: inclusive vs exclusive formulas",
     metaTitle: "How to Calculate GST - Inclusive vs Exclusive",
     metaDescription:
-      "Learn the exact mathematical formulas to add GST or remove GST from invoice prices at the 5%, 18% and 40% slabs (and older 12% and 28% invoices), with clear examples.",
+      "The formulas to add or remove GST from an invoice price at the 5%, 18% and 40% slabs (and older 12% and 28% invoices), with worked examples.",
     keywords: [
       "how to calculate gst",
       "gst inclusive formula",
@@ -799,6 +812,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "gst-calculator",
     toolLabel: "GST Calculator",
+    published: "2026-09-13",
     updated: "2026-09-13",
     intro: [
       "Goods and Services Tax (GST) is a unified indirect consumption tax levied on the supply of goods and services. Whether you are a business owner issuing client invoices or a consumer verifying retail receipts, calculating GST correctly is essential.",
@@ -871,6 +885,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "png-to-svg",
     toolLabel: "PNG to SVG Converter",
+    published: "2026-09-13",
     updated: "2026-09-13",
     intro: [
       "Selecting the wrong image format can severely bloat website load times, hurt Google Core Web Vitals, or cause logos and icons to look fuzzy on high-density Retina displays. Modern web design requires knowing when to use vector SVG, raster PNG, or modern compressed WebP.",
@@ -943,6 +958,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "pdf-to-word",
     toolLabel: "PDF to Word Converter",
+    published: "2026-09-13",
     updated: "2026-09-13",
     intro: [
       "PDFs are built for visual fidelity across operating systems — freezing fonts, coordinates, and margins in place so that a document prints identically everywhere. Microsoft Word documents, by contrast, are flowable semantic texts designed for editing, typing, and dynamic repagination.",
@@ -1015,6 +1031,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "json-formatter",
     toolLabel: "JSON Formatter",
+    published: "2026-09-13",
     updated: "2026-09-13",
     intro: [
       "JavaScript Object Notation (JSON) is the universal data interchange standard powering modern web APIs, cloud microservices, and configuration files. Defined formally in RFC 8259 and ECMA-404, JSON is lightweight, language-agnostic, and straightforward for computers to parse.",
@@ -1087,6 +1104,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "aspect-ratio-calculator",
     toolLabel: "Aspect Ratio Calculator",
+    published: "2026-09-13",
     updated: "2026-09-13",
     intro: [
       "Aspect ratio describes the proportional relationship between the width and height of an image, video, or digital screen. Written as two numbers separated by a colon (e.g. 16:9), it defines the geometric shape of the frame regardless of its physical size in inches or resolution in pixels.",
@@ -1159,6 +1177,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "exif-viewer",
     toolLabel: "EXIF Metadata Viewer",
+    published: "2026-09-13",
     updated: "2026-09-13",
     intro: [
       "Every time you take a photo with a smartphone or digital camera, the device embeds an invisible data structure known as EXIF (Exchangeable Image File Format) directly inside the image file. This data travels with the image wherever it is shared or uploaded.",
@@ -1231,6 +1250,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "compound-interest-calculator",
     toolLabel: "Compound Interest Calculator",
+    published: "2026-09-13",
     updated: "2026-09-13",
     intro: [
       "Compound interest is interest calculated not only on the initial principal deposited or borrowed, but also on the accumulated interest from previous periods. Often referred to as 'interest on interest', compounding is the foundational engine of long-term wealth creation.",
@@ -1303,6 +1323,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "regex-tester",
     toolLabel: "Regex Tester",
+    published: "2026-09-13",
     updated: "2026-09-13",
     intro: [
       "A Regular Expression (regex) is a sequence of characters that specifies a search pattern in text. Ubiquitous across software development, data parsing, form validation, and command-line search tools like grep, regex allows you to match complex textual rules with a single string.",
@@ -1375,6 +1396,7 @@ export const GUIDES: Guide[] = [
     ],
     toolSlug: "unit-converter",
     toolLabel: "Unit Converter",
+    published: "2026-09-13",
     updated: "2026-09-13",
     intro: [
       "The metric system (SI) is based on decimal powers of ten, making conversions between centimeters, meters, and kilometers simple multiplication. The imperial and US customary systems, however, rely on historical fractional definitions (12 inches to a foot, 16 ounces to a pound, 4 quarts to a gallon).",

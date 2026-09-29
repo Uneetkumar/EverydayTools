@@ -1,13 +1,13 @@
 import { MetadataRoute } from "next";
-import { SITE_CONFIG } from "@/lib/seo/metadata";
+import { SEO_CONFIG } from "@/lib/seo/config";
 
 export const dynamic = "force-static";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: `${SITE_CONFIG.name} - Free Online Calculators & Web Tools`,
-    short_name: SITE_CONFIG.name,
-    description: SITE_CONFIG.description,
+    name: `${SEO_CONFIG.siteName} - Free Online Calculators & Web Tools`,
+    short_name: SEO_CONFIG.siteName,
+    description: SEO_CONFIG.description,
     start_url: "/",
     id: "/",
     scope: "/",
@@ -18,18 +18,11 @@ export default function manifest(): MetadataRoute.Manifest {
     orientation: "any",
     categories: ["utilities", "productivity", "developer"],
     icons: [
-      {
-        src: "/icon.svg",
-        sizes: "any",
-        type: "image/svg+xml",
-        purpose: "any",
-      },
-      {
-        src: "/icon.svg",
-        sizes: "any",
-        type: "image/svg+xml",
-        purpose: "maskable",
-      },
+      // PNGs first: Android's install prompt and some launchers ignore SVG.
+      { src: "/icons/icon-192.png", sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: "/icons/maskable-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: "/icon.svg", sizes: "any", type: "image/svg+xml", purpose: "any" },
     ],
   };
 }

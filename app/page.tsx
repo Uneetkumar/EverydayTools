@@ -16,6 +16,15 @@ import { CategoryCard } from "@/components/tool/category-card";
 import { HeroSearch } from "@/components/home/hero-search";
 import { YourTools } from "@/components/home/your-tools";
 import { ToolVisual } from "@/components/tool/tool-visual";
+import { buildMetadata, routeSocialImage } from "@/lib/seo/metadata";
+import { SEO_CONFIG } from "@/lib/seo/config";
+
+export const metadata = buildMetadata({
+  title: "TabBench – Free Online Calculators, PDF & Image Tools",
+  description: SEO_CONFIG.description,
+  path: "/",
+  socialImage: routeSocialImage("/", "TabBench — free online tools that run in your browser"),
+});
 
 /**
  * Homepage: a place to start a task, not a catalogue.

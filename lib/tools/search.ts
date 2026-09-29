@@ -448,20 +448,33 @@ function scoreTool(tool: SearchableTool, groups: string[][], rawQuery: string, c
     group.forEach((token, index) => {
       const penalty = index === 0 ? 0 : 10;
       let hit = 0;
+      // A one- or two-letter token that only STARTS a longer word ("rs" in
+      // "rs256") is weak evidence: kept so "pd" still finds PDF tools while
+      // typing, but scored below an explicit synonym (rs → rupee), which
+      // otherwise lost "rs to" to the JWT Decoder.
+      const weak = (full: number) => (token.length <= 2 ? 4 : full);
       const inName = wordMatch(name, token);
       if (inName === 2) hit = 50;
-      else if (inName === 1 || hasToken(name, token)) hit = 40;
+      else if (inName === 1 || hasToken(name, token)) hit = weak(40);
       else if (wordMatch(keywords, token) === 2) hit = 22;
-      else if (hasToken(keywords, token)) hit = 18;
-      else if (hasToken(category, token)) hit = 12;
-      else if (hasToken(blob, token)) hit = 6;
+      else if (hasToken(keywords, token)) hit = weak(18);
+      else if (wordMatch(category, token) === 2) hit = 12;
+      else if (hasToken(category, token)) hit = weak(12);
+      else if (wordMatch(blob, token) === 2) hit = 6;
+      else if (hasToken(blob, token)) hit = weak(6);
       if (hit > 0) best = Math.max(best, hit - penalty);
     });
     if (best === 0) return -Infinity;
     score += best;
   }
 
-  score += nameBonus(tool, corrected);
+  // The typed phrase WITH its connector words is the stronger signal when it
+  // differs: "pdf to" is the start of "PDF to Word", not a search for "pdf".
+  // Without this, "pdf to" ranked Merge PDF first (its slug, pdf-merge,
+  // starts with "pdf" as well, and the shorter name won the tie).
+  const typed = normalize(rawQuery);
+  const typedBonus = typed !== corrected ? nameBonus(tool, typed) : 0;
+  score += Math.max(nameBonus(tool, corrected), typedBonus > 0 ? typedBonus + 90 : 0);
 
   // Exact phrase match bonus for multi-word queries. Checked against the
   // query with connector words removed as well, so "how to fill pdf form"

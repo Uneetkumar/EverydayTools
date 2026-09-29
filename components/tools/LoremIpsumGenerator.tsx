@@ -136,7 +136,7 @@ export default function LoremIpsumGenerator() {
         <div className="flex flex-wrap gap-4 items-center justify-between">
           <div className="flex flex-wrap items-center gap-3">
             {/* Type selector */}
-            <div className="flex bg-slate-200/70 dark:bg-slate-800 p-1 rounded-xl">
+            <div className="grid grid-cols-2 gap-0.5 min-[400px]:flex min-[400px]:gap-0 bg-slate-200/70 dark:bg-slate-800 p-1 rounded-xl">
               {(["paragraphs", "sentences", "words", "list"] as const).map((t) => (
                 <button
                   key={t}

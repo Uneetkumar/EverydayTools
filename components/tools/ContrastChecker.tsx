@@ -1,259 +1,202 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
-import { Check, X, Eye, RefreshCw, Sparkles, Sliders } from "lucide-react";
+import React, { useId, useMemo, useState } from "react";
+import { ArrowLeftRight, Check, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ColorField } from "@/components/color/color-field";
+import { Notice, Segmented, ToolDivider, ToolSection } from "@/components/tool/kit";
+import { useIsClient } from "@/lib/hooks/useIsClient";
+import { WCAG, contrast, css, nearestPassing, over, parseColor, ratioText, readColor, simulate, toHex, type Rgba, type Vision } from "@/lib/color/color";
+import { cn } from "@/lib/utils";
 
-interface Rgb {
-  r: number;
-  g: number;
-  b: number;
-}
+const VISIONS: { id: Vision; label: string; note: string }[] = [
+  { id: "deuteranopia", label: "Deuteranopia", note: "green-blind, the most common" },
+  { id: "protanopia", label: "Protanopia", note: "red-blind" },
+  { id: "tritanopia", label: "Tritanopia", note: "blue-blind, rare" },
+  { id: "achromatopsia", label: "Achromatopsia", note: "no colour" },
+];
 
-function hexToRgb(hex: string): Rgb {
-  const clean = hex.replace("#", "").trim();
-  if (clean.length === 3) {
-    return {
-      r: parseInt(clean[0] + clean[0], 16) || 0,
-      g: parseInt(clean[1] + clean[1], 16) || 0,
-      b: parseInt(clean[2] + clean[2], 16) || 0,
-    };
-  }
-  return {
-    r: parseInt(clean.substring(0, 2), 16) || 0,
-    g: parseInt(clean.substring(2, 4), 16) || 0,
-    b: parseInt(clean.substring(4, 6), 16) || 0,
-  };
-}
-
-// Relative luminance per WCAG 2.1 specification
-function getLuminance(rgb: Rgb): number {
-  const a = [rgb.r, rgb.g, rgb.b].map((v) => {
-    v /= 255;
-    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-  });
-  return a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722;
-}
-
-function getContrastRatio(fg: Rgb, bg: Rgb): number {
-  const lum1 = getLuminance(fg);
-  const lum2 = getLuminance(bg);
-  const brightest = Math.max(lum1, lum2);
-  const darkest = Math.min(lum1, lum2);
-  return (brightest + 0.05) / (darkest + 0.05);
-}
-
-// Color blindness matrix transformation approximations
-function simulateColorBlindness(rgb: Rgb, type: "protanopia" | "deuteranopia" | "tritanopia" | "achromatopsia"): string {
-  let r = rgb.r;
-  let g = rgb.g;
-  let b = rgb.b;
-
-  if (type === "protanopia") {
-    r = 0.56667 * rgb.r + 0.43333 * rgb.g;
-    g = 0.55833 * rgb.r + 0.44167 * rgb.g;
-    b = 0.24167 * rgb.g + 0.75833 * rgb.b;
-  } else if (type === "deuteranopia") {
-    r = 0.625 * rgb.r + 0.375 * rgb.g;
-    g = 0.7 * rgb.r + 0.3 * rgb.g;
-    b = 0.3 * rgb.g + 0.7 * rgb.b;
-  } else if (type === "tritanopia") {
-    r = 0.95 * rgb.r + 0.05 * rgb.g;
-    g = 0.43333 * rgb.g + 0.56667 * rgb.b;
-    b = 0.475 * rgb.g + 0.525 * rgb.b;
-  } else if (type === "achromatopsia") {
-    const gray = 0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b;
-    r = gray;
-    g = gray;
-    b = gray;
-  }
-
-  const clamp = (n: number) => Math.max(0, Math.min(255, Math.round(n)));
-  return `rgb(${clamp(r)}, ${clamp(g)}, ${clamp(b)})`;
-}
+const WHITE: Rgba = { r: 1, g: 1, b: 1, a: 1 };
 
 export default function ContrastChecker() {
-  const [fgHex, setFgHex] = useState<string>("#FFFFFF");
-  const [bgHex, setBgHex] = useState<string>("#1E40AF");
-  const [fontSize, setFontSize] = useState<"normal" | "large">("normal");
+  const id = useId();
+  // Names ("navy") are read by the browser, so wait for it before showing results.
+  const isClient = useIsClient();
+  const [fgText, setFg] = useState("#FFFFFF");
+  const [bgText, setBg] = useState("#1E40AF");
+  const [target, setTarget] = useState<"4.5" | "7">("4.5");
 
-  const fgRgb = useMemo(() => hexToRgb(fgHex), [fgHex]);
-  const bgRgb = useMemo(() => hexToRgb(bgHex), [bgHex]);
+  const fg = useMemo(() => (isClient ? readColor(fgText) : parseColor(fgText)), [fgText, isClient]);
+  const bgRaw = useMemo(() => (isClient ? readColor(bgText) : parseColor(bgText)), [bgText, isClient]);
+  // A see-through background is shown over white, as on most pages.
+  const bg = bgRaw && bgRaw.a < 1 ? over(bgRaw, WHITE) : bgRaw;
+  const ratio = fg && bg ? contrast(fg, bg) : null;
+  const goal = Number(target);
 
-  const ratio = useMemo(() => getContrastRatio(fgRgb, bgRgb), [fgRgb, bgRgb]);
+  const fixes = useMemo(() => {
+    if (!fg || !bg || ratio === null || ratio >= goal) return null;
+    return { text: nearestPassing(fg, bg, goal, true), background: nearestPassing(bg, fg, goal, false) };
+  }, [fg, bg, ratio, goal]);
 
-  // WCAG Compliance evaluation
-  const passAANormal = ratio >= 4.5;
-  const passAALarge = ratio >= 3.0;
-  const passAAANormal = ratio >= 7.0;
-  const passAAALarge = ratio >= 4.5;
-  const passUiComponents = ratio >= 3.0;
-
-  const handleSwap = () => {
-    const temp = fgHex;
-    setFgHex(bgHex);
-    setBgHex(temp);
+  const swap = () => {
+    setFg(bgText);
+    setBg(fgText);
   };
 
+  const passes = WCAG.filter((w) => ratio !== null && ratio >= w.min).length;
+
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Color Pickers & Preview */}
-        <div className="lg:col-span-6 space-y-4">
-          <div className="p-5 rounded-xl border space-y-4 bg-muted/30">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm text-slate-900 dark:text-white font-semibold">
-                Foreground & Background Colors
-              </h2>
-              <button
-                onClick={handleSwap}
-                className="flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
-              >
-                <RefreshCw className="w-3 h-3" /> Swap Colors
-              </button>
-            </div>
+    <div className="space-y-8">
+      <ToolSection
+        title="Colours"
+        actions={
+          <Button variant="ghost" size="sm" onClick={swap}>
+            <ArrowLeftRight aria-hidden="true" /> Swap
+          </Button>
+        }
+      >
+        <div className="grid gap-4 @lg:grid-cols-2">
+          <ColorField id={`${id}-fg`} label="Text (foreground)" value={fgText} onChange={setFg} hint="Any CSS colour. Transparency is allowed." />
+          <ColorField id={`${id}-bg`} label="Background" value={bgText} onChange={setBg} />
+        </div>
+        {fg && fg.a < 1 && bg && (
+          <p className="text-xs text-muted-foreground">
+            The text is {Math.round(fg.a * 100)}% opaque, so it is checked as it appears over the background: {toHex(over(fg, bg), false)}.
+          </p>
+        )}
+      </ToolSection>
 
-            {/* Text / Foreground */}
-            <div className="space-y-1.5">
-              <label htmlFor="fg-color-text" className="text-sm font-medium text-foreground">
-                Text / Foreground Color
-              </label>
+      <ToolDivider />
+
+      {fg && bg && ratio !== null ? (
+        <>
+          <div className="grid gap-4 @2xl:grid-cols-[1.2fr_1fr]">
+            <div className="space-y-3 rounded-xl border p-5" style={{ background: css(bg), color: css(fg) }}>
+              <p className="text-base">Normal text, 16 px. The quick brown fox jumps over the lazy dog.</p>
+              <p className="text-2xl font-normal">Large text, 24 px</p>
+              <p className="text-lg font-bold">Large bold text, 18.66 px</p>
               <div className="flex items-center gap-3">
-                <input aria-label="Text colour picker"
-                  type="color"
-                  value={fgHex}
-                  onChange={(e) => setFgHex(e.target.value.toUpperCase())}
-                  className="w-10 h-10 rounded-xl border border-slate-300 dark:border-slate-700 cursor-pointer shrink-0"
-                />
-                <input
-                  id="fg-color-text"
-                  type="text"
-                  value={fgHex}
-                  onChange={(e) => setFgHex(e.target.value.toUpperCase())}
-                  className="w-full px-3 py-2 font-mono text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                />
+                <span className="inline-flex h-9 items-center rounded-lg border-2 px-3 text-sm font-medium" style={{ borderColor: css(fg) }}>
+                  Button outline
+                </span>
+                <Check className="size-6" aria-hidden="true" />
               </div>
             </div>
-
-            {/* Background */}
-            <div className="space-y-1.5">
-              <label htmlFor="bg-color-text" className="text-sm font-medium text-foreground">
-                Background Color
-              </label>
-              <div className="flex items-center gap-3">
-                <input aria-label="Background colour picker"
-                  type="color"
-                  value={bgHex}
-                  onChange={(e) => setBgHex(e.target.value.toUpperCase())}
-                  className="w-10 h-10 rounded-xl border border-slate-300 dark:border-slate-700 cursor-pointer shrink-0"
-                />
-                <input
-                  id="bg-color-text"
-                  type="text"
-                  value={bgHex}
-                  onChange={(e) => setBgHex(e.target.value.toUpperCase())}
-                  className="w-full px-3 py-2 font-mono text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                />
-              </div>
+            <div className="flex flex-col justify-center rounded-xl border p-5">
+              <p className="text-xs font-medium text-muted-foreground">Contrast ratio</p>
+              <p className="mt-1 text-4xl font-semibold text-foreground tabular-nums">{ratioText(ratio)}:1</p>
+              <p className={cn("mt-1 text-sm font-medium", ratio >= 4.5 ? "text-success" : ratio >= 3 ? "text-warning" : "text-destructive")}>
+                {ratio >= 7 ? "Excellent — passes every level" : ratio >= 4.5 ? "Good — passes AA for all text" : ratio >= 3 ? "Only for large text and icons" : "Too low for any text"}
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Passes {passes} of {WCAG.length} WCAG 2.2 checks. Ratios are cut, not rounded, so 4.49 never shows as 4.50.
+              </p>
             </div>
           </div>
 
-          {/* Live Preview Box */}
-          <div
-            className="w-full p-6 rounded-xl border border-slate-200 dark:border-slate-800 flex flex-col justify-center space-y-2 transition-colors min-h-[140px]"
-            style={{ backgroundColor: bgHex, color: fgHex }}
+          <div className="overflow-x-auto rounded-lg border">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-muted/50 text-xs text-muted-foreground">
+                <tr>
+                  <th scope="col" className="px-3.5 py-2 font-medium">Check</th>
+                  <th scope="col" className="px-3.5 py-2 font-medium">Needs</th>
+                  <th scope="col" className="px-3.5 py-2 font-medium">Result</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y">
+                {WCAG.map((w) => {
+                  const ok = ratio >= w.min;
+                  return (
+                    <tr key={w.id}>
+                      <td className="px-3.5 py-2 text-foreground">
+                        {w.level} · {w.what} <span className="text-xs text-muted-foreground">(SC {w.sc})</span>
+                      </td>
+                      <td className="px-3.5 py-2 text-muted-foreground tabular-nums">{w.min}:1</td>
+                      <td className="px-3.5 py-2">
+                        <span className={cn("inline-flex items-center gap-1 font-medium", ok ? "text-success" : "text-destructive")}>
+                          {ok ? <Check className="size-4" aria-hidden="true" /> : <X className="size-4" aria-hidden="true" />}
+                          {ok ? "Pass" : "Fail"}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Large text means at least 24 px, or 18.66 px (14 pt) bold. Logos and disabled controls have no contrast requirement.
+          </p>
+
+          <ToolSection
+            title="Fix it"
+            description="The nearest colours that pass, keeping the same hue."
+            actions={
+              <Segmented
+                size="sm"
+                ariaLabel="Target"
+                value={target}
+                onChange={setTarget}
+                options={[
+                  { value: "4.5", label: "AA 4.5:1" },
+                  { value: "7", label: "AAA 7:1" },
+                ]}
+              />
+            }
           >
-            <h3 className="text-lg font-semibold tracking-tight">
-              Sample Heading Text (Large Text)
-            </h3>
-            <p className="text-sm leading-relaxed">
-              This is standard body copy text. Verify readability against WCAG 2.1 AA/AAA contrast guidelines.
-            </p>
-          </div>
-        </div>
-
-        {/* Contrast Score & Compliance Badges */}
-        <div className="lg:col-span-6 space-y-4">
-          <div className="p-6 rounded-xl border space-y-4 bg-muted/30">
-            <div className="flex items-center justify-between">
-              <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                Calculated Contrast Ratio
-              </span>
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-semibold border ${
-                  passAANormal
-                    ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
-                    : "bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800"
-                }`}
-              >
-                {passAANormal ? "WCAG AA Passed" : "Low Contrast"}
-              </span>
-            </div>
-
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl sm:text-5xl font-semibold tracking-tight text-slate-900 dark:text-white font-mono">
-                {ratio.toFixed(2)}:1
-              </span>
-            </div>
-
-            {/* Score Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 pt-2 border-t border-slate-100 dark:divide-slate-800">
-              {[
-                { label: "AA Normal Text", req: "≥ 4.5:1", pass: passAANormal },
-                { label: "AA Large Text", req: "≥ 3.0:1", pass: passAALarge },
-                { label: "AAA Normal Text", req: "≥ 7.0:1", pass: passAAANormal },
-                { label: "AAA Large Text", req: "≥ 4.5:1", pass: passAAALarge },
-                { label: "UI Components", req: "≥ 3.0:1", pass: passUiComponents },
-              ].map((item, idx) => (
-                <div
-                  key={idx}
-                  className="p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/40 flex flex-col justify-between"
-                >
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">{item.label}</span>
-                  <div className="flex items-center justify-between mt-1.5">
-                    <span className="text-xs font-mono text-slate-500 dark:text-slate-400">{item.req}</span>
-                    <span
-                      className={`inline-flex items-center gap-0.5 text-xs font-semibold ${
-                        item.pass ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
-                      }`}
-                    >
-                      {item.pass ? <Check className="w-3.5 h-3.5" /> : <X className="w-3.5 h-3.5" />}
-                      {item.pass ? "Pass" : "Fail"}
-                    </span>
+            {!fixes ? (
+              <Notice tone="success">This pair already reaches {target}:1.</Notice>
+            ) : (
+              <div className="grid gap-3 @lg:grid-cols-2">
+                {[
+                  { key: "text", label: "Change the text", c: fixes.text, apply: (c: Rgba) => setFg(toHex(c)), preview: (c: Rgba) => ({ background: css(bg), color: css(c) }), ratio: (c: Rgba) => contrast(c, bg) },
+                  { key: "bg", label: "Change the background", c: fixes.background, apply: (c: Rgba) => setBg(toHex(c)), preview: (c: Rgba) => ({ background: css(c), color: css(fg) }), ratio: (c: Rgba) => contrast(fg, c) },
+                ].map((f) => (
+                  <div key={f.key} className="space-y-2.5 rounded-lg border p-3.5">
+                    <p className="text-sm font-medium text-foreground">{f.label}</p>
+                    {f.c ? (
+                      <>
+                        <div className="rounded-md px-3 py-2 text-sm" style={f.preview(f.c)}>
+                          Sample text {ratioText(f.ratio(f.c))}:1
+                        </div>
+                        <div className="flex items-center justify-between gap-2">
+                          <code className="font-mono text-sm text-foreground">{toHex(f.c)}</code>
+                          <Button size="sm" variant="outline" onClick={() => f.apply(f.c!)}>
+                            Use this
+                          </Button>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No shade of this colour reaches {target}:1 here.</p>
+                    )}
                   </div>
-                </div>
-              ))}
-            </div>
-          </div>
+                ))}
+              </div>
+            )}
+          </ToolSection>
 
-          {/* Color Blindness Simulation Previews */}
-          <div className="p-4 rounded-xl border space-y-2.5 bg-muted/30">
-            <span className="text-sm text-slate-900 dark:text-white flex items-center gap-1.5 font-semibold">
-              <Eye className="w-3.5 h-3.5 text-muted-foreground" />
-              Color Blindness Previews
-            </span>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { label: "Protanopia (Red-Blind)", type: "protanopia" as const },
-                { label: "Deuteranopia (Green-Blind)", type: "deuteranopia" as const },
-                { label: "Tritanopia (Blue-Blind)", type: "tritanopia" as const },
-                { label: "Achromatopsia (Monochrome)", type: "achromatopsia" as const },
-              ].map(({ label, type }) => (
-                <div
-                  key={type}
-                  className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-semibold"
-                  style={{
-                    backgroundColor: simulateColorBlindness(bgRgb, type),
-                    color: simulateColorBlindness(fgRgb, type),
-                  }}
-                >
-                  <span className="truncate">{label}</span>
-                  <span className="text-xs uppercase font-mono px-1 rounded bg-black/20">Preview</span>
-                </div>
-              ))}
+          <ToolSection title="Colour vision" description="How the pair looks to people with colour blindness. Contrast comes from lightness, so a good ratio stays readable.">
+            <div className="grid grid-cols-2 gap-2 @xl:grid-cols-4">
+              {VISIONS.map((v) => {
+                const f = simulate(fg.a < 1 ? over(fg, bg) : fg, v.id);
+                const b = simulate(bg, v.id);
+                return (
+                  <figure key={v.id} className="overflow-hidden rounded-lg border">
+                    <div className="px-3 py-3 text-sm font-medium" style={{ background: css(b), color: css(f) }}>
+                      Aa · {ratioText(contrast(f, b))}:1
+                    </div>
+                    <figcaption className="px-3 py-2 text-xs text-muted-foreground">
+                      <span className="font-medium text-foreground">{v.label}</span> — {v.note}
+                    </figcaption>
+                  </figure>
+                );
+              })}
             </div>
-          </div>
-        </div>
-      </div>
+          </ToolSection>
+        </>
+      ) : (
+        <p className="text-sm text-muted-foreground">Enter two colours to check them.</p>
+      )}
     </div>
   );
 }

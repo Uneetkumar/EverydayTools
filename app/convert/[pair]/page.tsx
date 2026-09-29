@@ -4,8 +4,10 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { CURRENCY_PAIRS, getPairBySlug } from "@/lib/currency/pairs";
 import { CURRENCY_NAMES } from "@/lib/currency/rates";
-import { constructPageMetadata, SITE_CONFIG } from "@/lib/seo/metadata";
-import { generateBreadcrumbJsonLd, generateFaqJsonLd } from "@/lib/seo/jsonld";
+import { constructPageMetadata, routeSocialImage } from "@/lib/seo/metadata";
+import { absoluteUrl } from "@/lib/seo/config";
+import { generateFaqJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/json-ld";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import CurrencyConverter from "@/components/tools/CurrencyConverter";
 import FaqSection from "@/components/FaqSection";
@@ -25,14 +27,14 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: PairPageProps): Promise<Metadata> {
   const { pair } = await params;
   const def = getPairBySlug(pair);
-  if (!def) return { title: "Currency pair not found" };
+  if (!def) return { title: "Currency pair not found", robots: { index: false } };
+  const path = `/convert/${def.slug}`;
   return constructPageMetadata({
     title: def.metaTitle,
     description: def.metaDescription,
-    path: `/convert/${def.slug}`,
-    keywords: def.keywords,
+    path,
     // This route ships its own opengraph-image.tsx.
-    ogImage: null,
+    socialImage: routeSocialImage(path, `${def.common}: convert ${def.from} to ${def.to} on TabBench`),
   });
 }
 
@@ -87,27 +89,17 @@ export default async function CurrencyPairPage({ params }: PairPageProps) {
     ...def.extraFaqs,
   ];
 
-  const breadcrumbSchema = generateBreadcrumbJsonLd([
-    { name: "Home", path: "" },
-    { name: "Currency Converter", path: "/tools/currency-converter" },
-    { name: def.common, path: `/convert/${def.slug}` },
-  ]);
-  const faqSchema = generateFaqJsonLd(faqs, `${SITE_CONFIG.domain}/convert/${def.slug}`);
+  const faqSchema = generateFaqJsonLd(faqs, absoluteUrl(`/convert/${def.slug}`));
 
   return (
     <>
-      <script type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      {faqSchema && (
-        <script type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      )}
+      <JsonLd data={faqSchema} />
 
       <div className="page-container py-5 md:py-8">
         <Breadcrumbs
           items={[
             { name: "Currency Converter", url: "/tools/currency-converter" },
-            { name: def.common },
+            { name: def.common, url: `/convert/${def.slug}` },
           ]}
         />
 

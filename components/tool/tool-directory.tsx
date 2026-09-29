@@ -19,6 +19,9 @@ import { ToolCard } from "./tool-card";
 import { ToolEmptyState } from "./tool-states";
 import type { ExplorerTool } from "./tool-explorer";
 
+const subscribeNever = () => () => {};
+const readQueryParam = () => (new URLSearchParams(window.location.search).get("q") ?? "").slice(0, 100);
+
 interface DirectoryCategory {
   id: string;
   name: string;
@@ -37,7 +40,13 @@ export function ToolDirectory({
   tools: ExplorerTool[];
   categories: DirectoryCategory[];
 }) {
-  const [query, setQuery] = React.useState("");
+  // `/tools?q=pdf` opens the directory already searched — the target of the
+  // WebSite SearchAction in lib/seo/jsonld.ts. Read after hydration (the
+  // server snapshot is ""), and only until the visitor types. The page's
+  // canonical stays /tools, so ?q= URLs never compete with it.
+  const urlQuery = React.useSyncExternalStore(subscribeNever, readQueryParam, () => "");
+  const [typed, setQuery] = React.useState<string | null>(null);
+  const query = typed ?? urlQuery;
   const [category, setCategory] = React.useState("all");
   const [favoritesOnly, setFavoritesOnly] = React.useState(false);
   const favorites = useFavorites();

@@ -75,6 +75,13 @@
         ]
       },
       {
+        "source": "/apple-icon",
+        "headers": [
+          { "key": "Content-Type", "value": "image/png" },
+          { "key": "Cache-Control", "value": "public, max-age=86400" }
+        ]
+      },
+      {
         "source": "/_next/static/**",
         "headers": [
           {
@@ -107,13 +114,27 @@
       {
         "source": "/@(tool-index.json|tools.csv)",
         "headers": [
-          { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+          { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+          { "key": "X-Robots-Tag", "value": "noindex" }
         ]
       },
       {
-        "source": "/@(sitemap.xml|robots.txt|ads.txt)",
+        "source": "**/*.txt",
+        "headers": [
+          { "key": "X-Robots-Tag", "value": "noindex" }
+        ]
+      },
+      {
+        "source": "/@(sitemap*.xml|robots.txt|ads.txt)",
         "headers": [
           { "key": "Cache-Control", "value": "public, max-age=3600" }
+        ]
+      },
+      {
+        "source": "/sitemap.xsl",
+        "headers": [
+          { "key": "Content-Type", "value": "text/xsl; charset=utf-8" },
+          { "key": "Cache-Control", "value": "public, max-age=86400" }
         ]
       },
       {

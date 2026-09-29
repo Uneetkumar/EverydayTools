@@ -5,12 +5,15 @@
   "scripts": {
     "predev": "node scripts/copy-vendor.mjs",
     "dev": "next dev",
-    "prebuild": "node scripts/copy-vendor.mjs",
+    "prebuild": "node scripts/copy-vendor.mjs && node scripts/seo/lastmod.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "postbuild": "node scripts/seo-check.mjs",
     "seo:check": "node scripts/seo-check.mjs",
+    "seo:report": "node scripts/seo-check.mjs --report",
+    "seo:lastmod": "node scripts/seo/lastmod.mjs",
+    "test:seo": "node --test \"tests/seo/*.test.mjs\"",
     "ext:build": "node extension/scripts/build.mjs",
     "ext:dev": "node extension/scripts/build.mjs --dev",
     "ext:preview": "node extension/scripts/build.mjs --preview",
@@ -67,6 +70,7 @@
     "esbuild": "^0.25.12",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",
+    "jiti": "^2.7.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

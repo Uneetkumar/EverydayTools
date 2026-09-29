@@ -7,15 +7,14 @@ import {
   TOOL_CATEGORIES,
 } from "@/lib/tools/registry";
 import { getCategoryContent } from "@/lib/tools/categoryContent";
-import { constructPageMetadata, SITE_CONFIG } from "@/lib/seo/metadata";
-import {
-  generateCollectionJsonLd,
-  generateBreadcrumbJsonLd,
-  generateFaqJsonLd,
-} from "@/lib/seo/jsonld";
+import { GUIDES } from "@/lib/guides/content";
+import { constructPageMetadata, routeSocialImage } from "@/lib/seo/metadata";
+import { absoluteUrl } from "@/lib/seo/config";
+import { generateCollectionJsonLd, generateFaqJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/json-ld";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import FaqSection from "@/components/FaqSection";
-import { ShieldCheck } from "lucide-react";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 import { ToolExplorer, type ExplorerTool } from "@/components/tool/tool-explorer";
 import { CategoryVisual } from "@/components/tool/tool-visual";
 
@@ -42,16 +41,16 @@ export async function generateMetadata({
   const meta = TOOL_CATEGORIES.find((c) => c.id === category);
 
   if (!content || !meta) {
-    return { title: "Category Not Found" };
+    return { title: "Category not found", robots: { index: false } };
   }
 
+  const path = `/categories/${category}`;
   return constructPageMetadata({
     title: content.metaTitle,
     description: content.metaDescription,
-    path: `/categories/${category}`,
-    keywords: content.keywords,
+    path,
     // This route ships its own opengraph-image.tsx.
-    ogImage: null,
+    socialImage: routeSocialImage(path, `${content.heading} on TabBench`),
   });
 }
 
@@ -84,44 +83,29 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     (c) => c.id !== category && getToolsByCategory(c.id).length > 0
   );
 
+  // Guides whose tool lives in this category: the category → guide link of
+  // the topic cluster (tools already link to their own guides).
+  const categoryGuides = GUIDES.filter((g) => tools.some((t) => t.slug === g.toolSlug));
+  const pageUrl = absoluteUrl(`/categories/${category}`);
+
   const collectionSchema = generateCollectionJsonLd({
     name: content.heading,
     description: content.metaDescription,
-    url: `${SITE_CONFIG.domain}/categories/${category}`,
-    tools,
+    url: pageUrl,
+    items: tools.map((t) => ({ name: t.name, path: `/tools/${t.slug}` })),
   });
-
-  const breadcrumbSchema = generateBreadcrumbJsonLd([
-    { name: "Home", path: "" },
-    { name: "All Tools", path: "/tools" },
-    { name: meta.name, path: `/categories/${category}` },
-  ]);
-
-  const faqSchema = generateFaqJsonLd(
-    content.faqs,
-    `${SITE_CONFIG.domain}/categories/${category}`
-  );
+  const faqSchema = generateFaqJsonLd(content.faqs, pageUrl);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(collectionSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
-      {faqSchema && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-        />
-      )}
+      <JsonLd data={[collectionSchema, faqSchema]} />
 
       <div className="page-container py-6 md:py-10">
         <Breadcrumbs
-          items={[{ name: "All tools", url: "/tools" }, { name: meta.name }]}
+          items={[
+            { name: "All tools", url: "/tools" },
+            { name: meta.name, url: `/categories/${category}` },
+          ]}
         />
 
         <header className="mt-5 flex items-start gap-4">
@@ -166,6 +150,30 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
             ))}
           </div>
         </section>
+
+        {categoryGuides.length > 0 && (
+          <section aria-labelledby="category-guides" className="mt-14 max-w-3xl">
+            <h2 id="category-guides" className="type-h2 text-foreground">
+              Guides
+            </h2>
+            <p className="mt-2 type-body-sm text-muted-foreground">
+              Step-by-step walkthroughs for jobs these tools handle.
+            </p>
+            <ul className="mt-4 divide-y rounded-xl border bg-card shadow-soft">
+              {categoryGuides.map((g) => (
+                <li key={g.slug}>
+                  <Link
+                    href={`/guides/${g.slug}`}
+                    className="group flex items-center justify-between gap-3 px-4 py-3 text-sm font-medium transition-colors hover:bg-accent/50"
+                  >
+                    <span>{g.title}</span>
+                    <ArrowRight aria-hidden="true" className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {content.faqs.length > 0 && (
           <div className="mt-14 max-w-3xl">

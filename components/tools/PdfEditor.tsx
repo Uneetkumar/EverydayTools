@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useCallback, useEffect, useLayoutEffect } from "react";
 import { createPortal } from "react-dom";
+import Link from "next/link";
 import {
   PDFDocument,
   StandardFonts,
@@ -10,6 +11,9 @@ import {
   PDFTextField,
   PDFCheckBox,
   PDFDropdown,
+  PDFRadioGroup,
+  PDFOptionList,
+  LineCapStyle,
 } from "pdf-lib";
 import {
   Download,
@@ -80,7 +84,9 @@ export interface Annot {
   isItalic?: boolean;
   dataUrl?: string; // for image/signature
   opacity?: number;
-  points?: { x: number; y: number }[]; // for freehand draw (fractions)
+  /** Freehand stroke, as fractions of the annotation's own box (x, y, w, h),
+   *  so a drawing can be moved and resized like any other item. */
+  points?: { x: number; y: number }[];
   lineWidth?: number;
   fieldName?: string;
   fieldType?: "text" | "checkbox" | "dropdown";
@@ -91,6 +97,18 @@ export interface Annot {
   /** True for fields that already existed in the uploaded PDF. Those must not
    *  be recreated on export — the document already owns their widgets. */
   isSourceField?: boolean;
+  /** Text runs of the original page this edit replaces. Which runs are still
+   *  clickable is derived from these, so undo/redo restore it automatically. */
+  sourceRuns?: string[];
+  /** For a retyped text edit: the id of the cover hiding the original words.
+   *  Deleting the edit deletes its cover too, bringing the original back. */
+  coverId?: string;
+  /** Image/signature height ÷ width, in page-fraction units, so presets and
+   *  resizing keep the picture's real shape. */
+  ratio?: number;
+  /** For one button of a document's radio group: the value it selects.
+   *  `fieldValue` then holds the group's current value. */
+  radioValue?: string;
 }
 
 export interface TextRun {
@@ -117,7 +135,8 @@ export interface PageState {
 
 export interface FormFieldState {
   name: string;
-  type: "text" | "checkbox" | "dropdown" | "radio";
+  /** "list" is a list box (PDFOptionList); "radio" a radio-button group. */
+  type: "text" | "checkbox" | "dropdown" | "radio" | "list";
   value: string;
   options?: string[];
 }
@@ -160,6 +179,49 @@ const uniqueFieldName = (raw: string, taken: Set<string>) => {
   taken.add(name);
   return name;
 };
+
+/**
+ * Text annotations are positioned by their top edge; the baseline sits this
+ * many font-sizes below it. Export (drawText) and the on-page preview both
+ * use it, and retyped runs are placed with it so their baseline lands on the
+ * original one.
+ */
+const TEXT_ASCENT = 0.82;
+
+const TEXT_LINE_HEIGHT = 1.2;
+
+const fontFamilyCss = (cat?: FontCategory) => {
+  if (cat === "serif") return "'Times New Roman', Times, 'Liberation Serif', Georgia, serif";
+  if (cat === "monospace") return "'Courier New', Courier, 'Liberation Mono', Menlo, Consolas, monospace";
+  return "'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', sans-serif";
+};
+
+/**
+ * Where the baseline falls inside a CSS line box (line-height 1.2) for a font
+ * stack, in em — measured once from the font the browser actually picked.
+ * The preview shifts each text box by the difference from TEXT_ASCENT, so
+ * on-page text sits on the same baseline as the exported file.
+ */
+const baselineCache = new Map<string, number>();
+function cssBaseline(family: string): number {
+  const cached = baselineCache.get(family);
+  if (cached !== undefined) return cached;
+  let v = 0.94;
+  try {
+    const ctx = document.createElement("canvas").getContext("2d");
+    if (ctx) {
+      ctx.font = `100px ${family}`;
+      const m = ctx.measureText("Hg");
+      const a = m.fontBoundingBoxAscent;
+      const d = m.fontBoundingBoxDescent;
+      if (a > 0 && d > 0) v = ((TEXT_LINE_HEIGHT * 100 - (a + d)) / 2 + a) / 100;
+    }
+  } catch {
+    // keep the typical value
+  }
+  baselineCache.set(family, v);
+  return v;
+}
 
 const hexToRgb = (hex: string) => {
   const n = parseInt(hex.replace("#", ""), 16);
@@ -249,9 +311,19 @@ export default function PdfEditor() {
   const [pageIndex, setPageIndex] = useState(0);
   const [annots, setAnnots] = useState<Annot[]>([]);
   const [runs, setRuns] = useState<TextRun[]>([]);
-  const [usedRuns, setUsedRuns] = useState<Set<string>>(new Set());
+  // Runs already replaced by an edit. Derived from the annotations rather
+  // than kept as separate state: as separate state it was not part of the
+  // undo history, so undoing an edit left the original line unclickable.
+  const usedRuns = React.useMemo(() => new Set(annots.flatMap((a) => a.sourceRuns ?? [])), [annots]);
   const [showRuns, setShowRuns] = useState(true);
   const [fields, setFields] = useState<FormFieldState[]>([]);
+  // What the uploaded file is, for honest messages in the Forms panel and
+  // before a save that cannot work.
+  const [docInfo, setDocInfo] = useState<{ restricted: boolean; xfa: boolean; pdfjsFields: number }>({
+    restricted: false,
+    xfa: false,
+    pdfjsFields: 0,
+  });
   // Names of the document's own fields the user deleted. Dropping them from
   // `fields` only stops us writing a value — the widget itself still lives in
   // the file, so export has to remove them explicitly.
@@ -278,8 +350,13 @@ export default function PdfEditor() {
   const [drawColor, setDrawColor] = useState("#000000");
   const [drawWidth, setDrawWidth] = useState(3);
 
-  // Canvas zoom & dimensions
-  const [zoom, setZoom] = useState(1);
+  // Canvas zoom & dimensions. `fit` wins over `zoom` until the visitor zooms
+  // by hand: "page" shows the whole page (the default — at 100% a portrait
+  // page is taller than the viewer and its bottom was always cut off),
+  // "width" fills the viewer's width.
+  const [zoomValue, setZoomValue] = useState(1);
+  const [fit, setFit] = useState<"page" | "width" | null>("page");
+  const [viewport, setViewport] = useState({ w: 0, h: 0 });
   const [stageW, setStageW] = useState(0);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
@@ -312,9 +389,12 @@ export default function PdfEditor() {
     };
   }, [isFullscreen]);
 
-  // Drawing state
+  // Drawing state. Points go into a ref on every move and are copied into
+  // state once per frame, so the stroke is visible while it is drawn.
   const isDrawing = useRef(false);
   const currentDrawPoints = useRef<{ x: number; y: number }[]>([]);
+  const drawFrame = useRef<number | null>(null);
+  const [liveStroke, setLiveStroke] = useState<{ x: number; y: number }[] | null>(null);
 
   const bytesRef = useRef<ArrayBuffer | null>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -323,6 +403,13 @@ export default function PdfEditor() {
   const resizeRef = useRef<{ id: string; startX: number; startY: number; startW: number; startH: number; aspect: number } | null>(null);
   const inlineInputRef = useRef<HTMLTextAreaElement | null>(null);
   const sampleRef = useRef<CanvasRenderingContext2D | null>(null);
+  // The keyboard handler is registered once per selection change; it calls
+  // the latest removeAnnot through this ref.
+  const removeAnnotRef = useRef<(id: string) => void>(() => {});
+  // The selected item's floating toolbar, nudged back inside the page after
+  // each layout: the page clips overflow, and a toolbar wider than the space
+  // beside its item lost its first buttons.
+  const pillRef = useRef<HTMLDivElement | null>(null);
 
   // Push to undo stack
   const snapshot = useCallback(() => {
@@ -373,9 +460,7 @@ export default function PdfEditor() {
         e.preventDefault();
       } else if (e.key === "Delete" || e.key === "Backspace") {
         if (selectedId && !editingId) {
-          snapshot();
-          setAnnots((list) => list.filter((a) => a.id !== selectedId));
-          setSelectedId(null);
+          removeAnnotRef.current(selectedId);
           e.preventDefault();
         }
       } else if (e.key === "Escape") {
@@ -391,6 +476,57 @@ export default function PdfEditor() {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedId, editingId, undo, redo, snapshot]);
+
+  // Size of the scrollable viewer, for the fit modes.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const measure = () => {
+      const cs = getComputedStyle(el);
+      setViewport({
+        w: el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight),
+        h: el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom),
+      });
+    };
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    measure();
+    return () => ro.disconnect();
+  }, [pages.length, isFullscreen]);
+
+  const fitPageZoom = (() => {
+    const pg = pages[pageIndex];
+    if (!pg || !viewport.w || !viewport.h) return 1;
+    const sideways = pg.rotation % 180 !== 0;
+    const aspect = sideways ? pg.width / pg.height : pg.height / pg.width;
+    return Math.max(0.2, Math.min(1, viewport.h / (viewport.w * aspect)));
+  })();
+  const zoom = fit === "page" ? fitPageZoom : fit === "width" ? 1 : zoomValue;
+  const setZoom = (next: number | ((z: number) => number)) => {
+    if (typeof next === "number") {
+      setFit(null);
+      setZoomValue(next);
+    } else if (fit !== null) {
+      // Leaving a fit mode: step from what is on screen, not the stored value.
+      setFit(null);
+      setZoomValue(next(zoom));
+    } else {
+      setZoomValue((prev) => next(prev));
+    }
+  };
+
+  useLayoutEffect(() => {
+    const el = pillRef.current;
+    const st = stageRef.current;
+    if (!el || !st) return;
+    el.style.translate = "";
+    const r = el.getBoundingClientRect();
+    const box = st.getBoundingClientRect();
+    let dx = 0;
+    if (r.left < box.left + 4) dx = box.left + 4 - r.left;
+    else if (r.right > box.right - 4) dx = box.right - 4 - r.right;
+    if (dx) el.style.translate = `${dx}px 0`;
+  });
 
   // ResizeObserver for preview container
   useEffect(() => {
@@ -628,10 +764,10 @@ function legibleInk(ink?: string, bg?: string): string {
     setRedoStack([]);
     setAnnots([]);
     setRuns([]);
-    setUsedRuns(new Set());
     setSelectedId(null);
     setEditingId(null);
     setRemovedFields([]);
+    setDocInfo({ restricted: false, xfa: false, pdfjsFields: 0 });
     setStatus("Reading document…");
     try {
       const buf = await file.arrayBuffer();
@@ -676,8 +812,12 @@ function legibleInk(ink?: string, bg?: string): string {
                   : annot.fieldType === "Ch"
                   ? "dropdown"
                   : "text";
-              const fVal =
-                typeof annot.fieldValue === "string" ? annot.fieldValue : "";
+              const raw = typeof annot.fieldValue === "string" ? annot.fieldValue : "";
+              // pdf.js reports a ticked checkbox by its export value ("Yes",
+              // "1"…) and an unticked one as "Off"; the editor uses "on"/"".
+              // A radio button keeps the group's value and its own option.
+              const radioValue = annot.radioButton ? String(annot.buttonValue ?? "") : undefined;
+              const fVal = annot.checkBox ? (raw && raw !== "Off" ? "on" : "") : raw === "Off" ? "" : raw;
 
               foundFormAnnots.push({
                 id: `form-${i - 1}-${annot.fieldName}`,
@@ -693,6 +833,7 @@ function legibleInk(ink?: string, bg?: string): string {
                 text: fVal,
                 size: 12,
                 isSourceField: true,
+                radioValue,
               });
             }
           }
@@ -749,10 +890,25 @@ function legibleInk(ink?: string, bg?: string): string {
         });
         page.cleanup();
       }
+      // pdf.js reads fields even from encrypted files, so it tells us when a
+      // form exists that pdf-lib (which refuses encrypted files) cannot see.
+      let pdfjsFields = 0;
+      let xfa = false;
+      try {
+        xfa = Boolean((doc as unknown as { isPureXfa?: boolean }).isPureXfa);
+        const objs = await doc.getFieldObjects();
+        pdfjsFields = objs ? Object.keys(objs).length : 0;
+      } catch {
+        // No AcroForm
+      }
       await task.destroy();
 
-      // Read real form fields
+      // Read real form fields. pdf-lib throws on encrypted files — including
+      // the common kind that opens without a password but restricts printing
+      // or copying — and cannot save them either, so that is recorded rather
+      // than silently reported as "no fields".
       const foundFields: FormFieldState[] = [];
+      let restricted = false;
       try {
         const lib = await PDFDocument.load(buf.slice(0));
         for (const f of lib.getForm().getFields()) {
@@ -760,24 +916,20 @@ function legibleInk(ink?: string, bg?: string): string {
           if (f instanceof PDFTextField) {
             foundFields.push({ name, type: "text", value: f.getText() ?? "" });
           } else if (f instanceof PDFCheckBox) {
-            foundFields.push({
-              name,
-              type: "checkbox",
-              value: f.isChecked() ? "on" : "",
-            });
+            foundFields.push({ name, type: "checkbox", value: f.isChecked() ? "on" : "" });
           } else if (f instanceof PDFDropdown) {
-            foundFields.push({
-              name,
-              type: "dropdown",
-              value: f.getSelected()[0] ?? "",
-              options: f.getOptions(),
-            });
+            foundFields.push({ name, type: "dropdown", value: f.getSelected()[0] ?? "", options: f.getOptions() });
+          } else if (f instanceof PDFRadioGroup) {
+            foundFields.push({ name, type: "radio", value: f.getSelected() ?? "", options: f.getOptions() });
+          } else if (f instanceof PDFOptionList) {
+            foundFields.push({ name, type: "list", value: f.getSelected()[0] ?? "", options: f.getOptions() });
           }
         }
-      } catch {
-        // No form fields
+      } catch (e) {
+        restricted = /encrypt/i.test(String((e as Error)?.message ?? e));
       }
 
+      setDocInfo({ restricted, xfa, pdfjsFields });
       setFileName(file.name);
       setPages(next);
       setRuns(foundRuns);
@@ -796,19 +948,72 @@ function legibleInk(ink?: string, bg?: string): string {
   };
 
   /**
-   * DIRECT WORD EDITING WITH FONT MATCHING:
-   * When user clicks any detected word/phrase run on the PDF canvas,
-   * cover the background and IMMEDIATELY enter direct inline editing
-   * matching the PREVIOUS font family (serif, sans, mono), font weight (bold/regular),
-   * font style (italic), font size, and ink color!
+   * Where retyped text goes and what hides the original words underneath.
+   *
+   * The cover used to be the run's box padded by ~4pt above and ~5.6pt below.
+   * On tightly set documents (12pt leading, 10pt type) that reached into the
+   * lines above and below, so editing one line erased parts of its
+   * neighbours. It is now sized to the glyphs themselves — ascenders to
+   * ~0.92em above the baseline, descenders to ~0.24em below — and clamped
+   * so it never enters a neighbouring line's glyphs or the next word on the
+   * same line.
+   *
+   * The text is placed so its baseline sits exactly on the original baseline:
+   * a run's box is [baseline − size, baseline], and export (and the canvas)
+   * draw text with the baseline TEXT_ASCENT × size below the annotation top.
+   */
+  const placeEdit = (group: TextRun[]) => {
+    const pageNo = group[0].page;
+    const page = pages[pageNo];
+    const W = page.width;
+    const H = page.height;
+    const ids = new Set(group.map((r) => r.id));
+    const x0 = Math.min(...group.map((r) => r.x * W));
+    const x1 = Math.max(...group.map((r) => (r.x + r.w) * W));
+    const size = Math.max(...group.map((r) => r.size));
+    const baseline = Math.max(...group.map((r) => (r.y + r.h) * H));
+
+    let top = baseline - 0.92 * size;
+    let bottom = baseline + 0.24 * size;
+    let left = x0 - 1;
+    let right = x1 + 1;
+    for (const o of runs) {
+      if (o.page !== pageNo || ids.has(o.id)) continue;
+      const ox0 = o.x * W;
+      const ox1 = (o.x + o.w) * W;
+      const oBase = (o.y + o.h) * H;
+      if (Math.abs(oBase - baseline) < 0.5 * Math.min(size, o.size)) {
+        // Same line: stop short of the neighbouring words.
+        if (ox1 <= x0 + 0.5) left = Math.max(left, ox1 + 0.3);
+        else if (ox0 >= x1 - 0.5) right = Math.min(right, ox0 - 0.3);
+        continue;
+      }
+      if (ox1 <= left || ox0 >= right) continue;
+      if (oBase < baseline) {
+        // Line above: keep clear of its descenders, but always cover our own caps.
+        top = Math.max(top, Math.min(oBase + 0.22 * o.size, baseline - 0.74 * size));
+      } else {
+        // Line below: keep clear of its capitals, but always cover our own descenders' start.
+        bottom = Math.min(bottom, Math.max(oBase - 0.76 * o.size, baseline + 0.1 * size));
+      }
+    }
+
+    const cover = { x: Math.max(0, left / W), y: Math.max(0, top / H), w: (right - left) / W, h: (bottom - top) / H };
+    return {
+      cover,
+      text: { x: x0 / W, y: (baseline - TEXT_ASCENT * size) / H, size },
+    };
+  };
+
+  /**
+   * Click a line on the page: cover the original words and open an inline
+   * editor with the same font family, weight, style, size and ink colour.
    */
   const handleDirectWordEdit = (r: TextRun) => {
     snapshot();
+    const { cover, text } = placeEdit([r]);
     const bg = sampleBackground(r);
     const ink = sampleInk(r);
-    const page = pages[r.page];
-    const padX = Math.max(3.5 / page.width, 0.005);
-    const padY = Math.max(4.0 / page.height, 0.006);
     const coverId = crypto.randomUUID();
     const textId = crypto.randomUUID();
 
@@ -821,31 +1026,21 @@ function legibleInk(ink?: string, bg?: string): string {
 
     setAnnots((a) => [
       ...a,
-      {
-        id: coverId,
-        page: r.page,
-        type: "whiteout",
-        color: bg,
-        x: Math.max(0, r.x - padX),
-        y: Math.max(0, r.y - padY),
-        w: r.w + padX * 2.2,
-        h: r.h + padY * 2.4,
-      },
+      { id: coverId, page: r.page, type: "whiteout", color: bg, ...cover, sourceRuns: [r.id] },
       {
         id: textId,
         page: r.page,
         type: "text",
         text: r.str,
-        x: r.x,
-        y: r.y,
-        size: r.size,
+        ...text,
         color: ink,
         fontCategory: r.fontCategory,
         isBold: r.isBold,
         isItalic: r.isItalic,
+        sourceRuns: [r.id],
+        coverId,
       },
     ]);
-    setUsedRuns((s) => new Set(s).add(r.id));
     setSelectedId(textId);
     setEditingId(textId);
   };
@@ -867,46 +1062,29 @@ function legibleInk(ink?: string, bg?: string): string {
     },
     newText: string
   ) => {
-    if (!newText.trim() || newText === line.originalText) return;
+    if (!newText.trim() || newText === line.originalText || !line.runs.length) return;
+    if (!pages[line.runs[0].page]) return;
     snapshot();
-    const page = pages[pageIndex];
-    if (!page) return;
-    const padX = Math.max(3.5 / page.width, 0.005);
-    const padY = Math.max(4.0 / page.height, 0.006);
+    const { cover, text } = placeEdit(line.runs);
+    const box = { x: line.x, y: line.y, w: line.w, h: line.h };
     const coverId = crypto.randomUUID();
-    const textId = crypto.randomUUID();
-
-    // Mark all constituent runs as used
-    setUsedRuns((s) => {
-      const next = new Set(s);
-      line.runs.forEach((r) => next.add(r.id));
-      return next;
-    });
+    const sourceRuns = line.runs.map((r) => r.id);
 
     setAnnots((a) => [
       ...a,
+      { id: coverId, page: line.runs[0].page, type: "whiteout", color: sampleBackground(box), ...cover, sourceRuns },
       {
-        id: coverId,
-        page: pageIndex,
-        type: "whiteout",
-        color: "#ffffff",
-        x: Math.max(0, line.x - padX),
-        y: Math.max(0, line.y - padY),
-        w: line.w + padX * 2.2,
-        h: line.h + padY * 2.4,
-      },
-      {
-        id: textId,
-        page: pageIndex,
+        id: crypto.randomUUID(),
+        page: line.runs[0].page,
         type: "text",
         text: newText,
-        x: line.x,
-        y: line.y,
-        size: line.size,
-        color: "#000000",
+        ...text,
+        color: sampleInk(box),
         fontCategory: line.fontCategory,
         isBold: line.isBold,
         isItalic: line.isItalic,
+        sourceRuns,
+        coverId,
       },
     ]);
   };
@@ -1095,12 +1273,18 @@ function legibleInk(ink?: string, bg?: string): string {
   /** Freehand drawing start */
   const startDrawing = (e: React.PointerEvent) => {
     if (tool !== "draw" || !stageRef.current) return;
+    e.preventDefault();
     const r = stageRef.current.getBoundingClientRect();
     const x = (e.clientX - r.left) / r.width;
     const y = (e.clientY - r.top) / r.height;
     isDrawing.current = true;
     currentDrawPoints.current = [{ x, y }];
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    setLiveStroke([{ x, y }]);
+    try {
+      stageRef.current.setPointerCapture(e.pointerId);
+    } catch {
+      /* pointer already released */
+    }
   };
 
   /** Freehand drawing move */
@@ -1110,31 +1294,54 @@ function legibleInk(ink?: string, bg?: string): string {
     const x = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
     const y = Math.max(0, Math.min(1, (e.clientY - r.top) / r.height));
     currentDrawPoints.current.push({ x, y });
+    if (drawFrame.current === null) {
+      drawFrame.current = requestAnimationFrame(() => {
+        drawFrame.current = null;
+        setLiveStroke([...currentDrawPoints.current]);
+      });
+    }
   };
 
-  /** Freehand drawing finish */
+  /** Freehand drawing finish: store the stroke in its own bounding box. */
   const finishDrawing = () => {
-    if (!isDrawing.current || tool !== "draw") return;
+    if (!isDrawing.current) return;
     isDrawing.current = false;
-    if (currentDrawPoints.current.length > 1) {
-      snapshot();
-      const id = crypto.randomUUID();
-      setAnnots((a) => [
-        ...a,
-        {
-          id,
-          page: pageIndex,
-          type: "draw",
-          x: 0,
-          y: 0,
-          color: drawColor,
-          lineWidth: drawWidth,
-          points: [...currentDrawPoints.current],
-        },
-      ]);
-      setSelectedId(id);
+    if (drawFrame.current !== null) {
+      cancelAnimationFrame(drawFrame.current);
+      drawFrame.current = null;
     }
+    setLiveStroke(null);
+    const pts = currentDrawPoints.current;
     currentDrawPoints.current = [];
+    const page = pages[pageIndex];
+    if (pts.length < 2 || !page) return;
+
+    // Pad the box by half the pen width so a straight line is not zero-height.
+    const padX = drawWidth / 2 / page.width;
+    const padY = drawWidth / 2 / page.height;
+    const minX = Math.max(0, Math.min(...pts.map((p) => p.x)) - padX);
+    const minY = Math.max(0, Math.min(...pts.map((p) => p.y)) - padY);
+    const maxX = Math.min(1, Math.max(...pts.map((p) => p.x)) + padX);
+    const maxY = Math.min(1, Math.max(...pts.map((p) => p.y)) + padY);
+    const w = Math.max(maxX - minX, 1e-4);
+    const h = Math.max(maxY - minY, 1e-4);
+
+    snapshot();
+    setAnnots((a) => [
+      ...a,
+      {
+        id: crypto.randomUUID(),
+        page: pageIndex,
+        type: "draw",
+        x: minX,
+        y: minY,
+        w,
+        h,
+        color: drawColor,
+        lineWidth: drawWidth,
+        points: pts.map((p) => ({ x: (p.x - minX) / w, y: (p.y - minY) / h })),
+      },
+    ]);
   };
 
   /** Start corner drag resizing */
@@ -1235,10 +1442,17 @@ function legibleInk(ink?: string, bg?: string): string {
       setFields((list) => list.filter((f) => f.name !== name));
       setRemovedFields((list) => [...list, name]);
     }
-    setAnnots((list) => list.filter((a) => a.id !== id));
+    // Deleting a retyped line also removes the cover over the original
+    // words, so the page goes back to how it was rather than keeping a blank.
+    const linked = target?.coverId;
+    setAnnots((list) => list.filter((a) => a.id !== id && a.id !== linked));
     if (selectedId === id) setSelectedId(null);
     if (editingId === id) setEditingId(null);
   };
+
+  useEffect(() => {
+    removeAnnotRef.current = removeAnnot;
+  });
 
   const removeFormField = (name: string) => {
     snapshot();
@@ -1267,27 +1481,48 @@ function legibleInk(ink?: string, bg?: string): string {
 
   const addImage = async (file: File | undefined) => {
     if (!file) return;
+    const page = pages[pageIndex];
+    if (!page) return;
     const dataUrl = await new Promise<string>((res) => {
       const fr = new FileReader();
       fr.onload = () => res(String(fr.result));
       fr.readAsDataURL(file);
     });
+    const natural = await new Promise<{ w: number; h: number }>((res) => {
+      const img = new Image();
+      img.onload = () => res({ w: img.naturalWidth || 4, h: img.naturalHeight || 3 });
+      img.onerror = () => res({ w: 4, h: 3 });
+      img.src = dataUrl;
+    });
+    // Box in page fractions with the picture's own shape. A fixed 0.3 × 0.15
+    // box drew a wide screenshot as a thin strip at the top of an empty frame.
+    const ratio = (natural.h / natural.w) * (page.width / page.height);
+    let w = 0.4;
+    let h = w * ratio;
+    if (h > 0.5) {
+      h = 0.5;
+      w = h / ratio;
+    }
     snapshot();
     const id = crypto.randomUUID();
     setAnnots((a) => [
       ...a,
-      {
-        id,
-        page: pageIndex,
-        type: "image",
-        x: 0.15,
-        y: 0.15,
-        w: 0.3,
-        h: 0.15,
-        dataUrl,
-      },
+      { id, page: pageIndex, type: "image", x: (1 - w) / 2, y: 0.12, w, h, ratio, dataUrl },
     ]);
     setSelectedId(id);
+    setTool("select");
+  };
+
+  /** Resize an image or signature to a width, keeping its shape. */
+  const sizeImage = (a: Annot, w: number) => {
+    const ratio = a.ratio ?? (a.h ?? 0.12) / (a.w ?? 0.3);
+    let nw = Math.max(0.05, Math.min(0.95, w));
+    let nh = nw * ratio;
+    if (nh > 0.95) {
+      nh = 0.95;
+      nw = nh / ratio;
+    }
+    patch(a.id, { w: nw, h: nh, x: Math.min(a.x, 1 - nw), y: Math.min(a.y, 1 - nh) });
   };
 
   /** Insert Signature from modal */
@@ -1534,6 +1769,10 @@ function legibleInk(ink?: string, bg?: string): string {
             else cb.uncheck();
           } else if (f.type === "dropdown" && f.value) {
             form.getDropdown(f.name).select(f.value);
+          } else if (f.type === "radio" && f.value) {
+            form.getRadioGroup(f.name).select(f.value);
+          } else if (f.type === "list" && f.value) {
+            form.getOptionList(f.name).select(f.value);
           }
         } catch (e) {
           console.warn(`Could not write form field "${f.name}":`, e);
@@ -1642,7 +1881,7 @@ function legibleInk(ink?: string, bg?: string): string {
           } else if (a.type === "text" && a.text) {
             const font = resolveFont(a.fontCategory, a.isBold, a.isItalic);
             const size = a.size ?? 14;
-            const baselineY = py - size * 0.82;
+            const baselineY = py - size * TEXT_ASCENT;
             a.text.split("\n").forEach((line, n) => {
               page.drawText(line, {
                 x: px,
@@ -1744,14 +1983,19 @@ function legibleInk(ink?: string, bg?: string): string {
             }
           } else if (a.type === "draw" && a.points && a.points.length > 1) {
             const drawColorRgb = hexToRgb(a.color || "#000000");
-            for (let pIdx = 0; pIdx < a.points.length - 1; pIdx++) {
-              const p1 = a.points[pIdx];
-              const p2 = a.points[pIdx + 1];
+            const bw = a.w ?? 1;
+            const bh = a.h ?? 1;
+            const abs = a.points.map((p) => ({
+              x: (a.x + p.x * bw) * width,
+              y: height - (a.y + p.y * bh) * height,
+            }));
+            for (let pIdx = 0; pIdx < abs.length - 1; pIdx++) {
               page.drawLine({
-                start: { x: p1.x * width, y: height - p1.y * height },
-                end: { x: p2.x * width, y: height - p2.y * height },
+                start: abs[pIdx],
+                end: abs[pIdx + 1],
                 thickness: a.lineWidth || 2,
                 color: drawColorRgb,
+                lineCap: LineCapStyle.Round,
               });
             }
           }
@@ -1777,7 +2021,11 @@ function legibleInk(ink?: string, bg?: string): string {
       markToolCompleted();
     } catch (e) {
       console.error(e);
-      setError("Could not build the edited PDF file.");
+      setError(
+        /encrypt/i.test(String((e as Error)?.message ?? e))
+          ? "This PDF has security restrictions, so it can't be saved with changes. Remove them with Unlock PDF, then edit the unlocked copy."
+          : "Could not build the edited PDF file."
+      );
     } finally {
       setBusy(false);
     }
@@ -1869,6 +2117,15 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
       {busy && <ToolLoadingState label={status ?? "Working on the PDF…"} />}
 
       {error && <Notice tone="error">{error}</Notice>}
+      {pages.length > 0 && docInfo.restricted && !error && (
+        <Notice tone="warning">
+          This PDF has security restrictions, so it can be viewed and marked up here but not saved. Remove them with{" "}
+          <Link href="/tools/unlock-pdf" className="font-medium underline underline-offset-4">
+            Unlock PDF
+          </Link>{" "}
+          (it runs in your browser too), then open the unlocked copy.
+        </Notice>
+      )}
 
       {/* Main Studio Workspace Layout */}
       {pages.length > 0 && !busy && (
@@ -1928,9 +2185,9 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                       </Button>
                       <button
                         type="button"
-                        onClick={() => setZoom(1)}
-                        title="Reset to 100%"
-                        aria-label={`Zoom ${Math.round(zoom * 100)}%. Reset to 100%`}
+                        onClick={() => setFit("width")}
+                        title="Fit to width (100%)"
+                        aria-label={`Zoom ${Math.round(zoom * 100)}%. Fit to width`}
                         className="min-w-12 rounded-md px-1.5 py-1 text-sm tabular-nums text-foreground transition-colors outline-none hover:bg-muted focus-visible:ring-3 focus-visible:ring-ring/50"
                       >
                         {Math.round(zoom * 100)}%
@@ -1938,8 +2195,15 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                       <Button type="button" variant="ghost" size="icon-sm" aria-label="Zoom in" title="Zoom in" onClick={() => setZoom((z) => Math.min(3.0, z + 0.1))}>
                         <Plus aria-hidden="true" />
                       </Button>
-                      <Button type="button" variant="ghost" size="sm" onClick={() => setZoom(1.35)} title="Zoom to 135%" className="hidden sm:inline-flex">
-                        135%
+                      <Button
+                        type="button"
+                        variant={fit === "page" ? "secondary" : "ghost"}
+                        size="sm"
+                        onClick={() => setFit(fit === "page" ? "width" : "page")}
+                        title={fit === "page" ? "Fill the width of the viewer" : "Show the whole page"}
+                        aria-pressed={fit === "page"}
+                      >
+                        {fit === "page" ? "Fit width" : "Fit page"}
                       </Button>
                       <span className="mx-1 h-5 w-px bg-border" aria-hidden="true" />
                       <Button type="button" variant="ghost" size="icon-sm" aria-label="Undo" title="Undo (Ctrl+Z)" onClick={undo} disabled={!history.length}>
@@ -1973,13 +2237,15 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                     className={`flex gap-3 rounded-xl border p-3 bg-muted/30 ${
                       isFullscreen
                         ? "flex-1 min-h-0 h-full overflow-hidden"
-                        : "min-h-[750px] lg:h-[820px]"
+                        : // Tall enough to work in, short enough that the
+                          // whole viewer — and a fitted page — is on screen.
+                          "h-[clamp(480px,calc(100dvh-11rem),900px)]"
                     }`}
                   >
               {/* Left Page Filmstrip (Compact Thumbnails) */}
               <div
                 className={`hidden sm:flex flex-col gap-2 overflow-y-auto w-20 shrink-0 pr-1 select-none ${
-                  isFullscreen ? "h-full" : "max-h-[760px]"
+                  "h-full"
                 }`}
               >
                 {pages.map((p, i) => (
@@ -2018,7 +2284,11 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
               {/* Center Canvas Viewport */}
               <div
                 ref={containerRef}
-                className="relative flex-1 overflow-auto rounded-xl bg-white shadow-sm dark:bg-slate-900 p-2 sm:p-4 grid place-items-center"
+                // Centred with auto margins on the page, not place-items-center:
+                // a centred grid item taller or wider than the viewer overflows
+                // on BOTH sides, and the part above/left of the viewer can never
+                // be scrolled to — zoomed in, the top of the page was unreachable.
+                className="relative flex-1 overflow-auto rounded-xl bg-white shadow-sm dark:bg-slate-900 p-2 sm:p-4 grid"
               >
                 <div
                   ref={stageRef}
@@ -2030,8 +2300,10 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                   style={{
                     width: `${zoom * 100}%`,
                     maxWidth: zoom > 1 ? undefined : "100%",
+                    // Stops a finger drawing from scrolling the page instead.
+                    touchAction: tool === "draw" ? "none" : undefined,
                   }}
-                  className={`relative mx-auto overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 ${
+                  className={`relative m-auto overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 ${
                     tool === "select" ? "" : "cursor-crosshair"
                   }`}
                 >
@@ -2076,11 +2348,11 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                     const isSelected = selectedId === a.id;
                     const isEditing = editingId === a.id;
 
-                    const getFontFamilyCss = (cat?: FontCategory) => {
-                      if (cat === "serif") return "'Times New Roman', Times, 'Liberation Serif', Georgia, serif";
-                      if (cat === "monospace") return "'Courier New', Courier, 'Liberation Mono', Menlo, Consolas, monospace";
-                      return "'Helvetica Neue', Helvetica, Arial, 'Liberation Sans', sans-serif";
-                    };
+                    const getFontFamilyCss = fontFamilyCss;
+                    const textShift =
+                      a.type === "text"
+                        ? (TEXT_ASCENT - cssBaseline(fontFamilyCss(a.fontCategory))) * (a.size ?? 14) * scale
+                        : 0;
 
                     return (
                       <div
@@ -2132,7 +2404,10 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                             a.type === "text"
                               ? `${(a.size ?? 14) * scale}px`
                               : undefined,
-                          lineHeight: a.type === "text" ? 1.2 : undefined,
+                          lineHeight: a.type === "text" ? TEXT_LINE_HEIGHT : undefined,
+                          // Puts the baseline TEXT_ASCENT × size below the top,
+                          // exactly where the exported file draws it.
+                          marginTop: a.type === "text" ? `${textShift}px` : undefined,
                           fontFamily: a.type === "text" ? getFontFamilyCss(a.fontCategory) : undefined,
                           fontWeight: a.type === "text" ? (a.isBold ? 700 : 400) : undefined,
                           fontStyle: a.type === "text" ? (a.isItalic ? "italic" : "normal") : undefined,
@@ -2163,24 +2438,24 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                 }
                               }}
                               autoFocus
+                              rows={Math.max(1, (a.text ?? "").split("\n").length)}
+                              // Same font, size and line height as the placed
+                              // text, so nothing jumps when editing starts or ends.
                               style={{
-                                color: a.color || "#000000",
-                                fontFamily:
-                                  a.fontCategory === "serif"
-                                    ? "Georgia, serif"
-                                    : a.fontCategory === "monospace"
-                                    ? "monospace"
-                                    : "Inter, system-ui, sans-serif",
+                                color: a.color && getLuminance(a.color) < 0.8 ? a.color : "#0f172a",
+                                fontFamily: fontFamilyCss(a.fontCategory),
                                 fontWeight: a.isBold ? 700 : 400,
                                 fontStyle: a.isItalic ? "italic" : "normal",
                                 fontSize: `${(a.size ?? 14) * scale}px`,
+                                lineHeight: TEXT_LINE_HEIGHT,
+                                width: `${Math.max(4, ...(a.text ?? "").split("\n").map((l) => l.length)) + 2}ch`,
                               }}
-                              className="block min-w-[60px] resize-none border-0 bg-transparent p-0 outline-none text-base md:text-sm rounded-lg border border-input bg-background dark:bg-input/30 text-foreground placeholder:text-muted-foreground transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                              className="block min-w-[60px] resize-none overflow-hidden rounded-sm border-0 bg-white/95 p-0 outline-none ring-2 ring-blue-500/60"
                             />
                           ) : (
                             <span
                               onDoubleClick={() => setEditingId(a.id)}
-                              className="block px-0.5 whitespace-pre"
+                              className="block whitespace-pre"
                             >
                               {a.text || " "}
                             </span>
@@ -2208,14 +2483,24 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                           >
                             {a.fieldType === "checkbox" ? (
                               <label className="flex items-center gap-1.5 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={a.fieldValue === "on" || a.fieldValue === "true"}
-                                  onChange={(e) =>
-                                    setFieldValue(a, e.target.checked ? "on" : "")
-                                  }
-                                  className="h-4 w-4 rounded accent-blue-600 cursor-pointer"
-                                />
+                                {a.radioValue !== undefined ? (
+                                  <input
+                                    type="radio"
+                                    name={`pdf-radio-${a.fieldName}`}
+                                    checked={a.fieldValue === a.radioValue}
+                                    // Selecting one button sets the whole group,
+                                    // on the page and in the Forms panel.
+                                    onChange={() => a.fieldName && updateSourceField(a.fieldName, a.radioValue ?? "")}
+                                    className="h-4 w-4 cursor-pointer accent-blue-600"
+                                  />
+                                ) : (
+                                  <input
+                                    type="checkbox"
+                                    checked={a.fieldValue === "on" || a.fieldValue === "true"}
+                                    onChange={(e) => setFieldValue(a, e.target.checked ? "on" : "")}
+                                    className="h-4 w-4 rounded accent-blue-600 cursor-pointer"
+                                  />
+                                )}
                                 {isSelected && (
                                   <span className="text-xs font-semibold truncate text-muted-foreground">
                                     {a.fieldName || "Check"}
@@ -2262,6 +2547,26 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                             )}
                           </div>
                         )}
+                        {/* Freehand drawing — points are fractions of this box */}
+                        {a.type === "draw" && a.points && a.points.length > 1 && (
+                          <svg
+                            viewBox="0 0 1 1"
+                            preserveAspectRatio="none"
+                            aria-hidden="true"
+                            className="pointer-events-none absolute inset-0 h-full w-full overflow-visible"
+                          >
+                            <polyline
+                              points={a.points.map((p) => `${p.x},${p.y}`).join(" ")}
+                              fill="none"
+                              stroke={a.color || "#000000"}
+                              strokeWidth={(a.lineWidth ?? 2) * scale}
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              vectorEffect="non-scaling-stroke"
+                            />
+                          </svg>
+                        )}
+
                         {/* Image / Signature Rendering */}
                         {(a.type === "image" || a.type === "signature") &&
                           a.dataUrl && (
@@ -2278,6 +2583,7 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                         {isSelected &&
                           (a.type === "signature" ||
                             a.type === "image" ||
+                            a.type === "draw" ||
                             a.type === "whiteout" ||
                             a.type === "highlight" ||
                             a.type === "formfield") && (
@@ -2293,17 +2599,17 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                         {/* Floating Quick Action Pill above Selected Item */}
                         {isSelected && !isEditing && (
                           <div
+                            ref={pillRef}
                             onClick={(e) => e.stopPropagation()}
-                            className={`absolute z-40 flex items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white/95 px-2 py-1 shadow-xl backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95 max-w-[90vw] whitespace-nowrap ${
-                              a.y < 0.08
-                                ? "top-[calc(100%+8px)]"
-                                : "-top-10"
+                            style={{ maxWidth: stageW ? Math.max(200, stageW - 8) : undefined }}
+                            className={`absolute z-40 flex w-max max-w-[min(36rem,calc(100vw-3rem))] flex-wrap items-center gap-1.5 rounded-xl border border-slate-200/90 bg-white/95 px-2 py-1 shadow-xl backdrop-blur-md dark:border-slate-700 dark:bg-slate-900/95 whitespace-nowrap ${
+                              // Above the item (growing upward if it wraps),
+                              // or below it when the item is at the very top.
+                              a.y < 0.08 ? "top-[calc(100%+8px)]" : "bottom-[calc(100%+8px)]"
                             } ${
-                              a.x < 0.18
-                                ? "left-0 translate-x-0"
-                                : a.x > 0.72
-                                ? "right-0 translate-x-0"
-                                : "left-1/2 -translate-x-1/2"
+                              // Open toward the middle of the page so the bar
+                              // is never clipped by the page edge.
+                              a.x + (a.w ?? 0) / 2 < 0.5 ? "left-0" : "right-0"
                             }`}
                           >
                             {/* SIGNATURE SPECIFIC TOOLBAR */}
@@ -2377,22 +2683,16 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                 </span>
                                 <div className="flex items-center gap-0.5 border-l border-slate-200 pl-1 dark:border-slate-700">
                                   <button
-                                    onClick={() => {
-                                      const nw = Math.max(0.05, (a.w ?? 0.3) * 0.85);
-                                      const nh = Math.max(0.03, (a.h ?? 0.12) * 0.85);
-                                      patch(a.id, { w: nw, h: nh });
-                                    }}
+                                    type="button"
+                                    onClick={() => sizeImage(a, (a.w ?? 0.3) * 0.85)}
                                     title="Scale Down (-15%)"
                                     className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-sm hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 font-medium text-foreground"
                                   >
                                     <Minus className="h-3 w-3" /> Smaller
                                   </button>
                                   <button
-                                    onClick={() => {
-                                      const nw = Math.min(0.95, (a.w ?? 0.3) * 1.15);
-                                      const nh = Math.min(0.9, (a.h ?? 0.12) * 1.15);
-                                      patch(a.id, { w: nw, h: nh });
-                                    }}
+                                    type="button"
+                                    onClick={() => sizeImage(a, (a.w ?? 0.3) * 1.15)}
                                     title="Scale Up (+15%)"
                                     className="flex items-center gap-0.5 rounded px-1.5 py-0.5 text-sm hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 font-medium text-foreground"
                                   >
@@ -2400,27 +2700,23 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                   </button>
                                 </div>
                                 <div className="flex items-center gap-0.5 border-l border-slate-200 pl-1 dark:border-slate-700">
-                                  <button
-                                    onClick={() => patch(a.id, { w: 0.20, h: 0.08 })}
-                                    title="Small Preset"
-                                    className="rounded px-1.5 py-0.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                                  >
-                                    S
-                                  </button>
-                                  <button
-                                    onClick={() => patch(a.id, { w: 0.35, h: 0.14 })}
-                                    title="Medium Preset"
-                                    className="rounded px-1.5 py-0.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                                  >
-                                    M
-                                  </button>
-                                  <button
-                                    onClick={() => patch(a.id, { w: 0.55, h: 0.22 })}
-                                    title="Large Preset"
-                                    className="rounded px-1.5 py-0.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
-                                  >
-                                    L
-                                  </button>
+                                  {(
+                                    [
+                                      ["S", 0.2, "Small"],
+                                      ["M", 0.35, "Medium"],
+                                      ["L", 0.55, "Large"],
+                                    ] as const
+                                  ).map(([label, width, name]) => (
+                                    <button
+                                      key={label}
+                                      type="button"
+                                      onClick={() => sizeImage(a, width)}
+                                      title={`${name} (keeps the image's shape)`}
+                                      className="rounded px-1.5 py-0.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                                    >
+                                      {label}
+                                    </button>
+                                  ))}
                                 </div>
                               </>
                             )}
@@ -2640,12 +2936,14 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                                 <Copy className="h-3.5 w-3.5" />
                               </button>
 
-                              <button aria-label="Delete"
+                              <button
+                                type="button"
                                 onClick={() => removeAnnot(a.id)}
-                                title="Delete"
-                                className="flex items-center gap-1 rounded p-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
+                                title={a.type === "text" && a.coverId ? "Delete this edit and restore the original text (Delete key)" : "Delete (Delete key)"}
+                                className="flex items-center gap-1 rounded px-1.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
                               >
-                                <Trash2 className="h-3.5 w-3.5" />
+                                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
+                                {a.type === "text" && a.coverId ? "Remove edit" : "Delete"}
                               </button>
                             </div>
                           </div>
@@ -2653,6 +2951,26 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                       </div>
                     );
                   })}
+
+                  {/* The stroke being drawn right now */}
+                  {liveStroke && liveStroke.length > 0 && (
+                    <svg
+                      viewBox="0 0 1 1"
+                      preserveAspectRatio="none"
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-0 z-30 h-full w-full"
+                    >
+                      <polyline
+                        points={liveStroke.map((p) => `${p.x},${p.y}`).join(" ")}
+                        fill="none"
+                        stroke={drawColor}
+                        strokeWidth={drawWidth * scale}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        vectorEffect="non-scaling-stroke"
+                      />
+                    </svg>
+                  )}
                 </div>
               </div>
             </div>
@@ -2939,13 +3257,14 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                               </Button>
                             </div>
                           </div>
-                          {f.type === "dropdown" ? (
+                          {f.type === "dropdown" || f.type === "radio" || f.type === "list" ? (
                             <select
                               aria-label={`Value of ${f.name}`}
                               value={f.value}
                               onChange={(e) => updateSourceField(f.name, e.target.value)}
                               className="h-9 w-full rounded-lg border border-input bg-background px-2.5 text-base text-foreground outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:text-sm dark:bg-input/30"
                             >
+                              {f.type !== "dropdown" && !f.options?.includes(f.value) && <option value="">Not selected</option>}
                               {(f.options ?? ["Option 1", "Option 2"]).map((o) => (
                                 <option key={o} value={o}>
                                   {o}
@@ -3104,9 +3423,31 @@ const selected = annots.find((a) => a.id === selectedId) ?? null;
                       ))}
                     </div>
                   ) : (
-                    <p className="rounded-lg border border-dashed p-5 text-center text-sm text-muted-foreground">
-                      No form fields yet. Use Add field to place a text box, checkbox or dropdown.
-                    </p>
+                    <div className="space-y-2 rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+                      {docInfo.xfa ? (
+                        <p>
+                          This is an XFA form (made with Adobe LiveCycle). Its fields only work in Adobe Acrobat or Reader,
+                          so they cannot be filled here or in a browser.
+                        </p>
+                      ) : docInfo.restricted && docInfo.pdfjsFields > 0 ? (
+                        <p>
+                          This PDF has {docInfo.pdfjsFields} form field{docInfo.pdfjsFields === 1 ? "" : "s"}, but it is
+                          protected, so they can&apos;t be edited here. Remove the protection with{" "}
+                          <Link href="/tools/unlock-pdf" className="font-medium text-link underline-offset-4 hover:underline">
+                            Unlock PDF
+                          </Link>
+                          , then open the unlocked copy.
+                        </p>
+                      ) : (
+                        <>
+                          <p className="font-medium text-foreground">This PDF has no fillable form fields.</p>
+                          <p>
+                            The labels and values you see — names, dates, amounts — are printed text. To change them, go to
+                            Edit and click the text. To make a box someone can type into, use Add field.
+                          </p>
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
               )}

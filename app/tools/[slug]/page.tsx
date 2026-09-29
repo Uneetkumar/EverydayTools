@@ -5,6 +5,7 @@ import { getAllTools, getToolBySlug } from "@/lib/tools/registry";
 import { getToolContent } from "@/lib/tools/content";
 import { constructToolMetadata } from "@/lib/seo/metadata";
 import { generateToolJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/json-ld";
 import ToolShell from "@/components/ToolShell";
 
 import { ToolRenderer } from "@/components/tool/tool-loaders";
@@ -27,11 +28,8 @@ export async function generateMetadata({
 }: ToolPageProps): Promise<Metadata> {
   const { slug } = await params;
   const tool = getToolBySlug(slug);
-  if (!tool) {
-    return {
-      title: "Tool Not Found | TabBench",
-    };
-  }
+  // Unreachable in practice: dynamicParams is false, so unknown slugs 404.
+  if (!tool) return { title: "Tool not found", robots: { index: false } };
   return constructToolMetadata(tool);
 }
 
@@ -44,27 +42,12 @@ export default async function ToolPage({ params }: ToolPageProps) {
   }
 
   const content = getToolContent(tool.slug);
-  const { webAppSchema, breadcrumbSchema, faqSchema } = generateToolJsonLd(
-    tool,
-    content
-  );
+  // The BreadcrumbList is emitted by the visible trail in ToolShell.
+  const { webAppSchema, faqSchema } = generateToolJsonLd(tool, content);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(webAppSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
-      {faqSchema && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-        />
-      )}
+      <JsonLd data={[webAppSchema, faqSchema]} />
 
       <ToolShell tool={tool}>
         <ToolRenderer slug={tool.slug} />

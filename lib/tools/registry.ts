@@ -215,7 +215,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "A client-side developer utility to format unreadable JSON, detect syntax mistakes with exact line diagnostics, minify data, and inspect structures securely without data leaves your browser.",
     "iconName": "Braces",
     "privacy": "local",
-    "metaTitle": "JSON Formatter | TabBench",
+    "metaTitle": "JSON Formatter & Validator | TabBench",
     "metaDescription": "Format, validate, prettify, and minify JSON payloads in your browser. Live syntax error diagnostics with zero server upload.",
     "keywords": [
       "json formatter",
@@ -335,7 +335,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Essential writing utility for essayists, copywriters, and social media managers. Track character limits for Twitter/X, Instagram, LinkedIn, and calculate estimated reading duration.",
     "iconName": "LetterText",
     "privacy": "local",
-    "metaTitle": "Word Counter | TabBench",
+    "metaTitle": "Word Counter – Words, Characters & Reading Time | TabBench",
     "metaDescription": "Count words, characters, sentences, paragraphs, and reading time in real time. Perfect for essays, social media posts, and editorial drafts.",
     "keywords": [
       "word counter",
@@ -436,14 +436,14 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "slug": "base64-converter",
     "name": "Base64 Encoder & Decoder",
     "shortName": "Base64",
-    "tagline": "Encode text to Base64 or decode Base64 back to readable text.",
+    "tagline": "Encode text or files to Base64, or decode Base64 back to text or a file.",
     "category": "developer",
-    "description": "Encode text or decode Base64 strings instantly with live UTF-8 support and URL-safe mode.",
-    "longDescription": "Convert plain text to Base64 and decode Base64 strings to readable UTF-8 text with instant one-click copy and error detection.",
+    "description": "Encode text or files to Base64 or data: URIs, and decode Base64 back to text, images or downloadable files, with URL-safe and MIME options.",
+    "longDescription": "Convert text (UTF-8) or any file to Base64, as plain Base64 or a ready-to-paste data: URI. Decoding accepts standard or URL-safe Base64 and data: URIs, shows text or an image preview, recognises file types, and lets you download the result. Errors point to the exact character that is wrong.",
     "iconName": "Binary",
     "privacy": "local",
-    "metaTitle": "Base64 Converter | TabBench",
-    "metaDescription": "Encode text to Base64 and decode Base64 strings to UTF-8 text instantly. Supports URL-safe format and real-time live conversion.",
+    "metaTitle": "Base64 Encoder & Decoder | TabBench",
+    "metaDescription": "Free Base64 encoder and decoder for text and files: data: URIs, URL-safe Base64, image preview and file download. Works in your browser; nothing is uploaded.",
     "keywords": [
       "base64 converter",
       "base64 encoder",
@@ -462,10 +462,11 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "btoa"
     ],
     "features": [
-      "Encode text to Base64",
-      "Decode Base64 to UTF-8",
-      "URL-safe format toggle",
-      "Instant live preview"
+      "Text (UTF-8) or any file to Base64",
+      "data: URIs for images, fonts and more",
+      "URL-safe and MIME line-break options",
+      "Decodes to text, image preview or a download",
+      "Recognises PNG, JPEG, PDF, ZIP and other file types"
     ],
     "faqs": [
       {
@@ -495,7 +496,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "iconName": "KeySquare",
     "privacy": "local",
     "metaTitle": "JWT Decoder & Signature Verifier | TabBench",
-    "metaDescription": "Free JWT decoder: explains every claim, checks expiry, verifies HS256, RS256 and ES256 signatures with a secret, PEM or JWKS, and creates test tokens. Nothing leaves your browser.",
+    "metaDescription": "Free JWT decoder: explains each claim, checks expiry, verifies HS256, RS256 and ES256 signatures with a secret, PEM or JWKS. Nothing leaves your browser.",
     "keywords": [
       "jwt decoder",
       "decode jwt",
@@ -551,7 +552,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "iconName": "Hash",
     "privacy": "local",
     "metaTitle": "UUID & GUID Generator | TabBench",
-    "metaDescription": "Free UUID generator: v4, time-ordered v7, name-based v5 and v1 UUIDs, up to 1,000 at once as text, JSON or SQL. Paste a UUID to decode its version and creation time.",
+    "metaDescription": "Free UUID generator: v4, time-ordered v7, v5 and v1, up to 1,000 at once as text, JSON or SQL. Paste a UUID to decode its version and creation time.",
     "keywords": [
       "uuid generator",
       "random uuid generator",
@@ -608,8 +609,8 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "shortName": "URL Encoder & Decoder",
     "tagline": "Percent-encode text for URLs, or decode an encoded URL.",
     "category": "developer",
-    "description": "Encode query parameters and special characters into percent-encoded URL format, or decode URLs to plain text.",
-    "longDescription": "Quickly percent-encode URL strings and decode encoded URLs. Supports full URL encode and encodeURIComponent modes.",
+    "description": "Percent-encode a value, a whole URL or form data, decode encoded text even when parts are broken, and break a URL down into its parts and parameters.",
+    "longDescription": "Encode text the right way for where it goes — one query value, a whole URL or HTML form data — decode percent-encoded text without failing on one bad escape, spot double encoding, and see every part and query parameter of a URL decoded.",
     "iconName": "Link",
     "privacy": "local",
     "metaTitle": "URL Encoder & Decoder | TabBench",
@@ -633,10 +634,11 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "uri encode"
     ],
     "features": [
-      "encodeURIComponent support",
-      "decodeURIComponent support",
-      "Live conversion",
-      "One-click copy"
+      "Encode a value, a whole URL or form data (+ for spaces)",
+      "Strict RFC 3986 option for ! ' ( ) *",
+      "Decodes even when some escapes are broken",
+      "Spots double-encoded text",
+      "URL breakdown with every query parameter"
     ],
     "faqs": [
       {
@@ -665,7 +667,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Create clean QR codes instantly in your browser. Customize colors, error correction level, frame templates, and size. Download high-res PNG or SVG vector for print or web.",
     "iconName": "QrCode",
     "privacy": "local",
-    "metaTitle": "QR Code Generator | Free Custom QR Maker | TabBench",
+    "metaTitle": "QR Code Generator with Logo, Wi-Fi & vCard | TabBench",
     "metaDescription": "Create custom QR codes for URLs, vCards, WiFi networks, phone calls, and calendar events. Customize colors, logos, frames, and download crisp PNGs.",
     "keywords": [
       "qr code generator",
@@ -780,7 +782,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Create industry-standard barcodes directly in your browser. Supports EAN-13, UPC-A, Code 128, Code 39, ITF-14, and Pharmacode with automatic checksum computation, custom dimensions, color customization, and instant print layout.",
     "iconName": "Barcode",
     "privacy": "local",
-    "metaTitle": "Barcode Generator | Free Online Barcode Maker | TabBench",
+    "metaTitle": "Barcode Generator – Code 128, EAN-13 & UPC | TabBench",
     "metaDescription": "Create free standard barcodes online in Code 128, EAN-13, UPC, Code 39, and ITF-14. Customize size and colors, then download high-res PNG or SVG.",
     "keywords": [
       "barcode generator",
@@ -891,7 +893,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Compress JPG, PNG, and WebP images to your exact target file size in KB. Ideal for government portals, job applications, resumes, and websites with strict file size limits. 100% private in-browser compression.",
     "iconName": "ImageMinus",
     "privacy": "local",
-    "metaTitle": "Image Compressor | TabBench",
+    "metaTitle": "Image Compressor – Compress JPG, PNG & WebP | TabBench",
     "metaDescription": "Compress JPEG, PNG, and WebP images directly in your browser without uploading files. Reduce file size while maintaining visual clarity.",
     "keywords": [
       "image compressor",
@@ -1140,6 +1142,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     ],
     "relatedToolSlugs": [
       "jpg-to-png",
+      "webp-to-jpg",
       "image-to-webp",
       "image-compressor",
       "crop-image"
@@ -1458,7 +1461,8 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "relatedToolSlugs": [
       "image-compressor",
       "watermark-remover",
-      "png-to-jpg"
+      "png-to-jpg",
+      "online-camera"
     ],
     "nextSteps": [
       "image-resizer",
@@ -1644,7 +1648,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Calculate inclusive and exclusive GST amounts in seconds. Determine CGST, SGST, IGST tax breakdown and find net pricing.",
     "iconName": "Receipt",
     "privacy": "local",
-    "metaTitle": "GST Calculator | TabBench",
+    "metaTitle": "GST Calculator India – Add or Remove GST | TabBench",
     "metaDescription": "Calculate GST amounts instantly with inclusive and exclusive tax rates. View clear CGST, SGST, and IGST breakdowns directly in your browser.",
     "keywords": [
       "gst calculator",
@@ -1711,7 +1715,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Plan your loan repayment with our loan EMI calculator. Calculate monthly payments, total interest payable, and total cost of loan with interactive tenure sliders.",
     "iconName": "Landmark",
     "privacy": "local",
-    "metaTitle": "EMI Calculator | TabBench",
+    "metaTitle": "EMI Calculator – Loan EMI & Amortization Schedule | TabBench",
     "metaDescription": "Calculate your monthly loan EMI, total payable interest, and amortization schedule instantly. Fast, accurate, and completely private.",
     "keywords": [
       "emi calculator",
@@ -2061,7 +2065,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "iconName": "Fingerprint",
     "privacy": "local",
     "metaTitle": "Hash Generator & File Checksum Checker | TabBench",
-    "metaDescription": "Free hash generator: MD5, SHA-256, SHA-512, SHA-3 and CRC32 for text or files of any size, checksum verification against a published hash, and HMAC. Nothing is uploaded.",
+    "metaDescription": "Free hash generator: MD5, SHA-256, SHA-512, SHA-3 and CRC32 for text or files of any size, plus HMAC and checksum verification. Nothing is uploaded.",
     "keywords": [
       "hash generator",
       "sha256 generator",
@@ -2483,12 +2487,12 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "shortName": "Favicon Generator",
     "tagline": "Turn a logo into every favicon and app icon size a site needs.",
     "category": "image-media",
-    "description": "Turn a logo into a full set of favicon PNGs at every size browsers and phones request.",
-    "longDescription": "Generate favicons at 16px through 512px from a single logo, including the 180px Apple touch icon, packaged as a ZIP with a ready-to-paste HTML snippet and web manifest.",
+    "description": "Turn a logo, letter or emoji into a complete favicon set: favicon.ico, Apple touch icon, manifest icons and a maskable Android icon.",
+    "longDescription": "Create every icon a modern site needs from one logo (SVG, PNG or JPG) or from a letter or emoji: a multi-size favicon.ico, icon.svg, a 180px Apple touch icon on a solid background, 192px and 512px manifest icons, a padded maskable icon for Android, and a web manifest — previewed in a browser tab, on an iPhone home screen and in Android's round crop.",
     "iconName": "AppWindow",
     "privacy": "local",
     "metaTitle": "Favicon Generator | TabBench",
-    "metaDescription": "Generate multi-size website favicons (16x16, 32x32, 48x48, 180x180) and Apple touch icons from any logo or photo in seconds.",
+    "metaDescription": "Free favicon generator: favicon.ico, Apple touch icon, Android maskable icon and web manifest from a logo, a letter or an emoji. Nothing is uploaded.",
     "keywords": [
       "favicon generator",
       "create favicon",
@@ -2508,10 +2512,13 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "app icon"
     ],
     "features": [
-      "Nine sizes from 16px to 512px",
-      "Apple touch icon at 180px",
-      "ZIP with HTML snippet and manifest",
-      "Transparent or solid background"
+      "favicon.ico with 16, 32 and 48 px inside",
+      "Apple touch icon on a solid background",
+      "Manifest icons plus a maskable Android icon",
+      "From a logo, a letter or an emoji",
+      "Background, shape and padding controls",
+      "Tab, iPhone and Android previews",
+      "ZIP with manifest, HTML tags and every PNG size"
     ],
     "faqs": [
       {
@@ -2755,7 +2762,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "iconName": "Mic",
     "privacy": "network",
     "privacyNote": "Uses your browser's speech recognition, which may process audio on your browser vendor's servers.",
-    "metaTitle": "Speech to Text | TabBench",
+    "metaTitle": "Speech to Text – Voice Typing in 14 Languages | TabBench",
     "metaDescription": "Dictate text and transcribe spoken voice into written text in real time. Free in-browser speech recognition with instant copying and export.",
     "keywords": [
       "speech to text",
@@ -3068,7 +3075,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Estimate your mutual fund SIP wealth growth, total invested amount, and compounding gains with instant interactive year-by-year projections.",
     "iconName": "PiggyBank",
     "privacy": "local",
-    "metaTitle": "SIP Calculator | TabBench",
+    "metaTitle": "SIP Calculator – Mutual Fund SIP Returns | TabBench",
     "metaDescription": "Calculate mutual fund SIP returns and maturity wealth with TabBench's free calculator. Live annual compounding breakdown and visual growth charts.",
     "keywords": [
       "sip calculator",
@@ -3280,8 +3287,8 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "shortName": "Slug Generator",
     "tagline": "Turn a title into a clean, SEO-friendly URL slug.",
     "category": "text",
-    "description": "Convert headlines and titles into clean, SEO-friendly URL slugs with customizable separators.",
-    "longDescription": "Generate clean, URL-safe permalinks from any article title, product name, or headline with accent stripping, lowercase formatting, and optional stop word removal.",
+    "description": "Turn titles into clean URL slugs — one or many at once — with proper handling of accents, other alphabets and Hindi, and optional length limits.",
+    "longDescription": "Generate clean permalinks from article titles, product names or headlines. Accents are removed, letters like ß and Ł are spelled out, Cyrillic, Greek and Hindi are transliterated (or kept as Unicode if you prefer), & becomes and, and long slugs are cut at a word boundary. Paste one title per line to make many at once.",
     "iconName": "Link2",
     "privacy": "local",
     "metaTitle": "URL Slug Generator | TabBench",
@@ -3300,10 +3307,12 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "seo url"
     ],
     "features": [
-      "Hyphen, underscore, and dot separators",
-      "Diacritic and accent normalization",
-      "Optional stop word removal",
-      "Live blog URL preview"
+      "Many titles at once, one per line",
+      "Accents, ß, Ł, Cyrillic, Greek and Hindi handled",
+      "Keep Unicode letters if you prefer",
+      "Hyphen, underscore, dot or slash separators",
+      "Length limit that cuts at a word boundary",
+      "Optional stop word removal and full URL preview"
     ],
     "faqs": [
       {
@@ -3376,12 +3385,12 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "shortName": "Regex Tester",
     "tagline": "Test regular expressions with live match and group highlighting.",
     "category": "developer",
-    "description": "Test regular expressions with real-time match highlighting, capture group breakdown, and flags.",
-    "longDescription": "Interactive JavaScript regex testing utility with live multi-match highlighting, capture group inspection, syntax validation, and a quick cheat sheet reference.",
+    "description": "Test regular expressions with live highlighting, named groups, replace and split, a plain-English explanation of the pattern, and protection from patterns that would freeze the page.",
+    "longDescription": "Test JavaScript regular expressions against sample text: see every match and capture group (numbered and named) with positions, try replacements with $1 and $<name>, split text, and read a line-by-line explanation of the pattern. Patterns run in a background worker and are stopped if they backtrack catastrophically. Includes common patterns for email, URLs, Indian mobile numbers, PIN codes, PAN, GSTIN and IFSC.",
     "iconName": "Regex",
     "privacy": "local",
     "metaTitle": "Regex Tester & Debugger | TabBench",
-    "metaDescription": "Test regular expressions in real-time with live match highlighting, capture groups breakdown, flag toggles, and regex cheat sheet.",
+    "metaDescription": "Free regex tester with live highlighting, named groups, replace and split, plain-English explanations, and ready patterns for email, PAN, GSTIN and IFSC.",
     "keywords": [
       "regex tester",
       "regular expression tester",
@@ -3396,10 +3405,13 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "pattern matcher"
     ],
     "features": [
-      "Live match highlighting",
-      "Capture groups ($1, $2) breakdown",
-      "Flag toggles (g, i, m, s, u)",
-      "Built-in regex cheat sheet"
+      "Live highlighting of every match",
+      "Numbered and named capture groups with positions",
+      "Replace ($1, $<name>) and split previews",
+      "Plain-English explanation of the pattern",
+      "Stops runaway patterns instead of freezing",
+      "Common patterns incl. PAN, GSTIN, IFSC, PIN code",
+      "Copy as a JavaScript literal or new RegExp()"
     ],
     "faqs": [
       {
@@ -3424,8 +3436,8 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "shortName": "HTML Entity Converter",
     "tagline": "Escape or unescape HTML characters as named, decimal or hex entities.",
     "category": "developer",
-    "description": "Escape and unescape special HTML characters with named, decimal, and hex entity options.",
-    "longDescription": "Convert reserved HTML characters into safe entities and decode encoded HTML entities back to plain text with instant live conversion.",
+    "description": "Escape text for HTML or decode entities back to text, with named, decimal or hex references and correct handling of emoji and every named entity.",
+    "longDescription": "Encode only the characters HTML needs escaped, every non-ASCII character, or everything, as named, decimal or hex entities. Decoding understands all 2,231 named entities in the HTML standard, leaves tags alone, and spots text that was encoded twice.",
     "iconName": "CodeXml",
     "privacy": "local",
     "metaTitle": "HTML Entity Encoder & Decoder | TabBench",
@@ -3445,10 +3457,11 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "html decode"
     ],
     "features": [
-      "Bidirectional encode and decode",
-      "Named (&amp;), Decimal (&#38;), and Hex (&#x26;)",
-      "Instant copy to clipboard",
-      "Character count diagnostics"
+      "Encode only & < > \" ', non-ASCII too, or everything",
+      "Named (&amp;), decimal (&#38;) and hex (&#x26;)",
+      "Emoji and all Unicode encoded correctly",
+      "Decodes every HTML named entity and keeps tags",
+      "Detects double-encoded text"
     ],
     "faqs": [
       {
@@ -3470,14 +3483,14 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "slug": "color-converter",
     "name": "Color Converter",
     "shortName": "Color Converter",
-    "tagline": "Convert HEX, RGB, HSL and CMYK and build matching palettes.",
+    "tagline": "Convert any CSS colour to HEX, RGB, HSL, OKLCH and more, with shades and palettes.",
     "category": "developer",
-    "description": "Convert HEX, RGB, HSL, and CMYK color codes with harmonic palette generation and WCAG contrast previews.",
-    "longDescription": "Comprehensive color conversion tool for web developers and UI designers. Converts across HEX, RGB, HSL, CMYK, CSS variables, and generates harmonic color schemes.",
+    "description": "Convert colours between HEX, RGB, HSL, HWB, OKLCH, OKLab and CMYK, and build shade scales and harmonies.",
+    "longDescription": "Paste a colour in any CSS syntax — HEX, rgb(), hsl(), hwb(), oklch(), oklab() or a name — and get it in every format, including transparency. Generate an 11-step shade scale like Tailwind's 50–950 in OKLCH, copy it as CSS variables, and explore harmonies that keep the same lightness.",
     "iconName": "Palette",
     "privacy": "local",
     "metaTitle": "Color Converter & Palette Generator | TabBench",
-    "metaDescription": "Convert colors between HEX, RGB, HSL, and CMYK with live preview, CSS custom properties, and complementary/triadic palette generation.",
+    "metaDescription": "Free colour converter for HEX, RGB, HSL, OKLCH, OKLab, HWB and CMYK. Accepts any CSS colour, makes 50–950 shade scales and harmonies, and copies CSS variables.",
     "keywords": [
       "color converter",
       "hex to rgb",
@@ -3495,10 +3508,12 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "colour"
     ],
     "features": [
-      "HEX, RGB, HSL, CMYK & CSS variables",
-      "Live visual color picker",
-      "Complementary, analogous & triadic harmonies",
-      "One-click copy for all formats"
+      "Reads any CSS colour, including names and oklch()",
+      "HEX, RGB, HSL, HWB, OKLCH, OKLab, HSV, CMYK, floats",
+      "Transparency kept in every format",
+      "50–950 shade scale, copy as CSS variables",
+      "Harmonies with even lightness (OKLCH)",
+      "Contrast against white and black"
     ],
     "faqs": [
       {
@@ -3527,7 +3542,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Break down annual compensation (CTC) into monthly in-hand take-home salary, basic pay, HRA, Provident Fund (PF), and estimated income tax deductions.",
     "iconName": "Wallet",
     "privacy": "local",
-    "metaTitle": "Salary Take-Home Pay Calculator | TabBench",
+    "metaTitle": "CTC to In-Hand Salary Calculator (India) | TabBench",
     "metaDescription": "Calculate monthly in-hand salary from annual CTC. Breakdown basic pay, HRA, Provident Fund (PF), and income tax deductions accurately.",
     "keywords": [
       "salary calculator",
@@ -3629,12 +3644,12 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "shortName": "Unix Timestamp",
     "tagline": "Convert epoch timestamps to readable dates and back.",
     "category": "date-time",
-    "description": "Convert Unix epoch timestamps to human-readable UTC and local dates, with live ticking epoch clock.",
-    "longDescription": "Bidirectional converter between Unix timestamps (seconds and milliseconds) and formatted UTC/local date-time strings with relative duration indicators.",
+    "description": "Convert Unix timestamps in seconds, milliseconds, microseconds or nanoseconds to dates in any time zone, and dates back to timestamps.",
+    "longDescription": "Convert epoch timestamps to readable dates and back. The unit is detected from the number of digits (seconds, milliseconds, microseconds, nanoseconds); dates can be typed as ISO 8601, RFC 2822 or plain text and read in any time zone. Results include ISO 8601 with offset, RFC 2822, SQL, relative time, ISO week, and a batch mode for lists of timestamps from logs.",
     "iconName": "Clock4",
     "privacy": "local",
     "metaTitle": "Unix Timestamp & Epoch Converter | TabBench",
-    "metaDescription": "Convert Unix timestamps to human-readable UTC and local dates. Live ticking current epoch clock and reverse date-to-epoch converter.",
+    "metaDescription": "Free Unix timestamp converter: seconds, ms, µs and ns auto-detected, any time zone, ISO 8601, RFC 2822 and SQL formats, and batch conversion. Live epoch clock.",
     "keywords": [
       "unix timestamp converter",
       "epoch converter",
@@ -3650,10 +3665,12 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "date"
     ],
     "features": [
-      "Live ticking epoch timestamp clock",
-      "Seconds and milliseconds auto-detection",
-      "UTC, ISO 8601, and local time conversions",
-      "Relative time ('X hours ago') indicator"
+      "Seconds, ms, µs and ns detected from the digits",
+      "Dates typed as ISO 8601, RFC 2822 or plain text",
+      "Any IANA time zone, with DST handled",
+      "ISO 8601 with offset, RFC 2822, SQL, ISO week",
+      "Batch conversion with CSV copy",
+      "Live epoch clock and year-2038 warning"
     ],
     "faqs": [
       {
@@ -3678,12 +3695,12 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "shortName": "JSON to TypeScript",
     "tagline": "Generate TypeScript interfaces from a JSON sample.",
     "category": "developer",
-    "description": "Generate clean, typed TypeScript interfaces and type definitions from JSON API payloads.",
-    "longDescription": "Instantly convert JSON objects and arrays into structured, nested TypeScript interfaces or type aliases with customizable root naming, optional properties, and readonly modifiers.",
+    "description": "Generate TypeScript interfaces, type aliases or Zod schemas from JSON — every array item is read, so optional fields and mixed types come out right.",
+    "longDescription": "Convert JSON API responses into TypeScript interfaces, type aliases or Zod schemas. Every item of every array is examined: keys missing from some items become optional, mixed values become unions, null becomes | null, identical shapes share one type and different shapes get distinct names.",
     "iconName": "FileCode",
     "privacy": "local",
-    "metaTitle": "JSON to TypeScript Generator | TabBench",
-    "metaDescription": "Convert JSON payloads into clean, typed TypeScript interfaces and type aliases. Supports nested objects, readonly modifiers, and .ts file export.",
+    "metaTitle": "JSON to TypeScript & Zod Generator | TabBench",
+    "metaDescription": "Convert JSON into TypeScript interfaces, types or Zod schemas. Merges all array items, marks optional fields, handles nulls and unions. Runs in your browser.",
     "keywords": [
       "json to typescript",
       "json to ts",
@@ -3698,10 +3715,12 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "json types"
     ],
     "features": [
-      "Automatic nested interface generation",
-      "Interface or Type alias output",
-      "Optional and readonly field toggles",
-      "Single-click copy and .ts file download"
+      "Interfaces, type aliases or Zod schemas",
+      "Reads every array item, not just the first",
+      "Optional fields and union types detected",
+      "Same shapes share a type; clashing names are numbered",
+      "Readonly and all-optional options",
+      "Copy or download as .ts"
     ],
     "faqs": [
       {
@@ -3731,7 +3750,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "iconName": "CalendarClock",
     "privacy": "local",
     "metaTitle": "Cron Expression Explainer & Builder | TabBench",
-    "metaDescription": "Free cron expression explainer and builder: plain-English meaning, next run times in your time zone or UTC, error checks, and support for crontab, Quartz and AWS cron.",
+    "metaDescription": "Free cron explainer and builder: plain-English meaning, next run times in your time zone or UTC, error checks, and crontab, Quartz and AWS syntax.",
     "keywords": [
       "cron explainer",
       "cron expression builder",
@@ -3787,7 +3806,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "iconName": "Megaphone",
     "privacy": "local",
     "metaTitle": "UTM Campaign Builder & URL Cleaner | TabBench",
-    "metaDescription": "Free UTM builder: create Google Analytics campaign links with presets, see the GA4 channel they count under, catch tagging mistakes, and clean tracking from any link.",
+    "metaDescription": "Free UTM builder: make Google Analytics campaign links with presets, see the GA4 channel they count under, catch tagging mistakes and clean tracking links.",
     "keywords": [
       "utm builder",
       "utm generator",
@@ -3889,12 +3908,12 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "shortName": "Contrast Checker",
     "tagline": "Check text and background colours against WCAG AA and AAA.",
     "category": "developer",
-    "description": "Test color contrast against WCAG 2.1 AA/AAA standards with real-time color blindness simulations.",
-    "longDescription": "Ensure website accessibility by measuring exact luminance contrast ratios between text and background colors with WCAG 2.1 AA and AAA pass/fail ratings and color vision deficiency filters.",
+    "description": "Check text and background colours against WCAG 2.2 AA and AAA, get the nearest colours that pass, and preview them for colour blindness.",
+    "longDescription": "Measure the WCAG 2.2 contrast ratio between any two CSS colours, including transparent ones, see pass or fail for normal text, large text and UI components, and get the closest text or background colour that reaches 4.5:1 or 7:1 while keeping the same hue. Previews show the pair for protanopia, deuteranopia, tritanopia and achromatopsia.",
     "iconName": "Contrast",
     "privacy": "local",
     "metaTitle": "WCAG Color Contrast Checker & Blindness Simulator | TabBench",
-    "metaDescription": "Check color contrast compliance against WCAG 2.1 AA/AAA standards. Includes real-time Protanopia, Deuteranopia, and Tritanopia color blindness simulation.",
+    "metaDescription": "Free WCAG 2.2 contrast checker: AA and AAA results for text and UI, automatic fixes that keep your hue, transparency support and colour-blindness previews.",
     "keywords": [
       "contrast checker",
       "wcag contrast checker",
@@ -3911,10 +3930,12 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "contrast ratio"
     ],
     "features": [
-      "Exact WCAG 2.1 contrast ratio calculation",
-      "AA & AAA compliance badges for normal and large text",
-      "Protanopia, Deuteranopia, Tritanopia simulations",
-      "Live heading and paragraph preview box"
+      "WCAG 2.2 ratio, never rounded up",
+      "AA and AAA for text, large text and UI components",
+      "Suggests the nearest passing text or background colour",
+      "Any CSS colour, including transparency",
+      "Colour-blindness previews (Machado 2009 model)",
+      "Live text and button preview"
     ],
     "faqs": [
       {
@@ -3999,7 +4020,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "iconName": "Camera",
     "privacy": "local",
     "metaTitle": "EXIF & Image Metadata Viewer | TabBench",
-    "metaDescription": "Free EXIF viewer: see camera settings, date and GPS location in any photo, spot personal details, and remove metadata losslessly. Photos never leave your device.",
+    "metaDescription": "Free EXIF viewer: see camera settings, date and GPS location in any photo, spot personal details, and strip metadata losslessly. Photos stay on your device.",
     "keywords": [
       "exif viewer",
       "image metadata viewer",
@@ -4153,7 +4174,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "iconName": "PenLine",
     "privacy": "cloud-optional",
     "metaTitle": "AI Text Rewriter | TabBench",
-    "metaDescription": "Change the tone of emails and messages: professional, formal, friendly, casual, concise or simple. Reviewable on-device edits, or a full rewrite with Google Gemini.",
+    "metaDescription": "Change the tone of emails and messages: professional, formal, friendly, casual, concise or simple. Reviewable on-device edits, or a Google Gemini rewrite.",
     "keywords": [
       "ai text rewriter",
       "paraphrasing tool online",
@@ -4629,7 +4650,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "iconName": "Aperture",
     "privacy": "local",
     "metaTitle": "Online Camera with Filters & Video Recorder | TabBench",
-    "metaDescription": "Free online camera: take clearer photos with auto-enhance and low-light mode, add natural filters, and record video from your webcam or phone. Nothing is uploaded.",
+    "metaDescription": "Free online camera: clearer photos with auto-enhance and low-light mode, natural filters, and video recording from your webcam or phone. Nothing is uploaded.",
     "keywords": [
       "online camera",
       "webcam online",

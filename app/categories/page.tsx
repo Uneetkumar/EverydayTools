@@ -7,8 +7,10 @@ import {
   getToolsBySlugs,
   getAllTools,
 } from "@/lib/tools/registry";
-import { constructPageMetadata, SITE_CONFIG } from "@/lib/seo/metadata";
-import { generateBreadcrumbJsonLd } from "@/lib/seo/jsonld";
+import { constructPageMetadata } from "@/lib/seo/metadata";
+import { absoluteUrl } from "@/lib/seo/config";
+import { generateCollectionJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/json-ld";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { CategoryCard } from "@/components/tool/category-card";
 
@@ -26,13 +28,6 @@ export const metadata: Metadata = constructPageMetadata({
   title: "Tool Categories",
   description: `Browse all ${TOOL_COUNT} TabBench tools by category — calculators, PDF and document tools, image utilities, developer helpers, and text tools.`,
   path: "/categories",
-  keywords: [
-    "online tool categories",
-    "free calculator tools",
-    "pdf tools list",
-    "image tools list",
-    "developer tools list",
-  ],
 });
 
 export default function CategoriesIndexPage() {
@@ -42,43 +37,19 @@ export default function CategoriesIndexPage() {
     (cat) => getToolsByCategory(cat.id).length > 0
   );
 
-  const breadcrumbSchema = generateBreadcrumbJsonLd([
-    { name: "Home", path: "" },
-    { name: "Categories", path: "/categories" },
-  ]);
-
-  const listSchema = {
-    "@context": "https://schema.org",
-    "@type": "CollectionPage",
+  const listSchema = generateCollectionJsonLd({
     name: "TabBench Tool Categories",
     description: `All ${TOOL_COUNT} TabBench tools, grouped into ${categories.length} categories.`,
-    url: `${SITE_CONFIG.domain}/categories`,
-    isPartOf: { "@id": `${SITE_CONFIG.domain}/#website` },
-    mainEntity: {
-      "@type": "ItemList",
-      numberOfItems: categories.length,
-      itemListElement: categories.map((cat, i) => ({
-        "@type": "ListItem",
-        position: i + 1,
-        name: cat.name,
-        url: `${SITE_CONFIG.domain}/categories/${cat.id}`,
-      })),
-    },
-  };
+    url: absoluteUrl("/categories"),
+    items: categories.map((cat) => ({ name: cat.name, path: `/categories/${cat.id}` })),
+  });
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(listSchema) }}
-      />
+      <JsonLd data={listSchema} />
 
       <div className="page-container py-6 md:py-10">
-        <Breadcrumbs items={[{ name: "Categories" }]} />
+        <Breadcrumbs items={[{ name: "Categories", url: "/categories" }]} />
 
         <header className="mt-5 max-w-3xl">
           <h1 className="type-h1 text-foreground">Tool categories</h1>

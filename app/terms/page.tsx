@@ -1,29 +1,21 @@
 import React from "react";
 import Link from "next/link";
 import { constructPageMetadata } from "@/lib/seo/metadata";
-import { generateBreadcrumbJsonLd } from "@/lib/seo/jsonld";
 import { ProsePage } from "@/components/layout/prose-page";
 
 export const metadata = constructPageMetadata({
-  title: "Terms of Service - TabBench",
+  title: "Terms of Service",
   description:
     "The terms for using TabBench's free tools: acceptable use, your files and content, AI features, third-party services, accuracy and liability.",
   path: "/terms",
 });
 
 export default function TermsPage() {
-  const breadcrumbSchema = generateBreadcrumbJsonLd([
-    { name: "Home", path: "" },
-    { name: "Terms of Service", path: "/terms" },
-  ]);
 
   return (
     <>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
-      />
       <ProsePage
+        path="/terms"
         breadcrumb="Terms of Service"
         title="Terms of Service"
         updated="September 28, 2026"

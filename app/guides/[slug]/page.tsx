@@ -3,10 +3,13 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { GUIDES, getGuideBySlug } from "@/lib/guides/content";
-import { getToolBySlug } from "@/lib/tools/registry";
-import { constructPageMetadata, SITE_CONFIG } from "@/lib/seo/metadata";
-import { generateBreadcrumbJsonLd, generateFaqJsonLd } from "@/lib/seo/jsonld";
+import { getNextTools, getRelatedTools, getToolBySlug } from "@/lib/tools/registry";
+import { constructPageMetadata, routeSocialImage } from "@/lib/seo/metadata";
+import { absoluteUrl } from "@/lib/seo/config";
+import { generateArticleJsonLd, generateFaqJsonLd } from "@/lib/seo/jsonld";
+import { JsonLd } from "@/components/seo/json-ld";
 import Breadcrumbs from "@/components/Breadcrumbs";
+import RelatedTools from "@/components/RelatedTools";
 import AdSlot from "@/components/AdSlot";
 import FaqSection from "@/components/FaqSection";
 import { ArrowRight, ListOrdered, Lightbulb, Clock } from "lucide-react";
@@ -26,14 +29,17 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: GuidePageProps): Promise<Metadata> {
   const { slug } = await params;
   const guide = getGuideBySlug(slug);
-  if (!guide) return { title: "Guide not found" };
+  if (!guide) return { title: "Guide not found", robots: { index: false } };
+  const path = `/guides/${guide.slug}`;
   return constructPageMetadata({
     title: guide.metaTitle,
     description: guide.metaDescription,
-    path: `/guides/${guide.slug}`,
-    keywords: guide.keywords,
+    path,
+    type: "article",
+    publishedTime: guide.published,
+    modifiedTime: guide.updated,
     // This route ships its own opengraph-image.tsx.
-    ogImage: null,
+    socialImage: routeSocialImage(path, guide.title),
   });
 }
 
@@ -54,44 +60,30 @@ export default async function GuidePage({ params }: GuidePageProps) {
     ...restGuides.slice(guideStart),
     ...restGuides.slice(0, guideStart),
   ].slice(0, 5);
-  const url = `${SITE_CONFIG.domain}/guides/${guide.slug}`;
+  const url = absoluteUrl(`/guides/${guide.slug}`);
 
-  // Article carries the authorship and freshness signals a bare page does not.
-  const articleSchema = {
-    "@context": "https://schema.org",
-    "@type": "Article",
-    "@id": `${url}#article`,
-    headline: guide.title,
-    description: guide.metaDescription,
-    url,
-    datePublished: guide.updated,
-    dateModified: guide.updated,
-    inLanguage: "en",
-    author: { "@id": `${SITE_CONFIG.domain}/#organization` },
-    publisher: { "@id": `${SITE_CONFIG.domain}/#organization` },
-    mainEntityOfPage: { "@type": "WebPage", "@id": url },
-  };
+  // Tools that continue or complement the guide's main tool, so a guide links
+  // into the rest of its topic instead of to a single page.
+  const moreTools = tool
+    ? [...getNextTools(tool, 4), ...getRelatedTools(tool)]
+        .filter((t, i, arr) => t.slug !== tool.slug && arr.findIndex((x) => x.slug === t.slug) === i)
+        .slice(0, 4)
+    : [];
 
-  const breadcrumbSchema = generateBreadcrumbJsonLd([
-    { name: "Home", path: "" },
-    { name: "Guides", path: "/guides" },
-    { name: guide.title, path: `/guides/${guide.slug}` },
-  ]);
+  const articleSchema = generateArticleJsonLd(guide);
   const faqSchema = generateFaqJsonLd(guide.faqs, url);
 
   return (
     <>
-      <script type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }} />
-      <script type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }} />
-      {faqSchema && (
-        <script type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }} />
-      )}
+      <JsonLd data={[articleSchema, faqSchema]} />
 
       <div className="page-container py-8 md:py-12">
-        <Breadcrumbs items={[{ name: "Guides", url: "/guides" }, { name: guide.title }]} />
+        <Breadcrumbs
+          items={[
+            { name: "Guides", url: "/guides" },
+            { name: guide.title, url: `/guides/${guide.slug}` },
+          ]}
+        />
 
         <div className="mt-6 grid items-start gap-x-12 gap-y-10 lg:grid-cols-[minmax(0,1fr)_300px]">
           <article className="min-w-0 max-w-3xl">
@@ -190,6 +182,12 @@ export default async function GuidePage({ params }: GuidePageProps) {
             <div className="mt-12">
               <FaqSection faqs={guide.faqs} />
             </div>
+
+            {moreTools.length > 0 && (
+              <div className="mt-12">
+                <RelatedTools tools={moreTools} title="Related tools" />
+              </div>
+            )}
           </article>
 
           <aside aria-label="More guides" className="lg:sticky lg:top-24">
