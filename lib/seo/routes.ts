@@ -83,6 +83,7 @@ export function toolKind(tool: Pick<ToolDefinition, "slug" | "category">): Route
   if (tool.slug === "calculator" || tool.slug.endsWith("-calculator")) return "calculator";
   switch (tool.category) {
     case "developer":
+    case "api-http":
       return "developer-tool";
     case "pdf-docs":
       return "pdf-tool";

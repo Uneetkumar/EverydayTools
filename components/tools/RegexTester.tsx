@@ -1,62 +1,76 @@
 "use client";
 
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
-import { ChevronDown, Copy } from "lucide-react";
+import Link from "next/link";
+import { ChevronDown, Copy, History, Link2, Wand2 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { CodeBlock } from "@/components/tool/code-block";
 import { Chips, Field, Notice, Segmented, TextArea, TextInput, ToolDivider, ToolSection } from "@/components/tool/kit";
+import { Highlighted, MAX_MARKS } from "@/components/regex/highlight";
+import { Button } from "@/components/ui/button";
 import { usePersistentState } from "@/lib/hooks/usePersistentState";
 import { copyText } from "@/lib/utils/clipboard";
-import { FLAG_INFO, captureGroups, explain, toConstructor, toLiteral } from "@/lib/regex/explain";
+import { CHEAT_SHEET } from "@/lib/regex/cheatsheet";
+import { FLAG_INFO, captureGroups, explain, toLiteral } from "@/lib/regex/explain";
+import { LANGUAGES, detectForeignSyntax, explainRegexError, generateCode, portabilityNotes, type Language } from "@/lib/regex/flavors";
 import { COMMON_PATTERNS, MAX_MATCHES, createRunner, type RunResult } from "@/lib/regex/run";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_PATTERN = COMMON_PATTERNS[0];
-/** Highlighting stops here; the counts and lists still cover every match. */
-const MAX_MARKS = 1000;
+const FLAG_ORDER = "dgimsuvy";
 
 type View = "highlight" | "list" | "replace" | "split";
-
-function Highlighted({ text, matches }: { text: string; matches: { start: number; end: number }[] }) {
-  const parts: React.ReactNode[] = [];
-  let at = 0;
-  matches.slice(0, MAX_MARKS).forEach((m, i) => {
-    if (m.start < at) return;
-    if (m.start > at) parts.push(text.slice(at, m.start));
-    parts.push(
-      m.end === m.start ? (
-        <span key={i} className="mx-px inline-block h-[1.1em] w-0.5 translate-y-[0.15em] bg-primary/60" title={`Empty match at ${m.start}`} />
-      ) : (
-        <mark
-          key={i}
-          title={`Match ${i + 1}: characters ${m.start}–${m.end}`}
-          className={cn("rounded-sm px-px text-foreground", i % 2 ? "bg-primary/25" : "bg-primary/15")}
-        >
-          {text.slice(m.start, m.end)}
-        </mark>
-      )
-    );
-    at = m.end;
-  });
-  parts.push(text.slice(at));
-  return <>{parts}</>;
+interface Saved {
+  pattern: string;
+  flags: string;
 }
 
 export default function RegexTester() {
   const id = useId();
-  const [pattern, setPattern] = usePersistentState<string>("regex-pattern", DEFAULT_PATTERN.pattern);
+  const patternRef = useRef<HTMLInputElement>(null);
+  const [pattern, setPattern, , restored] = usePersistentState<string>("regex-pattern", DEFAULT_PATTERN.pattern);
   const [flags, setFlags] = usePersistentState<string>("regex-flags", DEFAULT_PATTERN.flags);
+  const [history, setHistory, clearHistory] = usePersistentState<Saved[]>("regex-history", []);
   const [text, setText] = useState(DEFAULT_PATTERN.sample);
   const [replacement, setReplacement] = useState("");
   const [view, setView] = useState<View>("highlight");
   const [result, setResult] = useState<RunResult | null>(null);
   const [showExplain, setShowExplain] = useState(true);
+  const [lang, setLang] = useState<Language>("javascript");
+  const [supportsV, setSupportsV] = useState(false);
   const runner = useRef<ReturnType<typeof createRunner> | null>(null);
 
   useEffect(() => {
     runner.current = createRunner(1500);
-    return () => runner.current?.dispose();
+    const t = setTimeout(() => {
+      try {
+        new RegExp("a", "v");
+        setSupportsV(true);
+      } catch {
+        setSupportsV(false);
+      }
+    }, 0);
+    return () => {
+      clearTimeout(t);
+      runner.current?.dispose();
+    };
   }, []);
+
+  // A shared link (…#p=…&f=gi) opens with that pattern. It is applied once the saved pattern has been restored, so the link wins.
+  useEffect(() => {
+    if (!restored) return;
+    const t = setTimeout(() => {
+      const params = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const p = params.get("p");
+      if (p !== null && p.length <= 2000) {
+        setPattern(p);
+        setFlags((params.get("f") ?? "").replace(/[^dgimsuvy]/g, ""));
+      }
+    }, 0);
+    return () => clearTimeout(t);
+    // Read the hash once, right after restore.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restored]);
 
   // Match in the worker whenever anything changes.
   useEffect(() => {
@@ -76,11 +90,35 @@ export default function RegexTester() {
     };
   }, [pattern, flags, text, replacement]);
 
-  const names = useMemo(() => captureGroups(pattern), [pattern]);
-  const lines = useMemo(() => (pattern ? explain(pattern, flags) : []), [pattern, flags]);
   const ok = result?.ok ? result : null;
 
-  const toggleFlag = (f: string) => setFlags(flags.includes(f) ? flags.replace(f, "") : [...flags, f].sort((a, b) => "gimsuy".indexOf(a) - "gimsuy".indexOf(b)).join(""));
+  // Remember a pattern once it has been left alone for a moment and works.
+  useEffect(() => {
+    if (!ok || !pattern || pattern.length < 3) return;
+    const t = window.setTimeout(() => {
+      setHistory((h) => [{ pattern, flags }, ...h.filter((x) => !(x.pattern === pattern && x.flags === flags))].slice(0, 8));
+    }, 2500);
+    return () => window.clearTimeout(t);
+    // Keyed on the pattern and flags only; the result object changes on every keystroke in the test text.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pattern, flags, !!ok]);
+
+  const names = useMemo(() => captureGroups(pattern), [pattern]);
+  const lines = useMemo(() => (pattern ? explain(pattern, flags) : []), [pattern, flags]);
+  const foreign = useMemo(() => (pattern ? detectForeignSyntax(pattern, flags) : []), [pattern, flags]);
+  const errorHint = result && !result.ok && !result.timeout ? explainRegexError(result.error, pattern) : null;
+  const code = useMemo(() => (pattern ? generateCode(lang, pattern, flags, text.split("\n")[0].slice(0, 60)) : null), [pattern, flags, lang, text]);
+  const portability = useMemo(() => (pattern ? portabilityNotes(pattern) : []), [pattern]);
+  const activePreset = COMMON_PATTERNS.find((p) => p.pattern === pattern)?.id ?? null;
+
+  const flagList = FLAG_INFO.concat(supportsV ? [{ flag: "v", name: "unicode sets", help: "Stricter Unicode mode with set operations. Replaces u" }] : []).sort((a, b) => FLAG_ORDER.indexOf(a.flag) - FLAG_ORDER.indexOf(b.flag));
+  const toggleFlag = (f: string) => {
+    let next = flags.includes(f) ? flags.replace(f, "") : flags + f;
+    // u and v cannot be used together.
+    if (!flags.includes(f) && f === "v") next = next.replace("u", "");
+    if (!flags.includes(f) && f === "u") next = next.replace("v", "");
+    setFlags([...next].sort((a, b) => FLAG_ORDER.indexOf(a) - FLAG_ORDER.indexOf(b)).join(""));
+  };
 
   const usePreset = (presetId: string) => {
     const p = COMMON_PATTERNS.find((x) => x.id === presetId)!;
@@ -89,23 +127,44 @@ export default function RegexTester() {
     setText(p.sample);
   };
 
+  const insert = (token: string, caret?: number) => {
+    const el = patternRef.current;
+    const start = el?.selectionStart ?? pattern.length;
+    const end = el?.selectionEnd ?? pattern.length;
+    setPattern(pattern.slice(0, start) + token + pattern.slice(end));
+    const pos = start + (caret ?? token.length);
+    window.requestAnimationFrame(() => {
+      el?.focus();
+      el?.setSelectionRange(pos, pos);
+    });
+  };
+
   const copy = async (value: string, what: string) => {
     if (await copyText(value)) toast.success(`${what} copied`);
   };
 
+  const shareLink = () => {
+    const url = `${window.location.origin}${window.location.pathname}#p=${encodeURIComponent(pattern)}&f=${flags}`;
+    return copy(url, "Link");
+  };
+
   const groupLabel = (i: number) => (names[i] ? `${i + 1} · ${names[i]}` : String(i + 1));
+  const matchesText = ok ? ok.matches.map((m) => m.text).join("\n") : "";
 
   return (
     <div className="space-y-8">
-      <ToolSection title="Regular expression">
-        <div
-          className={cn(
-            "flex h-12 items-center rounded-lg border bg-background font-mono text-base transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30",
-            result && !result.ok && !result.timeout && "border-destructive"
-          )}
-        >
+      <ToolSection
+        title="Regular expression"
+        actions={
+          <Link href="/tools/regex-builder" className="text-sm text-link hover:underline">
+            Not sure how to write it? Build it step by step
+          </Link>
+        }
+      >
+        <div className={cn("flex h-12 items-center rounded-lg border bg-background font-mono text-base transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 dark:bg-input/30", result && !result.ok && !result.timeout && "border-destructive")}>
           <span className="pl-3 text-muted-foreground select-none">/</span>
           <input
+            ref={patternRef}
             id={`${id}-pattern`}
             aria-label="Pattern"
             value={pattern}
@@ -119,20 +178,10 @@ export default function RegexTester() {
           <span className="pr-3 text-muted-foreground select-none">/{flags}</span>
         </div>
         <div role="group" aria-label="Flags" className="flex flex-wrap gap-1.5">
-          {FLAG_INFO.map((f) => {
+          {flagList.map((f) => {
             const on = flags.includes(f.flag);
             return (
-              <button
-                key={f.flag}
-                type="button"
-                aria-pressed={on}
-                title={f.help}
-                onClick={() => toggleFlag(f.flag)}
-                className={cn(
-                  "h-8 rounded-full border px-3 text-xs font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
-                  on ? "border-primary/50 bg-brand-subtle text-brand-subtle-foreground" : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground"
-                )}
-              >
+              <button key={f.flag} type="button" aria-pressed={on} title={f.help} onClick={() => toggleFlag(f.flag)} className={cn("h-8 rounded-full border px-3 text-xs font-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50", on ? "border-primary/50 bg-brand-subtle text-brand-subtle-foreground" : "border-border bg-background text-muted-foreground hover:bg-muted hover:text-foreground")}>
                 <span className="font-mono">{f.flag}</span> · {f.name}
               </button>
             );
@@ -140,15 +189,52 @@ export default function RegexTester() {
         </div>
         {result && !result.ok && result.timeout && (
           <Notice tone="warning">
-            This pattern took too long on this text and was stopped. It probably backtracks catastrophically — nested repeats like (a+)+ or
-            (\w|\d)* can take exponential time. Make the inner part more specific, or remove one of the repeats.
+            This pattern took too long on this text and was stopped. It probably backtracks catastrophically — nested repeats like (a+)+ or (\w|\d)* can take exponential time. Make the inner part more specific, or remove one of the repeats.
           </Notice>
         )}
-        {result && !result.ok && !result.timeout && <Notice tone="error">{result.error}</Notice>}
+        {result && !result.ok && !result.timeout && (
+          <Notice tone="error">
+            {result.error}
+            {errorHint && <span className="mt-1 block text-muted-foreground">{errorHint}</span>}
+          </Notice>
+        )}
+        {foreign.map((issue) => (
+          <Notice key={issue.id} tone="warning">
+            <span className="block">{issue.message}</span>
+            {issue.fix && (
+              <Button
+                type="button"
+                variant="outline"
+                size="xs"
+                className="mt-2"
+                onClick={() => {
+                  setPattern(issue.fix!.pattern);
+                  setFlags(issue.fix!.flags);
+                }}
+              >
+                <Wand2 aria-hidden="true" /> {issue.fix.label}
+              </Button>
+            )}
+          </Notice>
+        ))}
       </ToolSection>
 
       <ToolSection title="Common patterns" description="Starting points with sample text. The sample data is made up.">
-        <Chips ariaLabel="Common patterns" value={COMMON_PATTERNS.find((p) => p.pattern === pattern)?.id ?? null} onChange={usePreset} options={COMMON_PATTERNS.map((p) => ({ value: p.id, label: p.label }))} />
+        <Chips ariaLabel="Common patterns" value={activePreset} onChange={usePreset} options={COMMON_PATTERNS.map((p) => ({ value: p.id, label: p.label }))} />
+        {history.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <History className="size-3.5 text-muted-foreground" aria-hidden="true" />
+            <span className="text-xs text-muted-foreground">Recent</span>
+            {history.slice(0, 5).map((h) => (
+              <button key={`${h.pattern}/${h.flags}`} type="button" title={`/${h.pattern}/${h.flags}`} onClick={() => { setPattern(h.pattern); setFlags(h.flags); }} className="max-w-48 truncate rounded-full border bg-background px-2.5 py-0.5 font-mono text-xs text-foreground transition-colors hover:bg-muted">
+                {h.pattern}
+              </button>
+            ))}
+            <button type="button" onClick={clearHistory} className="text-xs text-muted-foreground underline-offset-2 hover:underline">
+              Clear
+            </button>
+          </div>
+        )}
       </ToolSection>
 
       <Field label="Test text" htmlFor={`${id}-text`} hint="Nothing you type here is saved or sent anywhere.">
@@ -187,43 +273,51 @@ export default function RegexTester() {
 
         {view === "list" &&
           (ok && ok.matches.length ? (
-            <div className="max-h-[28rem] overflow-auto rounded-lg border">
-              <table className="w-full text-left text-sm">
-                <thead className="sticky top-0 bg-muted text-xs text-muted-foreground">
-                  <tr>
-                    <th scope="col" className="px-3 py-2 font-medium">#</th>
-                    <th scope="col" className="px-3 py-2 font-medium">Match</th>
-                    <th scope="col" className="px-3 py-2 font-medium">Position</th>
-                    {names.length > 0 && <th scope="col" className="px-3 py-2 font-medium">Groups</th>}
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {ok.matches.slice(0, MAX_MARKS).map((m, i) => (
-                    <tr key={i} className="align-top">
-                      <td className="px-3 py-2 text-muted-foreground tabular-nums">{i + 1}</td>
-                      <td className="px-3 py-2 font-mono break-all text-foreground">{m.text || <span className="text-muted-foreground">(empty)</span>}</td>
-                      <td className="px-3 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
-                        {m.start}–{m.end}
-                      </td>
-                      {names.length > 0 && (
-                        <td className="px-3 py-2">
-                          <dl className="space-y-0.5">
-                            {m.groups.map((g, gi) => (
-                              <div key={gi} className="flex gap-2">
-                                <dt className="shrink-0 text-xs text-muted-foreground">{groupLabel(gi)}</dt>
-                                <dd className="font-mono text-xs break-all text-foreground">
-                                  {g.value === undefined ? <span className="text-muted-foreground">(not matched)</span> : g.value || <span className="text-muted-foreground">(empty)</span>}
-                                </dd>
-                              </div>
-                            ))}
-                          </dl>
-                        </td>
-                      )}
+            <>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" size="sm" onClick={() => copy(matchesText, "Matches")}>
+                  <Copy aria-hidden="true" /> Copy matches
+                </Button>
+                <Button type="button" variant="outline" size="sm" onClick={() => copy(JSON.stringify(ok.matches.map((m) => ({ match: m.text, index: m.start, groups: m.groups.map((g) => g.value ?? null) })), null, 2), "JSON")}>
+                  Copy as JSON
+                </Button>
+              </div>
+              <div className="max-h-[28rem] overflow-auto rounded-lg border">
+                <table className="w-full text-left text-sm">
+                  <thead className="sticky top-0 bg-muted text-xs text-muted-foreground">
+                    <tr>
+                      <th scope="col" className="px-3 py-2 font-medium">#</th>
+                      <th scope="col" className="px-3 py-2 font-medium">Match</th>
+                      <th scope="col" className="px-3 py-2 font-medium">Position</th>
+                      {names.length > 0 && <th scope="col" className="px-3 py-2 font-medium">Groups</th>}
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y">
+                    {ok.matches.slice(0, MAX_MARKS).map((m, i) => (
+                      <tr key={i} className="align-top">
+                        <td className="px-3 py-2 text-muted-foreground tabular-nums">{i + 1}</td>
+                        <td className="px-3 py-2 font-mono break-all text-foreground">{m.text || <span className="text-muted-foreground">(empty)</span>}</td>
+                        <td className="px-3 py-2 whitespace-nowrap text-muted-foreground tabular-nums">
+                          {m.start}–{m.end}
+                        </td>
+                        {names.length > 0 && (
+                          <td className="px-3 py-2">
+                            <dl className="space-y-0.5">
+                              {m.groups.map((g, gi) => (
+                                <div key={gi} className="flex gap-2">
+                                  <dt className="shrink-0 text-xs text-muted-foreground">{groupLabel(gi)}</dt>
+                                  <dd className="font-mono text-xs break-all text-foreground">{g.value === undefined ? <span className="text-muted-foreground">(not matched)</span> : g.value || <span className="text-muted-foreground">(empty)</span>}</dd>
+                                </div>
+                              ))}
+                            </dl>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           ) : (
             <p className="text-sm text-muted-foreground">No matches.</p>
           ))}
@@ -262,9 +356,7 @@ export default function RegexTester() {
                   </li>
                 ))}
               </ol>
-              <p className="text-xs text-muted-foreground">
-                As text.split(pattern): the pieces between matches. Captured groups are included as pieces of their own.
-              </p>
+              <p className="text-xs text-muted-foreground">As text.split(pattern): the pieces between matches. Captured groups are included as pieces of their own.</p>
             </>
           ) : (
             <p className="text-sm text-muted-foreground">Nothing to split.</p>
@@ -273,12 +365,7 @@ export default function RegexTester() {
 
       {lines.length > 0 && (
         <div>
-          <button
-            type="button"
-            aria-expanded={showExplain}
-            onClick={() => setShowExplain((v) => !v)}
-            className="inline-flex items-center gap-1 rounded-md text-sm font-semibold text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
-          >
+          <button type="button" aria-expanded={showExplain} onClick={() => setShowExplain((v) => !v)} className="inline-flex items-center gap-1 rounded-md text-sm font-semibold text-foreground outline-none focus-visible:ring-3 focus-visible:ring-ring/50">
             <ChevronDown className={cn("size-4 text-muted-foreground transition-transform", showExplain && "rotate-180")} aria-hidden="true" />
             What this pattern means
           </button>
@@ -295,21 +382,79 @@ export default function RegexTester() {
         </div>
       )}
 
-      {pattern && (
-        <ToolSection title="Use it in JavaScript">
-          <div className="space-y-2">
-            {[toLiteral(pattern, flags), toConstructor(pattern, flags)].map((code) => (
-              <div key={code} className="flex items-center gap-2 rounded-lg border bg-muted/30 px-3.5 py-2">
-                <code className="min-w-0 flex-1 font-mono text-sm break-all text-foreground">{code}</code>
-                <Button variant="ghost" size="icon-sm" aria-label="Copy code" onClick={() => copy(code, "Code")}>
-                  <Copy aria-hidden="true" />
-                </Button>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Tested with your browser&apos;s JavaScript engine. Python, PHP and Java mostly agree, but differ on details such as look-behind and {"\\p{…}"}.
-          </p>
+      <details className="group rounded-lg border">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3.5 py-2.5 text-sm font-semibold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring/50">
+          Quick reference
+          <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" aria-hidden="true" />
+        </summary>
+        <div className="space-y-5 border-t p-3.5">
+          <p className="text-xs text-muted-foreground">Select an item to insert it into the pattern at the cursor.</p>
+          {CHEAT_SHEET.map((g) => (
+            <div key={g.title}>
+              <h4 className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">{g.title}</h4>
+              <ul className="mt-2 grid gap-1.5 @md:grid-cols-2">
+                {g.items.map((it) => (
+                  <li key={it.token}>
+                    <button type="button" onClick={() => insert(it.insert ?? it.token, it.caret)} className="flex w-full items-baseline gap-3 rounded-md px-2 py-1.5 text-left transition-colors outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50">
+                      <code className="min-w-16 shrink-0 font-mono text-sm font-semibold text-primary">{it.token}</code>
+                      <span className="text-sm text-foreground">{it.meaning}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      </details>
+
+      {pattern && code && (
+        <ToolSection
+          title="Use it in your language"
+          description="Tested here with JavaScript's engine. Other languages mostly agree but differ in places, listed under the code."
+          actions={
+            <Button type="button" variant="outline" size="sm" onClick={shareLink}>
+              <Link2 aria-hidden="true" /> Copy link to this pattern
+            </Button>
+          }
+        >
+          <Segmented size="sm" ariaLabel="Language" value={lang} onChange={setLang} options={LANGUAGES.map((l) => ({ value: l.id, label: l.label }))} />
+          <CodeBlock label={`${LANGUAGES.find((l) => l.id === lang)!.label} · ${LANGUAGES.find((l) => l.id === lang)!.engine}`} code={code.code} maxHeight="20rem" />
+          {code.notes.map((n) => (
+            <Notice key={n} tone="info">
+              {n}
+            </Notice>
+          ))}
+          {lang === "javascript" && <p className="text-xs text-muted-foreground">Literal form: <code className="font-mono">{toLiteral(pattern, flags)}</code></p>}
+          {portability.length > 0 && (
+            <div className="overflow-x-auto rounded-lg border">
+              <table className="w-full min-w-[30rem] text-left text-xs">
+                <thead className="bg-muted text-muted-foreground">
+                  <tr>
+                    <th scope="col" className="px-3 py-2 font-medium">Your pattern uses</th>
+                    {LANGUAGES.map((l) => (
+                      <th key={l.id} scope="col" className="px-2 py-2 text-center font-medium">
+                        {l.label}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {portability.map((r) => (
+                    <tr key={r.feature}>
+                      <th scope="row" className="px-3 py-2 text-left font-medium text-foreground">
+                        {r.feature}
+                      </th>
+                      {LANGUAGES.map((l) => (
+                        <td key={l.id} className={cn("px-2 py-2 text-center", r.support[l.id] === "yes" ? "text-success" : r.support[l.id] === "no" ? "text-destructive" : "text-warning")}>
+                          {r.support[l.id] === "yes" ? "Yes" : r.support[l.id] === "no" ? "No" : "Limited"}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </ToolSection>
       )}
     </div>

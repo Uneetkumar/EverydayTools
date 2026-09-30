@@ -15,7 +15,9 @@ const listeners = new Set<() => void>();
 export function loadToolIndex(): Promise<ToolIndex | null> {
   if (cache) return Promise.resolve(cache);
   if (!inflight) {
-    inflight = fetch("/tool-index.json")
+    // `no-cache` = revalidate with the server even if the browser holds a copy
+    // it still considers fresh, so a newly added tool is searchable at once.
+    inflight = fetch("/tool-index.json", { cache: "no-cache" })
       .then((r) => (r.ok ? (r.json() as Promise<ToolIndex>) : null))
       .then((data) => {
         if (data) {

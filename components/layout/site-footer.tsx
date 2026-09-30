@@ -10,6 +10,7 @@ import { LogoMark } from "./logo";
 import { InstallAppButton } from "./install-app-button";
 
 const DEVELOPER_PICKS = ["json-formatter", "base64-converter", "jwt-decoder", "regex-tester", "uuid-generator"];
+const API_PICKS = ["curl-to-fetch", "http-status-code-lookup", "api-request-builder", "url-parser", "internet-speed-test"];
 
 function Column({ title, links }: { title: string; links: Array<{ href: string; label: string }> }) {
   return (
@@ -33,6 +34,7 @@ function Column({ title, links }: { title: string; links: Array<{ href: string; 
 export function SiteFooter() {
   const popular = getPopularTools().slice(0, 6);
   const developer = getToolsBySlugs(DEVELOPER_PICKS);
+  const api = getToolsBySlugs(API_PICKS);
   const ai = getToolsByCategory("ai-tools").slice(0, 5);
 
   return (
@@ -74,6 +76,10 @@ export function SiteFooter() {
             links={developer.map((t) => ({ href: `/tools/${t.slug}`, label: t.shortName }))}
           />
           <div className="space-y-10">
+            <Column
+              title="API & HTTP"
+              links={api.map((t) => ({ href: `/tools/${t.slug}`, label: t.shortName }))}
+            />
             <Column
               title="AI tools"
               links={ai.map((t) => ({ href: `/tools/${t.slug}`, label: t.shortName }))}

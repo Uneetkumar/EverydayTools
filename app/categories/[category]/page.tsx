@@ -77,6 +77,8 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
     aliases: t.aliases,
     iconName: t.iconName,
     isPopular: t.isPopular,
+    privacy: t.privacy,
+    searchRank: t.searchRank,
   }));
 
   const otherCategories = TOOL_CATEGORIES.filter(

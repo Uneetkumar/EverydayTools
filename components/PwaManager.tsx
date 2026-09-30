@@ -57,8 +57,19 @@ export default function PwaManager() {
   });
 
   useEffect(() => {
-    // 1. Register the service worker after load so it never competes with first paint.
-    if ("serviceWorker" in navigator) {
+    // 1. Register the service worker after load so it never competes with first
+    //    paint. Not in development: a worker there caches pages from earlier
+    //    edits and keeps answering with them, so new tools "don't appear" on
+    //    localhost until someone clears site data. Any worker a previous run
+    //    registered is removed instead.
+    if ("serviceWorker" in navigator && process.env.NODE_ENV !== "production") {
+      void navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((r) => void r.unregister());
+        if (regs.length > 0 && "caches" in window) {
+          void caches.keys().then((keys) => keys.forEach((k) => void caches.delete(k)));
+        }
+      });
+    } else if ("serviceWorker" in navigator) {
       const registerSW = () => {
         navigator.serviceWorker.register("/sw.js").catch((err) => {
           console.warn("PWA Service Worker registration skipped:", err);

@@ -54,7 +54,7 @@ const QrCodeScanner = dynamic(() => import("@/components/tools/QrCodeScanner"), 
 const BarcodeGenerator = dynamic(() => import("@/components/tools/BarcodeGenerator"), { loading });
 const BarcodeScanner = dynamic(() => import("@/components/tools/BarcodeScanner"), { loading });
 const PdfMerge = dynamic(() => import("@/components/tools/PdfMerge"), { loading });
-const PdfCompressor = dynamic(() => import("@/components/tools/PdfCompressor"), { loading });
+const PdfInspector = dynamic(() => import("@/components/tools/PdfInspector"), { loading });
 const AgeCalculator = dynamic(() => import("@/components/tools/AgeCalculator"), { loading });
 const GstCalculator = dynamic(() => import("@/components/tools/GstCalculator"), { loading });
 const EmiCalculator = dynamic(() => import("@/components/tools/EmiCalculator"), { loading });
@@ -93,6 +93,29 @@ const StopwatchTimer = dynamic(() => import("@/components/tools/StopwatchTimer")
 const TextSorter = dynamic(() => import("@/components/tools/TextSorter"), { loading });
 const PngToSvg = dynamic(() => import("@/components/tools/PngToSvg"), { loading });
 const Camera = dynamic(() => import("@/components/tools/Camera"), { loading });
+const HttpStatusLookup = dynamic(() => import("@/components/tools/HttpStatusLookup"), { loading });
+const HttpHeaderViewer = dynamic(() => import("@/components/tools/HttpHeaderViewer"), { loading });
+const HttpHeaderGenerator = dynamic(() => import("@/components/tools/HttpHeaderGenerator"), { loading });
+const UserAgentParser = dynamic(() => import("@/components/tools/UserAgentParser"), { loading });
+const UrlParser = dynamic(() => import("@/components/tools/UrlParser"), { loading });
+const QueryParamParser = dynamic(() => import("@/components/tools/QueryParamParser"), { loading });
+const QueryStringBuilder = dynamic(() => import("@/components/tools/QueryStringBuilder"), { loading });
+const ApiRequestBuilder = dynamic(() => import("@/components/tools/ApiRequestBuilder"), { loading });
+const CurlGenerator = dynamic(() => import("@/components/tools/CurlGenerator"), { loading });
+const CurlConverter = dynamic(() => import("@/components/tools/CurlConverter"), { loading });
+const HttpMethodReference = dynamic(() => import("@/components/tools/HttpMethodReference"), { loading });
+const MimeTypeLookup = dynamic(() => import("@/components/tools/MimeTypeLookup"), { loading });
+const ContentTypeLookup = dynamic(() => import("@/components/tools/ContentTypeLookup"), { loading });
+const SpeedTest = dynamic(() => import("@/components/tools/SpeedTest"), { loading });
+const CoinFlip = dynamic(() => import("@/components/tools/CoinFlip"), { loading });
+const DiceRoller = dynamic(() => import("@/components/tools/DiceRoller"), { loading });
+const RandomNumberGenerator = dynamic(() => import("@/components/tools/RandomNumberGenerator"), { loading });
+const RandomPicker = dynamic(() => import("@/components/tools/RandomPicker"), { loading });
+const CountdownTimer = dynamic(() => import("@/components/tools/CountdownTimer"), { loading });
+const PomodoroTimer = dynamic(() => import("@/components/tools/PomodoroTimer"), { loading });
+const IntervalTimer = dynamic(() => import("@/components/tools/IntervalTimer"), { loading });
+const WorldClock = dynamic(() => import("@/components/tools/WorldClock"), { loading });
+const RegexBuilder = dynamic(() => import("@/components/tools/RegexBuilder"), { loading });
 
 export function ToolRenderer({ slug }: { slug: string }) {
   switch (slug) {
@@ -182,8 +205,8 @@ export function ToolRenderer({ slug }: { slug: string }) {
       return <BarcodeScanner />;
     case "pdf-merge":
       return <PdfMerge />;
-    case "pdf-compressor":
-      return <PdfCompressor />;
+    case "pdf-page-counter":
+      return <PdfInspector />;
     case "age-calculator":
       return <AgeCalculator />;
     case "gst-calculator":
@@ -260,6 +283,58 @@ export function ToolRenderer({ slug }: { slug: string }) {
       return <PngToSvg />;
     case "online-camera":
       return <Camera />;
+    case "http-status-code-lookup":
+      return <HttpStatusLookup />;
+    case "http-header-viewer":
+      return <HttpHeaderViewer />;
+    case "http-header-generator":
+      return <HttpHeaderGenerator />;
+    case "user-agent-parser":
+      return <UserAgentParser />;
+    case "url-parser":
+      return <UrlParser />;
+    case "query-parameter-parser":
+      return <QueryParamParser />;
+    case "query-string-builder":
+      return <QueryStringBuilder />;
+    case "api-request-builder":
+      return <ApiRequestBuilder />;
+    case "curl-generator":
+      return <CurlGenerator />;
+    case "curl-to-fetch":
+      return <CurlConverter target="fetch" />;
+    case "curl-to-axios":
+      return <CurlConverter target="axios" />;
+    case "curl-to-python":
+      return <CurlConverter target="python" />;
+    case "curl-to-javascript":
+      return <CurlConverter target="javascript" />;
+    case "http-method-reference":
+      return <HttpMethodReference />;
+    case "mime-type-lookup":
+      return <MimeTypeLookup />;
+    case "content-type-lookup":
+      return <ContentTypeLookup />;
+    case "internet-speed-test":
+      return <SpeedTest />;
+    case "coin-flip":
+      return <CoinFlip />;
+    case "dice-roller":
+      return <DiceRoller />;
+    case "random-number-generator":
+      return <RandomNumberGenerator />;
+    case "random-name-picker":
+      return <RandomPicker />;
+    case "countdown-timer":
+      return <CountdownTimer />;
+    case "pomodoro-timer":
+      return <PomodoroTimer />;
+    case "interval-timer":
+      return <IntervalTimer />;
+    case "world-clock":
+      return <WorldClock />;
+    case "regex-builder":
+      return <RegexBuilder />;
     default:
       // A registry entry with no loader. Previously this fell through to the
       // Percentage Calculator, silently rendering the wrong tool.

@@ -1,4 +1,7 @@
 import { ToolFaq } from "./registry";
+import { API_HTTP_CONTENT } from "./sources/content-api-http";
+import { RANDOM_CONTENT } from "./sources/content-random";
+import { TIME_AND_MORE_CONTENT } from "./sources/content-time-and-more";
 
 /**
  * Long-form editorial content, kept separate from the registry so the tool
@@ -26,6 +29,9 @@ export interface ToolContent {
 }
 
 export const TOOL_CONTENT: Record<string, ToolContent> = {
+  ...API_HTTP_CONTENT,
+  ...RANDOM_CONTENT,
+  ...TIME_AND_MORE_CONTENT,
   "json-formatter": {
     intro:
       "Unformatted JSON is hard to scan and harder to debug — a single missing comma in a 2,000-line API response can cost you an afternoon. This formatter parses your JSON with the browser's native engine, reports the exact line and column of any syntax error, and re-indents the result so nested structures become obvious at a glance. Nothing is uploaded: the parse happens in your tab, which matters when the payload contains tokens, customer records, or anything else you would not paste into a random website.",
@@ -1335,7 +1341,7 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
     ],
   },
 
-  "pdf-compressor": {
+  "pdf-page-counter": {
     intro:
       "This tool inspects a PDF rather than re-compressing it: it reports the page count and paper sizes, the document properties, whether it is encrypted, and how much of the file is images and embedded fonts, so you can see what you are dealing with before deciding how to shrink it. It does not re-encode the images inside the file, because doing that properly needs image codecs that pdf-lib does not provide. What follows is the approach that actually works, using the tools available here.",
     howTo: {

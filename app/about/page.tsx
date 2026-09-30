@@ -86,7 +86,7 @@ export default function AboutPage() {
           the <Link href="/tools/emi-calculator">EMI calculator</Link> or the{" "}
           <Link href="/tools/gst-calculator">GST calculator</Link>. Where a tool has a real limitation, its page
           says so: the <Link href="/tools/video-cutter">video cutter</Link> cuts on keyframes, and the{" "}
-          <Link href="/tools/pdf-compressor">PDF inspector</Link> reports what makes a PDF large rather than
+          <Link href="/tools/pdf-page-counter">PDF inspector</Link> reports what makes a PDF large rather than
           pretending to compress it.
         </p>
         <p>

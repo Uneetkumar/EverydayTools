@@ -64,6 +64,11 @@
         "source": "/tools/basic-calculator",
         "destination": "/tools/calculator",
         "type": 301
+      },
+      {
+        "source": "/tools/pdf-compressor",
+        "destination": "/tools/pdf-page-counter",
+        "type": 301
       }
     ],
     "headers": [

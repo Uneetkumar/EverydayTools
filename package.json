@@ -18,7 +18,8 @@
     "ext:dev": "node extension/scripts/build.mjs --dev",
     "ext:preview": "node extension/scripts/build.mjs --preview",
     "ext:typecheck": "tsc -p extension",
-    "ext:test": "node extension/scripts/build.mjs --dev && node extension/dev/test-background.mjs"
+    "ext:test": "node extension/scripts/build.mjs --dev && node extension/dev/test-background.mjs",
+    "test:lib": "node --test \"tests/lib/*.test.mjs\""
   },
   "dependencies": {
     "@ffmpeg/core": "^0.12.10",

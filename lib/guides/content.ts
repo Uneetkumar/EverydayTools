@@ -11,6 +11,8 @@
  * so the size-target guides differ by the context they serve: exam portals,
  * bank KYC, and signature fields all have different constraints.
  */
+import { MORE_GUIDES } from "./more-guides";
+
 export interface GuideStep {
   title: string;
   body: string;
@@ -54,7 +56,7 @@ export const GUIDES: Guide[] = [
       "image compress 50kb online", "50kb photo for form",
     ],
     toolSlug: "image-compressor",
-    toolLabel: "Image Compressor",
+    toolLabel: "Compress Image",
     published: "2026-08-19",
     updated: "2026-08-19",
     intro: [
@@ -123,7 +125,7 @@ export const GUIDES: Guide[] = [
       "image compressor 100kb", "kyc photo size",
     ],
     toolSlug: "image-compressor",
-    toolLabel: "Image Compressor",
+    toolLabel: "Compress Image",
     published: "2026-08-19",
     updated: "2026-08-19",
     intro: [
@@ -186,7 +188,7 @@ export const GUIDES: Guide[] = [
       "scanned signature size", "10kb signature upload",
     ],
     toolSlug: "image-compressor",
-    toolLabel: "Image Compressor",
+    toolLabel: "Compress Image",
     published: "2026-08-19",
     updated: "2026-08-19",
     intro: [
@@ -317,7 +319,7 @@ export const GUIDES: Guide[] = [
       "shrink photo keep quality", "optimise image size",
     ],
     toolSlug: "image-resizer",
-    toolLabel: "Image Resizer",
+    toolLabel: "Resize Image",
     published: "2026-08-19",
     updated: "2026-08-19",
     intro: [
@@ -1453,6 +1455,7 @@ export const GUIDES: Guide[] = [
       },
     ],
   },
+  ...MORE_GUIDES,
 ];
 
 export function getGuideBySlug(slug: string): Guide | undefined {

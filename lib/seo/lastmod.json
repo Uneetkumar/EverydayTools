@@ -3,52 +3,60 @@
   "version": 1,
   "routes": {
     "/": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "384d1fa9afd06c69"
+      "lastmod": "2026-09-30",
+      "fingerprint": "8802444245cfac8a"
     },
     "/about": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "c8d3366d3d89e1f4"
+      "lastmod": "2026-09-30",
+      "fingerprint": "0cd25941e2718bcb"
     },
     "/categories": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "89f7283bf2a043e5"
+      "lastmod": "2026-09-30",
+      "fingerprint": "f60359409ba2dbd4"
     },
     "/categories/ai-tools": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "ff05d9a6d42e0301"
+      "lastmod": "2026-09-30",
+      "fingerprint": "6c94e37e1b3c319e"
+    },
+    "/categories/api-http": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "87a70c17be9967bd"
     },
     "/categories/business": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "33b6478d147db26a"
+      "lastmod": "2026-09-30",
+      "fingerprint": "1ad48b66f496770d"
     },
     "/categories/calculators": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "887c977458bef181"
+      "lastmod": "2026-09-30",
+      "fingerprint": "e32887d6c08ee82a"
     },
     "/categories/date-time": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "6bdb061bf5b99c47"
+      "lastmod": "2026-09-30",
+      "fingerprint": "98659d5dbf9bb42e"
     },
     "/categories/developer": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "040360756453f05f"
+      "lastmod": "2026-09-30",
+      "fingerprint": "bcad2ac18cdf79e5"
     },
     "/categories/image-media": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "a2f7bde711243576"
+      "lastmod": "2026-09-30",
+      "fingerprint": "9090ea139f21bb11"
     },
     "/categories/pdf-docs": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "eb106583ff5a2d7f"
+      "lastmod": "2026-09-30",
+      "fingerprint": "5e625e5a9a7259ed"
+    },
+    "/categories/random-fun": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "1570ade392465648"
     },
     "/categories/security": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "e7d445647f660651"
+      "lastmod": "2026-09-30",
+      "fingerprint": "37dcf6922cf55c92"
     },
     "/categories/text": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "1c84716626c38ce7"
+      "lastmod": "2026-09-30",
+      "fingerprint": "8bff62f46bc70253"
     },
     "/contact": {
       "lastmod": "2026-09-29",
@@ -103,32 +111,40 @@
       "fingerprint": "e18fc564787b6dd8"
     },
     "/editorial-policy": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "e54b81965ce3465a"
+      "lastmod": "2026-09-30",
+      "fingerprint": "1d07da195f6fbdf5"
     },
     "/guides": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "17cc521933e8a93c"
+      "lastmod": "2026-09-30",
+      "fingerprint": "d5a1dd2bb4f8d4df"
     },
     "/guides/complete-guide-to-json-formatting-and-validation": {
       "lastmod": "2026-09-13",
       "fingerprint": "570c01d4662f58f6"
     },
     "/guides/compress-image-to-100kb": {
-      "lastmod": "2026-08-19",
-      "fingerprint": "392a43152ab4d0d4"
+      "lastmod": "2026-09-30",
+      "fingerprint": "52ffc83883703722"
     },
     "/guides/compress-image-to-20kb": {
-      "lastmod": "2026-08-19",
-      "fingerprint": "a1bf36450923733e"
+      "lastmod": "2026-09-30",
+      "fingerprint": "33ba7906793e55b2"
     },
     "/guides/compress-image-to-50kb": {
-      "lastmod": "2026-08-19",
-      "fingerprint": "be2daac671893e23"
+      "lastmod": "2026-09-30",
+      "fingerprint": "497f1a09f6f3d1c3"
     },
     "/guides/compress-pdf-to-100kb": {
       "lastmod": "2026-08-19",
       "fingerprint": "226f26ced1c11f68"
+    },
+    "/guides/convert-curl-to-fetch-javascript": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "4b97f1944fbe3a18"
+    },
+    "/guides/convert-curl-to-python-requests": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "754cd0d725a2dd75"
     },
     "/guides/convert-pdf-to-word-free": {
       "lastmod": "2026-08-19",
@@ -137,6 +153,14 @@
     "/guides/convert-webp-to-jpg": {
       "lastmod": "2026-08-19",
       "fingerprint": "cb0816fff98496c6"
+    },
+    "/guides/cors-errors-explained-and-how-to-fix-them": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "eb33bfd29bb5bbea"
+    },
+    "/guides/dice-probability-chart-2d6-3d6-d20": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "a3d0e3631ddc6187"
     },
     "/guides/gst-calculation-guide-inclusive-vs-exclusive": {
       "lastmod": "2026-09-28",
@@ -162,13 +186,17 @@
       "lastmod": "2026-09-13",
       "fingerprint": "582abf7355ba5a0e"
     },
+    "/guides/http-status-codes-explained": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "95065f4564217a02"
+    },
     "/guides/png-vs-svg-vs-webp-complete-image-format-guide": {
       "lastmod": "2026-09-13",
       "fingerprint": "aa095b69244992c7"
     },
     "/guides/reduce-image-size-without-losing-quality": {
-      "lastmod": "2026-08-19",
-      "fingerprint": "0e74817ac67e728f"
+      "lastmod": "2026-09-30",
+      "fingerprint": "afbf832d3abc1452"
     },
     "/guides/regular-expressions-for-beginners-regex-cheat-sheet": {
       "lastmod": "2026-09-13",
@@ -190,6 +218,10 @@
       "lastmod": "2026-08-19",
       "fingerprint": "cabdda6def5b84ab"
     },
+    "/guides/what-internet-speed-do-you-need": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "989ec5e4435103a4"
+    },
     "/privacy": {
       "lastmod": "2026-09-29",
       "fingerprint": "9f30c641d6d1957f"
@@ -199,336 +231,440 @@
       "fingerprint": "c33d162efb5d75be"
     },
     "/tools": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "34d67c02dfee35f0"
+      "lastmod": "2026-09-30",
+      "fingerprint": "76d1e169f9086469"
     },
     "/tools/add-page-numbers": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "c533fdfb7e113cb7"
+      "lastmod": "2026-09-30",
+      "fingerprint": "2a8fdbf27baeca16"
     },
     "/tools/age-calculator": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "9c4d33223c2f2599"
+      "lastmod": "2026-09-30",
+      "fingerprint": "63e94d883d17792a"
     },
     "/tools/ai-explainer": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "f654e41c159112c2"
+      "lastmod": "2026-09-30",
+      "fingerprint": "6a0424b791b0cc14"
     },
     "/tools/ai-json-explainer": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "460a42e4816c5f87"
+      "lastmod": "2026-09-30",
+      "fingerprint": "fa10c8f9e10082c3"
     },
     "/tools/ai-keyword-extractor": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "277468fdb38f9da9"
+      "lastmod": "2026-09-30",
+      "fingerprint": "b4506c723acaefca"
     },
     "/tools/ai-text-rewriter": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "a405e81a814d8bf2"
+      "lastmod": "2026-09-30",
+      "fingerprint": "e2a199d6cd02ff97"
     },
     "/tools/ai-text-simplifier": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "90533c712b06f3f0"
+      "lastmod": "2026-09-30",
+      "fingerprint": "2c342400dabf9d0c"
     },
     "/tools/ai-text-summarizer": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "6ed27752546a3c95"
+      "lastmod": "2026-09-30",
+      "fingerprint": "871fb3cde73a1ec1"
+    },
+    "/tools/api-request-builder": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "4a794efa46327562"
     },
     "/tools/aspect-ratio-calculator": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "e2726630d47e06cd"
+      "lastmod": "2026-09-30",
+      "fingerprint": "b482216f73e68f73"
     },
     "/tools/audio-player": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "025606257e592634"
+      "lastmod": "2026-09-30",
+      "fingerprint": "dc5d88cda9d992f7"
     },
     "/tools/audio-remover": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "2eb01554deb50219"
+      "lastmod": "2026-09-30",
+      "fingerprint": "c410df6a4685cdd2"
     },
     "/tools/barcode-generator": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "d21911f91f51efcd"
+      "lastmod": "2026-09-30",
+      "fingerprint": "a1df2072686787b0"
     },
     "/tools/barcode-scanner": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "76969c7c265d7928"
+      "lastmod": "2026-09-30",
+      "fingerprint": "8fb3bf45775c7026"
     },
     "/tools/base64-converter": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "9dfb3dfd86b45bef"
+      "lastmod": "2026-09-30",
+      "fingerprint": "9e5e5d5080509df3"
     },
     "/tools/bmi-calculator": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "cbdaa2430e96a3a3"
+      "lastmod": "2026-09-30",
+      "fingerprint": "44448a547c3fd879"
     },
     "/tools/break-even-calculator": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "0f77d04814747922"
+      "lastmod": "2026-09-30",
+      "fingerprint": "5886e0ccf30cb257"
     },
     "/tools/calculator": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "f8b30a9e1fdb0be2"
+      "lastmod": "2026-09-30",
+      "fingerprint": "596b6eec2774381b"
     },
     "/tools/case-converter": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "c37c8a096d8dc776"
+      "lastmod": "2026-09-30",
+      "fingerprint": "fd496357d1c6deb7"
+    },
+    "/tools/coin-flip": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "a74ea1d0a6fd2ace"
     },
     "/tools/color-converter": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "c7e51bc55801753d"
+      "lastmod": "2026-09-30",
+      "fingerprint": "cc072d0d36e53471"
     },
     "/tools/compound-interest-calculator": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "04cc682092b3e7a7"
+      "lastmod": "2026-09-30",
+      "fingerprint": "594c8e73b4ea8e43"
+    },
+    "/tools/content-type-lookup": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "a933d22bf59d36ad"
     },
     "/tools/contrast-checker": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "e243b585d6dc1394"
+      "lastmod": "2026-09-30",
+      "fingerprint": "300cb5ffa7fbf2e2"
+    },
+    "/tools/countdown-timer": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "242349c3dffb1626"
     },
     "/tools/cron-explainer": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "a3c5e60952e42496"
+      "lastmod": "2026-09-30",
+      "fingerprint": "55f07cdb334fc1ef"
     },
     "/tools/crop-image": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "c271038e26242ae8"
+      "lastmod": "2026-09-30",
+      "fingerprint": "0ceaf5f2b65e7778"
+    },
+    "/tools/curl-generator": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "5b8baa14c92dc02a"
+    },
+    "/tools/curl-to-axios": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "2d69785a04523768"
+    },
+    "/tools/curl-to-fetch": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "de402f82c27483e0"
+    },
+    "/tools/curl-to-javascript": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "5068b7be7671c2ce"
+    },
+    "/tools/curl-to-python": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "9a093f486f475f6c"
     },
     "/tools/currency-converter": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "2ff22edfd7a71aaa"
+      "lastmod": "2026-09-30",
+      "fingerprint": "0f1c93c58700a909"
     },
     "/tools/date-difference-calculator": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "c884a595a88ab632"
+      "lastmod": "2026-09-30",
+      "fingerprint": "7580b551bc48b5c8"
+    },
+    "/tools/dice-roller": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "92d352c69b539ca0"
     },
     "/tools/discount-calculator": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "47d164c0dd5a7315"
+      "lastmod": "2026-09-30",
+      "fingerprint": "fb11bddaef30f251"
     },
     "/tools/emi-calculator": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "238e44b48cfc4c3a"
+      "lastmod": "2026-09-30",
+      "fingerprint": "82c94db0c04ef78c"
     },
     "/tools/exif-viewer": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "33f6898d6f30f4d3"
+      "lastmod": "2026-09-30",
+      "fingerprint": "a449a98c9f8542cd"
     },
     "/tools/favicon-generator": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "c490d5ac2ac6dbd2"
+      "lastmod": "2026-09-30",
+      "fingerprint": "f65fa78f9c6bc9f0"
     },
     "/tools/gst-calculator": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "aa3cb3fc1295bd80"
+      "lastmod": "2026-09-30",
+      "fingerprint": "be0f687994048f13"
     },
     "/tools/hash-generator": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "2a7267484efc06c6"
+      "lastmod": "2026-09-30",
+      "fingerprint": "de1ede7ee3f6048e"
     },
     "/tools/html-entity-converter": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "c75de3737938de6d"
+      "lastmod": "2026-09-30",
+      "fingerprint": "e5f6da908c208f94"
+    },
+    "/tools/http-header-generator": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "61b996b531f18d2a"
+    },
+    "/tools/http-header-viewer": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "19730e680dc331b9"
+    },
+    "/tools/http-method-reference": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "bb4d192f515f58e8"
+    },
+    "/tools/http-status-code-lookup": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "a8c55eb918ecb97a"
     },
     "/tools/image-compressor": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "5dfbe3b4b3e8cef1"
+      "lastmod": "2026-09-30",
+      "fingerprint": "fd12e6cbdf88b737"
     },
     "/tools/image-resizer": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "675fe65bc4608dc6"
+      "lastmod": "2026-09-30",
+      "fingerprint": "57f5e250a85965a9"
     },
     "/tools/image-to-pdf": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "1377842531599558"
+      "lastmod": "2026-09-30",
+      "fingerprint": "fd2453a231b7d6ab"
     },
     "/tools/image-to-text": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "f657e6b7dc844598"
+      "lastmod": "2026-09-30",
+      "fingerprint": "1eb29441d0c422b2"
     },
     "/tools/image-to-webp": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "0e12bbca8d8795dc"
+      "lastmod": "2026-09-30",
+      "fingerprint": "8b336c2ff844cb86"
+    },
+    "/tools/internet-speed-test": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "23cb9c5dcc4f9d68"
+    },
+    "/tools/interval-timer": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "e640ae0693f844d9"
     },
     "/tools/jpg-to-png": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "e6ebb730fd4276fd"
+      "lastmod": "2026-09-30",
+      "fingerprint": "8ee2f64d3828582d"
     },
     "/tools/json-formatter": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "2e8c2fca0e501bc2"
+      "lastmod": "2026-09-30",
+      "fingerprint": "7c84e287389f66ad"
     },
     "/tools/json-to-csv": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "5f4d6f5da6e09274"
+      "lastmod": "2026-09-30",
+      "fingerprint": "3c12db820922bc0a"
     },
     "/tools/json-to-typescript": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "7ca81ae213278377"
+      "lastmod": "2026-09-30",
+      "fingerprint": "8391843cceaecbd6"
     },
     "/tools/jwt-decoder": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "43e89436ad351486"
+      "lastmod": "2026-09-30",
+      "fingerprint": "438716f472f6ecef"
     },
     "/tools/lorem-ipsum-generator": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "e7c027cdb578a05c"
+      "lastmod": "2026-09-30",
+      "fingerprint": "b29be4cf012c8994"
     },
     "/tools/markdown-table-generator": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "34a0a001ed2bcf6b"
+      "lastmod": "2026-09-30",
+      "fingerprint": "8e16d9e6ac353a4d"
+    },
+    "/tools/mime-type-lookup": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "02ab1494f4988c71"
     },
     "/tools/notepad": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "43dcf5b1c9611262"
+      "lastmod": "2026-09-30",
+      "fingerprint": "e00c6db7f5f9fe68"
     },
     "/tools/online-camera": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "3cf754f9bcd47b71"
+      "lastmod": "2026-09-30",
+      "fingerprint": "fc46bd594c012aad"
     },
     "/tools/password-generator": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "811abc07e2b93c46"
-    },
-    "/tools/pdf-compressor": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "5967902af65e4465"
+      "lastmod": "2026-09-30",
+      "fingerprint": "f43d4f41a3d4481c"
     },
     "/tools/pdf-editor": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "42bae397876961e5"
+      "lastmod": "2026-09-30",
+      "fingerprint": "6256eeffb0e3997b"
     },
     "/tools/pdf-merge": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "91f44270e15ea44f"
+      "lastmod": "2026-09-30",
+      "fingerprint": "86111c4489f64aa6"
+    },
+    "/tools/pdf-page-counter": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "5f91a68af815b49b"
     },
     "/tools/pdf-to-jpg": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "8669d50795181b60"
+      "lastmod": "2026-09-30",
+      "fingerprint": "085b2e80c05eecf3"
     },
     "/tools/pdf-to-word": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "657dd590ca0a8ae3"
+      "lastmod": "2026-09-30",
+      "fingerprint": "b2928a7e1ec6d3f4"
     },
     "/tools/percentage-calculator": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "55589afd23e471f5"
+      "lastmod": "2026-09-30",
+      "fingerprint": "0bbd12ca813bb2d3"
     },
     "/tools/png-to-jpg": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "31c29649c2f58b54"
+      "lastmod": "2026-09-30",
+      "fingerprint": "2a023225990e7edb"
     },
     "/tools/png-to-svg": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "5f3bb6c1561815d5"
+      "lastmod": "2026-09-30",
+      "fingerprint": "4599be1ab3806364"
+    },
+    "/tools/pomodoro-timer": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "3ba7cf68aab02bab"
     },
     "/tools/profit-margin-calculator": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "9d31f4aa2a7b4043"
+      "lastmod": "2026-09-30",
+      "fingerprint": "11f1377d6748239c"
     },
     "/tools/qr-code-generator": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "eb1938ba046c1eaa"
+      "lastmod": "2026-09-30",
+      "fingerprint": "7e76da5821bb68e9"
     },
     "/tools/qr-code-scanner": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "7c5fb63ed971de3f"
+      "lastmod": "2026-09-30",
+      "fingerprint": "d2f9394f447f2317"
+    },
+    "/tools/query-parameter-parser": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "18697bc814b1b39e"
+    },
+    "/tools/query-string-builder": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "a0e9c12b38e8db1a"
+    },
+    "/tools/random-name-picker": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "70a294b1afde81a8"
+    },
+    "/tools/random-number-generator": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "fac9c36135783bbe"
+    },
+    "/tools/regex-builder": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "b00b50edafa5e5b8"
     },
     "/tools/regex-tester": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "dd6836d376e5143f"
+      "lastmod": "2026-09-30",
+      "fingerprint": "a0d6e277da8ab0a5"
     },
     "/tools/rotate-pdf": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "118c25f1fc61ac83"
+      "lastmod": "2026-09-30",
+      "fingerprint": "d8598cd42d8f97ad"
     },
     "/tools/salary-calculator": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "87a569a52349a81d"
+      "lastmod": "2026-09-30",
+      "fingerprint": "8ca72eba389b7d83"
     },
     "/tools/sample-file-generator": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "958fec5f44a2f449"
+      "lastmod": "2026-09-30",
+      "fingerprint": "52eb23c22b068640"
     },
     "/tools/sip-calculator": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "d73b064cda95b7cf"
+      "lastmod": "2026-09-30",
+      "fingerprint": "48e0e1ad5eaf3923"
     },
     "/tools/slug-generator": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "1944ad0bf8111196"
+      "lastmod": "2026-09-30",
+      "fingerprint": "da1b6a12ec69990f"
     },
     "/tools/speech-to-text": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "f5d9d7d8f9158f56"
+      "lastmod": "2026-09-30",
+      "fingerprint": "6d29a42646129bc6"
     },
     "/tools/split-pdf": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "b1e7f75d55b84fe4"
+      "lastmod": "2026-09-30",
+      "fingerprint": "9604080c1697b0f7"
     },
     "/tools/stopwatch-timer": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "b484d47bb996266f"
+      "lastmod": "2026-09-30",
+      "fingerprint": "b8646c5fd02046ce"
     },
     "/tools/text-diff-checker": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "6c155ca128bdc2dd"
+      "lastmod": "2026-09-30",
+      "fingerprint": "f28c79945c8cf3cf"
     },
     "/tools/text-sorter": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "8a216584d73e1043"
+      "lastmod": "2026-09-30",
+      "fingerprint": "2c683c5014bcb4d4"
     },
     "/tools/text-to-speech": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "f8dc01425dac7798"
+      "lastmod": "2026-09-30",
+      "fingerprint": "3d86830ba1143e1a"
     },
     "/tools/unit-converter": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "9761cee76156b506"
+      "lastmod": "2026-09-30",
+      "fingerprint": "d835351c73d77adf"
     },
     "/tools/unix-timestamp-converter": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "f8cf27f172305dc7"
+      "lastmod": "2026-09-30",
+      "fingerprint": "4020937c185c6011"
     },
     "/tools/unlock-pdf": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "a255f4afa315c5a6"
+      "lastmod": "2026-09-30",
+      "fingerprint": "3a01b273769d5550"
     },
     "/tools/url-encoder-decoder": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "23fe5d0fb003020b"
+      "lastmod": "2026-09-30",
+      "fingerprint": "2aff829c4b5d6a3f"
+    },
+    "/tools/url-parser": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "cd762e531f184c2d"
+    },
+    "/tools/user-agent-parser": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "3247a4dca54bc2c6"
     },
     "/tools/utm-builder": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "d8b1a38354e2409f"
+      "lastmod": "2026-09-30",
+      "fingerprint": "29319130cb7afefe"
     },
     "/tools/uuid-generator": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "6a368422aabf0192"
+      "lastmod": "2026-09-30",
+      "fingerprint": "3ef69bf028acce7f"
     },
     "/tools/video-cutter": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "f0a40d4c62bd43cc"
+      "lastmod": "2026-09-30",
+      "fingerprint": "1109ddb3c3396192"
     },
     "/tools/video-player": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "f25e10e225844d86"
+      "lastmod": "2026-09-30",
+      "fingerprint": "8f1540be8bd301d6"
     },
     "/tools/watermark-remover": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "2b7784ecfcc50ac4"
+      "lastmod": "2026-09-30",
+      "fingerprint": "d4bbec9486575432"
     },
     "/tools/webp-to-jpg": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "866c679d68d492a1"
+      "lastmod": "2026-09-30",
+      "fingerprint": "b4eacf603f494144"
     },
     "/tools/word-counter": {
-      "lastmod": "2026-09-28",
-      "fingerprint": "650ef261ae789589"
+      "lastmod": "2026-09-30",
+      "fingerprint": "afd605c2b7142a70"
     },
     "/tools/working-days-calculator": {
-      "lastmod": "2026-09-29",
-      "fingerprint": "3b5030d271bd1c5a"
+      "lastmod": "2026-09-30",
+      "fingerprint": "2b55a0e7f9a10c8d"
+    },
+    "/tools/world-clock": {
+      "lastmod": "2026-09-30",
+      "fingerprint": "f5dd2822786eae50"
     }
   }
 }

@@ -316,6 +316,81 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
       },
     ],
   },
+  "api-http": {
+    heading: "API, HTTP & Network Tools",
+    metaTitle: "API & HTTP Tools for Developers | TabBench",
+    metaDescription:
+      "Free API and HTTP tools: status code lookup, header viewer, URL and query parsers, request builder, cURL to fetch, Axios and Python converters, speed test.",
+    keywords: [
+      "http tools",
+      "api tools online",
+      "curl converter",
+      "http status codes",
+      "http header checker",
+      "url parser",
+      "api request builder",
+      "internet speed test",
+    ],
+    body: [
+      "Working with web APIs means constantly reading and writing the small details of HTTP: which status code means what, what a header does, how a query string is encoded, how a curl example from the documentation becomes code in your own language. These tools cover those jobs directly. Look up any status code or method, paste headers to have them explained and checked, break a URL into its parts, build a query string or a full request, and convert a curl command to fetch, Axios or Python.",
+      "Everything that can run in your browser does. Headers, URLs, user agents and curl commands are parsed on your device and never uploaded. Two tools use the network on purpose, and say so on their page: the API Request Builder sends the request you build directly from your browser to the address you enter, and the Internet Speed Test exchanges test data with Cloudflare's servers.",
+      "The converters read curl the way curl itself does, and their output was checked against a real curl on a local server, so the code you copy sends the same request the command would.",
+    ],
+    faqs: [
+      {
+        question: "Can these tools fetch a website's headers for me?",
+        answer:
+          "No. Browsers do not let one web page read another site's response headers. Run curl -I in a terminal or copy the headers from your browser's Network tab and paste them into the HTTP Header Viewer, which explains them.",
+      },
+      {
+        question: "Is my API key or token sent to TabBench?",
+        answer:
+          "No. Tools that only read and convert text work entirely in your browser. The API Request Builder sends your request directly to the server you name, not through TabBench, and does not save it. Use test credentials where you can.",
+      },
+      {
+        question: "How accurate are the cURL converters?",
+        answer:
+          "They follow curl's own rules for flags, quoting and how -d, -F, -G and -u combine, and the generated fetch and Python code is tested against real curl requests. They tell you where a target cannot behave like curl, for example forbidden browser headers or redirect defaults.",
+      },
+    ],
+  },
+  "random-fun": {
+    heading: "Random Generators: Coin Flip, Dice, Numbers & Picker",
+    metaTitle: "Coin Flip, Dice & Random Generators | TabBench",
+    metaDescription:
+      "Free fair random tools: flip a coin, roll dice with notation, generate random numbers without repeats, pick a name or spin a wheel. Unbiased and private.",
+    keywords: [
+      "coin flip",
+      "dice roller",
+      "random number generator",
+      "random name picker",
+      "spin the wheel",
+      "team generator",
+      "heads or tails",
+    ],
+    body: [
+      "Sometimes you just need an unbiased answer: heads or tails, a number from one to a hundred, who goes first, which team you are on. These tools give you that, with randomness you can trust. Every result comes from your device's cryptographic random generator, and turning its output into a range uses a method that does not favour any number, unlike the Math.random() shortcut many generators rely on.",
+      "Flip one coin or a hundred, roll any die or full tabletop notation such as 4d6kh3, draw numbers with or without repeats, and pick names with a wheel, a winners draw or a team split. The result is always decided first and the animation is added afterwards, so spinning and flipping effects never influence the outcome.",
+      "Nothing is sent to a server. Tallies and lists stay in your browser, and the animations respect your reduced-motion setting.",
+    ],
+    faqs: [
+      {
+        question: "Are these tools truly random and fair?",
+        answer:
+          "Yes for practical purposes. They use crypto.getRandomValues, the secure generator built into your operating system, and avoid modulo bias, so every outcome is equally likely and independent of the last.",
+      },
+      {
+        question: "Can I use them for a giveaway or raffle?",
+        answer:
+          "The selection is unbiased, so they work well for informal draws. For a regulated raffle or lottery, follow the rules that apply where you are and keep a record of the entries and the result.",
+      },
+      {
+        question: "Do the tools store my lists or results?",
+        answer:
+          "Lists and settings are kept only in your browser, for a few days, so a refresh does not lose them. Nothing is uploaded, and you can clear everything from the Privacy page.",
+      },
+    ],
+  },
   "ai-tools": {
     // Rewritten when the category grew from the Formula Explainer alone to
     // seven tools: the old copy only described formulas, so the meta

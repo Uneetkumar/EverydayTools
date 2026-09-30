@@ -10,7 +10,7 @@ import { ToolErrorState, ToolLoadingState } from "@/components/tool/tool-states"
 import { markToolCompleted, markToolError } from "@/lib/analytics";
 
 /**
- * PDF Inspector (kept at /tools/pdf-compressor for existing links).
+ * PDF Page Counter & Inspector. Its old address, /tools/pdf-compressor, redirects here (firebase.json).
  *
  * Reads the file with pdf-lib entirely in the browser and reports what is in
  * it — pages and their sizes, metadata, version, encryption, form fields, and
@@ -175,7 +175,7 @@ function Stat({ label, value, hint }: { label: string; value: React.ReactNode; h
   );
 }
 
-export default function PdfCompressor() {
+export default function PdfInspector() {
   const [file, setFile] = useState<File | null>(null);
   const [report, setReport] = useState<Report | null>(null);
   const [busy, setBusy] = useState(false);

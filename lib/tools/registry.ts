@@ -9,6 +9,10 @@
  * components/tool/tool-loaders.tsx.
  */
 
+import { API_HTTP_TOOLS } from "./sources/api-http";
+import { RANDOM_TOOLS } from "./sources/random";
+import { TIME_AND_MORE_TOOLS } from "./sources/time-and-more";
+
 export interface ToolFaq {
   question: string;
   answer: string;
@@ -30,6 +34,8 @@ export type ToolCategoryId =
   | "image-media"
   | "pdf-docs"
   | "security"
+  | "api-http"
+  | "random-fun"
   | "ai-tools";
 
 /**
@@ -72,12 +78,30 @@ export interface ToolDefinition {
   /** Workflow continuation: what people usually do after this tool. */
   nextSteps: string[];
   isPopular?: boolean;
+  /**
+   * How prominent the tool is, lower first. Search uses it only to break ties
+   * between equally good matches: "regex" matches Regex Tester and Regex Builder
+   * equally well, and the established one should be listed first.
+   */
+  searchRank: number;
 }
 
-export type ToolSource = Omit<ToolDefinition, "categoryName" | "isPopular">;
+export type ToolSource = Omit<ToolDefinition, "categoryName" | "isPopular" | "searchRank">;
+
+/**
+ * Who a category is for. Navigation groups by this ("Everyday tools" /
+ * "Developer tools") so a long list of categories reads as two short ones.
+ */
+export type CategoryGroupId = "everyday" | "developer";
+
+export const CATEGORY_GROUPS: Array<{ id: CategoryGroupId; name: string }> = [
+  { id: "everyday", name: "Everyday tools" },
+  { id: "developer", name: "Developer tools" },
+];
 
 export interface ToolCategory {
   id: ToolCategoryId;
+  group: CategoryGroupId;
   name: string;
   shortName: string;
   /** What someone can get done here, in one sentence. */
@@ -90,6 +114,7 @@ export interface ToolCategory {
 export const TOOL_CATEGORIES: ToolCategory[] = [
   {
     id: "calculators",
+    group: "everyday",
     name: "Calculators & Finance",
     shortName: "Calculators",
     description: "Work out percentages, GST, loan EMIs, SIP returns, take-home pay and unit conversions.",
@@ -97,39 +122,8 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     popular: ["percentage-calculator", "gst-calculator", "emi-calculator", "discount-calculator", "salary-calculator", "currency-converter"],
   },
   {
-    id: "date-time",
-    name: "Date & Time",
-    shortName: "Date & Time",
-    description: "Find your exact age, count days or business days between dates, convert timestamps and time things.",
-    icon: "CalendarClock",
-    popular: ["age-calculator", "date-difference-calculator", "working-days-calculator", "stopwatch-timer"],
-  },
-  {
-    id: "text",
-    name: "Text & Writing",
-    shortName: "Text",
-    description: "Count words, change case, compare, sort and clean text, or dictate and listen to it.",
-    icon: "Type",
-    popular: ["word-counter", "case-converter", "text-diff-checker", "text-sorter"],
-  },
-  {
-    id: "developer",
-    name: "Developer & Data",
-    shortName: "Developer",
-    description: "Format and validate JSON, encode Base64 and URLs, decode JWTs, test regex and convert data.",
-    icon: "Code",
-    popular: ["json-formatter", "base64-converter", "jwt-decoder", "regex-tester", "json-to-csv", "uuid-generator"],
-  },
-  {
-    id: "image-media",
-    name: "Image & Media",
-    shortName: "Images & Media",
-    description: "Compress, resize, crop and convert images, make QR codes and barcodes, and trim video.",
-    icon: "Image",
-    popular: ["image-compressor", "image-resizer", "crop-image", "qr-code-generator", "png-to-jpg", "image-to-webp"],
-  },
-  {
     id: "pdf-docs",
+    group: "everyday",
     name: "PDF & Documents",
     shortName: "PDF",
     description: "Edit, merge, split, rotate and convert PDFs, including PDF to Word and images to PDF.",
@@ -137,15 +131,35 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     popular: ["pdf-editor", "pdf-merge", "pdf-to-word", "image-to-pdf", "split-pdf", "pdf-to-jpg"],
   },
   {
-    id: "security",
-    name: "Security & Generators",
-    shortName: "Security",
-    description: "Generate strong passwords and cryptographic hashes without anything leaving your device.",
-    icon: "Shield",
-    popular: ["password-generator", "hash-generator"],
+    id: "image-media",
+    group: "everyday",
+    name: "Image & Media",
+    shortName: "Images & Media",
+    description: "Compress, resize, crop and convert images, make QR codes and barcodes, and trim video.",
+    icon: "Image",
+    popular: ["image-compressor", "image-resizer", "crop-image", "qr-code-generator", "png-to-jpg", "image-to-webp"],
+  },
+  {
+    id: "text",
+    group: "everyday",
+    name: "Text & Writing",
+    shortName: "Text",
+    description: "Count words, change case, compare, sort and clean text, or dictate and listen to it.",
+    icon: "Type",
+    popular: ["word-counter", "case-converter", "text-diff-checker", "text-sorter"],
+  },
+  {
+    id: "date-time",
+    group: "everyday",
+    name: "Date & Time",
+    shortName: "Date & Time",
+    description: "Find your exact age, count days or business days between dates, convert timestamps and time things.",
+    icon: "CalendarClock",
+    popular: ["age-calculator", "date-difference-calculator", "working-days-calculator", "stopwatch-timer"],
   },
   {
     id: "business",
+    group: "everyday",
     name: "Business & Marketing",
     shortName: "Business",
     description: "Price with confidence: profit margins, break-even points, ROI and campaign tracking links.",
@@ -153,12 +167,49 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     popular: ["profit-margin-calculator", "break-even-calculator", "utm-builder"],
   },
   {
+    id: "random-fun",
+    group: "everyday",
+    name: "Random & Games",
+    shortName: "Random",
+    description: "Flip a coin, roll dice, draw random numbers, pick a name or spin a wheel, with fair, unbiased randomness.",
+    icon: "Dices",
+    popular: ["coin-flip", "dice-roller", "random-number-generator", "random-name-picker"],
+  },
+  {
     id: "ai-tools",
+    group: "everyday",
     name: "AI Tools",
     shortName: "AI",
     description: "Summarise, rewrite and simplify text, extract keywords, explain JSON and read text in images.",
     icon: "Sparkles",
     popular: ["ai-text-summarizer", "image-to-text", "ai-text-rewriter", "ai-text-simplifier"],
+  },
+  {
+    id: "developer",
+    group: "developer",
+    name: "Developer & Data",
+    shortName: "Developer",
+    description: "Format and validate JSON, encode Base64 and URLs, decode JWTs, test regex and convert data.",
+    icon: "Code",
+    popular: ["json-formatter", "base64-converter", "jwt-decoder", "regex-tester", "json-to-csv", "uuid-generator"],
+  },
+  {
+    id: "api-http",
+    group: "developer",
+    name: "API, HTTP & Network",
+    shortName: "API & HTTP",
+    description: "Test your internet speed, look up status codes and headers, parse URLs, send requests and turn cURL into fetch, Axios or Python.",
+    icon: "Network",
+    popular: ["internet-speed-test", "curl-to-fetch", "http-status-code-lookup", "api-request-builder", "url-parser", "http-header-viewer"],
+  },
+  {
+    id: "security",
+    group: "developer",
+    name: "Security & Generators",
+    shortName: "Security",
+    description: "Generate strong passwords and cryptographic hashes without anything leaving your device.",
+    icon: "Shield",
+    popular: ["password-generator", "hash-generator"],
   },
 ];
 
@@ -172,17 +223,23 @@ export const POPULAR_TOOL_SLUGS = [
   "percentage-calculator",
   "pdf-merge",
   "json-formatter",
+  "internet-speed-test",
   "qr-code-generator",
   "pdf-to-word",
   "word-counter",
   "image-resizer",
   "gst-calculator",
   "age-calculator",
-  "ai-text-summarizer",
 ];
 
 /** Recently added. */
 export const NEW_TOOL_SLUGS = [
+  "internet-speed-test",
+  "curl-to-fetch",
+  "regex-builder",
+  "coin-flip",
+  "dice-roller",
+  "pomodoro-timer",
   "online-camera",
   "png-to-svg",
   "text-sorter",
@@ -194,6 +251,9 @@ export const NEW_TOOL_SLUGS = [
 
 /** Useful tools people rarely think to look for. */
 export const HIDDEN_GEM_SLUGS = [
+  "http-header-viewer",
+  "content-type-lookup",
+  "world-clock",
   "sample-file-generator",
   "exif-viewer",
   "contrast-checker",
@@ -205,6 +265,9 @@ export const HIDDEN_GEM_SLUGS = [
 ];
 
 const TOOL_SOURCE: Record<string, ToolSource> = {
+  ...API_HTTP_TOOLS,
+  ...RANDOM_TOOLS,
+  ...TIME_AND_MORE_TOOLS,
   "json-formatter": {
     "slug": "json-formatter",
     "name": "JSON Formatter",
@@ -253,7 +316,8 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "relatedToolSlugs": [
       "base64-converter",
       "jwt-decoder",
-      "uuid-generator"
+      "uuid-generator",
+      "api-request-builder"
     ],
     "nextSteps": [
       "json-to-csv",
@@ -425,7 +489,8 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "relatedToolSlugs": [
       "uuid-generator",
       "hash-generator",
-      "base64-converter"
+      "base64-converter",
+      "random-number-generator"
     ],
     "nextSteps": [
       "hash-generator",
@@ -477,7 +542,8 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "relatedToolSlugs": [
       "jwt-decoder",
       "url-encoder-decoder",
-      "json-formatter"
+      "json-formatter",
+      "http-header-viewer"
     ],
     "nextSteps": [
       "url-encoder-decoder",
@@ -533,7 +599,8 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "relatedToolSlugs": [
       "base64-converter",
       "uuid-generator",
-      "json-formatter"
+      "json-formatter",
+      "http-header-viewer"
     ],
     "nextSteps": [
       "base64-converter",
@@ -595,7 +662,8 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "relatedToolSlugs": [
       "password-generator",
       "base64-converter",
-      "json-formatter"
+      "json-formatter",
+      "random-number-generator"
     ],
     "nextSteps": [
       "password-generator",
@@ -649,12 +717,16 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "relatedToolSlugs": [
       "base64-converter",
       "jwt-decoder",
-      "json-formatter"
+      "json-formatter",
+      "url-parser",
+      "query-parameter-parser"
     ],
     "nextSteps": [
       "utm-builder",
       "base64-converter",
-      "slug-generator"
+      "slug-generator",
+      "url-parser",
+      "query-string-builder"
     ]
   },
   "qr-code-generator": {
@@ -885,15 +957,15 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
   },
   "image-compressor": {
     "slug": "image-compressor",
-    "name": "Image Compressor",
-    "shortName": "Image Compressor",
+    "name": "Compress Image",
+    "shortName": "Compress Image",
     "tagline": "Shrink JPG, PNG and WebP images to a target size like 50 KB.",
     "category": "image-media",
     "description": "Compress image to exact target KB (e.g. under 50KB, 100KB, 200KB) with live quality adaptation and alerts.",
     "longDescription": "Compress JPG, PNG, and WebP images to your exact target file size in KB. Ideal for government portals, job applications, resumes, and websites with strict file size limits. 100% private in-browser compression.",
     "iconName": "ImageMinus",
     "privacy": "local",
-    "metaTitle": "Image Compressor – Compress JPG, PNG & WebP | TabBench",
+    "metaTitle": "Compress Image: JPG, PNG & WebP Compressor",
     "metaDescription": "Compress JPEG, PNG, and WebP images directly in your browser without uploading files. Reduce file size while maintaining visual clarity.",
     "keywords": [
       "image compressor",
@@ -916,7 +988,10 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "image to 100kb",
       "compress jpg",
       "image optimizer",
-      "image size"
+      "image size",
+      "image compressor",
+      "photo compressor",
+      "compress picture"
     ],
     "features": [
       "Compress to exact KB target (e.g. 50KB, 100KB)",
@@ -1052,15 +1127,15 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
   },
   "watermark-remover": {
     "slug": "watermark-remover",
-    "name": "Watermark Remover",
-    "shortName": "Watermark Remover",
+    "name": "Remove Watermark",
+    "shortName": "Remove Watermark",
     "tagline": "Erase stamps, dates and logos from photos, or add your own watermark.",
     "category": "image-media",
     "description": "Remove watermarks, logos, dates, and stamps from images using smart inpainting, or add custom watermarks.",
     "longDescription": "Clean unwanted watermarks, timestamps, and logos from photos using client-side neighbor inpainting algorithms, or protect your images by adding custom text/image watermarks.",
     "iconName": "Eraser",
     "privacy": "local",
-    "metaTitle": "Watermark Remover | TabBench",
+    "metaTitle": "Remove Watermark from Images Online",
     "metaDescription": "Erase watermarks, stamps, date logs, and unwanted objects from images client-side. Fast in-browser canvas retouching.",
     "keywords": [
       "watermark remover",
@@ -1077,7 +1152,10 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "remove watermark",
       "remove logo",
       "erase object",
-      "add watermark"
+      "add watermark",
+      "watermark remover",
+      "remove date stamp from photo",
+      "remove stamp from photo"
     ],
     "features": [
       "Interactive watermark erase box",
@@ -1513,7 +1591,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       }
     ],
     "relatedToolSlugs": [
-      "pdf-compressor",
+      "pdf-page-counter",
       "image-compressor",
       "qr-code-generator"
     ],
@@ -1521,12 +1599,12 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "add-page-numbers",
       "split-pdf",
       "pdf-editor",
-      "pdf-compressor"
+      "pdf-page-counter"
     ]
   },
-  "pdf-compressor": {
-    "slug": "pdf-compressor",
-    "name": "PDF Inspector",
+  "pdf-page-counter": {
+    "slug": "pdf-page-counter",
+    "name": "PDF Page Counter & Inspector",
     "shortName": "PDF Inspector",
     "tagline": "Count a PDF's pages and see its sizes, metadata, encryption and what makes it large.",
     "category": "pdf-docs",
@@ -1984,7 +2062,8 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "relatedToolSlugs": [
       "age-calculator",
       "percentage-calculator",
-      "emi-calculator"
+      "emi-calculator",
+      "countdown-timer"
     ],
     "nextSteps": [
       "working-days-calculator",
@@ -2428,15 +2507,15 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
   },
   "image-resizer": {
     "slug": "image-resizer",
-    "name": "Image Resizer",
-    "shortName": "Image Resizer",
+    "name": "Resize Image",
+    "shortName": "Resize Image",
     "tagline": "Resize images to exact pixels or a percentage, keeping proportions.",
     "category": "image-media",
     "description": "Resize any image to exact pixel dimensions or a percentage, with aspect ratio locking.",
     "longDescription": "Change an image's pixel dimensions precisely, with an optional aspect-ratio lock and high-quality resampling. Export as JPG, PNG, or WebP without uploading anything.",
     "iconName": "Scaling",
     "privacy": "local",
-    "metaTitle": "Image Resizer | TabBench",
+    "metaTitle": "Resize Image: Free Online Image Resizer",
     "metaDescription": "Resize images by exact width/height pixels or percentage scale. Maintain aspect ratios and download optimized images instantly.",
     "keywords": [
       "image resizer",
@@ -2455,7 +2534,10 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "image dimensions",
       "scale image",
       "resize photo",
-      "image size"
+      "image size",
+      "image resizer",
+      "photo resizer",
+      "resize picture"
     ],
     "features": [
       "Exact pixel width and height",
@@ -2637,8 +2719,9 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     ],
     "relatedToolSlugs": [
       "image-compressor",
-      "pdf-compressor",
-      "json-formatter"
+      "pdf-page-counter",
+      "json-formatter",
+      "mime-type-lookup"
     ],
     "nextSteps": [
       "image-compressor",
@@ -2965,15 +3048,15 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
   },
   "video-cutter": {
     "slug": "video-cutter",
-    "name": "Video Cutter",
-    "shortName": "Video Cutter",
+    "name": "Cut Video",
+    "shortName": "Cut Video",
     "tagline": "Trim a video to a start and end point without re-encoding.",
     "category": "image-media",
     "description": "Trim a video to any start and end point without re-encoding — instant and lossless.",
     "longDescription": "Cut a clip out of any video by dragging start and end handles, then download it. The trim copies streams rather than re-encoding, so it finishes almost immediately and loses no quality.",
     "iconName": "Scissors",
     "privacy": "local",
-    "metaTitle": "Video Cutter | TabBench",
+    "metaTitle": "Cut Video Online: Free Video Cutter",
     "metaDescription": "Trim and cut video clips to any start and end timestamp without re-encoding. Lossless, instant, and runs 100% locally in your browser.",
     "keywords": [
       "video cutter",
@@ -2990,7 +3073,10 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "trim video",
       "cut video",
       "clip video",
-      "shorten video"
+      "shorten video",
+      "video cutter",
+      "video trimmer",
+      "cut mp4"
     ],
     "features": [
       "Lossless stream copy — no re-encode",
@@ -3422,12 +3508,14 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "relatedToolSlugs": [
       "json-formatter",
       "url-encoder-decoder",
-      "cron-explainer"
+      "cron-explainer",
+      "regex-builder"
     ],
     "nextSteps": [
       "ai-explainer",
       "text-diff-checker",
-      "cron-explainer"
+      "cron-explainer",
+      "regex-builder"
     ]
   },
   "html-entity-converter": {
@@ -3631,7 +3719,8 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "relatedToolSlugs": [
       "date-difference-calculator",
       "age-calculator",
-      "unix-timestamp-converter"
+      "unix-timestamp-converter",
+      "world-clock"
     ],
     "nextSteps": [
       "date-difference-calculator",
@@ -3681,7 +3770,8 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "relatedToolSlugs": [
       "date-difference-calculator",
       "working-days-calculator",
-      "cron-explainer"
+      "cron-explainer",
+      "world-clock"
     ],
     "nextSteps": [
       "date-difference-calculator",
@@ -3838,7 +3928,9 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "relatedToolSlugs": [
       "slug-generator",
       "url-encoder-decoder",
-      "profit-margin-calculator"
+      "profit-margin-calculator",
+      "query-string-builder",
+      "url-parser"
     ],
     "nextSteps": [
       "url-encoder-decoder",
@@ -4570,16 +4662,23 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "relatedToolSlugs": [
       "working-days-calculator",
       "date-difference-calculator",
-      "unix-timestamp-converter"
+      "unix-timestamp-converter",
+      "countdown-timer",
+      "pomodoro-timer",
+      "interval-timer",
+      "world-clock"
     ],
     "nextSteps": [
       "working-days-calculator",
-      "date-difference-calculator"
+      "date-difference-calculator",
+      "countdown-timer",
+      "pomodoro-timer",
+      "interval-timer"
     ]
   },
   "text-sorter": {
     "slug": "text-sorter",
-    "name": "Text Sorter & Deduplicator",
+    "name": "Text Sorter & Duplicate Remover",
     "shortName": "Text Sorter",
     "tagline": "Sort lines A–Z or by length, and remove duplicate lines.",
     "category": "text",
@@ -4603,7 +4702,10 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "alphabetize",
       "sort list",
       "dedupe",
-      "unique lines"
+      "unique lines",
+      "deduplicator",
+      "remove duplicates",
+      "sort lines"
     ],
     "features": [
       "Alphabetical sorting (A-Z and Z-A) with natural alphanumeric recognition",
@@ -4631,7 +4733,8 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "word-counter",
       "case-converter",
       "text-diff-checker",
-      "slug-generator"
+      "slug-generator",
+      "random-name-picker"
     ],
     "nextSteps": [
       "text-diff-checker",
@@ -4717,6 +4820,28 @@ const CATEGORY_NAMES = Object.fromEntries(
 
 const POPULAR_SET = new Set(POPULAR_TOOL_SLUGS);
 
+/**
+ * The hand-picked lists are the one place the site states which tools matter
+ * most: the global popular list first, then each category's own picks in the
+ * order the category shows them (first picks of every category before second
+ * picks, so no category crowds out the rest). Everything else ranks after.
+ */
+const SEARCH_ORDER: string[] = (() => {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  const add = (slug: string) => {
+    if (!seen.has(slug)) {
+      seen.add(slug);
+      out.push(slug);
+    }
+  };
+  POPULAR_TOOL_SLUGS.forEach(add);
+  const depth = Math.max(0, ...TOOL_CATEGORIES.map((c) => c.popular.length));
+  for (let i = 0; i < depth; i++) for (const c of TOOL_CATEGORIES) if (c.popular[i]) add(c.popular[i]);
+  return out;
+})();
+const SEARCH_RANK = new Map(SEARCH_ORDER.map((slug, i) => [slug, i]));
+
 export const TOOLS_REGISTRY: Record<string, ToolDefinition> = Object.fromEntries(
   Object.entries(TOOL_SOURCE).map(([slug, tool]) => [
     slug,
@@ -4724,6 +4849,7 @@ export const TOOLS_REGISTRY: Record<string, ToolDefinition> = Object.fromEntries
       ...tool,
       categoryName: CATEGORY_NAMES[tool.category],
       isPopular: POPULAR_SET.has(slug),
+      searchRank: SEARCH_RANK.get(slug) ?? SEARCH_ORDER.length,
     },
   ])
 );

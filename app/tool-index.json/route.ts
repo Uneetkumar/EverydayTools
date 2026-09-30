@@ -26,7 +26,11 @@ export async function GET() {
   return new Response(JSON.stringify(body), {
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      "Cache-Control": "public, max-age=3600",
+      // Revalidate every time (a 304 when nothing changed). This is also what
+      // firebase.json sends in production. It used to be `max-age=3600`, which
+      // the dev server passed through, so a browser that had loaded the site
+      // before a batch of tools was added searched the old list for an hour.
+      "Cache-Control": "public, max-age=0, must-revalidate",
     },
   });
 }

@@ -3,7 +3,10 @@
 // deletes caches whose key !== CACHE_NAME, so a constant name meant nothing was
 // ever purged: stale HTML from an old deploy survived indefinitely and could be
 // served on any navigation whose network fetch failed.
-const CACHE_NAME = "tabbench-pwa-v4";
+//
+// v5: purges HTML cached by v4 (a homepage from before the catalogue grew was
+// still being served to returning visitors) — see the navigate handler below.
+const CACHE_NAME = "tabbench-pwa-v5";
 const STATIC_ASSETS = [
   "/",
   "/manifest.webmanifest",
@@ -85,10 +88,17 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Handle page navigations (Network first with cache fallback)
+  // Handle page navigations (Network first with cache fallback).
+  //
+  // `cache: "no-cache"` makes the browser revalidate with the server instead
+  // of trusting its HTTP cache. Firebase serves HTML with a default
+  // `max-age=3600`, so without this a returning visitor could be shown the
+  // previous deploy's page (and a catalogue that lacks the newest tools) for up
+  // to an hour even though the network was fine. Revalidation is a 304 when
+  // nothing changed, so it costs almost nothing.
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: "no-cache" })
         .then((networkResponse) => {
           if (networkResponse && networkResponse.status === 200) {
             const responseClone = networkResponse.clone();
@@ -116,7 +126,7 @@ self.addEventListener("fetch", (event) => {
           }
           return networkResponse;
         })
-        .catch(() => cachedResponse);
+        .catch(() => cachedResponse || Response.error());
 
       return cachedResponse || fetchPromise;
     })

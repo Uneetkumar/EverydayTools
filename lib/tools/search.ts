@@ -23,6 +23,8 @@ export interface SearchableTool {
   aliases?: string[];
   features?: string[];
   isPopular?: boolean;
+  /** Prominence, lower first. Only used to order equally good matches. */
+  searchRank?: number;
 }
 
 /** Symbols must be mapped before punctuation is stripped. */
@@ -42,6 +44,10 @@ const SYMBOL_WORDS: Record<string, string> = {
  * `aliases` in the registry instead.
  */
 const ALIASES: Record<string, string[]> = {
+  // random-choice verbs: "toss dice", "throw a coin", "flip a die"
+  toss: ["roll", "flip", "throw"],
+  throw: ["roll", "toss", "flip"],
+
   // sample, demo & testing shorthand
   demo: ["sample", "test", "dummy", "mock", "placeholder", "generator"],
   sample: ["demo", "test", "dummy", "mock", "placeholder", "generator"],
@@ -420,24 +426,167 @@ function withTypos(groups: string[][], tools: readonly SearchableTool[]): { grou
  */
 function nameBonus(tool: SearchableTool, phrase: string): number {
   if (!phrase) return 0;
-  const names = [normalize(tool.name), normalize(tool.shortName), normalize(tool.slug)];
+  // The URL slug only confirms a match. Counted at full weight it let "Merge PDF"
+  // claim to START with "pdf" because its slug is pdf-merge, and outrank tools
+  // that really are named "PDF to ...".
+  const names: Array<[string, number]> = [
+    [normalize(tool.name), 1],
+    [normalize(tool.shortName), 1],
+    [normalize(tool.slug), 0.5],
+  ];
   let best = 0;
-  for (const n of names) {
+  for (const [n, weight] of names) {
     let b = 0;
     if (n === phrase) b = 300;
     else if (n.startsWith(phrase + " ")) b = 140;
     else if (n.startsWith(phrase)) b = 120;
     else if (` ${n} `.includes(` ${phrase} `)) b = 60;
     else if (` ${n}`.includes(` ${phrase}`)) b = 40;
-    best = Math.max(best, b);
+    best = Math.max(best, b * weight);
+  }
+  return best;
+}
+
+/* ---------------------------------------------------------------------------
+   Conversions: "pdf to word", "png to", "json to c"
+
+   "X to Y" is not a bag of words. "to" says which side is the source, so
+   "pdf to" asks for tools that START from a PDF, and Merge PDF, which merely
+   mentions PDFs, is not one of them. The same holds while the target is half
+   typed: "pdf to i" is heading for "image", so PDF to JPG must beat every tool
+   that only contains the word "pdf". Treating "to" and "i" as filler words, as
+   the plain tokeniser does, collapsed "pdf to i" into "pdf" and lost all of it.
+
+   Each tool's conversions are read from its own name, aliases and keywords
+   ("PDF to Word Converter", "pdf to docx", "word to pdf"), so a tool that does
+   both directions is found from either end.
+--------------------------------------------------------------------------- */
+
+interface Conversion {
+  from: string[];
+  to: string[];
+}
+
+const SPLIT_WORDS = new Set(["to", "into", "2"]);
+/** Words that lead a request without naming the source: "how to convert pdf to ...". */
+const LEAD_FILLER = new Set(["convert", "free", "online", "how", "to", "turn", "change", "make", "save", "export", "can", "i", "you", "do", "a", "an", "the", "my", "quickly", "easily"]);
+/** Words that trail a target without naming it: "... word converter". */
+const TRAIL_FILLER = new Set(["converter", "conversion", "convert", "tool", "tools", "online", "free", "generator", "maker", "changer", "file", "files"]);
+/** Words typed after "to" that mean nothing yet: "pdf to the". */
+const TARGET_NOISE = new Set(["the", "a", "an", "my", "your", "this", "that", "it", "file", "files", "format", "formats", "online", "free"]);
+
+/**
+ * A listed phrase that opens with one of these does something TO a file rather
+ * than converting between formats: "add text to pdf", "insert page numbers into
+ * document". Reading those as "text → pdf" made PDF Editor look like a converter.
+ */
+const ACTION_VERBS = new Set([
+  "add", "insert", "stamp", "attach", "sign", "fill", "edit", "draw", "reduce", "compress", "resize",
+  "extract", "remove", "merge", "split", "combine", "join", "copy", "upload", "download", "send",
+  "move", "apply", "set", "go", "print", "share", "link", "number",
+]);
+
+/** A typed or listed word also matches these: "image" is what people say for jpg, png and webp. */
+const FORMAT_SYNONYMS: Record<string, string[]> = {
+  image: ["jpg", "jpeg", "png", "webp", "svg", "gif"],
+  images: ["jpg", "jpeg", "png", "webp", "svg", "gif"],
+  photo: ["image", "jpg", "jpeg", "png"],
+  photos: ["image", "jpg", "jpeg", "png"],
+  picture: ["image", "jpg", "jpeg", "png"],
+  pictures: ["image", "jpg", "jpeg", "png"],
+  jpeg: ["jpg"],
+  doc: ["word", "docx"],
+  docx: ["word", "doc"],
+  word: ["docx", "doc"],
+  document: ["word", "docx", "pdf"],
+  excel: ["csv", "xlsx"],
+  spreadsheet: ["csv", "xlsx"],
+};
+
+function splitConversion(words: string[]): Conversion | null {
+  // The last "to": "how to convert pdf to word" converts to "word", not to "convert".
+  let at = -1;
+  for (let i = words.length - 1; i >= 1; i--) {
+    if (SPLIT_WORDS.has(words[i])) {
+      at = i;
+      break;
+    }
+  }
+  if (at < 1) return null;
+  const from = words.slice(0, at);
+  const to = words.slice(at + 1);
+  while (from.length && LEAD_FILLER.has(from[0])) from.shift();
+  if (from.length === 0) return null;
+  while (to.length && TARGET_NOISE.has(to[0])) to.shift();
+  while (to.length && TRAIL_FILLER.has(to[to.length - 1])) to.pop();
+  return { from, to };
+}
+
+function parseTypedConversion(query: string): Conversion | null {
+  return splitConversion(normalize(query).split(" ").filter(Boolean));
+}
+
+const conversionCache = new WeakMap<SearchableTool, Conversion[]>();
+function toolConversions(tool: SearchableTool): Conversion[] {
+  let list = conversionCache.get(tool);
+  if (list) return list;
+  const seen = new Set<string>();
+  list = [];
+  for (const phrase of [tool.name, tool.shortName, ...(tool.aliases ?? []), ...tool.keywords]) {
+    const c = splitConversion(normalize(phrase).split(" ").filter(Boolean));
+    if (!c || c.to.length === 0 || ACTION_VERBS.has(c.from[0])) continue;
+    const key = `${c.from.join(" ")}>${c.to.join(" ")}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    list.push(c);
+  }
+  conversionCache.set(tool, list);
+  return list;
+}
+
+const wordHit = (listed: string, typed: string) => listed.startsWith(typed) || (FORMAT_SYNONYMS[typed] ?? []).some((s) => listed.startsWith(s));
+/** Typed words match the listed phrase from its first word on, each as a prefix. */
+const leads = (phrase: string[], typed: string[]) => typed.length > 0 && typed.every((t, i) => phrase[i] !== undefined && wordHit(phrase[i], t));
+/** Typed words each match some word of the phrase, in any order. */
+const mentions = (phrase: string[], typed: string[]) => typed.length > 0 && typed.every((t) => phrase.some((w) => wordHit(w, t)));
+
+/**
+ * How well a tool's conversions fit a typed "X to Y". A tool that starts from
+ * X and ends at Y scores highest; one that starts from X but ends elsewhere
+ * still beats every tool that does not start from X at all.
+ */
+function conversionBonus(tool: SearchableTool, conv: Conversion): number {
+  let best = 0;
+  for (const pair of toolConversions(tool)) {
+    const fromLeads = leads(pair.from, conv.from);
+    if (!fromLeads && !mentions(pair.from, conv.from)) {
+      // It does not start from X, but it may still end at Y: "word to pdf" also
+      // wants Image to PDF. Only once Y is specific: a lone "i" would match every
+      // target that starts with i, from "inr" to "image".
+      if (conv.to.join("").length >= 3 && leads(pair.to, conv.to)) best = Math.max(best, 200);
+      continue;
+    }
+    let bonus: number;
+    if (conv.to.length === 0) {
+      bonus = fromLeads ? 260 : 90;
+    } else {
+      const toLeads = leads(pair.to, conv.to);
+      const toMentions = !toLeads && mentions(pair.to, conv.to);
+      bonus = toLeads ? (fromLeads ? 420 : 170) : toMentions ? (fromLeads ? 340 : 140) : fromLeads ? 260 : 40;
+      if (toLeads && fromLeads && pair.to.join(" ") === conv.to.join(" ")) bonus += 25;
+    }
+    best = Math.max(best, bonus);
   }
   return best;
 }
 
 /** Returns -Infinity when any group is unmatched, so every typed word must land. */
-function scoreTool(tool: SearchableTool, groups: string[][], rawQuery: string, corrected: string): number {
+function scoreTool(tool: SearchableTool, groups: string[][], rawQuery: string, corrected: string, conv: Conversion | null): number {
   if (groups.length === 0) return -Infinity;
   const { blob, name, keywords, category } = getIndexed(tool);
+
+  // A tool that converts between the typed formats may match on its target alone.
+  const related = conv ? conversionBonus(tool, conv) : 0;
 
   let score = 0;
   for (const group of groups) {
@@ -464,7 +613,10 @@ function scoreTool(tool: SearchableTool, groups: string[][], rawQuery: string, c
       else if (hasToken(blob, token)) hit = weak(6);
       if (hit > 0) best = Math.max(best, hit - penalty);
     });
-    if (best === 0) return -Infinity;
+    if (best === 0) {
+      if (related > 0) continue;
+      return -Infinity;
+    }
     score += best;
   }
 
@@ -489,6 +641,10 @@ function scoreTool(tool: SearchableTool, groups: string[][], rawQuery: string, c
     if (` ${blob}`.includes(` ${phrase}`)) { score += 15; break; }
   }
 
+  // Someone who typed "X to Y" wants a conversion. Tools that merely mention X
+  // (Merge PDF, Word Counter) stay in the list, below the ones that convert.
+  if (conv) score += related > 0 ? related : -150;
+
   // Fewer words in the name breaks near-ties toward the general tool:
   // "Calculator" before "Scientific Calculator" for the same match.
   score -= normalize(tool.name).split(" ").length;
@@ -506,19 +662,31 @@ export function searchTools<T extends SearchableTool>(
   query: string,
   limit?: number
 ): T[] {
-  const base = tokenize(query);
+  // "pdf to i": the source ("pdf") and the target as typed so far ("i") are both
+  // required words, but the target keeps its short words (the plain tokeniser
+  // would drop "i" as filler). A tool that converts from the source is let
+  // through whatever the target says, so conversions stay listed while the
+  // target is still being typed or is spelled differently ("image" for jpg).
+  const conv = parseTypedConversion(query);
+  const targetGroups = conv ? conv.to.map((w) => [SPELLING[w] ?? w, ...(ALIASES[w] ?? [])]) : [];
+  const base = conv ? [...tokenize(conv.from.join(" ")), ...targetGroups] : tokenize(query);
   if (base.length === 0) return limit ? tools.slice(0, limit) : tools;
   const { groups, corrected } = withTypos(base, tools);
 
   const scored = tools
-    .map((tool) => ({ tool, score: scoreTool(tool, groups, query, corrected) }))
+    .map((tool) => ({ tool, score: scoreTool(tool, groups, query, corrected, conv) }))
     .filter((entry) => entry.score > -Infinity)
     .sort((a, b) => {
       if (b.score !== a.score) return b.score - a.score;
-      // Stable, predictable ordering for equal scores.
+      // Equal scores: popular first, then the curated prominence order, which puts
+      // the established tool ahead of a newer sibling ("Regex Tester" before
+      // "Regex Builder"), then the alphabet. The alphabet alone picked the newer one.
       if (!!b.tool.isPopular !== !!a.tool.isPopular) {
         return a.tool.isPopular ? -1 : 1;
       }
+      const ra = a.tool.searchRank ?? Infinity;
+      const rb = b.tool.searchRank ?? Infinity;
+      if (ra !== rb) return ra - rb;
       return a.tool.name.localeCompare(b.tool.name);
     })
     .map((entry) => entry.tool);

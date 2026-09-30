@@ -224,26 +224,25 @@ export function Segmented<T extends string>({
   fill?: boolean;
 }) {
   return (
-    <ToggleGroup
-      type="single"
-      variant="outline"
-      size={size}
-      spacing={0}
-      value={value}
-      onValueChange={(v) => v && onChange(v as T)}
-      aria-label={ariaLabel}
-      className={cn(fill && "w-full", className)}
-    >
-      {options.map((o) => (
-        <ToggleGroupItem
-          key={o.value}
-          value={o.value}
-          className={cn("px-3.5", size === "default" && "h-10", fill && "flex-1")}
-        >
-          {o.label}
-        </ToggleGroupItem>
-      ))}
-    </ToggleGroup>
+    // A row of long labels can be wider than a phone: let it scroll sideways instead of widening the page.
+    <div className={cn("max-w-full overflow-x-auto", fill ? "w-full" : "w-fit")}>
+      <ToggleGroup
+        type="single"
+        variant="outline"
+        size={size}
+        spacing={0}
+        value={value}
+        onValueChange={(v) => v && onChange(v as T)}
+        aria-label={ariaLabel}
+        className={cn(fill && "w-full", className)}
+      >
+        {options.map((o) => (
+          <ToggleGroupItem key={o.value} value={o.value} className={cn("px-3.5", size === "default" && "h-10", fill && "flex-1")}>
+            {o.label}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
+    </div>
   );
 }
 

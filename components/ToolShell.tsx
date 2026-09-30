@@ -70,6 +70,10 @@ const WIDE_LAYOUT_TOOLS = new Set([
   "calculator",
   "sample-file-generator",
   "online-camera",
+  "regex-builder",
+  "world-clock",
+  "api-request-builder",
+  "internet-speed-test",
 ]);
 
 /**

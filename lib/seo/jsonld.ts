@@ -101,6 +101,8 @@ const APP_CATEGORY: Record<ToolCategoryId, string> = {
   "pdf-docs": "UtilitiesApplication",
   security: "SecurityApplication",
   "ai-tools": "UtilitiesApplication",
+  "api-http": "DeveloperApplication",
+  "random-fun": "UtilitiesApplication",
 };
 
 export function generateToolJsonLd(tool: ToolDefinition, content?: ToolContent) {

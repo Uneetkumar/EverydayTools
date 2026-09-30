@@ -47,7 +47,7 @@ export default function EditorialPolicyPage() {
         <h2 id="limits">2. Limits are stated</h2>
         <p>
           When a tool can&apos;t do something well, its page says so plainly instead of implying otherwise. The{" "}
-          <Link href="/tools/pdf-compressor">PDF inspector</Link> explains that it does not re-compress images, the{" "}
+          <Link href="/tools/pdf-page-counter">PDF inspector</Link> explains that it does not re-compress images, the{" "}
           <Link href="/tools/video-cutter">video cutter</Link> explains why cuts land on keyframes, and tools that
           send anything over the network say what and to whom.
         </p>

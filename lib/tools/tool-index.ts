@@ -24,6 +24,8 @@ export interface ToolIndexEntry {
   features: string[];
   privacy: ToolPrivacy;
   isPopular?: boolean;
+  /** Prominence, lower first: breaks ties between equally good search matches. */
+  searchRank: number;
 }
 
 export interface ToolIndex {
@@ -46,6 +48,7 @@ export function toIndexEntry(t: ToolDefinition): ToolIndexEntry {
     aliases: t.aliases,
     features: t.features,
     privacy: t.privacy,
+    searchRank: t.searchRank,
     ...(t.isPopular ? { isPopular: true } : {}),
   };
 }

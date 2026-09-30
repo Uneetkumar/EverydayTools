@@ -15,10 +15,12 @@ import { useFavorites } from "@/lib/history/favorites";
 import { track } from "@/lib/analytics";
 import { ToolCard } from "./tool-card";
 import { ToolEmptyState } from "./tool-states";
+import type { ToolPrivacy } from "@/lib/tools/registry";
 
 export interface ExplorerTool extends SearchableTool {
   tagline: string;
   iconName: string;
+  privacy?: ToolPrivacy;
 }
 
 interface ToolExplorerProps {
