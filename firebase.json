@@ -119,7 +119,7 @@
         ]
       },
       {
-        "source": "**/*.txt",
+        "source": "**/!(robots|ads).txt",
         "headers": [
           { "key": "X-Robots-Tag", "value": "noindex" }
         ]

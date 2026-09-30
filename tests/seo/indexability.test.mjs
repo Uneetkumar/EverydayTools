@@ -16,5 +16,6 @@ describe("Indexability", { skip }, () => {
   });
   it("Firebase duplicate hosts are noindexed and redirected; production is untouched", () =>
     expectNone(["host-guard", "host-guard-missing"]));
-  it("RSC payloads are X-Robots-Tag: noindex; URLs are normalised", () => expectNone(["rsc-indexable", "url-normalisation"]));
+  it("RSC payloads are X-Robots-Tag: noindex (robots.txt and ads.txt are not); URLs are normalised", () =>
+    expectNone(["rsc-indexable", "txt-noindex-broad", "url-normalisation"]));
 });

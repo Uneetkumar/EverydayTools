@@ -59,7 +59,7 @@ Problems are ordered by the spec's priority levels. "Before" counts come from ru
 | Problem | Evidence | Fix |
 |---|---|---|
 | `https://www.tabbench.com` fails with a certificate name mismatch. DNS points at Firebase, but no certificate was issued for `www`. | Live check, 29 Sep 2026 | **Manual.** Needs Firebase console access (§12). |
-| RSC payloads (`/about.txt`, `/tools/x.txt` and others) were served with a 200 status and no `noindex`. They duplicate every page's text. | Live `about.txt`: no `X-Robots-Tag` | `firebase.json` now sends `X-Robots-Tag: noindex` for `**/*.txt`. `tool-index.json` and `tools.csv` are noindexed too. |
+| RSC payloads (`/about.txt`, `/tools/x.txt` and others) were served with a 200 status and no `noindex`. They duplicate every page's text. | Live `about.txt`: no `X-Robots-Tag` | `firebase.json` now sends `X-Robots-Tag: noindex` for `**/!(robots\|ads).txt`, which covers every payload but not `robots.txt` or `ads.txt`. `tool-index.json` and `tools.csv` are noindexed too. |
 | The root layout set `alternates.canonical: "/"`. Any page that forgot its own canonical would silently canonicalise to the homepage. This was latent; no current page was affected. | `app/layout.tsx` | Removed. Every page now gets a self-canonical from `buildMetadata()`, and the audit fails the build on `canonical-not-self`. |
 | The sitemap's `lastmod` was one constant (`CONTENT_LAST_UPDATED` = 2026-09-13) for every non-guide URL, and had to be bumped by hand. | Old `app/sitemap.ts` | Each URL's `lastmod` now comes from a fingerprint of its content (§3). |
 
@@ -303,7 +303,7 @@ Every one of the 132 routes was loaded in iframes at seven widths:
 |---|---:|---:|
 | Phones: 320, 375, 390, 414 px | 528 | 0 (3 before the fixes) |
 | Tablet and desktop: 768, 1024 px | 264 | 0 |
-| Desktop: 1440 px | — | Checked in the browser pane |
+| Desktop: 1440 px | 132 | 0 |
 
 The three overflowing pages were fixed:
 
@@ -323,7 +323,7 @@ The three overflowing pages were fixed:
 | Indexed: guides | 20 | same |
 | Indexed: currency pairs | 12 | same |
 | Excluded: `/404`, `/_not-found` | 2 | `noindex` meta |
-| Excluded: RSC `.txt`, `tool-index.json`, `tools.csv` | — | `X-Robots-Tag: noindex` header |
+| Excluded: RSC `.txt`, `tool-index.json`, `tools.csv` | — | `X-Robots-Tag: noindex` header (`robots.txt` and `ads.txt` are left without it) |
 | Excluded: legacy tool slugs | 12 | 301 redirects in `firebase.json` |
 
 The audit compares what the build actually serves with the route registry. It fails on:
@@ -376,12 +376,25 @@ firebase deploy --only hosting
 After deploying, check each of these:
 
 - `https://tabbench.com/robots.txt`, `/sitemap.xml` and `/sitemap-tools.xml` return 200 with XML.
-- `https://tabbench.com/about.txt` returns `X-Robots-Tag: noindex`.
+- `https://tabbench.com/about.txt` returns `X-Robots-Tag: noindex`, and `/robots.txt` and `/ads.txt` do **not**.
 - `https://tabbench.com/apple-icon` and `/icons/icon-512.png` return PNGs.
 
 Commit `lib/seo/lastmod.json` along with the change that caused it; it is the record of when each page last changed.
 
 ---
+
+### Live check after your first deploy (30 September 2026)
+
+| Check | Result |
+|---|---|
+| `/robots.txt`, `/sitemap.xml` (5 child sitemaps), `/sitemap-tools.xml` (82 URLs), `/sitemap.xsl` | 200, correct content types |
+| `/tools/json-formatter` | Self-canonical, `DeveloperApplication` schema |
+| `/about.txt` | `X-Robots-Tag: noindex` |
+| `/apple-icon`, `/icons/icon-512.png` | 200 `image/png` |
+| `/tools/basic-calculator`, `/tools/` | 301 → `/tools/calculator`, `/tools` |
+| Unknown URL | 404 |
+| `https://www.tabbench.com` | **Still fails**: certificate name mismatch (§12, item 1) |
+| `/robots.txt`, `/ads.txt` | Carried `X-Robots-Tag: noindex` from the first `**/*.txt` rule. This is harmless for crawling, but it was imprecise. Fixed in `firebase.json` and tested on Firebase's local hosting server; it goes live on your next deploy. |
 
 ## 14. Google Search Console
 

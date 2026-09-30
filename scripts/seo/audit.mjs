@@ -388,9 +388,13 @@ export async function runAudit({ dir = path.join(ROOT, "out"), firebaseFile = pa
     if (redirects.has(dest)) err("redirect-chain", source, `redirects to ${dest}, which redirects again`);
     if (!builtRoutes.has(dest)) err("redirect-dead-end", source, `redirects to ${dest}, which is not built`);
   }
-  const headerFor = (src) => (firebase.headers ?? []).find((h) => h.source === src)?.headers ?? [];
-  if (!headerFor("**/*.txt").some((h) => h.key === "X-Robots-Tag" && /noindex/.test(h.value)))
+  // RSC payloads (about.txt, tools/x.txt, __next.*.txt) repeat every page's text and must be
+  // noindex — but robots.txt and ads.txt must not be, so the rule excludes them by name.
+  const txtRule = (firebase.headers ?? []).find((h) => /^\*\*\/.*\.txt$/.test(h.source ?? ""));
+  if (!txtRule?.headers?.some((h) => h.key === "X-Robots-Tag" && /noindex/.test(h.value)))
     err("rsc-indexable", "firebase.json", "RSC .txt payloads are served without X-Robots-Tag: noindex");
+  else if (txtRule.source === "**/*.txt")
+    warn("txt-noindex-broad", "firebase.json", "**/*.txt also sends noindex on robots.txt and ads.txt — use **/!(robots|ads).txt");
   if (firebase.trailingSlash !== false || firebase.cleanUrls !== true)
     err("url-normalisation", "firebase.json", "expected cleanUrls: true and trailingSlash: false");
 
