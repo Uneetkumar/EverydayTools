@@ -1,14 +1,15 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, Copy, Download, Eye, EyeOff, Info, Share2, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Clapperboard, Cloud, CloudUpload, Copy, Download, Eye, EyeOff, Gamepad2, Globe, Info, Share2, Tv, Video, XCircle, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
-import { Stat, StatGrid, ToolSection } from "@/components/tool/kit";
+import { ToolSection } from "@/components/tool/kit";
 import { Button } from "@/components/ui/button";
 import {
   activities,
   bufferbloat,
   capacity,
+  experiences,
   headline,
   insights,
   meetsFccBenchmark,
@@ -19,7 +20,7 @@ import {
   type Verdict,
 } from "@/lib/speedtest/aim";
 import type { SpeedResult } from "@/lib/speedtest/engine";
-import { formatDuration, formatMs, formatPercent, speedText, type SpeedUnit } from "@/lib/speedtest/format";
+import { formatDuration, formatMs, formatPercent, providerName, type SpeedUnit } from "@/lib/speedtest/format";
 import { reportJson, summaryText, toMeasurements } from "@/lib/speedtest/result";
 import { formatBytes } from "@/lib/http/mime";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,25 @@ export interface NetInfo {
   saveData?: boolean;
   type?: string;
 }
+
+const ACTIVITY_ICON: Record<string, LucideIcon> = {
+  browsing: Globe,
+  hd: Tv,
+  "4k": Clapperboard,
+  calls: Video,
+  gaming: Gamepad2,
+  "cloud-gaming": Cloud,
+  uploads: CloudUpload,
+};
+
+/** The whole result in one colour: set by the weakest of streaming, gaming and calls, as the headline is. */
+const OVERALL = {
+  good: { icon: CheckCircle2, card: "border-success/30 bg-success/5", badge: "bg-success/15 text-success" },
+  warn: { icon: AlertTriangle, card: "border-warning/30 bg-warning/5", badge: "bg-warning/15 text-warning" },
+  bad: { icon: XCircle, card: "border-destructive/30 bg-destructive/5", badge: "bg-destructive/15 text-destructive" },
+} as const;
+
+const MODE_NAME = { quick: "Quick", full: "Full", extended: "Extended" } as const;
 
 const VERDICT: Record<Verdict, { label: string; cls: string }> = {
   great: { label: "Great", cls: "bg-success/10 text-success" },
@@ -80,6 +100,9 @@ export function Report({ result, unit, plan, net }: { result: SpeedResult; unit:
   const fcc = meetsFccBenchmark(m);
   const { download: dl, upload: ul, latency: lat, tcp, meta } = result;
   const idle = lat?.median ?? null;
+  const weakest = experiences(m).reduce((lowest, e) => Math.min(lowest, e.level), 4);
+  const overall = OVERALL[weakest >= 3 ? "good" : weakest === 2 ? "warn" : "bad"];
+  const isp = providerName(meta.isp);
   const ip = meta.ip;
   const canShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
 
@@ -96,7 +119,17 @@ export function Report({ result, unit, plan, net }: { result: SpeedResult; unit:
   };
 
   const details: Array<[string, React.ReactNode]> = [
-    ["Provider", meta.isp ? `${meta.isp}${meta.asn ? ` (AS${meta.asn})` : ""}` : "Not reported"],
+    [
+      "Provider",
+      isp ? (
+        <span title={meta.isp}>
+          {isp}
+          {meta.asn ? <span className="text-muted-foreground"> · AS{meta.asn}</span> : null}
+        </span>
+      ) : (
+        "Not reported"
+      ),
+    ],
     ["Test server", meta.colo ? `Cloudflare ${meta.coloCity ?? meta.colo}${meta.colo && meta.coloCity ? ` (${meta.colo})` : ""}` : "Nearest Cloudflare data centre"],
     ["Your location, from your IP", [meta.city, meta.region, meta.country].filter(Boolean).join(", ") || "Not reported"],
     [
@@ -118,20 +151,27 @@ export function Report({ result, unit, plan, net }: { result: SpeedResult; unit:
       "Packets resent (TCP)",
       tcp && tcp.sent >= 200 ? `${tcp.retrans.toLocaleString()} of ${tcp.sent.toLocaleString()} (${formatPercent(tcp.ratio, tcp.ratio < 0.001 ? 2 : 1)})` : "Not enough data to tell",
     ],
+    ["Ping range", lat ? `${formatMs(lat.min)} to ${formatMs(lat.max)} · slowest 5% ${formatMs(lat.p95)}` : "Not measured"],
     ["Server-side round trip", tcp?.minRttMs !== undefined ? formatMs(tcp.minRttMs) : "Not reported"],
     ["Ping method", result.serverTimeRemoved ? "First byte, less server processing time" : "Full request time"],
     ["Data used", `${formatBytes(result.bytesDownloaded + result.bytesUploaded)} in ${formatDuration(result.durationMs / 1000)}`],
   ];
-  if (net?.effectiveType || net?.downlink) {
-    details.push(["Browser's own estimate", [net.effectiveType, net.downlink !== undefined ? `${net.downlink} Mbps` : null, net.rtt !== undefined ? `${net.rtt} ms` : null].filter(Boolean).join(" · ")]);
-  }
 
   return (
     <div className="space-y-8">
       {/* Verdict ------------------------------------------------------------- */}
-      <div className="rounded-xl border bg-background p-4 sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <p className="max-w-2xl text-base font-medium text-foreground">{headline(m)}</p>
+      <div className={cn("rounded-xl border p-4 sm:p-5", overall.card)}>
+        <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
+          <span className={cn("grid size-10 shrink-0 place-items-center rounded-full", overall.badge)}>
+            <overall.icon className="size-5" aria-hidden="true" />
+          </span>
+          <div className="min-w-0 flex-1 basis-64">
+            <p className="text-xs text-muted-foreground">
+              {MODE_NAME[result.mode]} test · {new Date(result.finishedAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+              {isp ? ` · ${isp}` : ""}
+            </p>
+            <h3 className="mt-1 text-base font-semibold text-pretty text-foreground sm:text-lg">{headline(m)}</h3>
+          </div>
           <div className="flex shrink-0 flex-wrap gap-2">
             <Button type="button" variant="outline" size="sm" onClick={copy}>
               <Copy aria-hidden="true" /> Copy result
@@ -146,7 +186,7 @@ export function Report({ result, unit, plan, net }: { result: SpeedResult; unit:
             </Button>
           </div>
         </div>
-        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+        <div className="mt-3 flex flex-wrap gap-2 text-xs sm:pl-14">
           {bloat && <span className={cn("rounded-full px-2.5 py-1 font-medium ring-1 ring-inset", GRADE_TONE[bloat.grade])}>Responsiveness {bloat.grade}</span>}
           {fcc !== null && (
             <span className={cn("rounded-full px-2.5 py-1 ring-1 ring-inset", fcc ? "bg-success/10 text-success ring-success/25" : "bg-muted text-muted-foreground ring-border")}>
@@ -156,22 +196,6 @@ export function Report({ result, unit, plan, net }: { result: SpeedResult; unit:
           {steadiness(dl?.consistency) && <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground ring-1 ring-border ring-inset">Download speed {steadiness(dl?.consistency)}</span>}
         </div>
       </div>
-
-      {/* Primary numbers ----------------------------------------------------- */}
-      <StatGrid>
-        <Stat
-          label="Download"
-          value={speedText(m.download, unit)}
-          hint={dl ? `Peak ${speedText(dl.peak, unit)}${dl.consistency !== null ? ` · ${formatPercent(dl.consistency)} steady` : ""}` : undefined}
-        />
-        <Stat
-          label="Upload"
-          value={speedText(m.upload, unit)}
-          hint={ul ? `Peak ${speedText(ul.peak, unit)}${ul.consistency !== null ? ` · ${formatPercent(ul.consistency)} steady` : ""}` : undefined}
-        />
-        <Stat label="Latency (ping)" value={formatMs(idle)} hint={lat ? `Slowest 5%: ${formatMs(lat.p95)}` : undefined} />
-        <Stat label="Jitter" value={formatMs(m.jitter)} hint="Variation between pings" />
-      </StatGrid>
 
       <div className="grid gap-8 @3xl:grid-cols-2">
         {/* Responsiveness ---------------------------------------------------- */}
@@ -207,18 +231,27 @@ export function Report({ result, unit, plan, net }: { result: SpeedResult; unit:
         {/* Activities -------------------------------------------------------- */}
         <ToolSection title="What you can do" description="Checked against what each activity needs, and against latency, jitter and packet loss where they matter.">
           <ul className="divide-y rounded-lg border bg-background">
-            {rows.map((c) => (
-              <li key={c.id} className="flex items-center justify-between gap-3 px-3.5 py-2.5">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground">{c.label}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Needs {c.need}
-                    {c.note && c.verdict !== "great" ? ` · held back because ${c.note}` : ""}
-                  </p>
-                </div>
-                <span className={cn("shrink-0 rounded-full px-2.5 py-0.5 text-xs font-medium", VERDICT[c.verdict].cls)}>{VERDICT[c.verdict].label}</span>
-              </li>
-            ))}
+            {rows.map((c) => {
+              const Icon = ACTIVITY_ICON[c.id] ?? Globe;
+              return (
+                <li key={c.id} className="flex items-center gap-3 px-3.5 py-2.5">
+                  <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-muted text-muted-foreground">
+                    <Icon className="size-4" aria-hidden="true" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-foreground">{c.label}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Needs {c.need}
+                      {c.note && c.verdict !== "great" ? ` · held back because ${c.note}` : ""}
+                    </p>
+                  </div>
+                  <span className={cn("inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium", VERDICT[c.verdict].cls)}>
+                    <span className="size-1.5 rounded-full bg-current" aria-hidden="true" />
+                    {VERDICT[c.verdict].label}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
           {(room.streams4k > 0 || room.streamsHd > 0) && (
             <p className="text-sm text-muted-foreground">

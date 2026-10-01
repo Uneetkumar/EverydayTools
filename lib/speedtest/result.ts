@@ -1,6 +1,6 @@
 import { bufferbloat, type Grade, type Measurements } from "./aim";
 import type { Mode, SpeedResult } from "./engine";
-import { speedText, type SpeedUnit } from "./format";
+import { providerName, speedText, type SpeedUnit } from "./format";
 import { median } from "./stats";
 
 /** Fewer packets than this say nothing reliable about loss. */
@@ -96,7 +96,7 @@ export function summaryText(r: SpeedResult, unit: SpeedUnit, url = "https://tabb
     `Internet speed test: ${speedText(m.download, unit)} down, ${speedText(m.upload, unit)} up`,
     `Ping ${m.latency !== null ? Math.round(m.latency) : "—"} ms · jitter ${m.jitter !== null ? Math.round(m.jitter) : "—"} ms${bloat ? ` · responsiveness under load ${bloat.grade}` : ""}`,
   ];
-  if (r.meta.isp) lines.push(`Provider: ${r.meta.isp}`);
+  if (r.meta.isp) lines.push(`Provider: ${providerName(r.meta.isp)}`);
   lines.push(`Tested ${new Date(r.finishedAt).toLocaleString()} with TabBench · ${url}`);
   return lines.join("\n");
 }

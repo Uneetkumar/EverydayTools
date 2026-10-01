@@ -400,7 +400,7 @@ export async function runSpeedTest({ mode, signal, onProgress }: RunOptions): Pr
   const tcp: TcpSnapshot[] = [];
   const noteTcp = (h: Headers) => {
     const s = parseTcpSnapshot(h.get("server-timing"));
-    if (s) tcp.push(s);
+    if (s) tcp.push({ ...s, at: performance.now() });
   };
 
   const wrap = (e: unknown): never => {
@@ -438,6 +438,8 @@ export async function runSpeedTest({ mode, signal, onProgress }: RunOptions): Pr
     const latency: LatencyResult = { ...summarizeLatency(pings)!, values: pings.map((x) => Math.round(x * 10) / 10) };
 
     // ---- download
+    // Packet counters are compared from the end of the ramp-up, when slow start is over.
+    const lossFrom = performance.now() + Math.min(plan.warmupMs, plan.downloadMs * 0.3);
     const download = await transfer({ phase: "download", plan, signal, onProgress, timings, worker: downloadStream, onTcp: noteTcp, noteProbe });
     // One more ping on the same connection reads the server's final packet counters for the window.
     try {
@@ -462,7 +464,7 @@ export async function runSpeedTest({ mode, signal, onProgress }: RunOptions): Pr
       latency,
       download,
       upload,
-      tcp: summarizeTcp(tcp),
+      tcp: summarizeTcp(tcp, lossFrom),
       protocol,
       meta,
       bytesDownloaded: download.bytes,

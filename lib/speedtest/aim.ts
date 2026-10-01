@@ -201,8 +201,16 @@ const RANK: Record<Verdict, number> = { poor: 0, ok: 1, good: 2, great: 3 };
 const worst = (...vs: Array<Verdict | null>): Verdict =>
   vs.filter((v): v is Verdict => v !== null).reduce((a, b) => (RANK[b] < RANK[a] ? b : a), "great" as Verdict);
 
+/** Where AIM's download points top out, in Mbps. */
+const AIM_TOP_DOWNLOAD = 100;
+
 export function activities(m: Measurements): Activity[] {
-  const ex = Object.fromEntries(experiences(m).map((e) => [e.id, e])) as Partial<Record<ExperienceId, Experience>>;
+  // Each row checks bandwidth against its own need, so the AIM scores here set
+  // bandwidth aside. Otherwise AIM's download bands, which give full marks only
+  // from 100 Mbps, mark a 30 Mbps line down for a 5 Mbps HD stream and name
+  // download speed as the reason.
+  const network = { ...m, download: m.download === null ? null : Math.max(m.download, AIM_TOP_DOWNLOAD) };
+  const ex = Object.fromEntries(experiences(network).map((e) => [e.id, e])) as Partial<Record<ExperienceId, Experience>>;
   const d = m.download;
   const u = m.upload;
   const both = d !== null && u !== null ? Math.min(d, u) : null;

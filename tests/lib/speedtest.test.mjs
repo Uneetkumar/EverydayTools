@@ -48,6 +48,20 @@ describe("server timing", () => {
     assert.equal(b.connections, 2);
     assert.equal(timing.summarizeTcp([]), null);
   });
+  it("leaves TCP slow start out of the loss window", () => {
+    const snap = (cid, at, sent, retrans) => ({ cid, at, sent, recv: 0, lost: 0, retrans, proto: "TCP" });
+    // Slow start: 3000 packets with 600 resent. Steady state after 1200 ms: 10000 packets, 10 resent.
+    const snaps = [snap("a", 100, 5, 0), snap("a", 1300, 3005, 600), snap("a", 4000, 8005, 605), snap("a", 6000, 13005, 610)];
+    const all = timing.summarizeTcp(snaps);
+    assert.ok(all.ratio > 0.04, `${all.ratio}`);
+    const steady = timing.summarizeTcp(snaps, 1200);
+    assert.equal(steady.sent, 10000);
+    assert.equal(steady.retrans, 10);
+    // A connection read only once after the ramp-up gives no window, but still counts as a connection.
+    const once = timing.summarizeTcp([snap("b", 100, 5, 0), snap("b", 5000, 3600, 700)], 1200);
+    assert.equal(once.sent, 0);
+    assert.equal(once.connections, 1);
+  });
 });
 
 describe("statistics", () => {
@@ -179,6 +193,19 @@ describe("what a speed is good for", () => {
     assert.equal(b.calls, "poor");
     assert.equal(b.gaming, "poor");
   });
+  it("does not blame download speed for a stream it comfortably carries", () => {
+    // 30 Mbps is six HD streams; AIM's own download bands would still mark it down.
+    const hd = aim.activities({ ...GOOD, download: 30 }).find((x) => x.id === "hd");
+    assert.equal(hd.verdict, "great");
+    assert.doesNotMatch(hd.note ?? "", /download/);
+    const fourK = aim.activities({ ...GOOD, download: 20 }).find((x) => x.id === "4k");
+    assert.equal(fourK.verdict, "ok");
+  });
+  it("still marks streaming down for a laggy line", () => {
+    const hd = aim.activities({ ...GOOD, download: 30, latency: 140, loadedIncrease: 450 }).find((x) => x.id === "hd");
+    assert.equal(hd.verdict, "ok");
+    assert.match(hd.note ?? "", /ms/);
+  });
   it("blames upload when upload is what limits video calls", () => {
     const row = aim.activities({ ...GOOD, download: 200, upload: 2 }).find((x) => x.id === "calls");
     assert.notEqual(row.verdict, "great");
@@ -246,6 +273,21 @@ describe("formatting", () => {
     assert.equal(fmt.formatDuration(259200), "about 3 days");
     assert.equal(fmt.formatDuration(null), "—");
   });
+  it("drops the street address from a provider's registered name", () => {
+    assert.equal(fmt.providerName("Airtel UNOC, CP-05, Sector 8, IMT Manesar, Gurugram, Haryana 122051"), "Airtel UNOC");
+    assert.equal(fmt.providerName("Comcast Cable Communications, LLC"), "Comcast Cable Communications");
+    assert.equal(fmt.providerName("Excitel"), "Excitel");
+    assert.equal(fmt.providerName(undefined), undefined);
+  });
+  it("places speeds on the dial with equal space per step", () => {
+    const stops = fmt.GAUGE_STOPS.Mbps;
+    assert.equal(fmt.gaugePosition(0, stops), 0);
+    assert.equal(fmt.gaugePosition(null, stops), 0);
+    assert.equal(fmt.gaugePosition(5, stops), 1 / 8);
+    assert.equal(fmt.gaugePosition(75, stops), 4.5 / 8);
+    assert.equal(fmt.gaugePosition(1000, stops), 1);
+    assert.equal(fmt.gaugePosition(5000, stops), 1);
+  });
 });
 
 const RUN = {
@@ -286,6 +328,10 @@ describe("result helpers", () => {
     assert.ok(!result.summaryText(RUN, "Mbps").includes("203.0.113.9"));
     assert.ok(!result.reportJson(RUN).includes("203.0.113.9"));
     assert.match(result.summaryText(RUN, "Mbps"), /200 Mbps down, 40\.0 Mbps up/);
+  });
+  it("shares the provider's name without its registered address", () => {
+    const text = result.summaryText({ ...RUN, meta: { ...RUN.meta, isp: "Airtel UNOC, CP-05, Sector 8, Gurugram" } }, "Mbps");
+    assert.match(text, /Provider: Airtel UNOC\n/);
   });
   it("quotes CSV cells safely", () => {
     const csv = result.historyCsv([{ at: 0, mode: "quick", down: 1, up: 2, ping: 3, jitter: 4, bloat: 5, grade: "A", isp: 'Acme, "Fast" Net', city: "X" }]);

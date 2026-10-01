@@ -44,6 +44,8 @@ export interface TcpSnapshot {
   recv: number;
   lost: number;
   retrans: number;
+  /** When the page read it (performance.now()), so a window can start after the ramp-up. */
+  at?: number;
 }
 
 /** The server's TCP statistics from a `cfL4` entry, or null when absent or malformed. */
@@ -91,9 +93,15 @@ export interface RetransmissionSummary {
 /**
  * Retransmissions over a window. Counters are cumulative per connection, so a
  * window's figures are the last snapshot minus the first, taken per connection.
- * Returns null when no connection has two snapshots to compare.
+ *
+ * `fromMs` starts the window after the ramp-up. A new connection overshoots
+ * and loses packets while TCP's slow start finds the line's speed; that is how
+ * TCP works, not a fault, and counting it made healthy lines read several
+ * percent (on HTTP/1.1, where counters arrive only at the start of each
+ * chunk, the window was almost all slow start). Snapshots without a time are
+ * always counted. Returns null when no connection has two snapshots to compare.
  */
-export function summarizeTcp(snapshots: TcpSnapshot[]): RetransmissionSummary | null {
+export function summarizeTcp(snapshots: TcpSnapshot[], fromMs?: number): RetransmissionSummary | null {
   if (snapshots.length === 0) return null;
   const byCid = new Map<string, TcpSnapshot[]>();
   for (const s of snapshots) byCid.set(s.cid, [...(byCid.get(s.cid) ?? []), s]);
@@ -105,14 +113,16 @@ export function summarizeTcp(snapshots: TcpSnapshot[]): RetransmissionSummary | 
   for (const list of byCid.values()) {
     // Counters only grow, so order by them: responses can arrive out of order.
     list.sort((a, b) => a.sent - b.sent);
-    const first = list[0];
     const last = list[list.length - 1];
     protocol ??= last.proto;
     if (last.minRttMs !== undefined) minRtt = minRtt === undefined ? last.minRttMs : Math.min(minRtt, last.minRttMs);
     if (last.rttMs !== undefined) rtt = rtt === undefined ? last.rttMs : Math.min(rtt, last.rttMs);
-    if (list.length < 2) continue;
-    sent += Math.max(0, last.sent - first.sent);
-    retrans += Math.max(0, Math.max(last.retrans - first.retrans, last.lost - first.lost));
+    const window = fromMs === undefined ? list : list.filter((s) => s.at === undefined || s.at >= fromMs);
+    if (window.length < 2) continue;
+    const first = window[0];
+    const end = window[window.length - 1];
+    sent += Math.max(0, end.sent - first.sent);
+    retrans += Math.max(0, Math.max(end.retrans - first.retrans, end.lost - first.lost));
   }
   return {
     connections: byCid.size,

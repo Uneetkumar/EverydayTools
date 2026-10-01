@@ -49,3 +49,31 @@ export function formatDuration(seconds: number | null): string {
 }
 
 export const formatPercent = (ratio: number | null, d = 0) => (ratio === null ? "—" : `${(ratio * 100).toFixed(d)}%`);
+
+/**
+ * A provider's name without the street address some registries append:
+ * "Airtel UNOC, CP-05, Sector 8, IMT Manesar, …" reads "Airtel UNOC".
+ */
+export function providerName(isp: string | null | undefined): string | undefined {
+  if (!isp) return undefined;
+  return isp.split(",")[0].trim() || isp.trim();
+}
+
+/**
+ * The dial's scale. Each step takes the same share of the arc, like a car's
+ * speedometer, so 5 Mbps and 500 Mbps both move it visibly.
+ */
+export const GAUGE_STOPS: Record<SpeedUnit, number[]> = {
+  Mbps: [0, 5, 10, 25, 50, 100, 250, 500, 1000],
+  "MB/s": [0, 1, 2, 5, 10, 25, 50, 100, 200],
+};
+
+/** Where `value` (in the stops' unit) sits on the dial, 0–1. Past the last stop it stays at the end. */
+export function gaugePosition(value: number | null, stops: number[]): number {
+  if (value === null || !(value > 0)) return 0;
+  const n = stops.length - 1;
+  for (let i = 0; i < n; i++) {
+    if (value <= stops[i + 1]) return (i + (value - stops[i]) / (stops[i + 1] - stops[i])) / n;
+  }
+  return 1;
+}

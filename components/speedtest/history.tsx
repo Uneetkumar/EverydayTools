@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Download } from "lucide-react";
 import { Stat, StatGrid, ToolSection } from "@/components/tool/kit";
 import { Button } from "@/components/ui/button";
-import { formatMs, speedText, type SpeedUnit } from "@/lib/speedtest/format";
+import { formatMs, providerName, speedText, type SpeedUnit } from "@/lib/speedtest/format";
 import { historyCsv, historyStats, type HistoryRecord } from "@/lib/speedtest/result";
 import { cn } from "@/lib/utils";
 import { TrendChart } from "./charts";
@@ -92,7 +92,9 @@ export function HistorySection({ records, unit, onClear }: { records: HistoryRec
                 <td className="px-3 py-2 text-foreground">{speedText(h.up, unit)}</td>
                 <td className="px-3 py-2 text-foreground">{formatMs(h.ping)}</td>
                 <td className={cn("px-3 py-2 font-medium", h.grade ? GRADE_CLS[h.grade] : "text-muted-foreground")}>{h.grade ?? "—"}</td>
-                <td className="hidden max-w-[12rem] truncate px-3 py-2 text-muted-foreground @md:table-cell">{h.isp ?? "—"}</td>
+                <td className="hidden max-w-[12rem] truncate px-3 py-2 text-muted-foreground @md:table-cell" title={h.isp}>
+                  {providerName(h.isp) ?? "—"}
+                </td>
               </tr>
             ))}
           </tbody>
