@@ -75,6 +75,7 @@ const WIDE_LAYOUT_TOOLS = new Set([
   "world-clock",
   "api-request-builder",
   "internet-speed-test",
+  "time-converter",
 ]);
 
 /**

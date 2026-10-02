@@ -116,6 +116,7 @@ const PomodoroTimer = dynamic(() => import("@/components/tools/PomodoroTimer"), 
 const IntervalTimer = dynamic(() => import("@/components/tools/IntervalTimer"), { loading });
 const WorldClock = dynamic(() => import("@/components/tools/WorldClock"), { loading });
 const RegexBuilder = dynamic(() => import("@/components/tools/RegexBuilder"), { loading });
+const TimeConverter = dynamic(() => import("@/components/tools/TimeConverter"), { loading });
 
 export function ToolRenderer({ slug }: { slug: string }) {
   switch (slug) {
@@ -335,6 +336,8 @@ export function ToolRenderer({ slug }: { slug: string }) {
       return <WorldClock />;
     case "regex-builder":
       return <RegexBuilder />;
+    case "time-converter":
+      return <TimeConverter />;
     default:
       // A registry entry with no loader. Previously this fell through to the
       // Percentage Calculator, silently rendering the wrong tool.

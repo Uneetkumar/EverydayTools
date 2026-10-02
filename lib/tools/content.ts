@@ -4837,7 +4837,65 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
       },
     ],
   },
-
+  "time-converter": {
+    intro:
+      "Converting between the 24-hour clock and 12-hour AM/PM time is a daily necessity for travellers, shift workers, logistics teams, and developers working with timestamps. The 24-hour format eliminates the ambiguity between day and night, but everyday speech and consumer devices still rely on the 12-hour AM/PM clock. This converter switches between both systems instantly in your browser, translates time into military notation, and provides an interactive 24-hour reference chart to eliminate confusion around midnight and noon.",
+    howTo: {
+      title: "How to convert 24-hour time to 12-hour AM/PM",
+      steps: [
+        "Select your conversion direction: 24-Hour to 12-Hour, or 12-Hour to 24-Hour.",
+        "Enter the hour and minutes into the input fields, or click Current Time to load your local clock.",
+        "For 24-hour to 12-hour: any hour above 12 subtracts 12 and becomes PM; hours 01 to 11 remain the same and become AM; hour 00 becomes 12:00 AM (midnight).",
+        "For 12-hour to 24-hour: select AM or PM. For PM hours (except 12 PM), add 12 to the hour. For 12 AM, set the hour to 00.",
+        "Copy your preferred output format: 12-hour standard, 24-hour digital, military time, or natural spoken time.",
+      ],
+    },
+    useCases: [
+      {
+        title: "Flight bookings and travel itineraries",
+        body:
+          "Airlines, train services, and international hotels almost exclusively use 24-hour time to avoid missed connections. Converting 19:40 to 7:40 PM or 06:15 to 6:15 AM ensures you never confuse morning departures with evening arrivals.",
+      },
+      {
+        title: "Medical, emergency, and military logs",
+        body:
+          "Healthcare facilities and armed forces use military and 24-hour time so critical records are never misinterpreted. A patient receiving medication at 2100 hours or a shift report filed at 0330 hours leaves no doubt about the exact timing.",
+      },
+      {
+        title: "Payroll timesheets and decimal hours",
+        body:
+          "Employee punch clocks and attendance software frequently export in 24-hour notation. Converting punch times into standard 12-hour equivalents and decimal hours makes verifying hours worked straightforward.",
+      },
+      {
+        title: "Global team meetings and cross-timezone scheduling",
+        body:
+          "When coordinating across continents, international teams often state meeting invitations in 24-hour UTC or local time. Quick conversion lets team members confirm whether a 16:00 invite conflicts with their local evening plans.",
+      },
+    ],
+    tips: [
+      "The easiest mental shortcut for 24-hour time: for any hour from 13 to 23, subtract 2 from the second digit and drop the 1 (e.g. 17:00 → 7 - 2 = 5 → 5:00 PM; 21:00 → 1 - 2 = -1 → 9:00 PM).",
+      "Midnight is 00:00 in 24-hour time and 12:00 AM on a 12-hour clock. Noon is 12:00 in 24-hour time and 12:00 PM on a 12-hour clock.",
+      "Military time removes the colon and always uses four digits (e.g., 0900 instead of 9:00 AM, and 1530 instead of 3:30 PM).",
+      "In digital clocks, 24:00 is rarely displayed — the clock immediately rolls over to 00:00 for the new day.",
+    ],
+    extraFaqs: [
+      {
+        question: "Why do some countries use 24-hour time while others use 12-hour time?",
+        answer:
+          "Most European, Latin American, and Asian countries use the 24-hour clock for official timetables, business, and broadcasting because it completely prevents AM/PM errors. English-speaking nations (such as the United States, Canada, and Australia) traditionally prefer the 12-hour AM/PM format in everyday life, while reserving the 24-hour clock for military, aviation, and computing.",
+      },
+      {
+        question: "What does AM and PM stand for?",
+        answer:
+          "AM stands for 'Ante Meridiem', Latin for 'before midday' (the hours from midnight to 11:59 AM). PM stands for 'Post Meridiem', Latin for 'after midday' (the hours from noon to 11:59 PM).",
+      },
+      {
+        question: "How do decimal hours work in payroll?",
+        answer:
+          "Decimal hours express minutes as a fraction of 60. For example, 30 minutes is 0.50 hours, 15 minutes is 0.25 hours, and 45 minutes is 0.75 hours. An employee working from 08:30 to 17:15 has worked 8.75 hours.",
+      },
+    ],
+  },
 };
 
 /** Returns the long-form content for a tool, if any has been written. */

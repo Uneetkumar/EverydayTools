@@ -69,6 +69,26 @@
         "source": "/tools/pdf-compressor",
         "destination": "/tools/pdf-page-counter",
         "type": 301
+      },
+      {
+        "source": "/tools/24-hour-to-12-hour-converter",
+        "destination": "/tools/time-converter",
+        "type": 301
+      },
+      {
+        "source": "/tools/12-to-24-hour-converter",
+        "destination": "/tools/time-converter",
+        "type": 301
+      },
+      {
+        "source": "/tools/military-time-converter",
+        "destination": "/tools/time-converter",
+        "type": 301
+      },
+      {
+        "source": "/tools/time-format-converter",
+        "destination": "/tools/time-converter",
+        "type": 301
       }
     ],
     "headers": [

@@ -113,8 +113,15 @@ const ALIASES: Record<string, string[]> = {
   date: ["age", "days", "calendar", "timestamp", "birthday", "difference"],
   dates: ["date", "days", "calendar", "difference"],
   day: ["days", "date", "calendar"],
-  time: ["timer", "stopwatch", "timestamp", "clock", "hours"],
+  time: ["timer", "stopwatch", "timestamp", "clock", "hours", "converter"],
   birthday: ["age", "birth"],
+  military: ["time", "converter", "clock", "hours", "24"],
+  am: ["pm", "time", "clock", "converter", "12"],
+  pm: ["am", "time", "clock", "converter", "12"],
+  clock: ["time", "converter", "hours", "military"],
+  hours: ["time", "converter", "clock", "military"],
+  "24h": ["time", "converter", "hours", "military", "12h"],
+  "12h": ["time", "converter", "hours", "am", "pm", "24h"],
 
   // media formats & shorthand
   photo: ["image", "picture"],
@@ -320,7 +327,7 @@ const GENERIC = new Set([
   "viewer", "explainer", "decoder", "encoder", "reader", "maker", "cleaner",
   "debugger", "matcher",
 ]);
-const ABBREVIATIONS = new Set(["calc", "calculate", "simple", "basic", "standard", "math"]);
+const ABBREVIATIONS = new Set(["calc", "calculate", "simple", "basic", "standard", "math", "military", "24h", "12h"]);
 
 /**
  * Whole-word prefix match, so a token matches as the user is still typing

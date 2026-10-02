@@ -155,7 +155,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     shortName: "Date & Time",
     description: "Find your exact age, count days or business days between dates, convert timestamps and time things.",
     icon: "CalendarClock",
-    popular: ["age-calculator", "date-difference-calculator", "working-days-calculator", "stopwatch-timer"],
+    popular: ["time-converter", "age-calculator", "date-difference-calculator", "working-days-calculator", "stopwatch-timer"],
   },
   {
     id: "business",
@@ -234,6 +234,7 @@ export const POPULAR_TOOL_SLUGS = [
 
 /** Recently added. */
 export const NEW_TOOL_SLUGS = [
+  "time-converter",
   "internet-speed-test",
   "curl-to-fetch",
   "regex-builder",
@@ -4836,6 +4837,98 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "crop-image",
       "image-to-pdf",
       "video-cutter"
+    ]
+  },
+  "time-converter": {
+    "slug": "time-converter",
+    "name": "Time Format Converter",
+    "shortName": "Time Converter",
+    "tagline": "Convert between 12-hour AM/PM, 24-hour and military time instantly.",
+    "category": "date-time",
+    "description": "Convert 24-hour time to 12-hour AM/PM format and vice versa. Includes military time notation, spoken time, and a 24-hour conversion cheat sheet.",
+    "longDescription": "A fast, client-side time converter that switches between the 24-hour clock, standard 12-hour AM/PM time, and military time. Features quick adjustment steppers, current local time detection, decimal hours calculation for timesheets, and an interactive 24-hour reference chart.",
+    "iconName": "Clock",
+    "privacy": "local",
+    "metaTitle": "Time Format Converter - 12 Hour & 24 Hour Clock",
+    "metaDescription": "Free time format converter. Convert between 12-hour AM/PM, 24-hour clock, and military time with a live conversion reference chart.",
+    "keywords": [
+      "24 hour to 12 hour converter",
+      "12 to 24 hour converter",
+      "military time converter",
+      "time converter",
+      "24 hour clock converter",
+      "am pm to 24 hour",
+      "24 hour to am pm",
+      "military time to standard time",
+      "convert 24 hours to 12 hours",
+      "time format converter",
+      "12 hour to 24 hour",
+      "military clock converter"
+    ],
+    "aliases": [
+      "military time",
+      "24 hour to 12 hour",
+      "12 to 24 hour",
+      "am pm converter",
+      "military clock",
+      "army time",
+      "24h to 12h",
+      "12h to 24h",
+      "standard time",
+      "convert time"
+    ],
+    "features": [
+      "Two-way conversion between 24-hour and 12-hour (AM/PM) time",
+      "Military time notation with phonetic pronunciation guide",
+      "Decimal hours calculation for payroll and timesheets",
+      "Interactive 24-hour reference table with 1-click time loading",
+      "Live day progress percentage and period of day indicator",
+      "One-click copy for all time formats",
+      "100% private in-browser with zero data uploaded"
+    ],
+    "formulas": [
+      {
+        "name": "24-Hour to 12-Hour Conversion",
+        "expression": "Hour 00 → 12:MM AM; Hour 12 → 12:MM PM; Hour > 12 → (Hour - 12):MM PM; Hour < 12 → Hour:MM AM",
+        "explanation": "If the 24-hour hour is 00, it is 12 AM (midnight). If 12, it is 12 PM (noon). For hours 13 through 23, subtract 12 and label as PM. For hours 01 through 11, keep the hour and label as AM.",
+        "example": "17:45 → (17 - 12):45 PM = 5:45 PM. 00:30 → 12:30 AM. 09:15 → 9:15 AM."
+      },
+      {
+        "name": "12-Hour to 24-Hour Conversion",
+        "expression": "12:MM AM → 00:MM; HH:MM AM → HH:MM; 12:MM PM → 12:MM; HH:MM PM → (HH + 12):MM",
+        "explanation": "For AM hours, keep the hour as-is except for 12 AM which becomes 00. For PM hours, add 12 to hours 1 through 11, while 12 PM stays 12.",
+        "example": "8:30 PM → (8 + 12):30 = 20:30. 12:45 AM → 00:45. 11:20 AM → 11:20."
+      }
+    ],
+    "faqs": [
+      {
+        "question": "How do you convert 24-hour time to 12-hour time?",
+        "answer": "If the hour is 00, convert it to 12:00 AM (midnight). For hours 01 through 11, keep the hour number and append AM. For hour 12, it is 12:00 PM (noon). For hours 13 through 23, subtract 12 from the hour and append PM (e.g. 15:45 becomes 3:45 PM)."
+      },
+      {
+        "question": "Is 12:00 AM midnight or noon?",
+        "answer": "12:00 AM is midnight (the very start of the day, written as 00:00 in 24-hour time). 12:00 PM is noon (midday, written as 12:00 in 24-hour time)."
+      },
+      {
+        "question": "What is the difference between military time and 24-hour time?",
+        "answer": "Military time is based on the 24-hour clock but does not use a colon separator and is always written with four digits (e.g., 0800 instead of 08:00, or 1730 instead of 17:30). In military speech, 0800 is spoken as 'zero eight hundred hours'."
+      },
+      {
+        "question": "Does 24:00 exist?",
+        "answer": "In ISO 8601 and military terminology, 24:00 can be used to denote the exact end of a day, equivalent to 00:00 of the following day. Modern digital clocks and computers virtually always roll over to 00:00."
+      }
+    ],
+    "relatedToolSlugs": [
+      "unix-timestamp-converter",
+      "date-difference-calculator",
+      "stopwatch-timer",
+      "working-days-calculator"
+    ],
+    "nextSteps": [
+      "unix-timestamp-converter",
+      "date-difference-calculator",
+      "stopwatch-timer",
+      "age-calculator"
     ]
   }
 };

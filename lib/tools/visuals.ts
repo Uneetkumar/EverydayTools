@@ -144,6 +144,7 @@ export const TOOL_BADGES: Record<string, string> = {
   "currency-converter": "FX",
   // Date & time
   "unix-timestamp-converter": "UNIX",
+  "time-converter": "12/24",
   // Business
   "utm-builder": "UTM",
   // Security
