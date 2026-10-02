@@ -87,7 +87,7 @@ function Row({ s, open, onToggle, onPick }: { s: StatusCode; open: boolean; onTo
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs text-muted-foreground">See also</span>
               {s.see.map((c) => (
-                <button key={c} type="button" onClick={() => onPick(c)} className="rounded-full border bg-background px-2.5 py-0.5 font-mono text-xs text-foreground transition-colors hover:bg-muted">
+                <button key={c} type="button" onClick={() => onPick(c)} className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground transition-colors hover:bg-muted outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
                   {c} {getStatus(c)?.name}
                 </button>
               ))}
@@ -191,7 +191,7 @@ export default function HttpStatusLookup() {
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs text-muted-foreground">Most looked up</span>
           {COMMON.map((c) => (
-            <button key={c} type="button" onClick={() => select(c)} className="rounded-full border bg-background px-2.5 py-0.5 font-mono text-xs text-foreground transition-colors hover:bg-muted">
+            <button key={c} type="button" onClick={() => select(c)} className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground transition-colors hover:bg-muted outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
               {c}
             </button>
           ))}

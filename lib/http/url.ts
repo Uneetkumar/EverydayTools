@@ -1,5 +1,5 @@
 /**
- * URL and query-string handling for the URL Parser, Query Parameter Parser
+ * URL and query-string handling for the URL Parser, Query String Parser
  * and Query String Builder. Parsing uses the browser's WHATWG URL class (the
  * one real requests go through) and adds what it does not report: how the
  * raw text was malformed, what the components mean, and which parameters look

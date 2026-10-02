@@ -124,6 +124,13 @@
         ]
       },
       {
+        "source": "/@(sw.js|offline-manifest.json)",
+        "headers": [
+          { "key": "Cache-Control", "value": "no-cache" },
+          { "key": "X-Robots-Tag", "value": "noindex" }
+        ]
+      },
+      {
         "source": "**/!(robots|ads).txt",
         "headers": [
           { "key": "X-Robots-Tag", "value": "noindex" }

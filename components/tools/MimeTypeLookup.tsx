@@ -55,7 +55,7 @@ export default function MimeTypeLookup() {
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs text-muted-foreground">Common</span>
           {COMMON.map((c) => (
-            <button key={c} type="button" onClick={() => { setQuery(c); setShown(PAGE); }} className="rounded-full border bg-background px-2.5 py-0.5 font-mono text-xs text-foreground transition-colors hover:bg-muted">
+            <button key={c} type="button" onClick={() => { setQuery(c); setShown(PAGE); }} className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground transition-colors hover:bg-muted outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
               .{c}
             </button>
           ))}

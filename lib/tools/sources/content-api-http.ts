@@ -112,7 +112,7 @@ export const API_HTTP_CONTENT: Record<string, ToolContent> = {
         "Set the options. Start from a preset where one is offered, such as “Versioned static files” for caching or “Same origin only” for CSP.",
         "Read the warnings under the result. They flag options that commonly break sites, such as includeSubDomains on HSTS or unsafe-inline in a CSP.",
         "Pick your server or host in the format menu and copy the configuration into the file named above the code.",
-        "Reload your server, then check the live response with the HTTP Header Viewer.",
+        "Reload your server, then check the live response with the HTTP Header Analyzer.",
       ],
     },
     useCases: [
@@ -226,7 +226,7 @@ export const API_HTTP_CONTENT: Record<string, ToolContent> = {
       },
       {
         title: "Cleaning tracking links",
-        body: "See every parameter a marketing link carries, then use the Query Parameter Parser to strip the tracking ones before sharing.",
+        body: "See every parameter a marketing link carries, then use the Query String Parser to strip the tracking ones before sharing.",
       },
     ],
     tips: [

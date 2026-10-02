@@ -194,7 +194,7 @@ export default function WorldClock() {
               <div className="flex flex-wrap items-center gap-1.5">
                 <span className="text-xs text-muted-foreground">Popular</span>
                 {CITIES.filter((c) => !ids.includes(c.id) && ["dubai", "singapore", "los-angeles", "paris", "berlin", "toronto", "auckland", "utc"].includes(c.id)).map((c) => (
-                  <button key={c.id} type="button" onClick={() => addCity(c.id)} className="rounded-full border bg-background px-2.5 py-0.5 text-xs text-foreground transition-colors hover:bg-muted">
+                  <button key={c.id} type="button" onClick={() => addCity(c.id)} className="rounded-full border bg-background px-2.5 py-1 text-xs text-foreground transition-colors hover:bg-muted outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
                     {c.name}
                   </button>
                 ))}

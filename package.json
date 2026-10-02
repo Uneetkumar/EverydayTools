@@ -9,7 +9,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postbuild": "node scripts/seo-check.mjs",
+    "postbuild": "node scripts/offline-manifest.mjs && node scripts/seo-check.mjs",
     "seo:check": "node scripts/seo-check.mjs",
     "seo:report": "node scripts/seo-check.mjs --report",
     "seo:lastmod": "node scripts/seo/lastmod.mjs",

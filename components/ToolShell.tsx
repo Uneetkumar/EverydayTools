@@ -28,6 +28,7 @@ import TrackToolVisit from "./TrackToolVisit";
 import { FavoriteButton } from "./tool/favorite-button";
 import { ShareButton } from "./tool/share-button";
 import { PrivacyNote } from "./tool/privacy-note";
+import { ToolOffline } from "./offline/tool-offline";
 import { NextSteps } from "./tool/next-steps";
 import { ToolWorkspace } from "./tool/tool-workspace";
 import { cn } from "@/lib/utils";
@@ -139,6 +140,7 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
           </div>
           <p className="mt-2 max-w-3xl type-body text-muted-foreground">{tool.description}</p>
           <PrivacyNote tool={tool} className="mt-2.5" />
+          <ToolOffline slug={tool.slug} privacy={tool.privacy} />
         </div>
       </header>
 

@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
+import { OfflineStatus } from "@/components/offline/offline-status";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SearchProvider } from "@/components/search/search-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -186,6 +187,7 @@ export default function RootLayout({
 
               <div className="flex min-h-screen flex-col">
                 <Header />
+                <OfflineStatus />
                 <main id="main" className="flex-1">
                   {children}
                 </main>

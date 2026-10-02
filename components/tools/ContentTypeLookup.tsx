@@ -21,7 +21,7 @@ function CheckTab() {
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="text-xs text-muted-foreground">Try</span>
         {["application/json", "text/html; charset=UTF-8", "multipart/form-data", "application/javascript", "text/json", "image/svg+xml"].map((s) => (
-          <button key={s} type="button" onClick={() => setValue(s)} className="rounded-full border bg-background px-2.5 py-0.5 font-mono text-xs text-foreground transition-colors hover:bg-muted">
+          <button key={s} type="button" onClick={() => setValue(s)} className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground transition-colors hover:bg-muted outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
             {s}
           </button>
         ))}

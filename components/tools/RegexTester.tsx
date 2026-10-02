@@ -226,7 +226,7 @@ export default function RegexTester() {
             <History className="size-3.5 text-muted-foreground" aria-hidden="true" />
             <span className="text-xs text-muted-foreground">Recent</span>
             {history.slice(0, 5).map((h) => (
-              <button key={`${h.pattern}/${h.flags}`} type="button" title={`/${h.pattern}/${h.flags}`} onClick={() => { setPattern(h.pattern); setFlags(h.flags); }} className="max-w-48 truncate rounded-full border bg-background px-2.5 py-0.5 font-mono text-xs text-foreground transition-colors hover:bg-muted">
+              <button key={`${h.pattern}/${h.flags}`} type="button" title={`/${h.pattern}/${h.flags}`} onClick={() => { setPattern(h.pattern); setFlags(h.flags); }} className="max-w-48 truncate rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground transition-colors hover:bg-muted outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
                 {h.pattern}
               </button>
             ))}

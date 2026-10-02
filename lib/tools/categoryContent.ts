@@ -340,7 +340,7 @@ export const CATEGORY_CONTENT: Record<string, CategoryContent> = {
       {
         question: "Can these tools fetch a website's headers for me?",
         answer:
-          "No. Browsers do not let one web page read another site's response headers. Run curl -I in a terminal or copy the headers from your browser's Network tab and paste them into the HTTP Header Viewer, which explains them.",
+          "No. Browsers do not let one web page read another site's response headers. Run curl -I in a terminal or copy the headers from your browser's Network tab and paste them into the HTTP Header Analyzer, which explains them.",
       },
       {
         question: "Is my API key or token sent to TabBench?",

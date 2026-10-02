@@ -93,6 +93,7 @@ export function SiteFooter() {
               ["/tools", "All tools"],
               ["/categories", "Categories"],
               ["/guides", "Guides"],
+              ["/offline", "Use offline"],
               ["/about", "About"],
               ["/editorial-policy", "Editorial policy"],
               ["/contact", "Contact"],

@@ -27,7 +27,7 @@ export const TIME_AND_MORE_TOOLS: Record<string, ToolSource> = {
       "10 minute timer",
       "days until",
     ],
-    aliases: ["timer", "egg timer", "countdown", "alarm timer", "cooking timer", "class timer", "days countdown", "count down"],
+    aliases: ["timer", "egg timer", "countdown", "alarm timer", "cooking timer", "class timer", "days countdown", "count down", "online timer", "set a timer"],
     features: [
       "Up to six timers at once, each with a label",
       "Set with hours, minutes and seconds or type 25 min, 1h 15m",

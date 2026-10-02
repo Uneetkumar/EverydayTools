@@ -49,7 +49,7 @@ export default function BreakEvenCalculator() {
                 <button
                   key={sym}
                   onClick={() => setCurrencySymbol(sym)}
-                  className={`px-2 py-0.5 rounded-md transition-all ${
+                  className={`h-7 min-w-7 px-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring/50 transition-all ${
                     currencySymbol === sym
                       ? "bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-xs"
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"

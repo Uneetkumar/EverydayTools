@@ -2,8 +2,10 @@ import { fetchWithTimeout } from "@/lib/utils/net";
 /**
  * Live exchange-rate fetching.
  *
- * NOTE ON PRIVACY CLAIMS: unlike every other tool on this site, the currency
- * converter cannot work offline — it must ask somebody what today's rate is.
+ * NOTE ON PRIVACY CLAIMS: unlike almost every other tool on this site, the
+ * currency converter needs the network — it must ask somebody what today's
+ * rate is. Offline it falls back to the last table this device fetched,
+ * marked `saved`, so a traveller still gets a dated answer.
  * The request contains no user data (it is a plain GET for a public rate
  * table), but the browser does contact a third party, so this tool must not
  * carry the "nothing leaves your browser" badge the others use.
@@ -15,6 +17,8 @@ export interface RateTable {
   /** ISO timestamp the provider last refreshed its rates. */
   updatedAt: string;
   provider: string;
+  /** True when the providers could not be reached and this is the last table saved on the device. */
+  saved?: boolean;
 }
 
 const CACHE_KEY = "et_fx_rates_v1";
@@ -22,6 +26,26 @@ const CACHE_KEY = "et_fx_rates_v1";
 const CACHE_TTL_MS = 60 * 60 * 1000;
 
 type Cached = { fetchedAt: number; table: RateTable };
+
+/** The last good table per base currency, kept with no expiry for offline use. */
+const LAST_KEY = "et_fx_rates_last_v1";
+
+function readLast(base: string): RateTable | null {
+  try {
+    const raw = localStorage.getItem(`${LAST_KEY}_${base}`);
+    return raw ? { ...(JSON.parse(raw) as RateTable), saved: true } : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeLast(base: string, table: RateTable) {
+  try {
+    localStorage.setItem(`${LAST_KEY}_${base}`, JSON.stringify(table));
+  } catch {
+    // Storage full or blocked: offline fallback is a convenience only.
+  }
+}
 
 function readCache(base: string): RateTable | null {
   try {
@@ -82,9 +106,17 @@ export async function getRates(base: string): Promise<RateTable> {
     table = await fetchPrimary(base);
   } catch {
     // One provider being down should not take the tool down with it.
-    table = await fetchFallback(base);
+    try {
+      table = await fetchFallback(base);
+    } catch (e) {
+      // Offline, or both providers down: the last rates this device saw, dated.
+      const last = readLast(base);
+      if (last) return last;
+      throw e;
+    }
   }
   writeCache(base, table);
+  writeLast(base, table);
   return table;
 }
 

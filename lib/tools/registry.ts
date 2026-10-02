@@ -336,7 +336,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Instant math tool for students, finance managers, shoppers, and researchers. Solve X% of Y, percentage increase/decrease, and percentage difference instantly.",
     "iconName": "Percent",
     "privacy": "local",
-    "metaTitle": "Percentage Calculator | TabBench",
+    "metaTitle": "Percentage Calculator: % of, Change & Difference",
     "metaDescription": "Calculate percentages, percentage increases, decreases, and differences with TabBench's free calculator. Includes formulas and instant calculations.",
     "keywords": [
       "percentage calculator",
@@ -507,7 +507,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Convert text (UTF-8) or any file to Base64, as plain Base64 or a ready-to-paste data: URI. Decoding accepts standard or URL-safe Base64 and data: URIs, shows text or an image preview, recognises file types, and lets you download the result. Errors point to the exact character that is wrong.",
     "iconName": "Binary",
     "privacy": "local",
-    "metaTitle": "Base64 Encoder & Decoder | TabBench",
+    "metaTitle": "Base64 Encode & Decode: Text and Files",
     "metaDescription": "Free Base64 encoder and decoder for text and files: data: URIs, URL-safe Base64, image preview and file download. Works in your browser; nothing is uploaded.",
     "keywords": [
       "base64 converter",
@@ -681,7 +681,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Encode text the right way for where it goes — one query value, a whole URL or HTML form data — decode percent-encoded text without failing on one bad escape, spot double encoding, and see every part and query parameter of a URL decoded.",
     "iconName": "Link",
     "privacy": "local",
-    "metaTitle": "URL Encoder & Decoder | TabBench",
+    "metaTitle": "URL Encode & Decode Online: Percent-Encoding",
     "metaDescription": "Encode and decode URLs and URI query parameters using standard percent-encoding. Inspect and modify query parameters in real time.",
     "keywords": [
       "url encoder decoder",
@@ -1028,7 +1028,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Convert multiple photos and documents into a clean multi-page PDF, or convert PDF pages into high-res JPG/PNG images client-side with zero data uploads.",
     "iconName": "FilePlus2",
     "privacy": "local",
-    "metaTitle": "Image to PDF Converter | TabBench",
+    "metaTitle": "Image to PDF: Combine JPG & PNG into One PDF",
     "metaDescription": "Convert JPG, PNG, and WebP images into clean, multi-page PDF documents. Reorder pages, adjust margins, and download instantly.",
     "keywords": [
       "image to pdf",
@@ -1082,7 +1082,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Easily extract text and formatting from PDF files into editable DOCX Word files, or convert Word (.docx) documents into clean PDF files right in your browser.",
     "iconName": "FileType",
     "privacy": "local",
-    "metaTitle": "PDF to Word Converter | TabBench",
+    "metaTitle": "PDF to Word: Convert to Editable DOCX, No Upload",
     "metaDescription": "Convert PDF documents to editable Word (.docx) files or Word to PDF in your browser. Fast, private conversion with no uploads.",
     "keywords": [
       "pdf to word",
@@ -1190,7 +1190,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Instant format conversion from PNG to JPG. Automatically fills transparent PNG backgrounds with clean white or custom colors when saving as JPG.",
     "iconName": "FileImage",
     "privacy": "local",
-    "metaTitle": "PNG to JPG Converter | TabBench",
+    "metaTitle": "PNG to JPG: Convert Images Online, No Upload",
     "metaDescription": "Convert PNG images to JPG format with custom background color and compression quality settings. 100% private in your browser.",
     "keywords": [
       "png to jpg",
@@ -1303,7 +1303,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Convert standard JPEG and JPG photos into uncompressed PNG images. Great for graphic design, logos, and high-fidelity editing.",
     "iconName": "FileImage",
     "privacy": "local",
-    "metaTitle": "JPG to PNG Converter | TabBench",
+    "metaTitle": "JPG to PNG: Lossless Converter, No Upload",
     "metaDescription": "Convert JPG and JPEG images to high-quality PNG format instantly. Retain maximum image clarity with client-side conversion.",
     "keywords": [
       "jpg to png",
@@ -1346,14 +1346,14 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
   "image-to-webp": {
     "slug": "image-to-webp",
     "name": "Image to WebP Converter",
-    "shortName": "Image to WebP Converter",
+    "shortName": "Convert to WebP",
     "tagline": "Convert JPG and PNG to WebP for smaller, faster-loading images.",
     "category": "image-media",
     "description": "Convert JPG and PNG images into modern Google WebP format to reduce file sizes by 30% to 80% while retaining quality.",
     "longDescription": "Speed up your website load times and save bandwidth by converting bulky images to modern, high-efficiency WebP format.",
     "iconName": "ImageDown",
     "privacy": "local",
-    "metaTitle": "Image to WebP Converter | TabBench",
+    "metaTitle": "Convert to WebP: JPG & PNG to WebP Online",
     "metaDescription": "Convert JPG and PNG images into modern WebP format for faster web page loading. Batch conversion directly in your browser.",
     "keywords": [
       "image to webp",
@@ -1368,7 +1368,8 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "aliases": [
       "jpg to webp",
       "png to webp",
-      "webp converter"
+      "webp converter",
+      "convert to webp"
     ],
     "features": [
       "Convert PNG and JPG to WebP",
@@ -1404,7 +1405,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Easily open and convert downloaded .webp images into standard JPG or PNG files that can be edited in Photoshop, Word, or shared anywhere.",
     "iconName": "ImageUp",
     "privacy": "local",
-    "metaTitle": "WebP to JPG Converter | TabBench",
+    "metaTitle": "WebP to JPG or PNG: Open WebP Images Anywhere",
     "metaDescription": "Convert WebP images to standard JPG format for compatibility with older viewers and editors. Fast in-browser processing.",
     "keywords": [
       "webp to jpg",
@@ -1503,7 +1504,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Crop, frame, and resize your images for Instagram posts, YouTube thumbnails, profile pictures, and banners with precise pixel controls.",
     "iconName": "Crop",
     "privacy": "local",
-    "metaTitle": "Crop Image | TabBench",
+    "metaTitle": "Crop Image Online: 1:1, 16:9 or Custom Size",
     "metaDescription": "Crop photos and graphics to custom dimensions or standard aspect ratios (16:9, 4:3, 1:1). Download crisp cropped images with zero upload.",
     "keywords": [
       "crop image",
@@ -1559,7 +1560,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Merge multiple PDF files securely in your browser using pdf-lib. Reorder files, remove unwanted pages, and download the combined PDF with zero server upload.",
     "iconName": "Combine",
     "privacy": "local",
-    "metaTitle": "Merge PDF | TabBench",
+    "metaTitle": "Merge PDF: Combine PDF Files in Any Order",
     "metaDescription": "Merge and combine multiple PDF documents into a single organized file. Reorder pages and files with client-side processing.",
     "keywords": [
       "merge pdf",
@@ -1612,7 +1613,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "See what is inside a PDF before you send or shrink it: page count and paper sizes, title, author and other properties, PDF version, encryption, form fields, and whether images or embedded fonts make the file large. The file is read in your browser and never uploaded.",
     "iconName": "FileSearch",
     "privacy": "local",
-    "metaTitle": "PDF Page Counter & Inspector | TabBench",
+    "metaTitle": "PDF Page Counter: Pages, Sizes & Metadata",
     "metaDescription": "Inspect PDF files, count pages, view document metadata, and learn practical steps to reduce PDF file size safely.",
     "keywords": [
       "pdf page counter",
@@ -1665,7 +1666,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Find out your exact age to the day and minute. View interesting milestones like days lived, total breaths, total heartbeats, and days until your next birthday.",
     "iconName": "Cake",
     "privacy": "local",
-    "metaTitle": "Age Calculator | TabBench",
+    "metaTitle": "Age Calculator: Exact Age in Years, Months, Days",
     "metaDescription": "Calculate your exact age in years, months, weeks, days, hours, and minutes from your date of birth. Accurate with leap-year handling.",
     "keywords": [
       "age calculator",
@@ -1854,7 +1855,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Find out how much you save during sales and clearance events. Calculate percentage discounts, fixed cash discounts, and additional coupon codes.",
     "iconName": "Tag",
     "privacy": "local",
-    "metaTitle": "Discount Calculator | TabBench",
+    "metaTitle": "Discount Calculator: Sale Price & Savings",
     "metaDescription": "Calculate sale prices, percentage discounts, and stacked savings instantly. See exact savings and final prices with zero calculation errors.",
     "keywords": [
       "discount calculator",
@@ -1913,7 +1914,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Optimize your product pricing, ecommerce stores, and quotes. Understand the crucial mathematical difference between Margin and Markup.",
     "iconName": "BadgePercent",
     "privacy": "local",
-    "metaTitle": "Profit Margin Calculator | TabBench",
+    "metaTitle": "Profit Margin Calculator: Margin, Markup & Price",
     "metaDescription": "Calculate profit margins, markup percentages, gross profit, and required selling prices with instant formulas and visual breakdowns.",
     "keywords": [
       "profit margin calculator",
@@ -1971,7 +1972,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Manipulate and format text in your browser. Clean messy copy, format code identifiers, strip redundant spaces, and capitalize headings.",
     "iconName": "CaseSensitive",
     "privacy": "local",
-    "metaTitle": "Case Converter | TabBench",
+    "metaTitle": "Case Converter: UPPER, lower, Title & camelCase",
     "metaDescription": "Convert text between UPPERCASE, lowercase, Title Case, camelCase, snake_case, and kebab-case instantly. Fast, clean formatting in your browser.",
     "keywords": [
       "case converter",
@@ -2018,14 +2019,14 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
   "date-difference-calculator": {
     "slug": "date-difference-calculator",
     "name": "Date Difference Calculator",
-    "shortName": "Date Difference Calculator",
+    "shortName": "Days Between Dates",
     "tagline": "Days, weeks and months between two dates, or add time to a date.",
     "category": "date-time",
     "description": "Calculate exact days, business days, weeks, months, and years between two dates or add/subtract time from a date.",
     "longDescription": "Calculate calendar days, working/business days, and time intervals between any two dates. Plan deadlines or add/subtract days from today.",
     "iconName": "CalendarRange",
     "privacy": "local",
-    "metaTitle": "Date Difference Calculator | TabBench",
+    "metaTitle": "Date Difference Calculator: Days Between Dates",
     "metaDescription": "Calculate the exact number of days, weeks, months, and business days between two dates. Fast, accurate calendar arithmetic in your browser.",
     "keywords": [
       "date difference calculator",
@@ -2046,7 +2047,9 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "countdown",
       "add days",
       "time difference",
-      "date"
+      "date",
+      "how many days between",
+      "day counter"
     ],
     "features": [
       "Total calendar days",
@@ -2081,7 +2084,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Read the text out of any image and get it back as editable, copyable text. The default recogniser runs entirely in your browser, so the image is never uploaded. An optional AI mode handles handwriting, tables and non-English scripts that on-device OCR cannot.",
     "iconName": "ScanText",
     "privacy": "cloud-optional",
-    "metaTitle": "Image to Text (OCR) | TabBench",
+    "metaTitle": "Image to Text (OCR): Copy Text from Images",
     "metaDescription": "Extract text from an image free. Runs in your browser so nothing is uploaded, with an optional AI mode for handwriting, tables and other scripts.",
     "keywords": [
       "image to text",
@@ -2204,7 +2207,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Find differences between two versions of text, code, or documentation. Visual line-by-line comparison highlighting exact edits.",
     "iconName": "GitCompareArrows",
     "privacy": "local",
-    "metaTitle": "Text Diff Checker | TabBench",
+    "metaTitle": "Text Diff Checker: Compare Two Texts Online",
     "metaDescription": "Compare two blocks of text side by side to find differences, added words, and removed lines. Private, instant in-browser comparison.",
     "keywords": [
       "text diff checker",
@@ -2248,15 +2251,15 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
   },
   "ai-explainer": {
     "slug": "ai-explainer",
-    "name": "AI Formula Explainer",
-    "shortName": "AI Formula Explainer",
+    "name": "AI Code & Formula Explainer",
+    "shortName": "Code Explainer",
     "tagline": "Plain-English explanations of formulas, calculations and code.",
     "category": "ai-tools",
     "description": "Get instant, plain-English explanations for complex formulas, financial calculations, regex patterns, or code snippets.",
     "longDescription": "An intelligent educational explainer that demystifies mathematical formulas, financial metrics, regex expressions, and code structures.",
     "iconName": "Sigma",
     "privacy": "cloud-optional",
-    "metaTitle": "AI Formula Explainer | TabBench",
+    "metaTitle": "AI Code & Formula Explainer in Plain English",
     "metaDescription": "Understand math formulas, financial metrics, code logic, and regex in plain English with instant AI-powered explanations.",
     "keywords": [
       "ai formula explainer",
@@ -2273,7 +2276,13 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     ],
     "aliases": [
       "explain formula",
-      "explain code"
+      "explain code",
+      "ai formula explainer",
+      "formula explainer",
+      "code explainer",
+      "explain this code",
+      "what does this code do",
+      "explain excel formula"
     ],
     "features": [
       "Plain English math breakdowns",
@@ -2308,7 +2317,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Pull selected pages out of a PDF into a new file using simple range syntax like 1-3, 5, 8-10. Runs client-side with pdf-lib, so contracts and statements are never uploaded.",
     "iconName": "Split",
     "privacy": "local",
-    "metaTitle": "Split PDF | TabBench",
+    "metaTitle": "Split PDF: Extract Pages or Page Ranges",
     "metaDescription": "Split PDF files and extract specific pages or custom page ranges into new documents. Fast, secure, and processed in your browser.",
     "keywords": [
       "split pdf",
@@ -2361,7 +2370,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Convert PDF pages into images at your chosen resolution using pdf.js. Download single pages or the whole document as a ZIP archive, with all rendering done inside your browser.",
     "iconName": "FileImage",
     "privacy": "local",
-    "metaTitle": "PDF to JPG Converter | TabBench",
+    "metaTitle": "PDF to JPG: Save PDF Pages as Images",
     "metaDescription": "Convert PDF pages into high-resolution JPG or PNG images (up to 288 DPI). Download individual pages or a ZIP archive.",
     "keywords": [
       "pdf to jpg",
@@ -2413,7 +2422,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Fix sideways or upside-down scans by rotating PDF pages. Rotation is added to any existing page rotation so already-landscape pages stay correct, and the file never leaves your browser.",
     "iconName": "RotateCw",
     "privacy": "local",
-    "metaTitle": "Rotate PDF | TabBench",
+    "metaTitle": "Rotate PDF: Turn Pages and Save, No Upload",
     "metaDescription": "Rotate PDF pages clockwise or counter-clockwise (90°, 180°, 270°) and save the corrected document. 100% private in-browser.",
     "keywords": [
       "rotate pdf",
@@ -2464,7 +2473,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Add clean page numbers to any PDF, choosing the corner they sit in and the number to start counting from. Useful for court filings, dissertations, and any document that must be paginated.",
     "iconName": "ListOrdered",
     "privacy": "local",
-    "metaTitle": "Add Page Numbers to PDF | TabBench",
+    "metaTitle": "Add Page Numbers to PDF Online, No Upload",
     "metaDescription": "Add page numbers to PDF documents with customizable placement, formatting, and starting numbers. Processed entirely in your browser.",
     "keywords": [
       "add page numbers to pdf",
@@ -2573,7 +2582,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Create every icon a modern site needs from one logo (SVG, PNG or JPG) or from a letter or emoji: a multi-size favicon.ico, icon.svg, a 180px Apple touch icon on a solid background, 192px and 512px manifest icons, a padded maskable icon for Android, and a web manifest — previewed in a browser tab, on an iPhone home screen and in Android's round crop.",
     "iconName": "AppWindow",
     "privacy": "local",
-    "metaTitle": "Favicon Generator | TabBench",
+    "metaTitle": "Favicon Generator: Every Icon Size from a Logo",
     "metaDescription": "Free favicon generator: favicon.ico, Apple touch icon, Android maskable icon and web manifest from a logo, a letter or an emoji. Nothing is uploaded.",
     "keywords": [
       "favicon generator",
@@ -2630,7 +2639,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "iconName": "ArrowRightLeft",
     "privacy": "network",
     "privacyNote": "Fetches live exchange rates. The amounts you type are never sent.",
-    "metaTitle": "Currency Converter | TabBench",
+    "metaTitle": "Currency Converter: 160+ Live Exchange Rates",
     "metaDescription": "Convert global currencies with live exchange rates. Compare foreign exchange values instantly across USD, EUR, GBP, INR, and 160+ currencies.",
     "keywords": [
       "currency converter",
@@ -2685,7 +2694,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Create placeholder files at any size you specify — sample images, PDFs, DOCX, CSV, JSON, text, and short videos — with randomised content each time. Built for testing upload limits, forms, and file handling.",
     "iconName": "Shuffle",
     "privacy": "local",
-    "metaTitle": "Sample File Generator | TabBench",
+    "metaTitle": "Sample File Generator: Test Files at Exact Size",
     "metaDescription": "Generate dummy files of any exact size across PDF, JPG, PNG, MP4, CSV, and JSON formats for upload and performance testing.",
     "keywords": [
       "sample file generator",
@@ -2739,7 +2748,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Jot notes, drafts, and snippets in a clean editor that autosaves to this browser as you type. Keep multiple notes, search across them, and export any note as a text file.",
     "iconName": "NotebookPen",
     "privacy": "local",
-    "metaTitle": "Online Notepad | TabBench",
+    "metaTitle": "Online Notepad: Autosaves as You Type",
     "metaDescription": "A clean, distraction-free online notepad that autosaves your notes locally. No account required, 100% private, and works offline.",
     "keywords": [
       "online notepad",
@@ -2792,7 +2801,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Paste text and have it read aloud using the voices installed on your device. Adjust speed and pitch, pause and resume, and proofread by ear. Nothing is sent anywhere.",
     "iconName": "Volume2",
     "privacy": "local",
-    "metaTitle": "Text to Speech | TabBench",
+    "metaTitle": "Text to Speech: Read Text Aloud Online",
     "metaDescription": "Convert written text into natural spoken audio directly in your browser. Choose system voices, adjust speed and pitch, and listen instantly.",
     "keywords": [
       "text to speech",
@@ -2897,7 +2906,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Open any video your browser can decode and play it with full transport controls, adjustable speed, picture-in-picture and a multi-file playlist. Files play from disk and are never uploaded.",
     "iconName": "MonitorPlay",
     "privacy": "local",
-    "metaTitle": "Video Player | TabBench",
+    "metaTitle": "Online Video Player: MP4, WebM & MOV",
     "metaDescription": "Play MP4, WebM, MOV, and local video files in your browser with speed controls, playlists, and picture-in-picture. Nothing uploaded.",
     "keywords": [
       "online video player",
@@ -2948,7 +2957,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Open audio files from your device and play them with a queue, adjustable speed and full transport controls. Useful for reviewing recordings and lectures without installing anything.",
     "iconName": "Music",
     "privacy": "local",
-    "metaTitle": "Audio Player | TabBench",
+    "metaTitle": "Online Audio Player: MP3, WAV & FLAC",
     "metaDescription": "Play MP3, WAV, FLAC, M4A, and OGG audio files directly in your browser with playlist management and playback speed controls.",
     "keywords": [
       "online audio player",
@@ -3110,7 +3119,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Mute a video by removing its audio track entirely, or extract that audio as an .m4a file. Both are stream copies, so the video keeps its exact original quality and the audio keeps its original bitrate.",
     "iconName": "VolumeX",
     "privacy": "local",
-    "metaTitle": "Remove Audio from Video | TabBench",
+    "metaTitle": "Remove Audio from Video: Mute or Extract It",
     "metaDescription": "Mute video or extract audio tracks as separate files without re-encoding. Fast, lossless, and completely client-side.",
     "keywords": [
       "remove audio from video",
@@ -3218,7 +3227,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Compute exact compound interest growth on initial deposits and optional monthly contributions across daily, monthly, quarterly, and annual compounding periods.",
     "iconName": "ChartLine",
     "privacy": "local",
-    "metaTitle": "Compound Interest Calculator | TabBench",
+    "metaTitle": "Compound Interest Calculator with Deposits",
     "metaDescription": "Calculate compound interest growth with initial deposits, monthly contributions, and flexible compounding frequencies. 100% private in-browser tool.",
     "keywords": [
       "compound interest calculator",
@@ -3274,7 +3283,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Instant body mass index calculator supporting metric (cm/kg) and imperial (feet-inches/lbs) units with WHO classification categories and ideal weight ranges.",
     "iconName": "HeartPulse",
     "privacy": "local",
-    "metaTitle": "BMI Calculator | TabBench",
+    "metaTitle": "BMI Calculator: Healthy Weight & WHO Category",
     "metaDescription": "Calculate Body Mass Index (BMI) and ideal weight range instantly. Supports metric and imperial units with WHO classification categories.",
     "keywords": [
       "bmi calculator",
@@ -3329,7 +3338,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "A lightweight placeholder text generator for web designers, developers, and typesetters with customizable paragraph counts, HTML tag options, and instant one-click copying.",
     "iconName": "Pilcrow",
     "privacy": "local",
-    "metaTitle": "Lorem Ipsum Generator | TabBench",
+    "metaTitle": "Lorem Ipsum Generator: Placeholder Text",
     "metaDescription": "Generate placeholder Lorem Ipsum text by paragraphs, sentences, words, or lists. Includes optional HTML tags and one-click copy.",
     "keywords": [
       "lorem ipsum generator",
@@ -3377,7 +3386,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Generate clean permalinks from article titles, product names or headlines. Accents are removed, letters like ß and Ł are spelled out, Cyrillic, Greek and Hindi are transliterated (or kept as Unicode if you prefer), & becomes and, and long slugs are cut at a word boundary. Paste one title per line to make many at once.",
     "iconName": "Link2",
     "privacy": "local",
-    "metaTitle": "URL Slug Generator | TabBench",
+    "metaTitle": "URL Slug Generator: SEO-Friendly Slugs",
     "metaDescription": "Convert headlines and titles into clean, SEO-friendly URL slugs with customizable separators, accent stripping, and lowercase formatting.",
     "keywords": [
       "slug generator",
@@ -3528,7 +3537,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Encode only the characters HTML needs escaped, every non-ASCII character, or everything, as named, decimal or hex entities. Decoding understands all 2,231 named entities in the HTML standard, leaves tags alone, and spots text that was encoded twice.",
     "iconName": "CodeXml",
     "privacy": "local",
-    "metaTitle": "HTML Entity Encoder & Decoder | TabBench",
+    "metaTitle": "HTML Entity Encoder & Decoder: Escape HTML",
     "metaDescription": "Encode reserved HTML characters to safe entities and decode HTML entities back to plain text. Supports named, decimal, and hex entities.",
     "keywords": [
       "html entity encoder",
@@ -3622,7 +3631,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
   },
   "salary-calculator": {
     "slug": "salary-calculator",
-    "name": "Take-Home Salary Calculator",
+    "name": "CTC to In-Hand Salary Calculator",
     "shortName": "Salary Calculator",
     "tagline": "Estimate monthly in-hand pay from your annual CTC.",
     "category": "calculators",
@@ -3644,7 +3653,10 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "ctc to in hand",
       "take home pay",
       "net salary",
-      "in hand salary"
+      "in hand salary",
+      "take home salary calculator",
+      "take-home salary",
+      "in hand salary calculator"
     ],
     "features": [
       "Annual CTC to monthly in-hand conversion",
@@ -4125,7 +4137,10 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "image metadata",
       "photo info",
       "camera data",
-      "exif data"
+      "exif data",
+      "photo metadata",
+      "picture details",
+      "where was this photo taken"
     ],
     "features": [
       "Camera, lens, exposure, date and GPS details",
@@ -4160,7 +4175,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Visual spreadsheet editor to build, customize, and export GitHub Flavored Markdown and HTML tables with cell alignment controls and row/column management.",
     "iconName": "Table",
     "privacy": "local",
-    "metaTitle": "Markdown Table Generator | TabBench",
+    "metaTitle": "Markdown Table Generator: Visual Editor",
     "metaDescription": "Create Markdown and HTML tables in an interactive visual spreadsheet editor with column alignment controls and one-click copy.",
     "keywords": [
       "markdown table generator",
@@ -4209,7 +4224,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Free online AI text summarizer that reduces lengthy text into concise summaries and structured bullet points. Runs privately in your browser with zero mandatory signups.",
     "iconName": "ListCollapse",
     "privacy": "cloud-optional",
-    "metaTitle": "AI Text Summarizer | TabBench",
+    "metaTitle": "AI Text Summarizer: Summary or Key Points",
     "metaDescription": "Summarise articles, reports and email threads into a short paragraph or bullet points. Private on-device by default, with an optional Google Gemini mode.",
     "keywords": [
       "ai text summarizer",
@@ -4265,7 +4280,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Change the tone of emails, messages and paragraphs. The on-device engine makes safe, reviewable edits in your browser; the optional Cloud AI mode rewrites the whole text with Google Gemini.",
     "iconName": "PenLine",
     "privacy": "cloud-optional",
-    "metaTitle": "AI Text Rewriter | TabBench",
+    "metaTitle": "AI Text Rewriter & Paraphraser: Change the Tone",
     "metaDescription": "Change the tone of emails and messages: professional, formal, friendly, casual, concise or simple. Reviewable on-device edits, or a Google Gemini rewrite.",
     "keywords": [
       "ai text rewriter",
@@ -4315,7 +4330,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Transform convoluted writing into clear, accessible plain English with Flesch-Kincaid readability scoring and jargon reduction.",
     "iconName": "WandSparkles",
     "privacy": "cloud-optional",
-    "metaTitle": "AI Text Simplifier | TabBench",
+    "metaTitle": "AI Text Simplifier: Make Writing Plain English",
     "metaDescription": "Turn legal, technical and official text into plain English, with reading-ease scores before and after. Runs on your device, with an optional Gemini rewrite.",
     "keywords": [
       "ai text simplifier",
@@ -4364,7 +4379,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Analyze text to extract high-relevance search keywords, tags, and n-gram phrases for SEO, indexing, and content research.",
     "iconName": "Tags",
     "privacy": "cloud-optional",
-    "metaTitle": "AI Keyword Extractor | TabBench",
+    "metaTitle": "AI Keyword Extractor: Key Phrases from Text",
     "metaDescription": "Find the main keywords and key phrases in any text, with counts and density. Runs in your browser, with an optional Google Gemini mode.",
     "keywords": [
       "ai keyword extractor",
@@ -4413,7 +4428,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "Demystify complex API responses and JSON documents with deterministic schema visualization, field explanations, and architectural insights.",
     "iconName": "TextSearch",
     "privacy": "cloud-optional",
-    "metaTitle": "AI JSON Explainer | TabBench",
+    "metaTitle": "AI JSON Explainer: What a Payload Contains",
     "metaDescription": "Understand any JSON: every field, type and format mapped, secrets and personal data flagged, and an optional plain-English explanation from Gemini.",
     "keywords": [
       "ai json explainer",
@@ -4453,7 +4468,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
   },
   "calculator": {
     "slug": "calculator",
-    "name": "Calculator",
+    "name": "Scientific Calculator",
     "shortName": "Calculator",
     "tagline": "Standard and scientific calculator with history and keyboard input.",
     "category": "calculators",
@@ -4461,7 +4476,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "longDescription": "A free, private online calculator with two modes: Standard for everyday arithmetic, percentages, squares and roots, and Scientific for trigonometry, logarithms, powers, factorials and brackets. It keeps a history of your results, has memory keys, and works with your keyboard. Everything is calculated in your browser.",
     "iconName": "Calculator",
     "privacy": "local",
-    "metaTitle": "Free Online Calculator - Standard & Scientific",
+    "metaTitle": "Free Online Calculator: Standard & Scientific",
     "metaDescription": "Free online calculator with standard and scientific modes, memory keys, calculation history and keyboard support. Runs entirely in your browser.",
     "keywords": [
       "simple calculator",
@@ -4478,7 +4493,9 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "aliases": [
       "basic calculator",
       "scientific calculator",
-      "math"
+      "math",
+      "calculator",
+      "online calculator"
     ],
     "features": [
       "Standard mode with percent, reciprocal, square and square root keys",
@@ -4611,15 +4628,15 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
   },
   "stopwatch-timer": {
     "slug": "stopwatch-timer",
-    "name": "Stopwatch & Timer",
-    "shortName": "Stopwatch & Timer",
+    "name": "Online Stopwatch",
+    "shortName": "Stopwatch",
     "tagline": "A stopwatch with laps, and a countdown timer with an alarm.",
     "category": "date-time",
     "description": "Digital millisecond stopwatch with split and lap delta tracking, plus countdown timer with presets, synthesized chime alarms, and fullscreen mode.",
     "longDescription": "A free online precision digital stopwatch and countdown timer. Track split times, lap deltas with fastest/slowest lap highlighting, set custom countdown durations or one-click presets (including 25-minute Pomodoro), and enjoy synthesized audio chime alarms and fullscreen presentation mode.",
     "iconName": "Timer",
     "privacy": "local",
-    "metaTitle": "Free Online Stopwatch & Countdown Timer",
+    "metaTitle": "Online Stopwatch with Laps & Countdown Timer",
     "metaDescription": "Free online precision stopwatch with lap tracking and countdown timer with sound alerts, presets, and fullscreen mode. 100% private in your browser.",
     "keywords": [
       "online stopwatch",
@@ -4635,7 +4652,10 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "countdown",
       "pomodoro",
       "stopwatch",
-      "alarm"
+      "alarm",
+      "stopwatch and timer",
+      "stopwatch & timer",
+      "lap timer"
     ],
     "features": [
       "Centisecond (10ms) precision digital stopwatch with lap and split times",
@@ -4774,7 +4794,13 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
       "video recorder",
       "record video",
       "photo filters",
-      "camera filters"
+      "camera filters",
+      "webcam test",
+      "camera test",
+      "test my webcam",
+      "test camera",
+      "selfie camera",
+      "mirror"
     ],
     "features": [
       "Auto-enhance for brightness, colour, clarity and sharpness",

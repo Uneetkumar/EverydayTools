@@ -59,8 +59,8 @@ export const API_HTTP_TOOLS: Record<string, ToolSource> = {
 
   "http-header-viewer": {
     slug: "http-header-viewer",
-    name: "HTTP Header Viewer & Analyzer",
-    shortName: "HTTP Header Viewer",
+    name: "HTTP Header Analyzer",
+    shortName: "Header Analyzer",
     tagline: "Paste HTTP headers to see what each means and what to fix.",
     category: "api-http",
     description: "Paste request or response headers from curl, DevTools or logs. Each header is explained, security and caching problems are flagged, and cookies and CORS are checked.",
@@ -68,7 +68,7 @@ export const API_HTTP_TOOLS: Record<string, ToolSource> = {
       "Paste the headers from curl -I, your browser's Network tab or a server log and this tool explains every header in plain language. It checks the security headers (HSTS, CSP, X-Frame-Options, Referrer-Policy), reads Cache-Control and works out how long a response can be cached, inspects Set-Cookie flags, and spots CORS mistakes. It handles redirect chains from curl -L. Everything runs in your browser.",
     iconName: "TextSearch",
     privacy: "local",
-    metaTitle: "HTTP Header Viewer & Security Checker",
+    metaTitle: "HTTP Header Analyzer & Security Checker",
     metaDescription: "Paste HTTP request or response headers to see what each one means. Checks security headers, Cache-Control, cookies and CORS. Free and private, in your browser.",
     keywords: [
       "http header viewer",
@@ -82,7 +82,7 @@ export const API_HTTP_TOOLS: Record<string, ToolSource> = {
       "set-cookie flags",
       "http header parser",
     ],
-    aliases: ["header checker", "check headers", "security headers", "response headers", "request headers", "curl headers", "explain headers"],
+    aliases: ["header checker", "check headers", "security headers", "response headers", "request headers", "curl headers", "explain headers", "http header viewer", "header viewer", "analyze http headers", "security headers check"],
     features: [
       "Explains over 100 standard and common headers",
       "Security checklist: HSTS, CSP, nosniff, framing, referrer and permissions policy",
@@ -267,7 +267,7 @@ export const API_HTTP_TOOLS: Record<string, ToolSource> = {
 
   "query-parameter-parser": {
     slug: "query-parameter-parser",
-    name: "Query Parameter Parser",
+    name: "Query String Parser",
     shortName: "Query Parser",
     tagline: "Turn a query string into a table or JSON, decoded.",
     category: "api-http",
@@ -290,7 +290,7 @@ export const API_HTTP_TOOLS: Record<string, ToolSource> = {
       "urlsearchparams",
       "split query string",
     ],
-    aliases: ["url parameters", "query params", "get params", "query string decoder", "parse params", "querystring to object"],
+    aliases: ["url parameters", "query params", "get params", "query string decoder", "parse params", "querystring to object", "query parameter parser", "parse query string"],
     features: [
       "Decoded table of every parameter, in order",
       "JSON output with arrays for repeated names",
@@ -780,8 +780,8 @@ export const API_HTTP_TOOLS: Record<string, ToolSource> = {
 
   "content-type-lookup": {
     slug: "content-type-lookup",
-    name: "Content-Type Lookup & Checker",
-    shortName: "Content-Type Lookup",
+    name: "Content-Type Header Checker",
+    shortName: "Content-Type Checker",
     tagline: "Pick, check or detect the right Content-Type header.",
     category: "api-http",
     description: "Find the Content-Type to send for JSON, forms, uploads and downloads, check a header value for mistakes, or drop a file to detect its real type from its contents.",
@@ -803,7 +803,7 @@ export const API_HTTP_TOOLS: Record<string, ToolSource> = {
       "text/event-stream",
       "content type checker",
     ],
-    aliases: ["content type", "content-type checker", "mime detector", "file type detector", "header content type", "what is my file type"],
+    aliases: ["content type", "content-type checker", "mime detector", "file type detector", "header content type", "what is my file type", "content type lookup", "content-type lookup", "which content type"],
     features: [
       "Recipes for 30 common jobs, grouped: API, web page, files, streaming",
       "Header checker: type, subtype, suffix, charset, boundary and common mistakes",

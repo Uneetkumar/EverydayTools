@@ -67,6 +67,7 @@ const STATIC_ROUTES: Omit<PublicRoute, "lastmod">[] = [
   { path: "/categories", kind: "hub", section: "pages", label: "Categories", sourceFiles: ["app/categories/page.tsx"] },
   { path: "/guides", kind: "hub", section: "pages", label: "Guides", sourceFiles: ["app/guides/page.tsx"] },
   { path: "/about", kind: "informational", section: "pages", label: "About", sourceFiles: ["app/about/page.tsx"] },
+  { path: "/offline", kind: "informational", section: "pages", label: "Use offline", sourceFiles: ["app/offline/page.tsx", "components/offline/offline-manager.tsx"] },
   { path: "/contact", kind: "informational", section: "pages", label: "Contact", sourceFiles: ["app/contact/page.tsx", "app/contact/ContactForm.tsx"] },
   { path: "/editorial-policy", kind: "informational", section: "pages", label: "Editorial policy", sourceFiles: ["app/editorial-policy/page.tsx"] },
   { path: "/privacy", kind: "legal", section: "pages", label: "Privacy policy", sourceFiles: ["app/privacy/page.tsx"] },

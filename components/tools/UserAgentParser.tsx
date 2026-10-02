@@ -132,7 +132,7 @@ export default function UserAgentParser() {
               )}
               <span className="mx-1 text-xs text-muted-foreground">Try</span>
               {SAMPLE_USER_AGENTS.map((s) => (
-                <button key={s.label} type="button" onClick={() => setUa(s.ua)} className="rounded-full border bg-background px-2.5 py-0.5 text-xs text-foreground transition-colors hover:bg-muted">
+                <button key={s.label} type="button" onClick={() => setUa(s.ua)} className="rounded-full border bg-background px-2.5 py-1 text-xs text-foreground transition-colors hover:bg-muted outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
                   {s.label}
                 </button>
               ))}

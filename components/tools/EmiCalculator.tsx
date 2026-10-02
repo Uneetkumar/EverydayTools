@@ -57,7 +57,7 @@ export default function EmiCalculator() {
                   key={cur}
                   type="button"
                   onClick={() => setCurrencySymbol(cur)}
-                  className={`px-2 py-0.5 rounded-md font-semibold text-xs transition ${
+                  className={`h-7 min-w-7 px-2 rounded-md outline-none focus-visible:ring-2 focus-visible:ring-ring/50 font-semibold text-xs transition ${
                     currencySymbol === cur
                       ? "bg-brand-subtle text-brand-subtle-foreground ring-1 ring-inset ring-primary/30 font-medium"
                       : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"

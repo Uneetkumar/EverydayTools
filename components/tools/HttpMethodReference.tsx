@@ -104,7 +104,7 @@ export default function HttpMethodReference() {
           <h4 className="text-sm font-semibold text-foreground">Usual success responses</h4>
           <p className="mt-1 flex flex-wrap gap-1.5">
             {current.success.map((c) => (
-              <Link key={c} href={`/tools/http-status-code-lookup#${c}`} className="rounded-full border bg-background px-2.5 py-0.5 text-xs text-foreground transition-colors hover:bg-muted">
+              <Link key={c} href={`/tools/http-status-code-lookup#${c}`} className="rounded-full border bg-background px-2.5 py-1 text-xs text-foreground transition-colors hover:bg-muted outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
                 <span className="font-mono">{c}</span> {getStatus(c)?.name}
               </Link>
             ))}

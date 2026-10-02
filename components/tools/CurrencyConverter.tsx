@@ -175,8 +175,8 @@ export default function CurrencyConverter({
               {loading ? "…" : converted !== null ? fmt(converted, to) : "—"}
             </span>
             {converted !== null && !loading && (
-              <button onClick={copyResult} aria-label="Copy converted amount"
-                className="shrink-0 text-emerald-700 dark:text-emerald-400 hover:opacity-70">
+              <button type="button" onClick={copyResult} aria-label="Copy converted amount"
+                className="grid size-8 shrink-0 place-items-center rounded-md text-emerald-700 outline-none hover:bg-emerald-100 focus-visible:ring-2 focus-visible:ring-ring/50 dark:text-emerald-400 dark:hover:bg-emerald-900/40">
                 {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               </button>
             )}
@@ -201,8 +201,8 @@ export default function CurrencyConverter({
               1 {to} = {(1 / rate).toLocaleString(undefined, { maximumFractionDigits: 6 })} {from}
             </span>
           </div>
-          <button onClick={refresh}
-            className="flex items-center gap-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+          <button type="button" onClick={refresh}
+            className="inline-flex h-8 items-center gap-1.5 rounded-md px-2 text-xs font-semibold text-link outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/50">
             <RefreshCw className="w-3.5 h-3.5" />
             Refresh
           </button>
@@ -260,6 +260,16 @@ export default function CurrencyConverter({
           Change either currency above to override — no location lookup was
           performed.
         </p>
+      )}
+
+      {table?.saved && !loading && (
+        <div className="flex gap-2.5 rounded-xl border border-warning/30 bg-warning/5 p-4 text-sm text-foreground" role="status">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warning" aria-hidden="true" />
+          <p>
+            You&rsquo;re offline, so these are the last rates saved on this device, from{" "}
+            {new Date(table.updatedAt).toLocaleDateString([], { day: "numeric", month: "short", year: "numeric" })}. Connect to get today&rsquo;s.
+          </p>
+        </div>
       )}
 
       {table && !loading && (

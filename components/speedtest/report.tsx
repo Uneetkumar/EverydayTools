@@ -161,16 +161,27 @@ export function Report({ result, unit, plan, net }: { result: SpeedResult; unit:
     <div className="space-y-8">
       {/* Verdict ------------------------------------------------------------- */}
       <div className={cn("rounded-xl border p-4 sm:p-5", overall.card)}>
-        <div className="flex flex-wrap items-start gap-x-4 gap-y-3">
-          <span className={cn("grid size-10 shrink-0 place-items-center rounded-full", overall.badge)}>
-            <overall.icon className="size-5" aria-hidden="true" />
-          </span>
-          <div className="min-w-0 flex-1 basis-64">
-            <p className="text-xs text-muted-foreground">
-              {MODE_NAME[result.mode]} test · {new Date(result.finishedAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
-              {isp ? ` · ${isp}` : ""}
-            </p>
-            <h3 className="mt-1 text-base font-semibold text-pretty text-foreground sm:text-lg">{headline(m)}</h3>
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+          <div className="flex min-w-0 flex-1 basis-72 items-start gap-3.5">
+            <span className={cn("grid size-10 shrink-0 place-items-center rounded-full", overall.badge)}>
+              <overall.icon className="size-5" aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">
+                {MODE_NAME[result.mode]} test · {new Date(result.finishedAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}
+                {isp ? ` · ${isp}` : ""}
+              </p>
+              <h3 className="mt-1 text-base font-semibold text-pretty text-foreground sm:text-lg">{headline(m)}</h3>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                {bloat && <span className={cn("rounded-full px-2.5 py-1 font-medium ring-1 ring-inset", GRADE_TONE[bloat.grade])}>Responsiveness {bloat.grade}</span>}
+                {fcc !== null && (
+                  <span className={cn("rounded-full px-2.5 py-1 ring-1 ring-inset", fcc ? "bg-success/10 text-success ring-success/25" : "bg-muted text-muted-foreground ring-border")}>
+                    {fcc ? "Meets" : "Below"} the 100/20 Mbps broadband benchmark (FCC)
+                  </span>
+                )}
+                {steadiness(dl?.consistency) && <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground ring-1 ring-border ring-inset">Download speed {steadiness(dl?.consistency)}</span>}
+              </div>
+            </div>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
             <Button type="button" variant="outline" size="sm" onClick={copy}>
@@ -185,15 +196,6 @@ export function Report({ result, unit, plan, net }: { result: SpeedResult; unit:
               <Download aria-hidden="true" /> Report (JSON)
             </Button>
           </div>
-        </div>
-        <div className="mt-3 flex flex-wrap gap-2 text-xs sm:pl-14">
-          {bloat && <span className={cn("rounded-full px-2.5 py-1 font-medium ring-1 ring-inset", GRADE_TONE[bloat.grade])}>Responsiveness {bloat.grade}</span>}
-          {fcc !== null && (
-            <span className={cn("rounded-full px-2.5 py-1 ring-1 ring-inset", fcc ? "bg-success/10 text-success ring-success/25" : "bg-muted text-muted-foreground ring-border")}>
-              {fcc ? "Meets" : "Below"} the 100/20 Mbps broadband benchmark (FCC)
-            </span>
-          )}
-          {steadiness(dl?.consistency) && <span className="rounded-full bg-muted px-2.5 py-1 text-muted-foreground ring-1 ring-border ring-inset">Download speed {steadiness(dl?.consistency)}</span>}
         </div>
       </div>
 

@@ -263,7 +263,7 @@ export const MORE_GUIDES: Guide[] = [
       },
       {
         title: "Test with the response in front of you",
-        body: "Open the Network tab and look at both the OPTIONS request and the real one. Paste the response headers into the HTTP Header Viewer, which checks for the wildcard-with-credentials mistake and a missing Vary: Origin. Retest after every change, and clear the browser's cached preflight if needed.",
+        body: "Open the Network tab and look at both the OPTIONS request and the real one. Paste the response headers into the HTTP Header Analyzer, which checks for the wildcard-with-credentials mistake and a missing Vary: Origin. Retest after every change, and clear the browser's cached preflight if needed.",
       },
     ],
     notes: [

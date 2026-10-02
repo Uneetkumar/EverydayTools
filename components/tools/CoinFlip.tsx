@@ -149,7 +149,7 @@ export default function CoinFlip() {
             ["Go", "Stay"],
             ["Me", "You"],
           ].map(([a, b]) => (
-            <button key={a} type="button" onClick={() => setLabels([a, b])} className="rounded-full border bg-background px-2.5 py-0.5 text-xs text-foreground transition-colors hover:bg-muted">
+            <button key={a} type="button" onClick={() => setLabels([a, b])} className="rounded-full border bg-background px-2.5 py-1 text-xs text-foreground transition-colors hover:bg-muted outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
               {a} / {b}
             </button>
           ))}

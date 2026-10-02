@@ -124,7 +124,7 @@ export default function UrlParser() {
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="text-xs text-muted-foreground">Try</span>
           {SAMPLES.map((s, i) => (
-            <button key={s} type="button" onClick={() => { setInput(s); setEdit(null); }} className="rounded-full border bg-background px-2.5 py-0.5 text-xs text-foreground transition-colors hover:bg-muted">
+            <button key={s} type="button" onClick={() => { setInput(s); setEdit(null); }} className="rounded-full border bg-background px-2.5 py-1 text-xs text-foreground transition-colors hover:bg-muted outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
               Example {i + 1}
             </button>
           ))}
@@ -193,7 +193,7 @@ export default function UrlParser() {
           )}
 
           {u.query.length > 0 && (
-            <ToolSection title={`Query parameters (${u.query.length})`} description="Decoded, with + read as a space. Use the Query Parameter Parser for JSON output and nested keys.">
+            <ToolSection title={`Query parameters (${u.query.length})`} description="Decoded, with + read as a space. Use the Query String Parser for JSON output and nested keys.">
               <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full min-w-[26rem] text-left text-sm">
                   <thead className="bg-muted text-xs text-muted-foreground">
