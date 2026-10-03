@@ -12,6 +12,7 @@
 import { API_HTTP_TOOLS } from "./sources/api-http";
 import { RANDOM_TOOLS } from "./sources/random";
 import { TIME_AND_MORE_TOOLS } from "./sources/time-and-more";
+import { NEW_OFFLINE_TOOLS } from "./sources/new-tools";
 
 export interface ToolFaq {
   question: string;
@@ -119,7 +120,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     shortName: "Calculators",
     description: "Work out percentages, GST, loan EMIs, SIP returns, take-home pay and unit conversions.",
     icon: "Calculator",
-    popular: ["percentage-calculator", "gst-calculator", "emi-calculator", "discount-calculator", "salary-calculator", "currency-converter"],
+    popular: ["percentage-calculator", "gst-calculator", "tip-calculator", "fuel-cost-calc", "emi-calculator", "discount-calculator", "salary-calculator", "currency-converter"],
   },
   {
     id: "pdf-docs",
@@ -155,7 +156,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     shortName: "Date & Time",
     description: "Find your exact age, count days or business days between dates, convert timestamps and time things.",
     icon: "CalendarClock",
-    popular: ["time-converter", "age-calculator", "date-difference-calculator", "working-days-calculator", "stopwatch-timer"],
+    popular: ["time-converter", "work-hours-calc", "age-calculator", "date-difference-calculator", "working-days-calculator", "stopwatch-timer"],
   },
   {
     id: "business",
@@ -182,7 +183,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     shortName: "AI",
     description: "Summarise, rewrite and simplify text, extract keywords, explain JSON and read text in images.",
     icon: "Sparkles",
-    popular: ["ai-text-summarizer", "image-to-text", "ai-text-rewriter", "ai-text-simplifier"],
+    popular: ["ai-text-summarizer", "llm-token-counter", "ai-prompt-opt", "image-to-text", "ai-text-rewriter", "ai-text-simplifier"],
   },
   {
     id: "developer",
@@ -191,7 +192,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     shortName: "Developer",
     description: "Format and validate JSON, encode Base64 and URLs, decode JWTs, test regex and convert data.",
     icon: "Code",
-    popular: ["json-formatter", "base64-converter", "jwt-decoder", "regex-tester", "json-to-csv", "uuid-generator"],
+    popular: ["json-formatter", "json-to-csv", "sql-formatter", "base64-converter", "jwt-decoder", "regex-tester", "json-to-yaml", "uuid-generator"],
   },
   {
     id: "api-http",
@@ -200,7 +201,7 @@ export const TOOL_CATEGORIES: ToolCategory[] = [
     shortName: "API & HTTP",
     description: "Test your internet speed, look up status codes and headers, parse URLs, send requests and turn cURL into fetch, Axios or Python.",
     icon: "Network",
-    popular: ["internet-speed-test", "curl-to-fetch", "http-status-code-lookup", "api-request-builder", "url-parser", "http-header-viewer"],
+    popular: ["subnet-calculator", "mac-address-lookup", "internet-speed-test", "curl-to-fetch", "http-status-code-lookup", "api-request-builder", "url-parser", "http-header-viewer"],
   },
   {
     id: "security",
@@ -234,6 +235,26 @@ export const POPULAR_TOOL_SLUGS = [
 
 /** Recently added. */
 export const NEW_TOOL_SLUGS = [
+  "subnet-calculator",
+  "mac-address-lookup",
+  "ipv4-to-ipv6",
+  "ssl-cert-decoder",
+  "sql-formatter",
+  "json-to-yaml",
+  "chmod-calculator",
+  "docker-to-compose",
+  "box-shadow-gen",
+  "glassmorphism-gen",
+  "px-to-rem",
+  "svg-to-data-uri",
+  "color-palette-gen",
+  "llm-token-counter",
+  "ai-prompt-opt",
+  "json-schema-for-ai",
+  "clean-prompt-strip",
+  "tip-calculator",
+  "fuel-cost-calc",
+  "work-hours-calc",
   "time-converter",
   "internet-speed-test",
   "curl-to-fetch",
@@ -269,6 +290,7 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
   ...API_HTTP_TOOLS,
   ...RANDOM_TOOLS,
   ...TIME_AND_MORE_TOOLS,
+  ...NEW_OFFLINE_TOOLS,
   "json-formatter": {
     "slug": "json-formatter",
     "name": "JSON Formatter",

@@ -33,6 +33,7 @@ import { NextSteps } from "./tool/next-steps";
 import { ToolWorkspace } from "./tool/tool-workspace";
 import { cn } from "@/lib/utils";
 import { ToolVisual } from "./tool/tool-visual";
+import { InstallAppButton } from "./layout/install-app-button";
 
 interface ToolShellProps {
   tool: ToolDefinition;
@@ -76,6 +77,20 @@ const WIDE_LAYOUT_TOOLS = new Set([
   "api-request-builder",
   "internet-speed-test",
   "time-converter",
+  "subnet-calculator",
+  "ssl-cert-decoder",
+  "sql-formatter",
+  "json-to-yaml",
+  "docker-to-compose",
+  "box-shadow-gen",
+  "glassmorphism-gen",
+  "svg-to-data-uri",
+  "color-palette-gen",
+  "llm-token-counter",
+  "ai-prompt-opt",
+  "json-schema-for-ai",
+  "clean-prompt-strip",
+  "work-hours-calc",
 ]);
 
 /**
@@ -134,7 +149,8 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-3">
             <h1 className="type-h1 text-foreground">{tool.name}</h1>
-            <div className="flex shrink-0 gap-1.5 md:gap-2">
+            <div className="flex shrink-0 items-center gap-1.5 md:gap-2">
+              <InstallAppButton variant="tool-bar" />
               <FavoriteButton slug={tool.slug} name={tool.name} withLabel />
               <ShareButton title={tool.name} path={`/tools/${tool.slug}`} />
             </div>

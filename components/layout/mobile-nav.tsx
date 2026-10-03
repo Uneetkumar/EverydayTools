@@ -2,8 +2,9 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Download, Menu, Search } from "lucide-react";
+import { Menu, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InstallAppButton } from "./install-app-button";
 import {
   Sheet,
   SheetContent,
@@ -99,16 +100,7 @@ export function MobileNav({ categories, popular }: MobileNavProps) {
         </nav>
 
         <div className="flex items-center justify-between border-t px-3 py-2">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              close();
-              window.dispatchEvent(new CustomEvent("tabbench-trigger-install"));
-            }}
-          >
-            <Download aria-hidden="true" /> Install app
-          </Button>
+          <InstallAppButton variant="footer" onClick={close} />
           <ThemeToggle />
         </div>
       </SheetContent>

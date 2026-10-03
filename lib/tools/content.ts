@@ -2,6 +2,7 @@ import { ToolFaq } from "./registry";
 import { API_HTTP_CONTENT } from "./sources/content-api-http";
 import { RANDOM_CONTENT } from "./sources/content-random";
 import { TIME_AND_MORE_CONTENT } from "./sources/content-time-and-more";
+import { NEW_OFFLINE_CONTENT } from "./sources/content-new-tools";
 
 /**
  * Long-form editorial content, kept separate from the registry so the tool
@@ -32,6 +33,7 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
   ...API_HTTP_CONTENT,
   ...RANDOM_CONTENT,
   ...TIME_AND_MORE_CONTENT,
+  ...NEW_OFFLINE_CONTENT,
   "json-formatter": {
     intro:
       "Unformatted JSON is hard to scan and harder to debug — a single missing comma in a 2,000-line API response can cost you an afternoon. This formatter parses your JSON with the browser's native engine, reports the exact line and column of any syntax error, and re-indents the result so nested structures become obvious at a glance. Nothing is uploaded: the parse happens in your tab, which matters when the payload contains tokens, customer records, or anything else you would not paste into a random website.",

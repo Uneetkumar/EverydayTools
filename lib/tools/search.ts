@@ -119,7 +119,7 @@ const ALIASES: Record<string, string[]> = {
   am: ["pm", "time", "clock", "converter", "12"],
   pm: ["am", "time", "clock", "converter", "12"],
   clock: ["time", "converter", "hours", "military"],
-  hours: ["time", "converter", "clock", "military"],
+  hours: ["time", "converter", "clock", "military", "work", "timesheet", "payroll", "overtime", "shift"],
   "24h": ["time", "converter", "hours", "military", "12h"],
   "12h": ["time", "converter", "hours", "am", "pm", "24h"],
 
@@ -150,13 +150,39 @@ const ALIASES: Record<string, string[]> = {
   age: ["birthday", "date", "calculator"],
   emi: ["loan", "calculator"],
   auth: ["jwt", "token", "password"],
-  token: ["jwt", "decoder", "auth"],
+  token: ["jwt", "decoder", "auth", "counter", "llm", "tokens"],
+  tokens: ["token", "counter", "llm", "cost"],
   guid: ["uuid", "generator"],
   hash: ["sha256", "md5", "generator"],
   diff: ["compare", "comparison", "difference"],
   compare: ["diff", "checker", "text"],
   notes: ["notepad", "scratchpad"],
   note: ["notepad", "text"],
+  subnet: ["cidr", "calculator", "network", "netmask", "ip"],
+  cidr: ["subnet", "calculator", "ip", "range", "netmask"],
+  mac: ["address", "lookup", "vendor", "oui", "hardware"],
+  oui: ["mac", "vendor", "lookup", "hardware"],
+  ipv6: ["ipv4", "converter", "ip", "expander", "compressor"],
+  cert: ["ssl", "certificate", "decoder", "x509", "tls", "csr"],
+  x509: ["ssl", "certificate", "decoder", "cert", "csr"],
+  csr: ["ssl", "certificate", "decoder", "x509"],
+  sql: ["formatter", "beautifier", "query", "postgres", "mysql", "format"],
+  yaml: ["json", "converter", "compose", "kubernetes"],
+  yml: ["yaml", "json", "converter"],
+  chmod: ["permissions", "calculator", "linux", "octal", "unix"],
+  permissions: ["chmod", "calculator", "linux", "octal"],
+  docker: ["compose", "run", "container", "yaml"],
+  shadow: ["box", "generator", "css", "elevation", "tailwind"],
+  glass: ["glassmorphism", "generator", "frosted", "backdrop", "blur"],
+  rem: ["px", "converter", "pixels", "clamp", "fluid", "typography"],
+  clamp: ["rem", "px", "fluid", "typography", "css"],
+  svg: ["data", "uri", "converter", "encoder", "base64", "inline"],
+  palette: ["color", "generator", "tailwind", "shades", "contrast", "wcag"],
+  prompt: ["optimizer", "builder", "ai", "xml", "cleaner"],
+  tip: ["calculator", "bill", "split", "restaurant", "gratuity"],
+  fuel: ["gas", "calculator", "mileage", "cost", "trip", "carpool"],
+  gas: ["fuel", "calculator", "mileage", "trip"],
+  timesheet: ["work", "hours", "calculator", "payroll", "timecard"],
 
   // financial & math shortcuts
   sip: ["calculator", "mutual", "investment", "fund", "returns"],
@@ -551,7 +577,9 @@ function toolConversions(tool: SearchableTool): Conversion[] {
   return list;
 }
 
-const wordHit = (listed: string, typed: string) => listed.startsWith(typed) || (FORMAT_SYNONYMS[typed] ?? []).some((s) => listed.startsWith(s));
+const wordHit = (listed: string, typed: string) =>
+  listed.startsWith(typed) ||
+  (FORMAT_SYNONYMS[typed] ?? []).some((s) => listed.startsWith(s) && (s !== "doc" || listed === "doc" || listed === "docx" || listed.startsWith("document")));
 /** Typed words match the listed phrase from its first word on, each as a prefix. */
 const leads = (phrase: string[], typed: string[]) => typed.length > 0 && typed.every((t, i) => phrase[i] !== undefined && wordHit(phrase[i], t));
 /** Typed words each match some word of the phrase, in any order. */

@@ -118,6 +118,27 @@ const WorldClock = dynamic(() => import("@/components/tools/WorldClock"), { load
 const RegexBuilder = dynamic(() => import("@/components/tools/RegexBuilder"), { loading });
 const TimeConverter = dynamic(() => import("@/components/tools/TimeConverter"), { loading });
 
+const SubnetCalculator = dynamic(() => import("@/components/tools/SubnetCalculator"), { loading });
+const MacAddressLookup = dynamic(() => import("@/components/tools/MacAddressLookup"), { loading });
+const Ipv4ToIpv6Converter = dynamic(() => import("@/components/tools/Ipv4ToIpv6Converter"), { loading });
+const SslCertificateDecoder = dynamic(() => import("@/components/tools/SslCertificateDecoder"), { loading });
+const SqlFormatter = dynamic(() => import("@/components/tools/SqlFormatter"), { loading });
+const JsonToYaml = dynamic(() => import("@/components/tools/JsonToYaml"), { loading });
+const ChmodCalculator = dynamic(() => import("@/components/tools/ChmodCalculator"), { loading });
+const DockerRunToCompose = dynamic(() => import("@/components/tools/DockerRunToCompose"), { loading });
+const BoxShadowGenerator = dynamic(() => import("@/components/tools/BoxShadowGenerator"), { loading });
+const GlassmorphismGenerator = dynamic(() => import("@/components/tools/GlassmorphismGenerator"), { loading });
+const PxToRemConverter = dynamic(() => import("@/components/tools/PxToRemConverter"), { loading });
+const SvgToDataUri = dynamic(() => import("@/components/tools/SvgToDataUri"), { loading });
+const ColorPaletteGenerator = dynamic(() => import("@/components/tools/ColorPaletteGenerator"), { loading });
+const LlmTokenCounter = dynamic(() => import("@/components/tools/LlmTokenCounter"), { loading });
+const AiPromptOptimizer = dynamic(() => import("@/components/tools/AiPromptOptimizer"), { loading });
+const JsonSchemaForAi = dynamic(() => import("@/components/tools/JsonSchemaForAi"), { loading });
+const CleanPromptStripper = dynamic(() => import("@/components/tools/CleanPromptStripper"), { loading });
+const TipCalculator = dynamic(() => import("@/components/tools/TipCalculator"), { loading });
+const FuelCostCalculator = dynamic(() => import("@/components/tools/FuelCostCalculator"), { loading });
+const WorkHoursCalculator = dynamic(() => import("@/components/tools/WorkHoursCalculator"), { loading });
+
 export function ToolRenderer({ slug }: { slug: string }) {
   switch (slug) {
     case "image-compressor":
@@ -338,6 +359,46 @@ export function ToolRenderer({ slug }: { slug: string }) {
       return <RegexBuilder />;
     case "time-converter":
       return <TimeConverter />;
+    case "subnet-calculator":
+      return <SubnetCalculator />;
+    case "mac-address-lookup":
+      return <MacAddressLookup />;
+    case "ipv4-to-ipv6":
+      return <Ipv4ToIpv6Converter />;
+    case "ssl-cert-decoder":
+      return <SslCertificateDecoder />;
+    case "sql-formatter":
+      return <SqlFormatter />;
+    case "json-to-yaml":
+      return <JsonToYaml />;
+    case "chmod-calculator":
+      return <ChmodCalculator />;
+    case "docker-to-compose":
+      return <DockerRunToCompose />;
+    case "box-shadow-gen":
+      return <BoxShadowGenerator />;
+    case "glassmorphism-gen":
+      return <GlassmorphismGenerator />;
+    case "px-to-rem":
+      return <PxToRemConverter />;
+    case "svg-to-data-uri":
+      return <SvgToDataUri />;
+    case "color-palette-gen":
+      return <ColorPaletteGenerator />;
+    case "llm-token-counter":
+      return <LlmTokenCounter />;
+    case "ai-prompt-opt":
+      return <AiPromptOptimizer />;
+    case "json-schema-for-ai":
+      return <JsonSchemaForAi />;
+    case "clean-prompt-strip":
+      return <CleanPromptStripper />;
+    case "tip-calculator":
+      return <TipCalculator />;
+    case "fuel-cost-calc":
+      return <FuelCostCalculator />;
+    case "work-hours-calc":
+      return <WorkHoursCalculator />;
     default:
       // A registry entry with no loader. Previously this fell through to the
       // Percentage Calculator, silently rendering the wrong tool.

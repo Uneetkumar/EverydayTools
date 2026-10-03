@@ -33,6 +33,7 @@ import { Logo } from "./logo";
 import { MobileNav } from "./mobile-nav";
 import { ThemeToggle } from "./theme-toggle";
 import { CategoryVisual, ToolVisual } from "@/components/tool/tool-visual";
+import { InstallAppButton } from "./install-app-button";
 
 export interface NavTool {
   slug: string;
@@ -185,7 +186,8 @@ export function SiteHeader({ categories, popular, aiTools }: SiteHeaderProps) {
             <Search aria-hidden="true" />
           </Button>
 
-          <div className="hidden items-center gap-0.5 md:flex">
+          <div className="hidden items-center gap-1 md:flex">
+            <InstallAppButton variant="header" />
             <SavedToolsMenu kind="favorites" />
             <SavedToolsMenu kind="recent" />
             <ThemeToggle />

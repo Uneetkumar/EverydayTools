@@ -16,6 +16,7 @@ import { CategoryCard } from "@/components/tool/category-card";
 import { HeroSearch } from "@/components/home/hero-search";
 import { YourTools } from "@/components/home/your-tools";
 import { ToolVisual } from "@/components/tool/tool-visual";
+import { InstallAppButton } from "@/components/layout/install-app-button";
 import { buildMetadata, routeSocialImage } from "@/lib/seo/metadata";
 import { SEO_CONFIG } from "@/lib/seo/config";
 
@@ -105,6 +106,13 @@ export default function HomePage() {
         />
         <div className="page-container relative py-14 md:py-20">
           <div className="mx-auto max-w-3xl text-center">
+            <div className="mx-auto mb-4 inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-primary/20 bg-background/80 px-3.5 py-1 text-xs font-medium text-foreground backdrop-blur shadow-sm">
+              <span className="flex size-2 rounded-full bg-emerald-500 shrink-0" />
+              <span className="hidden sm:inline">Offline-ready PWA · All tools work without internet</span>
+              <span className="sm:hidden">Offline PWA · 100% in-browser</span>
+              <span className="text-muted-foreground/60 hidden sm:inline">·</span>
+              <InstallAppButton variant="hero" className="h-6 px-2.5 text-xs" />
+            </div>
             <p className="type-label text-muted-foreground">
               {allTools.length} free tools · No sign-up · Files stay on your device
             </p>
