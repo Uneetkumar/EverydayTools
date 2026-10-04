@@ -5,6 +5,7 @@
  */
 import { cn, h } from "./dom";
 import { iconSvg } from "../shared/icons";
+import { MARK, markSvgBody } from "../../../lib/brand/mark";
 import type { ExtTool } from "../shared/tools";
 
 export function icon(name: string, className = "size-4"): HTMLSpanElement {
@@ -128,4 +129,4 @@ export function toggle(checked: boolean, onChange: (v: boolean) => void, id: str
 }
 
 /** The TabBench mark, identical to the site's LogoMark. */
-export const LOGO_SVG = `<svg viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="#2563eb"/><rect x="7" y="7" width="18" height="6" rx="1.75" fill="#fff" fill-opacity=".28"/><rect x="7" y="15.5" width="4.5" height="4" rx="1.25" fill="#fff"/><rect x="13.75" y="15.5" width="4.5" height="4" rx="1.25" fill="#fff"/><rect x="20.5" y="15.5" width="4.5" height="4" rx="1.25" fill="#fff"/><rect x="7" y="21.5" width="4.5" height="4" rx="1.25" fill="#fff"/><rect x="13.75" y="21.5" width="4.5" height="4" rx="1.25" fill="#fff"/><rect x="20.5" y="21.5" width="4.5" height="4" rx="1.25" fill="#38bdf8"/></svg>`;
+export const LOGO_SVG = `<svg viewBox="0 0 ${MARK.size} ${MARK.size}" aria-hidden="true">${markSvgBody()}</svg>`;

@@ -128,13 +128,13 @@ for (const page of ["popup.html", "permission.html"]) {
 if (mode === "preview") fs.copyFileSync(path.join(ext, "dev/chrome-mock.js"), path.join(out, "chrome-mock.js"));
 
 /* ------------------------------------------------------------------ */
-/* 4. Icons: the site's logo mark                                      */
+/* 4. Icons: the site's logo mark (lib/brand/mark.ts)              */
 /* ------------------------------------------------------------------ */
 
+const { MARK, markSvgBody } = await jiti.import(path.join(root, "lib/brand/mark.ts"));
 const mark = (size, pad) => {
-  const inner = size - pad * 2;
-  const s = inner / 32;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><g transform="translate(${pad} ${pad}) scale(${s})"><rect width="32" height="32" rx="8" fill="#2563eb"/><rect x="7" y="7" width="18" height="6" rx="1.75" fill="#fff" fill-opacity=".28"/><rect x="7" y="15.5" width="4.5" height="4" rx="1.25" fill="#fff"/><rect x="13.75" y="15.5" width="4.5" height="4" rx="1.25" fill="#fff"/><rect x="20.5" y="15.5" width="4.5" height="4" rx="1.25" fill="#fff"/><rect x="7" y="21.5" width="4.5" height="4" rx="1.25" fill="#fff"/><rect x="13.75" y="21.5" width="4.5" height="4" rx="1.25" fill="#fff"/><rect x="20.5" y="21.5" width="4.5" height="4" rx="1.25" fill="#38bdf8"/></g></svg>`;
+  const s = (size - pad * 2) / MARK.size;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><g transform="translate(${pad} ${pad}) scale(${s})">${markSvgBody()}</g></svg>`;
 };
 // Toolbar sizes are full-bleed; the store icon keeps the recommended transparent margin.
 for (const [size, pad] of [[16, 0], [32, 0], [48, 2], [128, 8]]) {

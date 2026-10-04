@@ -10,6 +10,7 @@
     "start": "next start",
     "lint": "eslint",
     "postbuild": "node scripts/offline-manifest.mjs && node scripts/seo-check.mjs",
+    "brand:icons": "node scripts/brand-icons.mjs",
     "seo:check": "node scripts/seo-check.mjs",
     "seo:report": "node scripts/seo-check.mjs --report",
     "seo:lastmod": "node scripts/seo/lastmod.mjs",

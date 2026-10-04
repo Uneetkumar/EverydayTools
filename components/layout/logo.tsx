@@ -1,24 +1,20 @@
 import Link from "next/link";
+import { MARK, markSvgBody } from "@/lib/brand/mark";
 import { cn } from "@/lib/utils";
 
 /**
- * The TabBench mark: the app icon (blue squircle, screen and keypad)
- * simplified for small sizes, where the icon's keypad glyphs would not read.
- * One component so the header, mobile menu and footer can never drift apart
- * again (they previously used a calculator, a wrench and two different blues).
+ * The TabBench mark, drawn from lib/brand/mark.ts so the header, mobile menu,
+ * footer, favicon and app icons all show the same logo.
  */
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 32 32" aria-hidden="true" className={cn("size-7 shrink-0", className)}>
-      <rect width="32" height="32" rx="8" fill="#2563eb" />
-      <rect x="7" y="7" width="18" height="6" rx="1.75" fill="#fff" fillOpacity=".28" />
-      <rect x="7" y="15.5" width="4.5" height="4" rx="1.25" fill="#fff" />
-      <rect x="13.75" y="15.5" width="4.5" height="4" rx="1.25" fill="#fff" />
-      <rect x="20.5" y="15.5" width="4.5" height="4" rx="1.25" fill="#fff" />
-      <rect x="7" y="21.5" width="4.5" height="4" rx="1.25" fill="#fff" />
-      <rect x="13.75" y="21.5" width="4.5" height="4" rx="1.25" fill="#fff" />
-      <rect x="20.5" y="21.5" width="4.5" height="4" rx="1.25" fill="#38bdf8" />
-    </svg>
+    <svg
+      viewBox={`0 0 ${MARK.size} ${MARK.size}`}
+      aria-hidden="true"
+      className={cn("size-7 shrink-0", className)}
+      // Static markup built from constants in lib/brand/mark.ts, never user input.
+      dangerouslySetInnerHTML={{ __html: markSvgBody() }}
+    />
   );
 }
 
