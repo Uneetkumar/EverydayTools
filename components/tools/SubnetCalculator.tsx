@@ -255,7 +255,7 @@ function calculateIpv6Subnet(ipStr: string, prefixNum: number): Ipv6SubnetResult
   // Total /64 subnets
   let totalSubnets64 = "1";
   if (prefixNum <= 64) {
-    totalSubnets64 = (BigInt(1) << BigInt(64 - prefixNum)).toLocaleString();
+    totalSubnets64 = (BigInt(1) << BigInt(64 - prefixNum)).toLocaleString("en-US");
   } else {
     totalSubnets64 = "N/A (Subnet is smaller than /64)";
   }
@@ -355,8 +355,8 @@ export default function SubnetCalculator() {
       `Broadcast Address: ${resultV4.broadcastAddress}`,
       `Subnet Mask: ${resultV4.netmask}`,
       `Wildcard Mask: ${resultV4.wildcard}`,
-      `Usable Hosts: ${resultV4.usableHosts.toLocaleString()}`,
-      `Total Addresses: ${resultV4.totalHosts.toLocaleString()}`,
+      `Usable Hosts: ${resultV4.usableHosts.toLocaleString("en-US")}`,
+      `Total Addresses: ${resultV4.totalHosts.toLocaleString("en-US")}`,
       `Type: ${resultV4.ipType} (${resultV4.ipClass})`,
     ].join("\n");
     copyToClipboard(summary, "summary");
@@ -445,8 +445,8 @@ export default function SubnetCalculator() {
 
               <ToolSection title="Calculation Results">
                 <StatGrid>
-                  <Stat label="Usable Hosts" value={resultV4.usableHosts.toLocaleString()} tone="success" />
-                  <Stat label="Total IP Addresses" value={resultV4.totalHosts.toLocaleString()} />
+                  <Stat label="Usable Hosts" value={resultV4.usableHosts.toLocaleString("en-US")} tone="success" />
+                  <Stat label="Total IP Addresses" value={resultV4.totalHosts.toLocaleString("en-US")} />
                   <Stat label="Subnet Mask" value={resultV4.netmask} />
                   <Stat label="Network Type" value={resultV4.ipType.split(" ")[0]} hint={resultV4.ipClass} />
                 </StatGrid>
@@ -554,8 +554,8 @@ export default function SubnetCalculator() {
                           >
                             <td className="px-3 py-1.5">/{c}</td>
                             <td className="px-3 py-1.5">{mask}</td>
-                            <td className="px-3 py-1.5">{total.toLocaleString()}</td>
-                            <td className="px-3 py-1.5">{usable.toLocaleString()}</td>
+                            <td className="px-3 py-1.5">{total.toLocaleString("en-US")}</td>
+                            <td className="px-3 py-1.5">{usable.toLocaleString("en-US")}</td>
                             <td className="px-3 py-1.5">
                               <button
                                 type="button"

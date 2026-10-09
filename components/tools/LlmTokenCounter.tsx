@@ -148,8 +148,10 @@ function ratesFor(model: ModelPricing, tokens: number) {
   };
 }
 
+// Numbers use a fixed locale: the page is prerendered, so the build machine's or the visitor's
+// locale (10,50,000 vs 1,050,000 vs 1.050.000) would make the server HTML and hydration disagree.
 const fmtUsd = (n: number) => `$${n < 0.01 ? n.toFixed(5) : n.toFixed(4)}`;
-const fmtRate = (n: number) => `$${n < 1 ? n.toFixed(2) : n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
+const fmtRate = (n: number) => `$${n < 1 ? n.toFixed(2) : n.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
 
 const SAMPLE_TEXTS = [
   {
@@ -265,11 +267,11 @@ export default function LlmTokenCounter() {
   const copyStats = () => {
     const summary = [
       `Model: ${model.name} (${model.provider})`,
-      `Tokens: ${stats.tokens.toLocaleString()}`,
-      `Words: ${stats.words.toLocaleString()}`,
-      `Characters: ${stats.charsWithSpaces.toLocaleString()}`,
+      `Tokens: ${stats.tokens.toLocaleString("en-US")}`,
+      `Words: ${stats.words.toLocaleString("en-US")}`,
+      `Characters: ${stats.charsWithSpaces.toLocaleString("en-US")}`,
       `Estimated Input Cost: ${stats.inputCost} at ${fmtRate(stats.rates.inputPer1M)} per 1M tokens (prices checked ${PRICES_CHECKED})`,
-      `Context Usage: ${stats.contextPercent}% of ${model.contextWindow.toLocaleString()} tokens`,
+      `Context Usage: ${stats.contextPercent}% of ${model.contextWindow.toLocaleString("en-US")} tokens`,
     ].join("\n");
     navigator.clipboard.writeText(summary);
     setCopied(true);
@@ -326,12 +328,12 @@ export default function LlmTokenCounter() {
         <StatGrid>
           <Stat
             label="Estimated Tokens"
-            value={stats.tokens.toLocaleString()}
+            value={stats.tokens.toLocaleString("en-US")}
             tone="success"
             hint={`~${stats.tokensPerWord} tokens per word`}
           />
-          <Stat label="Total Words" value={stats.words.toLocaleString()} />
-          <Stat label="Characters" value={stats.charsWithSpaces.toLocaleString()} hint={`${stats.charsNoSpaces} without spaces`} />
+          <Stat label="Total Words" value={stats.words.toLocaleString("en-US")} />
+          <Stat label="Characters" value={stats.charsWithSpaces.toLocaleString("en-US")} hint={`${stats.charsNoSpaces} without spaces`} />
           <Stat
             label="Input API Cost"
             value={stats.inputCost}
@@ -346,7 +348,7 @@ export default function LlmTokenCounter() {
               <Gauge className="size-3.5 text-primary" /> Context Window Capacity
             </span>
             <span className="font-mono text-muted-foreground">
-              {stats.tokens.toLocaleString()} / {model.contextWindow.toLocaleString()} tokens ({stats.contextPercent}%)
+              {stats.tokens.toLocaleString("en-US")} / {model.contextWindow.toLocaleString("en-US")} tokens ({stats.contextPercent}%)
             </span>
           </div>
 
@@ -385,8 +387,8 @@ export default function LlmTokenCounter() {
                     <td className="px-3 py-2 text-foreground font-medium">
                       {m.name} <span className="text-[10px] text-muted-foreground">({m.provider})</span>
                     </td>
-                    <td className="px-3 py-2">{m.contextWindow.toLocaleString()}</td>
-                    <td className="px-3 py-2">{modelTokens.toLocaleString()}</td>
+                    <td className="px-3 py-2">{m.contextWindow.toLocaleString("en-US")}</td>
+                    <td className="px-3 py-2">{modelTokens.toLocaleString("en-US")}</td>
                     <td className="px-3 py-2">
                       {pCost}
                       {r.isLong && <span className="ml-1 text-[10px] text-muted-foreground">long</span>}

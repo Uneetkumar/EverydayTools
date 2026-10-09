@@ -94,8 +94,8 @@ export default function AiTextSummarizer() {
           stats={
             <div className="space-y-3">
               <StatGrid>
-                <Stat label="Original" value={`${inWords.toLocaleString()} words`} />
-                <Stat label="Summary" value={`${outWords.toLocaleString()} words`} />
+                <Stat label="Original" value={`${inWords.toLocaleString("en-US")} words`} />
+                <Stat label="Summary" value={`${outWords.toLocaleString("en-US")} words`} />
                 <Stat label="Shorter by" value={`${Math.max(0, Math.round((1 - outWords / Math.max(inWords, 1)) * 100))}%`} />
                 <Stat
                   label={local ? "Sentences kept" : "Reading time saved"}

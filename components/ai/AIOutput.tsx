@@ -79,7 +79,7 @@ export default function AIOutput({
         <div>
           <h3 className="text-sm font-semibold text-foreground">{title}</h3>
           <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
-            {words.toLocaleString()} words · {result.length.toLocaleString()} characters
+            {words.toLocaleString("en-US")} words · {result.length.toLocaleString("en-US")} characters
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">

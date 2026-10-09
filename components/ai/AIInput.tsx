@@ -107,11 +107,11 @@ export default function AIInput({
 
       <p className="flex flex-wrap justify-between gap-2 text-xs text-muted-foreground tabular-nums" aria-live="polite">
         <span>
-          {words.toLocaleString()} words · {value.length.toLocaleString()} characters
+          {words.toLocaleString("en-US")} words · {value.length.toLocaleString("en-US")} characters
         </span>
         {over && (
           <span className="text-warning">
-            Over {maxChars.toLocaleString()} characters: long text is slower and gives a less focused result.
+            Over {maxChars.toLocaleString("en-US")} characters: long text is slower and gives a less focused result.
           </span>
         )}
       </p>

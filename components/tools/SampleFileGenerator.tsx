@@ -601,7 +601,7 @@ export default function SampleFileGenerator({
                 4. Exact Target File Size
               </span>
               <span className="text-xs font-mono font-medium text-foreground">
-                {formatBytesShort(bytes)} ({bytes.toLocaleString()} bytes)
+                {formatBytesShort(bytes)} ({bytes.toLocaleString("en-US")} bytes)
               </span>
             </div>
             <div className="grid grid-cols-4 sm:flex sm:flex-wrap gap-1.5 sm:gap-2">
@@ -649,7 +649,7 @@ export default function SampleFileGenerator({
                       {formatBytesShort(bytes)}
                     </span>
                     <span className="text-xs font-mono text-slate-500 dark:text-slate-400">
-                      ({bytes.toLocaleString()} bytes)
+                      ({bytes.toLocaleString("en-US")} bytes)
                     </span>
                   </div>
                 </div>

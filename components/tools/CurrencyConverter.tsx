@@ -229,7 +229,7 @@ export default function CurrencyConverter() {
           {QUICK_AMOUNTS.map((q) => (
             <button key={q} onClick={() => setAmount(String(q))}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition">
-              {CURRENCY_SYMBOLS[from] ?? ""}{q.toLocaleString()}
+              {CURRENCY_SYMBOLS[from] ?? ""}{q.toLocaleString("en-US")}
             </button>
           ))}
         </div>
