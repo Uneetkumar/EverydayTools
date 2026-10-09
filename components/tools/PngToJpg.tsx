@@ -11,6 +11,7 @@ import {
   Sparkles,
   Layers,
 } from "lucide-react";
+import { toast } from "sonner";
 import { markToolCompleted } from "@/lib/analytics";
 import { downloadDataUrl } from "@/lib/utils/download";
 
@@ -52,6 +53,14 @@ export default function PngToJpg({
     setIsProcessing(true);
     const img = new Image();
     img.src = URL.createObjectURL(f);
+    // A format the browser cannot decode (HEIC outside Safari, a broken or
+    // renamed file) fires onerror, not onload; without this the page waited
+    // forever.
+    img.onerror = () => {
+      setIsProcessing(false);
+      setConvertedUrl(null);
+      toast.error("This browser can't open that image. Try a JPG, PNG or WebP file.");
+    };
     img.onload = () => {
       const canvas = document.createElement("canvas");
       canvas.width = img.width;
@@ -82,7 +91,12 @@ export default function PngToJpg({
         ctx.drawImage(img, 0, 0);
         canvas.toBlob(
           (blob) => {
-            if (blob) {
+            // Safari decodes WebP but cannot encode it: toBlob quietly
+            // returns a PNG instead, which would be saved as ".webp".
+            if (blob && blob.type !== "image/webp") {
+              setConvertedUrl(null);
+              toast.error("This browser can't create WebP files (Safari can only display them). Try Chrome, Edge or Firefox.");
+            } else if (blob) {
               setConvertedUrl(URL.createObjectURL(blob));
               setConvertedSize(blob.size);
             }

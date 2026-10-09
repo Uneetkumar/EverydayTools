@@ -13,6 +13,7 @@ import {
   getRates,
   RateTable,
   POPULAR_CURRENCIES,
+  CURRENCY_NAMES,
   CURRENCY_SYMBOLS,
 } from "@/lib/currency/rates";
 import { detectLocalCurrency, defaultPairForCurrency } from "@/lib/currency/locale";
@@ -26,22 +27,26 @@ const POPULAR_PAIRS: [string, string][] = [
   ["AED", "INR"], ["USD", "EUR"], ["CAD", "INR"], ["AUD", "INR"],
 ];
 
-interface CurrencyConverterProps {
-  /** Set by the /convert/[pair] pages. When present, locale detection is skipped. */
-  initialFrom?: string;
-  initialTo?: string;
+/**
+ * ?from=USD&to=INR in the URL selects a pair. The retired /convert/<pair>
+ * pages 301-redirect here with those parameters (firebase.json), so old
+ * links and bookmarks still open on the pair they were for.
+ */
+function pairFromUrl(): { from: string; to: string } | null {
+  const params = new URLSearchParams(window.location.search);
+  const from = params.get("from")?.toUpperCase();
+  const to = params.get("to")?.toUpperCase();
+  if (!from || !to || !(from in CURRENCY_NAMES) || !(to in CURRENCY_NAMES)) return null;
+  return { from, to };
 }
 
-export default function CurrencyConverter({
-  initialFrom,
-  initialTo,
-}: CurrencyConverterProps = {}) {
+export default function CurrencyConverter() {
   const [amount, setAmount] = useState<string>("1");
   // These defaults must be deterministic: the page is prerendered at build
   // time, so detecting the locale during render would produce a hydration
   // mismatch. Detection happens after mount instead.
-  const [from, setFrom] = useState(initialFrom ?? "USD");
-  const [to, setTo] = useState(initialTo ?? "INR");
+  const [from, setFrom] = useState("USD");
+  const [to, setTo] = useState("INR");
   const [table, setTable] = useState<RateTable | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,12 +55,19 @@ export default function CurrencyConverter({
   const [reloadToken, setReloadToken] = useState(0);
   const [localCurrency, setLocalCurrency] = useState<string | null>(null);
 
-  // A pair page states the pair explicitly, so the URL must win over the guess.
+  // A pair in the URL is an explicit choice, so it wins over the locale guess.
   useEffect(() => {
-    if (initialFrom || initialTo) return;
     // Deferred off the synchronous effect path so mount does not immediately
     // cascade into a second render.
     const id = setTimeout(() => {
+      const fromUrl = pairFromUrl();
+      if (fromUrl) {
+        // Only a new "from" starts a fetch (and later clears loading).
+        if (fromUrl.from !== "USD") setLoading(true);
+        setFrom(fromUrl.from);
+        setTo(fromUrl.to);
+        return;
+      }
       const local = detectLocalCurrency();
       if (!local || local === "INR") return;
       const pair = defaultPairForCurrency(local);
@@ -65,7 +77,7 @@ export default function CurrencyConverter({
       setTo(pair.to);
     }, 0);
     return () => clearTimeout(id);
-  }, [initialFrom, initialTo]);
+  }, []);
 
   // State updates happen in the promise callbacks rather than synchronously in
   // the effect body, and `cancelled` guards against a slow response for a

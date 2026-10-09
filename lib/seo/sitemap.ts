@@ -9,7 +9,6 @@ import { SITEMAP_SECTIONS, getPublicRoutes, type PublicRoute, type SitemapSectio
  *   /sitemap-categories.xml  category landing pages
  *   /sitemap-tools.xml       one URL per tool
  *   /sitemap-guides.xml      how-to guides
- *   /sitemap-currency.xml    currency-pair converter pages
  *
  * Split by content type so Search Console reports indexing per type ("82
  * tools submitted, N indexed") — the fastest way to see which kind of page

@@ -30,13 +30,13 @@ const SAMPLE_IPV6 = [
 
 function expandIpv6(ipv6: string): string | null {
   try {
-    let s = ipv6.trim().toLowerCase();
+    const s = ipv6.trim().toLowerCase();
     if (!s || s.includes(":::")) return null;
     const parts = s.split("::");
     if (parts.length > 2) return null;
 
-    let left = parts[0] ? parts[0].split(":") : [];
-    let right = parts.length === 2 && parts[1] ? parts[1].split(":") : [];
+    const left = parts[0] ? parts[0].split(":") : [];
+    const right = parts.length === 2 && parts[1] ? parts[1].split(":") : [];
 
     // Handle embedded IPv4 at the end
     const lastPart = right.length > 0 ? right[right.length - 1] : left[left.length - 1];
@@ -64,8 +64,10 @@ function expandIpv6(ipv6: string): string | null {
       return null;
     }
 
-    const all = [...left, ...middle, ...right].map((h) => h.padStart(4, "0"));
-    return all.join(":");
+    const all = [...left, ...middle, ...right];
+    // Each group must be 1-4 hex digits; "zzzz" or "12345" is not an address.
+    if (!all.every((h) => /^[0-9a-f]{1,4}$/.test(h))) return null;
+    return all.map((h) => h.padStart(4, "0")).join(":");
   } catch {
     return null;
   }
@@ -142,9 +144,6 @@ export default function Ipv4ToIpv6Converter() {
     const siit = `::ffff:0:${ipv4.trim()}`;
     const inAddrArpa = `${octets[3]}.${octets[2]}.${octets[1]}.${octets[0]}.in-addr.arpa`;
 
-    // IPv6 reverse DNS for 6to4
-    const ip6Nibbles = `2002${hex1}${hex2}000000000000000000000000`.split("").reverse().join(".");
-    const ip6Arpa = `${ip6Nibbles}.ip6.arpa`;
 
     return {
       ipv4: ipv4.trim(),
@@ -158,7 +157,6 @@ export default function Ipv4ToIpv6Converter() {
       intVal: intVal.toString(),
       binary,
       inAddrArpa,
-      ip6Arpa,
     };
   }, [ipv4]);
 
@@ -261,7 +259,7 @@ export default function Ipv4ToIpv6Converter() {
                     { label: "Hexadecimal (Base 16)", val: v4Results.hexRaw, key: "hex" },
                     { label: "Integer (Base 10)", val: v4Results.intVal, key: "int" },
                     { label: "Binary (32-bit)", val: v4Results.binary, key: "bin" },
-                    { label: "Reverse DNS Zone (IPv4 in-addr.arpa)", val: v4Results.inAddrArpa, key: "dns4" },
+                    { label: "Reverse DNS PTR Name (in-addr.arpa)", val: v4Results.inAddrArpa, key: "dns4" },
                   ].map((row) => (
                     <div
                       key={row.key}

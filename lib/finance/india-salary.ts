@@ -1,5 +1,6 @@
 /**
- * Indian salary: CTC → take-home, for FY 2025-26 rates (Budget 2025).
+ * Indian salary: CTC → take-home, for FY 2026-27 rates. Budget 2025 set these
+ * slabs and Budget 2026 (1 Feb 2026) left them unchanged; re-check each budget.
  *
  * Kept as pure functions, separate from the UI, so the tax rules can be read
  * and checked in one place. It is an estimate for a typical salaried
@@ -14,7 +15,7 @@ interface Slab {
   rate: number;
 }
 
-/** New regime, FY 2025-26 (section 115BAC). */
+/** New regime, FY 2025-26 and 2026-27 (section 115BAC). */
 export const NEW_REGIME_SLABS: Slab[] = [
   { upTo: 400000, rate: 0 },
   { upTo: 800000, rate: 0.05 },

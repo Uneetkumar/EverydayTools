@@ -128,8 +128,8 @@ export default function AiPromptOptimizer() {
   return (
     <div className="space-y-6">
       <ToolSection
-        title="Structured AI Prompt Optimizer & XML Builder"
-        description="Construct production-grade, state-of-the-art XML prompts for ChatGPT, Claude 3.5, and AI Agents with role isolation and negative constraints."
+        title="Structured Prompt Builder"
+        description="Fill in the sections you need — role, context, goal, rules, reasoning steps, examples, output format — and each is wrapped in its own XML-style tag, the layout model providers recommend for long prompts. Empty sections are left out."
       >
         <Chips
           value={null}

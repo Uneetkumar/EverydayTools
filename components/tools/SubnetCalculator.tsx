@@ -458,7 +458,9 @@ export default function SubnetCalculator() {
                     { label: "Broadcast Address", val: resultV4.broadcastAddress, key: "bcast" },
                     { label: "Wildcard Mask", val: resultV4.wildcard, key: "wild" },
                     { label: "IP Class & Scope", val: `${resultV4.ipClass} · ${resultV4.ipType}`, key: "scope" },
-                    { label: "Reverse DNS Zone", val: resultV4.inAddrArpa, key: "rdns" },
+                    // The full reversed address is the host's PTR name, not
+                    // the zone (a /24's zone drops the last octet).
+                    { label: "Reverse DNS (PTR) Name", val: resultV4.inAddrArpa, key: "rdns" },
                   ].map((row) => (
                     <div
                       key={row.key}

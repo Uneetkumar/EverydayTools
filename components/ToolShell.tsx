@@ -8,8 +8,8 @@ import {
   getToolsByCategory,
 } from "@/lib/tools/registry";
 import { getToolContent } from "@/lib/tools/content";
-import { CURRENCY_PAIRS } from "@/lib/currency/pairs";
 import { getGuidesForTool } from "@/lib/guides/content";
+import { getLastmod, toolPath } from "@/lib/seo/routes";
 import Breadcrumbs from "./Breadcrumbs";
 import FormulaBox from "./FormulaBox";
 import FaqSection from "./FaqSection";
@@ -124,6 +124,10 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
 
   const workspace = <ToolWorkspace name={tool.name}>{children}</ToolWorkspace>;
 
+  // The same date the sitemap and the WebApplication JSON-LD publish: it moves
+  // only when this page's own content or tool code changes.
+  const updated = getLastmod(toolPath(tool.slug));
+
   return (
     <div className="page-container py-5 md:py-8">
       <TrackToolVisit slug={tool.slug} name={tool.name} category={tool.category} />
@@ -230,28 +234,23 @@ export default function ToolShell({ tool, children }: ToolShellProps) {
 
             {allFaqs.length > 0 && <FaqSection faqs={allFaqs} />}
 
-            {tool.slug === "currency-converter" && (
-              <ContentSection id="pairs-heading" title="Popular currency conversions">
-                <p className="mb-4 type-body-sm text-muted-foreground">
-                  Each pair has its own page with the live rate and context on that corridor.
-                </p>
-                <ul className="grid gap-2 sm:grid-cols-2">
-                  {CURRENCY_PAIRS.map((p) => (
-                    <li key={p.slug}>
-                      <Link
-                        href={`/convert/${p.slug}`}
-                        className="flex items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2.5 text-sm transition-colors hover:bg-accent/50"
-                      >
-                        <span className="truncate">
-                          {p.common}
-                          <span className="text-muted-foreground"> · {p.from} → {p.to}</span>
-                        </span>
-                        <ArrowRight aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground" />
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </ContentSection>
+            {updated && (
+              <p className="type-body-sm text-muted-foreground">
+                Page last updated{" "}
+                <time dateTime={updated}>
+                  {new Date(`${updated}T00:00:00Z`).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                    timeZone: "UTC",
+                  })}
+                </time>
+                . Found a wrong result or a mistake on this page?{" "}
+                <Link href="/contact" className="text-link hover:underline">
+                  Let us know
+                </Link>
+                .
+              </p>
             )}
 
             <RelatedTools tools={related} from={tool.slug} />

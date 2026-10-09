@@ -63,6 +63,9 @@ export function generateOrganizationJsonLd(): JsonLdNode {
       url: absoluteUrl("/contact"),
       availableLanguage: ["English"],
     },
+    // Matches "Who builds TabBench" on /about.
+    founder: { "@type": "Person", name: "Uneet Kumar" },
+    foundingDate: "2026-08",
     ...(SEO_CONFIG.sameAs.length ? { sameAs: [...SEO_CONFIG.sameAs] } : {}),
   };
 }

@@ -5,7 +5,6 @@ import {
   type ToolDefinition,
 } from "@/lib/tools/registry";
 import { GUIDES } from "@/lib/guides/content";
-import { CURRENCY_PAIRS } from "@/lib/currency/pairs";
 import lastmodManifest from "./lastmod.json";
 
 /**
@@ -22,7 +21,7 @@ import lastmodManifest from "./lastmod.json";
  * 301-redirects.
  */
 
-export type SitemapSection = "pages" | "categories" | "tools" | "guides" | "currency";
+export type SitemapSection = "pages" | "categories" | "tools" | "guides";
 
 export type RouteKind =
   | "homepage"
@@ -36,7 +35,6 @@ export type RouteKind =
   | "ai-tool"
   | "utility"
   | "guide"
-  | "currency-pair"
   | "informational"
   | "legal";
 
@@ -58,7 +56,6 @@ export const SITEMAP_SECTIONS: { id: SitemapSection; file: string; title: string
   { id: "categories", file: "sitemap-categories.xml", title: "Tool categories" },
   { id: "tools", file: "sitemap-tools.xml", title: "Tools" },
   { id: "guides", file: "sitemap-guides.xml", title: "Guides" },
-  { id: "currency", file: "sitemap-currency.xml", title: "Currency pair converters" },
 ];
 
 const STATIC_ROUTES: Omit<PublicRoute, "lastmod">[] = [
@@ -77,7 +74,6 @@ const STATIC_ROUTES: Omit<PublicRoute, "lastmod">[] = [
 export const toolPath = (slug: string) => `/tools/${slug}`;
 export const categoryPath = (id: string) => `/categories/${id}`;
 export const guidePath = (slug: string) => `/guides/${slug}`;
-export const currencyPairPath = (slug: string) => `/convert/${slug}`;
 
 /** Page type for reports: a calculator, a PDF tool, and so on. */
 export function toolKind(tool: Pick<ToolDefinition, "slug" | "category">): RouteKind {
@@ -126,12 +122,6 @@ export function getPublicRoutes(): PublicRoute[] {
       kind: "guide" as const,
       section: "guides" as const,
       label: g.title,
-    })),
-    ...CURRENCY_PAIRS.map((p) => ({
-      path: currencyPairPath(p.slug),
-      kind: "currency-pair" as const,
-      section: "currency" as const,
-      label: `${p.common} (${p.from} to ${p.to})`,
     })),
   ];
   return routes.map((r) => ({ ...r, lastmod: LASTMOD[r.path]?.lastmod }));

@@ -12,6 +12,73 @@ export const metadata = constructPageMetadata({
   path: "/about",
 });
 
+/**
+ * Dated maintenance log, newest first. Keep it to real, user-visible changes
+ * (fixes, corrected figures, rewritten pages), and add an entry when one
+ * ships: a log that stops being updated is worse than none.
+ */
+const RECENT_CHANGES: Array<{ date: string; label: string; text: React.ReactNode }> = [
+  {
+    date: "2026-10-09",
+    label: "9 October 2026",
+    text: (
+      <>
+        Rewrote the explanations for 26 tools with worked examples and their real limits. Fixed the{" "}
+        <Link href="/tools/sql-formatter">SQL Formatter</Link> (a <code>--</code> comment could swallow the next
+        line), <Link href="/tools/docker-to-compose">Docker Run to Compose</Link> (an unrecognised flag&apos;s value
+        was taken as the image name), the <Link href="/tools/json-to-yaml">JSON ↔ YAML converter</Link> (now built
+        on the js-yaml library, so multi-line blocks no longer vanish) and the Tailwind output of the{" "}
+        <Link href="/tools/glassmorphism-gen">Glassmorphism Generator</Link>.
+      </>
+    ),
+  },
+  {
+    date: "2026-10-09",
+    label: "9 October 2026",
+    text: (
+      <>
+        Checked the <Link href="/tools/salary-calculator">salary calculator</Link> against Budget 2026: the
+        income-tax slabs, standard deduction and ₹12 lakh rebate are unchanged, so it now states FY 2026-27 rates.
+      </>
+    ),
+  },
+  {
+    date: "2026-10-09",
+    label: "9 October 2026",
+    text: (
+      <>
+        Fixed the <Link href="/tools/llm-token-counter">LLM Token Counter</Link>, which counted roughly twice
+        the real number of tokens. Its estimate is now checked against OpenAI&apos;s tokenizer and lands within
+        about 5% on English text and code, and the model list and prices are updated to the current OpenAI,
+        Anthropic and Google models.
+      </>
+    ),
+  },
+  {
+    date: "2026-10-09",
+    label: "9 October 2026",
+    text: (
+      <>
+        Merged the twelve separate currency-pair pages (such as dollar to rupee) into the{" "}
+        <Link href="/tools/currency-converter">Currency Converter</Link>. Old links still open the converter on
+        the same pair, and the useful facts from those pages, such as which currencies are pegged to the dollar,
+        are now in its FAQ.
+      </>
+    ),
+  },
+  {
+    date: "2026-10-04",
+    label: "4 October 2026",
+    text: (
+      <>
+        Added network and developer tools including the <Link href="/tools/subnet-calculator">Subnet
+        Calculator</Link>, <Link href="/tools/chmod-calculator">chmod calculator</Link> and{" "}
+        <Link href="/tools/work-hours-calc">Work Hours Calculator</Link>.
+      </>
+    ),
+  },
+];
+
 export default function AboutPage() {
 
   const tools = getAllTools();
@@ -27,6 +94,19 @@ export default function AboutPage() {
         title="About TabBench"
         lead={`TabBench is a collection of ${tools.length} free tools for everyday tasks — working out a percentage, shrinking a photo, merging PDFs, formatting JSON — that open instantly in your browser with no account and, for almost all of them, no upload.`}
       >
+        <h2 id="who">Who builds TabBench</h2>
+        <p>
+          TabBench is built and maintained by Uneet Kumar. It started in August 2026 with a handful of PDF and
+          image tools and has grown from requests and from gaps found while using it. Tool pages explain how each
+          tool works and, where it matters, what it cannot do; calculator pages show the formula used, with a
+          worked example you can check by hand.
+        </p>
+        <p>
+          Corrections, bug reports and tool requests come to the maintainer directly through the{" "}
+          <Link href="/contact">contact page</Link>, and fixes are listed under{" "}
+          <a href="#changes">recent changes</a> below.
+        </p>
+
         <h2 id="what">What you can do here</h2>
         <p>
           The tools are grouped by the job they help with. Each one has its own page explaining what it does,
@@ -108,6 +188,18 @@ export default function AboutPage() {
           <li>Upload a file for a job your browser can do itself.</li>
           <li>Sell or share what you type or upload — for local tools, we never receive it in the first place.</li>
           <li>Add a fake &ldquo;processing&rdquo; delay or a countdown before a download.</li>
+        </ul>
+
+        <h2 id="changes">Recent changes</h2>
+        <ul>
+          {RECENT_CHANGES.map((c, i) => (
+            <li key={`${c.date}-${i}`}>
+              <strong>
+                <time dateTime={c.date}>{c.label}</time>.
+              </strong>{" "}
+              {c.text}
+            </li>
+          ))}
         </ul>
 
         <h2 id="contact">Get in touch</h2>

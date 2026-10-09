@@ -16,7 +16,8 @@ import {
 } from "@/components/tool/kit";
 import { Button } from "@/components/ui/button";
 
-// Comprehensive offline database of common IEEE OUI prefixes (first 3 bytes: 6 hex chars)
+// Offline table of ~140 common IEEE OUI prefixes (first 3 bytes: 6 hex chars).
+// A small subset of the IEEE registry, which has tens of thousands of entries.
 const OUI_DATABASE: Record<string, string> = {
   // Apple
   "0017F2": "Apple, Inc.",
@@ -214,12 +215,20 @@ export default function MacAddressLookup() {
       ? `${octets[0]}${octets[1]}.${octets[2]}xx.xxxx`.toLowerCase()
       : `${octets[0]}${octets[1]}.${octets[2]}${octets[3]}.${octets[4]}${octets[5]}`.toLowerCase();
     const ouiKey = cleanHex.slice(0, 6);
-    const vendor = OUI_DATABASE[ouiKey] ?? "Unknown Vendor (Private or Unregistered OUI)";
 
     // First byte bit analysis
     const firstByte = parseInt(octets[0], 16);
     const isMulticast = (firstByte & 1) === 1; // Bit 0 (I/G bit)
     const isLocal = (firstByte & 2) === 2; // Bit 1 (U/L bit)
+
+    // The built-in table holds ~140 common prefixes, not the full IEEE
+    // registry, so a miss must not suggest the address is fake. A locally
+    // administered address has no vendor at all (randomised or virtual).
+    const known = OUI_DATABASE[ouiKey];
+    const vendor = isLocal
+      ? "None (locally administered: randomised or virtual)"
+      : known ?? "Not in built-in list (covers ~140 common vendors)";
+    const vendorShort = isLocal ? "None" : known ? known.split(" ")[0] : "Unknown";
 
     // Binary representation
     const binary = octets.map((o) => parseInt(o, 16).toString(2).padStart(8, "0")).join(" ");
@@ -234,6 +243,8 @@ export default function MacAddressLookup() {
       raw: cleanHex,
       ouiKey: `${octets[0]}:${octets[1]}:${octets[2]}`,
       vendor,
+      vendorShort,
+      vendorKnown: !isLocal && !!known,
       isMulticast,
       isLocal,
       binary,
@@ -307,7 +318,7 @@ export default function MacAddressLookup() {
 
           <ToolSection title="Vendor & OUI Details">
             <StatGrid>
-              <Stat label="Hardware Vendor" value={parsed.vendor.split(" ")[0]} hint={parsed.vendor} tone="success" />
+              <Stat label="Hardware Vendor" value={parsed.vendorShort} hint={parsed.vendor} tone={parsed.vendorKnown ? "success" : undefined} />
               <Stat label="OUI Prefix" value={parsed.ouiKey} hint="IEEE Organization Block" />
               <Stat
                 label="Transmission Type"

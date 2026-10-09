@@ -110,7 +110,12 @@ function formatSql(
   // Process casing on code tokens only (preserve string literals completely)
   let processed = "";
   for (const t of tokens) {
-    if (t.type === "literal" || t.type === "comment") {
+    if (t.type === "comment" && t.text.startsWith("--")) {
+      // A line comment runs to the end of the line. The newline after it is
+      // flattened with the rest of the code below, so restore it here or the
+      // next clause would be commented out ("a, -- note b" drops column b).
+      processed += `${t.text}\n`;
+    } else if (t.type === "literal" || t.type === "comment") {
       processed += t.text;
     } else {
       let code = t.text.replace(/[\r\n\t]+/g, " ");

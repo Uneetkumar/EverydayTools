@@ -100,9 +100,19 @@ export default function GlassmorphismGenerator() {
   }, [backgroundRgba, borderRgba, blur, saturation, borderWidth, borderRadius]);
 
   const tailwindCode = useMemo(() => {
-    return `backdrop-blur-[${blur}px] backdrop-saturate-[${saturation}%] bg-[${backgroundRgba}] ${
-      borderWidth > 0 ? `border border-[${borderRgba}]` : ""
-    } rounded-[${borderRadius}px] shadow-lg`;
+    // Tailwind splits classes on whitespace, so spaces inside an arbitrary
+    // value must be underscores: bg-[rgba(255,_255,_255,_0.15)].
+    const arb = (v: string) => v.replace(/\s+/g, "_");
+    return [
+      `backdrop-blur-[${blur}px]`,
+      `backdrop-saturate-[${saturation}%]`,
+      `bg-[${arb(backgroundRgba)}]`,
+      borderWidth > 0 ? `border-[${borderWidth}px] border-[${arb(borderRgba)}]` : "",
+      `rounded-[${borderRadius}px]`,
+      "shadow-[0_8px_32px_0_rgba(0,0,0,0.15)]",
+    ]
+      .filter(Boolean)
+      .join(" ");
   }, [blur, saturation, backgroundRgba, borderWidth, borderRgba, borderRadius]);
 
   const copyToClipboard = (text: string, key: string) => {

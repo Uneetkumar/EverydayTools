@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { Copy, Check, Download, ArrowRightLeft, Trash2, FileCode } from "lucide-react";
 import { toast } from "sonner";
+import { CORE_SCHEMA, dump, loadAll } from "js-yaml";
 import { downloadBlob } from "@/lib/utils/download";
 import {
   ToolSection,
@@ -97,189 +98,20 @@ const PRESETS = [
   },
 ];
 
-// Clean Pure JS JSON -> YAML serializer
-function jsonToYaml(obj: any, indent = 2, currentIndent = 0): string {
-  const pad = " ".repeat(currentIndent);
-
-  if (obj === null || obj === undefined) return "null";
-  if (typeof obj === "boolean" || typeof obj === "number") return String(obj);
-  if (typeof obj === "string") {
-    if (obj.includes("\n")) {
-      const lines = obj.split("\n").map((l) => pad + "  " + l).join("\n");
-      return "|\n" + lines;
-    }
-    if (/[:#\[\]{}*,]|^\s|\s$|^(true|false|null|[0-9]+(\.[0-9]+)?)$/i.test(obj)) {
-      return JSON.stringify(obj);
-    }
-    return obj;
-  }
-
-  if (Array.isArray(obj)) {
-    if (obj.length === 0) return "[]";
-    return obj
-      .map((item) => {
-        if (typeof item === "object" && item !== null && !Array.isArray(item)) {
-          const innerYaml = jsonToYaml(item, indent, currentIndent + indent);
-          const trimmed = innerYaml.trim();
-          const firstNewline = trimmed.indexOf("\n");
-          if (firstNewline !== -1) {
-            const firstLine = trimmed.slice(0, firstNewline);
-            const rest = trimmed.slice(firstNewline + 1);
-            return `${pad}- ${firstLine}\n${rest}`;
-          }
-          return `${pad}- ${trimmed}`;
-        }
-        return `${pad}- ${jsonToYaml(item, indent, currentIndent + indent)}`;
-      })
-      .join("\n");
-  }
-
-  if (typeof obj === "object") {
-    const keys = Object.keys(obj);
-    if (keys.length === 0) return "{}";
-    return keys
-      .map((key) => {
-        const val = obj[key];
-        const safeKey = /[:\s]/.test(key) ? JSON.stringify(key) : key;
-        if (typeof val === "object" && val !== null && Object.keys(val).length > 0) {
-          return `${pad}${safeKey}:\n${jsonToYaml(val, indent, currentIndent + indent)}`;
-        }
-        return `${pad}${safeKey}: ${jsonToYaml(val, indent, currentIndent + indent)}`;
-      })
-      .join("\n");
-  }
-
-  return String(obj);
+// js-yaml rather than a hand-written parser: the old one turned block
+// scalars (`run: |` in CI files) into {} and round-tripped "" as null.
+// CORE_SCHEMA is YAML 1.2's: no Date objects from timestamps, and "yes"/"no"
+// stay strings. dump() still quotes YAML 1.1 booleans ("on", "yes") so older
+// parsers read them back as strings.
+function jsonToYaml(obj: unknown, indent: number): string {
+  return dump(obj, { indent, lineWidth: -1, noRefs: true, schema: CORE_SCHEMA }).trimEnd();
 }
 
-// Clean Lightweight YAML -> JSON parser
-function yamlToJson(yamlStr: string): any {
-  const lines = yamlStr.split(/\r?\n/);
-
-  const parseScalar = (val: string): any => {
-    val = val.trim();
-    if (!val || val === "null" || val === "~") return null;
-    if (val === "true" || val === "True" || val === "yes" || val === "Yes") return true;
-    if (val === "false" || val === "False" || val === "no" || val === "No") return false;
-    if (/^-?\d+$/.test(val)) return parseInt(val, 10);
-    if (/^-?\d+\.\d+$/.test(val)) return parseFloat(val);
-    if (val.startsWith("\"") && val.endsWith("\"")) {
-      try {
-        return JSON.parse(val);
-      } catch {
-        return val.slice(1, -1);
-      }
-    }
-    if (val.startsWith("'") && val.endsWith("'")) {
-      return val.slice(1, -1).replace(/''/g, "'");
-    }
-    if (val.startsWith("[") && val.endsWith("]")) {
-      try {
-        return JSON.parse(val);
-      } catch {
-        return val.slice(1, -1).split(",").map((s) => parseScalar(s.trim()));
-      }
-    }
-    if (val.startsWith("{") && val.endsWith("}")) {
-      try {
-        return JSON.parse(val);
-      } catch {
-        return val;
-      }
-    }
-    return val;
-  };
-
-  const cleaned: { indent: number; text: string }[] = [];
-  for (let i = 0; i < lines.length; i++) {
-    const raw = lines[i];
-    const trimmed = raw.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const indent = raw.search(/\S/);
-    cleaned.push({ indent, text: trimmed });
-  }
-
-  if (cleaned.length === 0) return {};
-
-  let idx = 0;
-
-  function parseBlock(minIndent: number): any {
-    if (idx >= cleaned.length) return null;
-    const first = cleaned[idx];
-    if (first.indent < minIndent) return null;
-
-    if (first.text.startsWith("- ")) {
-      const arr: any[] = [];
-      const seqIndent = first.indent;
-      while (idx < cleaned.length && cleaned[idx].indent === seqIndent && cleaned[idx].text.startsWith("- ")) {
-        const itemLine = cleaned[idx];
-        const content = itemLine.text.slice(2).trim();
-        idx++;
-
-        if (content.includes(":") && !content.startsWith("\"") && !content.startsWith("'")) {
-          const colonIdx = content.indexOf(":");
-          const k = content.slice(0, colonIdx).trim().replace(/^["']|["']$/g, "");
-          const vStr = content.slice(colonIdx + 1).trim();
-          const obj: Record<string, any> = {};
-          if (vStr === "" || vStr === "|" || vStr === ">") {
-            obj[k] = parseBlock(seqIndent + 1);
-          } else {
-            obj[k] = parseScalar(vStr);
-          }
-          while (idx < cleaned.length && cleaned[idx].indent > seqIndent && !cleaned[idx].text.startsWith("- ")) {
-            const propLine = cleaned[idx];
-            if (propLine.text.includes(":")) {
-              const cIdx = propLine.text.indexOf(":");
-              const pk = propLine.text.slice(0, cIdx).trim().replace(/^["']|["']$/g, "");
-              const pvStr = propLine.text.slice(cIdx + 1).trim();
-              idx++;
-              if (pvStr === "" || pvStr === "|" || pvStr === ">") {
-                obj[pk] = parseBlock(propLine.indent + 1);
-              } else {
-                obj[pk] = parseScalar(pvStr);
-              }
-            } else {
-              idx++;
-            }
-          }
-          arr.push(obj);
-        } else if (content === "" || content === "|" || content === ">") {
-          arr.push(parseBlock(seqIndent + 1));
-        } else {
-          arr.push(parseScalar(content));
-        }
-      }
-      return arr;
-    } else {
-      const map: Record<string, any> = {};
-      const mapIndent = first.indent;
-      while (idx < cleaned.length && cleaned[idx].indent === mapIndent && !cleaned[idx].text.startsWith("- ")) {
-        const line = cleaned[idx];
-        const colonIdx = line.text.indexOf(":");
-        if (colonIdx === -1) {
-          idx++;
-          continue;
-        }
-        const key = line.text.slice(0, colonIdx).trim().replace(/^["']|["']$/g, "");
-        const valStr = line.text.slice(colonIdx + 1).trim();
-        idx++;
-
-        if (valStr === "" || valStr === "|" || valStr === ">") {
-          if (idx < cleaned.length && cleaned[idx].indent > mapIndent) {
-            map[key] = parseBlock(cleaned[idx].indent);
-          } else {
-            map[key] = valStr === "|" || valStr === ">" ? "" : {};
-          }
-        } else {
-          map[key] = parseScalar(valStr);
-        }
-      }
-      return map;
-    }
-  }
-
-  const result = parseBlock(0);
-  return result ?? {};
+/** One document → that value; a multi-document stream (---) → an array. */
+function yamlToJson(yamlStr: string): unknown {
+  const docs = loadAll(yamlStr, undefined, { schema: CORE_SCHEMA });
+  if (docs.length === 0) return {};
+  return docs.length === 1 ? docs[0] : docs;
 }
 
 export default function JsonToYaml() {

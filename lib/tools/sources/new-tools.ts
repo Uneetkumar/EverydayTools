@@ -9,7 +9,7 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "subnet-calculator",
     name: "Subnet Calculator",
     shortName: "Subnet Calc",
-    tagline: "IPv4 & IPv6 CIDR subnet calculator with binary bit breakdown.",
+    tagline: "IPv4 and IPv6 subnets: ranges, masks, host counts and bits.",
     category: "api-http",
     description: "Calculate IPv4 and CIDR subnets, host ranges, netmasks, broadcast addresses, and binary bit masks.",
     longDescription:
@@ -38,6 +38,14 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
       "RFC 1918 private vs public IP classification",
       "One-click copy for summary reports and configurations",
     ],
+    formulas: [
+      {
+        name: "Network, broadcast and usable hosts",
+        expression: "network   = address AND mask\nbroadcast = network OR (NOT mask)\nusable    = 2^(32 − prefix) − 2",
+        explanation: "The mask is prefix 1-bits followed by 0-bits. ANDing it with any address in the subnet clears the host bits and gives the network address; setting every host bit gives the broadcast address. Hosts are everything in between. /31 and /32 are special cases with 2 and 1 usable addresses.",
+        example: "192.168.10.77/26: mask 255.255.255.192, network 192.168.10.64, broadcast 192.168.10.127, usable 192.168.10.65–192.168.10.126 (2^6 − 2 = 62 hosts), wildcard 0.0.0.63.",
+      },
+    ],
     faqs: [
       {
         question: "What is the difference between network address and broadcast address?",
@@ -58,16 +66,16 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "mac-address-lookup",
     name: "MAC Address Lookup",
     shortName: "MAC Lookup",
-    tagline: "Identify hardware vendors, normalize MAC formats, and decode OUI bits.",
+    tagline: "Reformat MAC addresses, decode their bits and spot common vendors.",
     category: "api-http",
-    description: "Search MAC address hardware vendors from an offline OUI database and normalize MAC notation formats.",
+    description: "Reformat a MAC address, decode its flag bits, and look up the vendor from a built-in list of common prefixes.",
     longDescription:
       "Inspect and validate MAC addresses (EUI-48). Look up hardware manufacturers like Apple, Cisco, Intel, and Samsung using a bundled offline OUI database. Analyze multicast (I/G) and local administration (U/L) bits.",
     iconName: "Cpu",
     privacy: "local",
     metaTitle: "MAC Address Lookup & OUI Vendor Finder",
     metaDescription:
-      "Lookup MAC address hardware vendors from our offline OUI database. Normalize colon, hyphen, Cisco dot, and hex formats instantly.",
+      "Look up common MAC address vendors offline, decode the unicast and local bits, and convert between colon, hyphen, Cisco dot and hex formats.",
     keywords: [
       "mac address lookup",
       "oui lookup",
@@ -80,8 +88,8 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     ],
     aliases: ["mac vendor", "oui", "mac address", "hardware address", "ethernet mac"],
     features: [
-      "Bundled offline database with 150+ common networking and hardware vendors",
-      "Instant normalization between colon, hyphen, Cisco dot, and raw hex",
+      "Built-in list of about 140 common vendor prefixes (a subset of the IEEE register)",
+      "Normalization between colon, hyphen, Cisco dot, and raw hex",
       "Bit breakdown for Unicast/Multicast (I/G) and Universally/Locally Administered (U/L)",
       "Integer and binary bitstream conversion",
       "Random MAC address generator for testing and lab environments",
@@ -106,7 +114,7 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "ipv4-to-ipv6",
     name: "IPv4 to IPv6 Converter",
     shortName: "IPv4 to IPv6",
-    tagline: "Convert IPv4 to mapped, 6to4, hex, and compress or expand IPv6.",
+    tagline: "IPv4 in IPv6 notation, plus IPv6 expand, compress and PTR names.",
     category: "api-http",
     description: "Convert IPv4 addresses to IPv6 mapped and 6to4 formats, and compress or expand IPv6 addresses.",
     longDescription:
@@ -154,9 +162,9 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "ssl-cert-decoder",
     name: "SSL Certificate Decoder",
     shortName: "SSL Decoder",
-    tagline: "Inspect X.509 certificates and CSRs, validity dates, SANs, and keys.",
+    tagline: "Read a certificate or CSR: names, dates, SANs and fingerprint.",
     category: "api-http",
-    description: "Decode X.509 SSL/TLS certificates and CSRs in your browser without uploading private credentials.",
+    description: "Decode X.509 SSL/TLS certificates and CSRs in your browser: names, validity dates, SANs and fingerprint.",
     longDescription:
       "An in-browser ASN.1/DER X.509 certificate and Certificate Signing Request (CSR) inspector. Decode Subject, Issuer, Validity periods with days-remaining countdowns, Subject Alternative Names (SANs), serial numbers, and SHA-256 fingerprints 100% locally.",
     iconName: "ShieldCheck",
@@ -202,7 +210,7 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "sql-formatter",
     name: "SQL Formatter",
     shortName: "SQL Formatter",
-    tagline: "Format, beautify, and minify SQL queries for Postgres, MySQL, and SQLite.",
+    tagline: "Put each SQL clause on its own line, or minify to one line.",
     category: "developer",
     description: "Beautify, indent, format, and minify SQL queries with customizable casing and spacing.",
     longDescription:
@@ -250,11 +258,11 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "json-to-yaml",
     name: "JSON to YAML Converter",
     shortName: "JSON to YAML",
-    tagline: "Convert bidirectional JSON to YAML and YAML to JSON with presets.",
+    tagline: "Convert JSON to YAML and back, with clear error locations.",
     category: "developer",
     description: "Convert JSON to YAML and YAML to JSON with syntax validation, custom indentation, and config presets.",
     longDescription:
-      "A bidirectional JSON ↔ YAML converter with instant split editing. Convert Kubernetes manifests, Docker Compose configurations, and GitHub Actions files between JSON and YAML effortlessly and safely in your browser.",
+      "A two-way JSON ↔ YAML converter built on js-yaml. Convert Kubernetes manifests, Docker Compose files and GitHub Actions workflows between JSON and YAML in your browser.",
     iconName: "FileCode",
     privacy: "local",
     metaTitle: "JSON to YAML & YAML to JSON Converter",
@@ -297,7 +305,7 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "chmod-calculator",
     name: "Chmod Permissions Calculator",
     shortName: "Chmod Calc",
-    tagline: "Interactive 3x3 Linux permissions matrix, octal sync, and command generator.",
+    tagline: "Work out chmod values from checkboxes, octal or ls -l strings.",
     category: "developer",
     description: "Calculate Linux and Unix file permissions with an interactive 3x3 matrix, octal, and symbolic codes.",
     longDescription:
@@ -324,6 +332,14 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
       "Instant synchronization between Octal, Symbolic (-rwxr-xr-x), and Checkboxes",
       "Recursive and separate directory (755) and file (644) fix commands",
       "Quick presets for SSH keys (600), web servers, and scripts",
+    ],
+    formulas: [
+      {
+        name: "Octal mode from permission bits",
+        expression: "digit   = 4 × read + 2 × write + 1 × execute\nspecial = 4 × setuid + 2 × setgid + 1 × sticky\nmode    = [special] owner group others",
+        explanation: "One digit each for owner, group and others, plus an optional leading digit for the special bits. The symbolic string shows the same bits as letters, with s or t replacing x where a special bit is set.",
+        example: "Owner rwx (4 + 2 + 1 = 7), group r-x (4 + 1 = 5), others r-x (5) → 755, shown as -rwxr-xr-x. Adding setgid gives 2755, shown as -rwxr-sr-x.",
+      },
     ],
     faqs: [
       {
@@ -427,7 +443,7 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
       {
         question: "Can I use the output in Tailwind CSS?",
         answer:
-          "Yes. The generator produces exact Tailwind CSS arbitrary values like shadow-[0_10px_25px_-5px_rgba(0,0,0,0.1)] ready to paste directly into your JSX or HTML.",
+          "Yes. It produces a Tailwind arbitrary value such as shadow-[0px_10px_25px_-5px_rgba(0,_0,_0,_0.12)], with spaces written as underscores as Tailwind requires, ready to paste into your markup.",
       },
     ],
     relatedToolSlugs: ["glassmorphism-gen", "px-to-rem", "color-palette-gen"],
@@ -438,7 +454,7 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "glassmorphism-gen",
     name: "Glassmorphism Generator",
     shortName: "Glassmorphism",
-    tagline: "Create modern CSS frosted glass effects with backdrop blur and border glow.",
+    tagline: "Design frosted-glass panels and copy the CSS or Tailwind classes.",
     category: "developer",
     description: "Design frosted glass UI cards with CSS backdrop-filter blur, border highlights, and scene previews.",
     longDescription:
@@ -484,7 +500,7 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "px-to-rem",
     name: "PX to REM Converter",
     shortName: "PX to REM",
-    tagline: "Convert PX to REM and calculate responsive fluid clamp() typography.",
+    tagline: "Convert px to rem and build fluid clamp() font sizes.",
     category: "developer",
     description: "Convert pixels to rem and em units, and calculate fluid typography CSS clamp() formulas.",
     longDescription:
@@ -511,6 +527,20 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
       "Interactive live viewport slider simulator to test scaling in real time",
       "Tailwind CSS text scale cheat sheet reference table",
     ],
+    formulas: [
+      {
+        name: "Pixels to rem",
+        expression: "rem = px ÷ root font size",
+        explanation: "rem is measured against the font size of the html element, 16px unless a stylesheet or the reader's settings change it.",
+        example: "24px ÷ 16px = 1.5rem. With a 10px root, the same 24px is 2.4rem.",
+      },
+      {
+        name: "Fluid font size with clamp()",
+        expression: "slope     = (max size − min size) ÷ (max width − min width)\nintercept = min size − slope × min width\nfont-size: clamp(min, slope × 100vw + intercept, max)",
+        explanation: "The preferred value is a straight line through the two size and width points; clamp() stops it at the minimum and maximum. Sizes are divided by the root font size to give rem.",
+        example: "16px at 375px to 24px at 1280px: slope = 8 ÷ 905 = 0.00884, intercept = 16 − 0.00884 × 375 = 12.685px = 0.7928rem → clamp(1rem, 0.884vw + 0.7928rem, 1.5rem).",
+      },
+    ],
     faqs: [
       {
         question: "Why should web developers use REM instead of PX?",
@@ -531,7 +561,7 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "svg-to-data-uri",
     name: "SVG to Data URI Converter",
     shortName: "SVG Data URI",
-    tagline: "Clean and encode SVG markup into UTF-8 and Base64 Data URIs.",
+    tagline: "Turn SVG markup into data URIs for CSS, HTML and React.",
     category: "developer",
     description: "Convert SVG code into optimized UTF-8 and Base64 Data URIs for CSS background-image and HTML img tags.",
     longDescription:
@@ -578,7 +608,7 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "color-palette-gen",
     name: "Color Palette Generator",
     shortName: "Palette Gen",
-    tagline: "Generate 11-step Tailwind color shades with WCAG accessibility contrast.",
+    tagline: "Build a 50–950 shade scale from one colour, with contrast ratios.",
     category: "developer",
     description: "Generate 11-step Tailwind color shade scales (50 to 950) with WCAG contrast badges and color harmonies.",
     longDescription:
@@ -625,20 +655,20 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "llm-token-counter",
     name: "LLM Token Counter",
     shortName: "Token Counter",
-    tagline: "Estimate BPE tokens, context limits, and API costs for GPT-4o, Claude, and Gemini.",
+    tagline: "Estimate tokens, context-window use and API cost for a prompt.",
     category: "ai-tools",
-    description: "Calculate LLM tokens, context capacity, and estimated prompt API costs across OpenAI, Anthropic, and Google models.",
+    description: "Estimate LLM tokens, context-window use and prompt API costs at listed model prices.",
     longDescription:
-      "An offline LLM token counter and API pricing calculator. Accurately estimate BPE tokens, word counts, and character lengths for GPT-4o, Claude 3.5 Sonnet, Gemini 1.5 Pro, and Llama 3 with real-time prompt and completion cost estimates.",
+      "An offline LLM token estimator and API cost calculator. Approximates BPE token counts, word counts and character lengths, with prompt and completion cost estimates at listed model prices.",
     iconName: "Cpu",
     privacy: "local",
     metaTitle: "LLM Token Counter & API Cost Calc",
     metaDescription:
-      "Count LLM tokens and estimate API prompt and completion costs for GPT-4o, Claude 3.5, Gemini 1.5, and Llama 3. Runs 100% in your browser.",
+      "Estimate LLM tokens, context-window use and prompt and completion API costs for common models. Runs in your browser; nothing is sent to an AI provider.",
     keywords: [
       "llm token counter",
       "token counter online",
-      "gpt 4o token counter",
+      "gpt token counter",
       "claude token counter",
       "gemini token counter",
       "openai pricing calculator",
@@ -647,10 +677,10 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     ],
     aliases: ["token counter", "llm tokens", "count tokens", "openai tokens", "prompt cost"],
     features: [
-      "Accurate BPE token approximation for GPT-4o, Claude 3.5, Gemini 1.5, and Llama 3",
+      "Heuristic BPE-style token estimate with a per-model adjustment",
       "Detailed metrics: tokens, words, characters with/without spaces, and tokens per word",
       "Real-time API prompt (input) and completion (output) cost estimation",
-      "Visual context window capacity meter (128k, 200k, 1M, 2M limits)",
+      "Context window capacity meter for each listed model",
       "Multi-model price and token comparison matrix",
     ],
     faqs: [
@@ -673,9 +703,9 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "ai-prompt-opt",
     name: "AI Prompt Optimizer",
     shortName: "Prompt Optimizer",
-    tagline: "Build structured XML system prompts with role isolation and negative rules.",
+    tagline: "Assemble a clear, sectioned prompt from role, rules and examples.",
     category: "ai-tools",
-    description: "Build structured XML system prompts with role isolation, negative constraints, and few-shot examples.",
+    description: "Assemble a structured prompt from role, context, rules, examples and output format, each in its own XML-style tag.",
     longDescription:
       "A structured prompt engineering tool for AI builders. Compose system prompts using industry-standard XML boundary tags (<role>, <objective>, <rules>, <thinking_process>, <examples>) to drastically improve LLM output accuracy.",
     iconName: "Sparkles",
@@ -720,7 +750,7 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "json-schema-for-ai",
     name: "AI Function Calling Schema",
     shortName: "AI Tool Schema",
-    tagline: "Build OpenAI Structured Output and Anthropic Tool Call JSON schemas.",
+    tagline: "Write tool schemas for OpenAI and Anthropic function calling.",
     category: "ai-tools",
     description: "Generate strict JSON schemas for OpenAI Function Calling, Structured Outputs, and Anthropic Claude Tools.",
     longDescription:
@@ -751,7 +781,7 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
       {
         question: "What are OpenAI Structured Outputs?",
         answer:
-          "Structured Outputs ensure the model's generated response strictly matches your supplied JSON Schema 100% of the time. It requires 'strict: true', 'additionalProperties: false', and all properties listed in 'required'.",
+          "Structured Outputs constrain the model so its arguments always match your JSON Schema. It requires 'strict: true', 'additionalProperties: false' on every object, and every property listed in 'required' (optional ones are made nullable).",
       },
       {
         question: "How do Anthropic Claude Tool definitions differ from OpenAI?",
@@ -767,7 +797,7 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "clean-prompt-strip",
     name: "Prompt & Context Cleaner",
     shortName: "Prompt Cleaner",
-    tagline: "Strip markdown, HTML, comments, and mask PII to reduce token consumption.",
+    tagline: "Strip markup and comments and mask personal data before prompting.",
     category: "ai-tools",
     description: "Sanitize prompts, mask PII (emails, cards, IPs), strip HTML and comments, and optimize context sizes.",
     longDescription:
@@ -814,7 +844,7 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "tip-calculator",
     name: "Tip & Bill Split Calculator",
     shortName: "Tip Calculator",
-    tagline: "Calculate tips, split group bills, round per person, and copy SMS summary.",
+    tagline: "Work out the tip, split the bill and round each share.",
     category: "calculators",
     description: "Calculate restaurant tips, split bills among friends, round per person, and copy a shareable message.",
     longDescription:
@@ -841,11 +871,19 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
       "Customizable currency symbols and locale formatting",
       "One-click copy formatted WhatsApp and SMS group summary",
     ],
+    formulas: [
+      {
+        name: "Tip, total and split",
+        expression: "tip        = bill × tip% ÷ 100\ntotal      = bill + tip\nper person = total ÷ people\nround up   : share = ⌈per person⌉, total = share × people, tip = total − bill",
+        explanation: "Exact Cent uses the plain split. Round Total Up rounds the total to the next whole unit before splitting; Round Per Person Up rounds each share instead. In both cases the extra goes into the tip.",
+        example: "$120 at 18% for 4 people: tip $21.60, total $141.60, $35.40 each. Rounded up per person: $36 each, $144 in total, so the tip becomes $24.00 (20%).",
+      },
+    ],
     faqs: [
       {
         question: "How is the tip calculated when rounding per person?",
         answer:
-          "When rounding per person up, the individual share is rounded to the nearest whole currency unit (e.g. $28.40 -> $29.00), and the tip is adjusted accordingly so the group covers the exact required amount plus generous rounding.",
+          "Each person's share is rounded up to the next whole unit ($28.40 becomes $29.00) and the tip grows by the difference, so the group pays slightly more than the exact amount and nobody has to settle cents.",
       },
       {
         question: "What is standard tipping etiquette?",
@@ -861,11 +899,11 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     slug: "fuel-cost-calc",
     name: "Fuel Cost Calculator",
     shortName: "Fuel Calculator",
-    tagline: "Calculate road trip gas costs, fuel consumed, and passenger splits.",
+    tagline: "Fuel needed, trip cost and each passenger's share.",
     category: "calculators",
     description: "Calculate gas and fuel costs for road trips and daily commutes in Metric or Imperial units.",
     longDescription:
-      "A comprehensive road trip fuel cost calculator. Calculate total gasoline or diesel consumed, total trip cost, and cost per passenger in Metric (km, L/100km, $/L) or Imperial (miles, MPG, $/gal) with vehicle presets.",
+      "A road trip fuel cost calculator. Calculate total gasoline or diesel consumed, total trip cost, and cost per passenger in Metric (km, L/100km, $/L) or Imperial (miles, MPG, $/gal) with vehicle presets.",
     iconName: "Fuel",
     privacy: "local",
     metaTitle: "Fuel Cost & Mileage Calculator",
@@ -888,6 +926,14 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
       "Split fuel expenses evenly among road trip passengers",
       "Preloaded vehicle efficiency presets (Hybrid, Sedan, SUV, Truck, Motorcycle)",
       "Cost per kilometer or mile metric for travel expense reimbursement",
+    ],
+    formulas: [
+      {
+        name: "Fuel used and trip cost",
+        expression: "metric:   fuel (L)   = distance (km) ÷ 100 × L/100km\nimperial: fuel (gal) = distance (mi) ÷ MPG\ncost       = fuel × price per litre or gallon\nper person = cost ÷ passengers",
+        explanation: "Round Trip doubles the distance first. Cost per km or mile is the total cost divided by the total distance.",
+        example: "560 km round trip at 6.67 L/100km (15 km/L) = 37.4 L; at ₹95 a litre = ₹3,548; split four ways = ₹887 each.",
+      },
     ],
     faqs: [
       {
@@ -913,7 +959,7 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
     category: "date-time",
     description: "Calculate work hours, weekly payroll timesheets, unpaid break deductions, and overtime pay.",
     longDescription:
-      "A complete employee shift and weekly timesheet calculator. Calculate shift duration, deduct unpaid breaks, compute decimal hours for payroll software, calculate overtime pay, and handle overnight cross-midnight shifts effortlessly.",
+      "A shift and weekly timesheet calculator. Calculate shift duration, deduct unpaid breaks, compute decimal hours for payroll software, calculate overtime pay, and handle overnight shifts that cross midnight.",
     iconName: "Clock",
     privacy: "local",
     metaTitle: "Work Hours & Timesheet Calculator",
@@ -936,6 +982,14 @@ export const NEW_OFFLINE_TOOLS: Record<string, ToolSource> = {
       "Decimal hours conversion (e.g. 8h 30m = 8.50 hrs) for payroll entry",
       "Overtime pay calculation with customizable weekly threshold and 1.5x overtime rate",
       "One-click 'Fill 9-to-5' weekday schedule button and CSV timesheet export",
+    ],
+    formulas: [
+      {
+        name: "Hours worked, overtime and pay",
+        expression: "shift    = end − start (+ 24 h if end is earlier) − break\nregular  = min(week total, threshold)\novertime = max(0, week total − threshold)\npay      = regular × rate + overtime × overtime rate",
+        explanation: "Each day's shift is worked out in minutes and converted to decimal hours by dividing by 60. Overtime is counted on the weekly total, not per day.",
+        example: "Monday–Thursday 09:00–17:30 and Friday 09:00–17:00, each with a 30-minute break: 4 × 8 + 7.5 = 39.5 hours, all regular at a 40-hour threshold. At $25 an hour that is $987.50.",
+      },
     ],
     faqs: [
       {

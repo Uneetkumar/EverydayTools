@@ -18,71 +18,138 @@ import { Button } from "@/components/ui/button";
 
 interface ModelPricing {
   name: string;
-  provider: string;
+  provider: "OpenAI" | "Anthropic" | "Google";
   contextWindow: number;
+  /** Standard (not batch, not cached) USD list price per 1M tokens. */
   inputPer1M: number;
   outputPer1M: number;
+  /** Higher rates for the whole request once the prompt is over `above` tokens. */
+  longContext?: { above: number; inputPer1M: number; outputPer1M: number };
+  /**
+   * Estimated tokens relative to OpenAI's o200k tokenizer, which the
+   * estimator is calibrated against. From each provider's published ratios:
+   * Anthropic's tokenizer for Claude 4.7 and later produces about 30% more
+   * tokens than its previous one (which tracked o200k closely), and Google
+   * puts a Gemini token at about 4 characters (o200k averages ~4.4 on English).
+   */
   tokenMultiplier: number;
+  note?: string;
 }
 
+/**
+ * List prices checked 9 October 2026 on each provider's own pages. Providers
+ * change models and prices often: re-check every few months, update the date
+ * in PRICES_CHECKED, and keep the notes below the table in step.
+ *   OpenAI:    https://developers.openai.com/api/docs/pricing
+ *              https://developers.openai.com/api/docs/models
+ *   Anthropic: https://platform.claude.com/docs/en/about-claude/pricing
+ *              https://platform.claude.com/docs/en/about-claude/models/overview
+ *   Google:    https://ai.google.dev/gemini-api/docs/pricing
+ *              https://ai.google.dev/gemini-api/docs/models
+ */
+const PRICES_CHECKED = "9 October 2026";
+
+const PRICE_SOURCES = [
+  { label: "OpenAI", href: "https://developers.openai.com/api/docs/pricing" },
+  { label: "Anthropic", href: "https://platform.claude.com/docs/en/about-claude/pricing" },
+  { label: "Google", href: "https://ai.google.dev/gemini-api/docs/pricing" },
+];
+
 const MODELS: Record<string, ModelPricing> = {
-  "gpt-4o": {
-    name: "GPT-4o",
+  "gpt-6-astra": {
+    name: "GPT-6 Astra",
     provider: "OpenAI",
-    contextWindow: 128000,
-    inputPer1M: 2.5,
-    outputPer1M: 10.0,
-    tokenMultiplier: 1.0,
+    contextWindow: 1_050_000,
+    inputPer1M: 10,
+    outputPer1M: 50,
+    longContext: { above: 272_000, inputPer1M: 20, outputPer1M: 75 },
+    tokenMultiplier: 1,
   },
-  "gpt-4o-mini": {
-    name: "GPT-4o-mini",
+  "gpt-6.1-sol": {
+    name: "GPT-6.1 Sol",
     provider: "OpenAI",
-    contextWindow: 128000,
-    inputPer1M: 0.15,
-    outputPer1M: 0.6,
-    tokenMultiplier: 1.0,
+    contextWindow: 1_050_000,
+    inputPer1M: 2,
+    outputPer1M: 10,
+    longContext: { above: 272_000, inputPer1M: 4, outputPer1M: 15 },
+    tokenMultiplier: 1,
   },
-  "claude-3-5-sonnet": {
-    name: "Claude 3.5 Sonnet",
+  "gpt-6-luna": {
+    name: "GPT-6 Luna",
+    provider: "OpenAI",
+    contextWindow: 1_050_000,
+    inputPer1M: 0.1,
+    outputPer1M: 0.5,
+    longContext: { above: 272_000, inputPer1M: 0.2, outputPer1M: 0.75 },
+    tokenMultiplier: 1,
+  },
+  "claude-fable-5-1": {
+    name: "Claude Fable 5.1",
     provider: "Anthropic",
-    contextWindow: 200000,
-    inputPer1M: 3.0,
-    outputPer1M: 15.0,
-    tokenMultiplier: 1.05,
+    contextWindow: 1_000_000,
+    inputPer1M: 10,
+    outputPer1M: 50,
+    tokenMultiplier: 1.3,
   },
-  "claude-3-5-haiku": {
-    name: "Claude 3.5 Haiku",
+  "claude-opus-5-5": {
+    name: "Claude Opus 5.5",
     provider: "Anthropic",
-    contextWindow: 200000,
-    inputPer1M: 0.8,
-    outputPer1M: 4.0,
-    tokenMultiplier: 1.05,
+    contextWindow: 1_000_000,
+    inputPer1M: 4,
+    outputPer1M: 20,
+    tokenMultiplier: 1.3,
   },
-  "gemini-1-5-pro": {
-    name: "Gemini 1.5 Pro",
+  "claude-sonnet-5-5": {
+    name: "Claude Sonnet 5.5",
+    provider: "Anthropic",
+    contextWindow: 1_000_000,
+    inputPer1M: 2,
+    outputPer1M: 10,
+    tokenMultiplier: 1.3,
+  },
+  "claude-haiku-5-5": {
+    name: "Claude Haiku 5.5",
+    provider: "Anthropic",
+    contextWindow: 1_000_000,
+    inputPer1M: 0.1,
+    outputPer1M: 0.5,
+    longContext: { above: 100_000, inputPer1M: 0.5, outputPer1M: 2.5 },
+    tokenMultiplier: 1.3,
+  },
+  "gemini-3.1-pro-preview": {
+    name: "Gemini 3.1 Pro (preview)",
     provider: "Google",
-    contextWindow: 2000000,
-    inputPer1M: 1.25,
-    outputPer1M: 5.0,
-    tokenMultiplier: 0.98,
+    contextWindow: 1_048_576,
+    inputPer1M: 2,
+    outputPer1M: 12,
+    longContext: { above: 200_000, inputPer1M: 4, outputPer1M: 18 },
+    tokenMultiplier: 1.1,
   },
-  "gemini-1-5-flash": {
-    name: "Gemini 1.5 Flash",
+  "gemini-3.8-flash": {
+    name: "Gemini 3.8 Flash",
     provider: "Google",
-    contextWindow: 1000000,
-    inputPer1M: 0.075,
-    outputPer1M: 0.3,
-    tokenMultiplier: 0.98,
-  },
-  "llama-3-1-70b": {
-    name: "Llama 3.1 70B",
-    provider: "Meta",
-    contextWindow: 128000,
-    inputPer1M: 0.6,
-    outputPer1M: 0.8,
-    tokenMultiplier: 1.02,
+    contextWindow: 1_048_576,
+    inputPer1M: 0.75,
+    outputPer1M: 3.75,
+    tokenMultiplier: 1.1,
+    note: "Gemini 3.8 Flash: promotional price until 31 December 2026; $1.50 input and $7.50 output per 1M tokens from 1 January 2027.",
   },
 };
+
+const DEFAULT_MODEL = "gpt-6.1-sol";
+
+/** The rates that apply to a request whose prompt is `tokens` long. */
+function ratesFor(model: ModelPricing, tokens: number) {
+  const long = model.longContext && tokens > model.longContext.above ? model.longContext : null;
+  return {
+    inputPer1M: long ? long.inputPer1M : model.inputPer1M,
+    outputPer1M: long ? long.outputPer1M : model.outputPer1M,
+    isLong: !!long,
+  };
+}
+
+const fmtUsd = (n: number) => `$${n < 0.01 ? n.toFixed(5) : n.toFixed(4)}`;
+const fmtRate = (n: number) => `$${n < 1 ? n.toFixed(2) : n.toLocaleString(undefined, { maximumFractionDigits: 2 })}`;
 
 const SAMPLE_TEXTS = [
   {
@@ -124,33 +191,50 @@ Always think step-by-step before answering. Enclose architectural decisions insi
   },
 ];
 
-// High-fidelity BPE token estimation
+/**
+ * Heuristic token estimate, calibrated against OpenAI's o200k_base tokenizer:
+ * within about 5% on English prose, source code and JSON, about 10-15% on
+ * CSS, CSV and URLs. It is not any provider's real tokenizer.
+ *
+ * BPE tokenizers attach the space before a word to the word (" token"), so a
+ * word with its leading space is one piece; camelCase splits into its parts;
+ * digits group in threes; runs of punctuation and of whitespace (newlines,
+ * indentation) are about one token each. Devanagari and other non-Latin
+ * alphabets average ~4 characters a token, CJK ~1.5.
+ */
 function estimateTokens(text: string, multiplier: number): number {
   if (!text) return 0;
-  // BPE pattern matching words, numbers, punctuation, spaces, code symbols
-  const bpeRegex = /[A-Z]?[a-z]+|[A-Z]+(?![a-z])|[0-9]+|[^\s\w]+|\s+(?!\S)|\s+/g;
-  const matches = text.match(bpeRegex);
-  if (!matches) return 0;
-
+  const pieces =
+    text.match(/ ?(?:[A-Z]?[a-z]+|[A-Z]+(?![a-z])|[\p{L}\p{M}]+)| ?\p{N}+| ?[^\s\p{L}\p{M}\p{N}]+|\s+/gu) ?? [];
   let count = 0;
-  for (const token of matches) {
-    if (token.length <= 4) {
-      count += 1;
+  for (const piece of pieces) {
+    const t = piece.trimStart();
+    if (!t) {
+      count += 1; // a whitespace run
+      continue;
+    }
+    const cp = t.codePointAt(0) ?? 0;
+    if (/\p{N}/u.test(t[0])) {
+      count += Math.ceil(t.length / 3);
+    } else if (/[\p{L}\p{M}]/u.test(t[0])) {
+      const isCjk = (cp >= 0x2e80 && cp <= 0x9fff) || (cp >= 0xac00 && cp <= 0xd7af) || (cp >= 0x3040 && cp <= 0x30ff);
+      const len = [...t].length;
+      if (isCjk) count += Math.ceil(len / 1.5);
+      else if (cp > 0x24f) count += Math.ceil(len / 4);
+      else count += len <= 12 ? 1 : Math.ceil(len / 7);
     } else {
-      // Long words or continuous numbers split into multiple tokens
-      count += Math.ceil(token.length / 3.8);
+      count += Math.ceil(t.length / 6);
     }
   }
-
   return Math.max(1, Math.round(count * multiplier));
 }
 
 export default function LlmTokenCounter() {
-  const [selectedModelKey, setSelectedModelKey] = useState("gpt-4o");
+  const [selectedModelKey, setSelectedModelKey] = useState(DEFAULT_MODEL);
   const [text, setText] = useState(SAMPLE_TEXTS[0].text);
   const [copied, setCopied] = useState(false);
 
-  const model = MODELS[selectedModelKey] || MODELS["gpt-4o"];
+  const model = MODELS[selectedModelKey] || MODELS[DEFAULT_MODEL];
 
   const stats = useMemo(() => {
     const rawTokens = estimateTokens(text, model.tokenMultiplier);
@@ -159,8 +243,9 @@ export default function LlmTokenCounter() {
     const words = text.trim() ? text.trim().split(/\s+/).length : 0;
     const tokensPerWord = words > 0 ? (rawTokens / words).toFixed(2) : "0";
 
-    const inputCost = ((rawTokens / 1_000_000) * model.inputPer1M).toFixed(5);
-    const outputCost = ((rawTokens / 1_000_000) * model.outputPer1M).toFixed(5);
+    const rates = ratesFor(model, rawTokens);
+    const inputCost = fmtUsd((rawTokens / 1_000_000) * rates.inputPer1M);
+    const outputCost = fmtUsd((rawTokens / 1_000_000) * rates.outputPer1M);
 
     const contextPercent = Math.min(100, (rawTokens / model.contextWindow) * 100);
 
@@ -172,6 +257,7 @@ export default function LlmTokenCounter() {
       tokensPerWord,
       inputCost,
       outputCost,
+      rates,
       contextPercent: contextPercent.toFixed(2),
     };
   }, [text, model]);
@@ -182,7 +268,7 @@ export default function LlmTokenCounter() {
       `Tokens: ${stats.tokens.toLocaleString()}`,
       `Words: ${stats.words.toLocaleString()}`,
       `Characters: ${stats.charsWithSpaces.toLocaleString()}`,
-      `Estimated Input Cost: $${stats.inputCost}`,
+      `Estimated Input Cost: ${stats.inputCost} at ${fmtRate(stats.rates.inputPer1M)} per 1M tokens (prices checked ${PRICES_CHECKED})`,
       `Context Usage: ${stats.contextPercent}% of ${model.contextWindow.toLocaleString()} tokens`,
     ].join("\n");
     navigator.clipboard.writeText(summary);
@@ -195,7 +281,7 @@ export default function LlmTokenCounter() {
     <div className="space-y-6">
       <ToolSection
         title="LLM Token Counter & API Cost Calculator"
-        description="Estimate BPE tokens, character count, and exact prompt & completion pricing across GPT-4o, Claude 3.5, Gemini 1.5, and Llama 3."
+        description="Estimate tokens, characters and API cost for a prompt. Counts approximate how BPE tokenizers split text (each provider's real tokenizer differs a little), and prices are list prices per 1M tokens that providers change often."
       >
         <div className="flex flex-wrap items-center justify-between gap-2">
           <Chips
@@ -246,7 +332,11 @@ export default function LlmTokenCounter() {
           />
           <Stat label="Total Words" value={stats.words.toLocaleString()} />
           <Stat label="Characters" value={stats.charsWithSpaces.toLocaleString()} hint={`${stats.charsNoSpaces} without spaces`} />
-          <Stat label="Input API Cost" value={`$${stats.inputCost}`} hint={`$${model.inputPer1M} / 1M tokens`} />
+          <Stat
+            label="Input API Cost"
+            value={stats.inputCost}
+            hint={`${fmtRate(stats.rates.inputPer1M)} / 1M tokens${stats.rates.isLong ? " (long-prompt rate)" : ""}`}
+          />
         </StatGrid>
 
         {/* Context Window Progress Meter */}
@@ -283,8 +373,9 @@ export default function LlmTokenCounter() {
             <tbody className="divide-y divide-border">
               {Object.entries(MODELS).map(([k, m]) => {
                 const modelTokens = estimateTokens(text, m.tokenMultiplier);
-                const pCost = ((modelTokens / 1_000_000) * m.inputPer1M).toFixed(5);
-                const cCost = ((modelTokens / 1_000_000) * m.outputPer1M).toFixed(5);
+                const r = ratesFor(m, modelTokens);
+                const pCost = fmtUsd((modelTokens / 1_000_000) * r.inputPer1M);
+                const cCost = fmtUsd((modelTokens / 1_000_000) * r.outputPer1M);
                 const isCurrent = k === selectedModelKey;
                 return (
                   <tr
@@ -296,13 +387,41 @@ export default function LlmTokenCounter() {
                     </td>
                     <td className="px-3 py-2">{m.contextWindow.toLocaleString()}</td>
                     <td className="px-3 py-2">{modelTokens.toLocaleString()}</td>
-                    <td className="px-3 py-2">${pCost}</td>
-                    <td className="px-3 py-2">${cCost}</td>
+                    <td className="px-3 py-2">
+                      {pCost}
+                      {r.isLong && <span className="ml-1 text-[10px] text-muted-foreground">long</span>}
+                    </td>
+                    <td className="px-3 py-2">{cCost}</td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
+        </div>
+
+        <div className="space-y-1.5 text-xs text-muted-foreground">
+          <p>
+            Standard list prices per 1M tokens, checked {PRICES_CHECKED} on each provider&apos;s pricing page (
+            {PRICE_SOURCES.map((src, i) => (
+              <React.Fragment key={src.href}>
+                {i > 0 && ", "}
+                <a href={src.href} target="_blank" rel="noopener noreferrer" className="text-link hover:underline">
+                  {src.label}
+                </a>
+              </React.Fragment>
+            ))}
+            ). Batch and prompt-caching discounts are not included, and prices change often, so confirm before
+            budgeting. Completion cost is what generating the same number of tokens would cost.
+          </p>
+          <p>
+            Long-prompt rates (marked &ldquo;long&rdquo;) apply to the whole request once the prompt passes a size:
+            over 272K tokens on OpenAI&apos;s GPT-6 models, over 200K on Gemini 3.1 Pro, and over 100K on Claude
+            Haiku 5.5.{" "}
+            {Object.values(MODELS)
+              .filter((m) => m.note)
+              .map((m) => m.note)
+              .join(" ")}
+          </p>
         </div>
 
         <ActionBar>

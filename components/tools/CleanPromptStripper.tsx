@@ -73,14 +73,23 @@ function cleanPrompt(
 ): string {
   let text = input;
 
+  // Markdown headings look exactly like "# comment" lines; when Markdown is
+  // being stripped anyway, unwrap them first so the comment pass below keeps
+  // their text.
+  if (options.stripMarkdown) {
+    text = text.replace(/^#{1,6}\s+/gm, "");
+  }
+
   // 1. Strip Comments
   if (options.stripComments) {
     text = text
       .replace(/\/\*[\s\S]*?\*\//g, "") // Block comments /* */
       .replace(/<!--[\s\S]*?-->/g, "") // HTML comments <!-- -->
       .replace(/(?<!:)\/\/.*$/gm, "") // Line comments and inline // comments (preserving http://, https://)
-      .replace(/(?<=\s)#(?!\s*#).*$/gm, "") // Inline # comments
-      .replace(/^\s*#(?!#).*$/gm, ""); // Standalone script line comments #
+      // Inline "# comment" needs a space after the #, so "issue #42" and
+      // "color: #fff" survive.
+      .replace(/(?<=\s)#\s.*$/gm, "")
+      .replace(/^\s*#(?![#!]).*$/gm, ""); // Standalone script line comments # (not #! shebangs)
   }
 
   // 2. Strip HTML tags
@@ -92,10 +101,12 @@ function cleanPrompt(
   if (options.stripMarkdown) {
     text = text
       .replace(/^#{1,6}\s+/gm, "") // Headers
-      .replace(/\*\*([^*]+)\*\*/g, "$1") // Bold **text**
-      .replace(/\*([^*]+)\*/g, "$1") // Italics *text*
-      .replace(/__([^_]+)__/g, "$1") // Bold __text__
-      .replace(/_([^_]+)_/g, "$1") // Italics _text_
+      .replace(/\*\*([^*\n]+)\*\*/g, "$1") // Bold **text**
+      .replace(/(?<![\w*])\*([^*\n]+)\*(?![\w*])/g, "$1") // Italics *text*
+      // Underscore emphasis only at word edges, so snake_case names such as
+      // user_id_value are left alone.
+      .replace(/(?<!\w)__([^_\n]+)__(?!\w)/g, "$1") // Bold __text__
+      .replace(/(?<!\w)_([^_\n]+)_(?!\w)/g, "$1") // Italics _text_
       .replace(/`([^`]+)`/g, "$1") // Inline code `text`
       .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1") // Links [text](url) -> text
       .replace(/^>\s+/gm, "") // Blockquotes
@@ -109,20 +120,26 @@ function cleanPrompt(
       /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b/g,
       "[EMAIL_REDACTED]"
     );
-    // Phone numbers (US/Intl)
+    // Cards and IPs first: the looser phone pattern would otherwise claim
+    // part of a 16-digit card number.
+    // Credit card patterns
     text = text.replace(
-      /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g,
-      "[PHONE_REDACTED]"
+      /\b(?:\d{4}[-\s]?){3}\d{4}\b/g,
+      "[CARD_REDACTED]"
     );
     // IPv4 addresses
     text = text.replace(
       /\b(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g,
       "[IP_REDACTED]"
     );
-    // Credit card patterns
+    // Phone numbers: international "+" numbers in groups (+44 20 7946 0958),
+    // Indian mobiles (98765 43210, +91-9876543210), then North American
+    // 10-digit numbers.
+    text = text.replace(/\+\d{1,3}(?:[-.\s]?\(?\d{2,5}\)?){2,4}\b/g, "[PHONE_REDACTED]");
+    text = text.replace(/(?<!\d)(?:0)?[6-9]\d{4}[-\s]?\d{5}\b/g, "[PHONE_REDACTED]");
     text = text.replace(
-      /\b(?:\d{4}[-\s]?){3}\d{4}\b/g,
-      "[CARD_REDACTED]"
+      /(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}\b/g,
+      "[PHONE_REDACTED]"
     );
     // AWS Key pattern
     text = text.replace(/\bAKIA[0-9A-Z]{16}\b/g, "[AWS_KEY_REDACTED]");

@@ -3,40 +3,40 @@
   "version": 1,
   "routes": {
     "/": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "262236c9ce049730"
+      "lastmod": "2026-10-09",
+      "fingerprint": "3b5021be6f8ae02d"
     },
     "/about": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "e12887caf99641f0"
+      "lastmod": "2026-10-09",
+      "fingerprint": "74b4ad76dde3c725"
     },
     "/categories": {
       "lastmod": "2026-10-04",
       "fingerprint": "bef05ac4fe75e9e2"
     },
     "/categories/ai-tools": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "f9bbb4ee68a36828"
+      "lastmod": "2026-10-09",
+      "fingerprint": "525959cb59188e47"
     },
     "/categories/api-http": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "d5bf67f37a6ad491"
+      "lastmod": "2026-10-09",
+      "fingerprint": "813e36de02048923"
     },
     "/categories/business": {
       "lastmod": "2026-09-30",
       "fingerprint": "1ad48b66f496770d"
     },
     "/categories/calculators": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "b3d7bcd7b0a657d2"
+      "lastmod": "2026-10-09",
+      "fingerprint": "c9ba801fdcf5f1da"
     },
     "/categories/date-time": {
       "lastmod": "2026-10-04",
       "fingerprint": "c13eddb14993b860"
     },
     "/categories/developer": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "17d95140ebda101b"
+      "lastmod": "2026-10-09",
+      "fingerprint": "5633331cb147ab69"
     },
     "/categories/image-media": {
       "lastmod": "2026-09-30",
@@ -61,54 +61,6 @@
     "/contact": {
       "lastmod": "2026-09-29",
       "fingerprint": "cb1347fb245b3f30"
-    },
-    "/convert/aed-to-inr": {
-      "lastmod": "2026-09-05",
-      "fingerprint": "5a986048a77cddd9"
-    },
-    "/convert/aud-to-inr": {
-      "lastmod": "2026-09-05",
-      "fingerprint": "ef35418fcc56a96e"
-    },
-    "/convert/cad-to-inr": {
-      "lastmod": "2026-09-05",
-      "fingerprint": "53ae5be0bb56ce5c"
-    },
-    "/convert/eur-to-inr": {
-      "lastmod": "2026-09-05",
-      "fingerprint": "6696d1d7176b945e"
-    },
-    "/convert/gbp-to-inr": {
-      "lastmod": "2026-09-05",
-      "fingerprint": "b1924ac94e3078b9"
-    },
-    "/convert/gbp-to-usd": {
-      "lastmod": "2026-09-05",
-      "fingerprint": "b2280a038a2f0ce7"
-    },
-    "/convert/inr-to-usd": {
-      "lastmod": "2026-09-05",
-      "fingerprint": "3b50c182506dfbf2"
-    },
-    "/convert/kwd-to-inr": {
-      "lastmod": "2026-09-05",
-      "fingerprint": "2a173ddc5bb504b1"
-    },
-    "/convert/sar-to-inr": {
-      "lastmod": "2026-09-05",
-      "fingerprint": "98277e8d912e0928"
-    },
-    "/convert/sgd-to-inr": {
-      "lastmod": "2026-09-05",
-      "fingerprint": "aba83f6546692f05"
-    },
-    "/convert/usd-to-eur": {
-      "lastmod": "2026-09-05",
-      "fingerprint": "f2ac13ca016190be"
-    },
-    "/convert/usd-to-inr": {
-      "lastmod": "2026-09-05",
-      "fingerprint": "e18fc564787b6dd8"
     },
     "/editorial-policy": {
       "lastmod": "2026-09-30",
@@ -235,8 +187,8 @@
       "fingerprint": "c33d162efb5d75be"
     },
     "/tools": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "fbfffacdcc1ad6f3"
+      "lastmod": "2026-10-09",
+      "fingerprint": "b3ada51972bb7636"
     },
     "/tools/add-page-numbers": {
       "lastmod": "2026-10-04",
@@ -259,8 +211,8 @@
       "fingerprint": "8840eba6e3f39898"
     },
     "/tools/ai-prompt-opt": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "8984c320ac271987"
+      "lastmod": "2026-10-09",
+      "fingerprint": "d039bcc4f111504b"
     },
     "/tools/ai-text-rewriter": {
       "lastmod": "2026-10-04",
@@ -307,8 +259,8 @@
       "fingerprint": "006b4ec2a63ea8b7"
     },
     "/tools/box-shadow-gen": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "d672cbd5f675e72b"
+      "lastmod": "2026-10-09",
+      "fingerprint": "20d5b51ca671233b"
     },
     "/tools/break-even-calculator": {
       "lastmod": "2026-10-04",
@@ -323,12 +275,12 @@
       "fingerprint": "fc1f7ebba7a9e659"
     },
     "/tools/chmod-calculator": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "c4a467b74686dc4e"
+      "lastmod": "2026-10-09",
+      "fingerprint": "37d27c1b0fa4d527"
     },
     "/tools/clean-prompt-strip": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "ade443ae1ea0329d"
+      "lastmod": "2026-10-09",
+      "fingerprint": "a961ca6453fac9f9"
     },
     "/tools/coin-flip": {
       "lastmod": "2026-10-03",
@@ -339,12 +291,12 @@
       "fingerprint": "a5afecfdf58b66bc"
     },
     "/tools/color-palette-gen": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "466010df756157b0"
+      "lastmod": "2026-10-09",
+      "fingerprint": "333b8871b9fc5244"
     },
     "/tools/compound-interest-calculator": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "a7a4e1ce559ed1be"
+      "lastmod": "2026-10-09",
+      "fingerprint": "1f6a66cccd674c1c"
     },
     "/tools/content-type-lookup": {
       "lastmod": "2026-10-04",
@@ -387,8 +339,8 @@
       "fingerprint": "8b2f259429e7e6ba"
     },
     "/tools/currency-converter": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "f03ef1418d8fa17a"
+      "lastmod": "2026-10-09",
+      "fingerprint": "6a0850887df0d08c"
     },
     "/tools/date-difference-calculator": {
       "lastmod": "2026-10-04",
@@ -403,8 +355,8 @@
       "fingerprint": "54cff658fc7277a2"
     },
     "/tools/docker-to-compose": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "f05e7dd60ec525bc"
+      "lastmod": "2026-10-09",
+      "fingerprint": "171e49da04ce057d"
     },
     "/tools/emi-calculator": {
       "lastmod": "2026-10-04",
@@ -419,12 +371,12 @@
       "fingerprint": "1f202ecc37d567bc"
     },
     "/tools/fuel-cost-calc": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "293cbad4c8bdbefe"
+      "lastmod": "2026-10-09",
+      "fingerprint": "7810a3335f8619d6"
     },
     "/tools/glassmorphism-gen": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "6403fc05798f0df3"
+      "lastmod": "2026-10-09",
+      "fingerprint": "1d9c0adf3b177110"
     },
     "/tools/gst-calculator": {
       "lastmod": "2026-09-30",
@@ -471,8 +423,8 @@
       "fingerprint": "b1cde13dae60f5b6"
     },
     "/tools/image-to-webp": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "0365a391592c706c"
+      "lastmod": "2026-10-09",
+      "fingerprint": "cf7a2b29582476f8"
     },
     "/tools/internet-speed-test": {
       "lastmod": "2026-10-02",
@@ -483,20 +435,20 @@
       "fingerprint": "7bcf3e96ef50fa69"
     },
     "/tools/ipv4-to-ipv6": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "5a504895949a58b5"
+      "lastmod": "2026-10-09",
+      "fingerprint": "e5148f8edf3c647f"
     },
     "/tools/jpg-to-png": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "cde58bffa691b3a6"
+      "lastmod": "2026-10-09",
+      "fingerprint": "b21bc0cfc716ce9f"
     },
     "/tools/json-formatter": {
       "lastmod": "2026-09-30",
       "fingerprint": "7c84e287389f66ad"
     },
     "/tools/json-schema-for-ai": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "bc9a4edf327c87ec"
+      "lastmod": "2026-10-09",
+      "fingerprint": "60eeb1ed0e53f775"
     },
     "/tools/json-to-csv": {
       "lastmod": "2026-10-04",
@@ -507,24 +459,24 @@
       "fingerprint": "640ba5a778ce87ed"
     },
     "/tools/json-to-yaml": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "5744e43791f20e6a"
+      "lastmod": "2026-10-09",
+      "fingerprint": "ad8904f09203bc53"
     },
     "/tools/jwt-decoder": {
       "lastmod": "2026-10-04",
       "fingerprint": "b88544c881ccac7c"
     },
     "/tools/llm-token-counter": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "90ce690d93c9be3f"
+      "lastmod": "2026-10-09",
+      "fingerprint": "c0cc402fccc0c17b"
     },
     "/tools/lorem-ipsum-generator": {
       "lastmod": "2026-10-04",
       "fingerprint": "f874d31617dd9a09"
     },
     "/tools/mac-address-lookup": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "b8594338baa84c6a"
+      "lastmod": "2026-10-09",
+      "fingerprint": "e38efb07bb4a27c8"
     },
     "/tools/markdown-table-generator": {
       "lastmod": "2026-10-04",
@@ -571,8 +523,8 @@
       "fingerprint": "0bbd12ca813bb2d3"
     },
     "/tools/png-to-jpg": {
-      "lastmod": "2026-09-30",
-      "fingerprint": "2a023225990e7edb"
+      "lastmod": "2026-10-09",
+      "fingerprint": "f613cf1de9e1054c"
     },
     "/tools/png-to-svg": {
       "lastmod": "2026-10-04",
@@ -587,8 +539,8 @@
       "fingerprint": "081f556ea8a634be"
     },
     "/tools/px-to-rem": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "539b02ed02473799"
+      "lastmod": "2026-10-09",
+      "fingerprint": "2af3ade6012a47b4"
     },
     "/tools/qr-code-generator": {
       "lastmod": "2026-09-30",
@@ -627,16 +579,16 @@
       "fingerprint": "cbe3442a9bcb1d9f"
     },
     "/tools/salary-calculator": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "72802624bc645c13"
+      "lastmod": "2026-10-09",
+      "fingerprint": "a6276db27ec01e0b"
     },
     "/tools/sample-file-generator": {
       "lastmod": "2026-10-04",
       "fingerprint": "4d2b902f7e511108"
     },
     "/tools/sip-calculator": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "bbb003b00b5dc4a2"
+      "lastmod": "2026-10-09",
+      "fingerprint": "72e291eac2eecf17"
     },
     "/tools/slug-generator": {
       "lastmod": "2026-10-04",
@@ -651,24 +603,24 @@
       "fingerprint": "9604080c1697b0f7"
     },
     "/tools/sql-formatter": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "01cbee56175ecad2"
+      "lastmod": "2026-10-09",
+      "fingerprint": "4ade47cbc1136205"
     },
     "/tools/ssl-cert-decoder": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "0d1a7d10e4de106e"
+      "lastmod": "2026-10-09",
+      "fingerprint": "eb947e05735de29c"
     },
     "/tools/stopwatch-timer": {
       "lastmod": "2026-10-04",
       "fingerprint": "623a238444711aa4"
     },
     "/tools/subnet-calculator": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "ff01215d9abb727a"
+      "lastmod": "2026-10-09",
+      "fingerprint": "752bcd20ea528a9e"
     },
     "/tools/svg-to-data-uri": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "e95c116be596597a"
+      "lastmod": "2026-10-09",
+      "fingerprint": "8ed6fedaa1671e07"
     },
     "/tools/text-diff-checker": {
       "lastmod": "2026-10-04",
@@ -687,8 +639,8 @@
       "fingerprint": "786f6c48940cce6b"
     },
     "/tools/tip-calculator": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "16fec42824e99f18"
+      "lastmod": "2026-10-09",
+      "fingerprint": "f5f602e4780daf18"
     },
     "/tools/unit-converter": {
       "lastmod": "2026-10-04",
@@ -735,16 +687,16 @@
       "fingerprint": "5528d26fffee2daa"
     },
     "/tools/webp-to-jpg": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "6f66ee3901e21039"
+      "lastmod": "2026-10-09",
+      "fingerprint": "bb44f7338b34318b"
     },
     "/tools/word-counter": {
       "lastmod": "2026-09-30",
       "fingerprint": "afd605c2b7142a70"
     },
     "/tools/work-hours-calc": {
-      "lastmod": "2026-10-04",
-      "fingerprint": "54fd1672796e1b01"
+      "lastmod": "2026-10-09",
+      "fingerprint": "e2235acb7586a068"
     },
     "/tools/working-days-calculator": {
       "lastmod": "2026-10-04",

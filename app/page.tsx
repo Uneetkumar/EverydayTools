@@ -89,7 +89,8 @@ export default function HomePage() {
   const categories = TOOL_CATEGORIES.map((c) => ({ category: c, tools: getToolsByCategory(c.id) })).filter(
     (c) => c.tools.length > 0
   );
-  const newTools = getToolsBySlugs(NEW_TOOL_SLUGS);
+  // A short list: 34 "new" cards read as a tool dump, not a curated site.
+  const newTools = getToolsBySlugs(NEW_TOOL_SLUGS).slice(0, 8);
   const gems = getToolsBySlugs(HIDDEN_GEM_SLUGS);
   const aiTools = getToolsByCategory("ai-tools");
   const guides = FEATURED_GUIDES.map((s) => GUIDES.find((g) => g.slug === s)).filter(
@@ -108,8 +109,10 @@ export default function HomePage() {
           <div className="mx-auto max-w-3xl text-center">
             <div className="mx-auto mb-4 inline-flex max-w-full flex-wrap items-center justify-center gap-2 rounded-full border border-primary/20 bg-background/80 px-3.5 py-1 text-xs font-medium text-foreground backdrop-blur shadow-sm">
               <span className="flex size-2 rounded-full bg-emerald-500 shrink-0" />
-              <span className="hidden sm:inline">Offline-ready PWA · All tools work without internet</span>
-              <span className="sm:hidden">Offline PWA · 100% in-browser</span>
+              {/* Not "all tools": the speed test, currency rates, API tools
+                  and cloud AI mode need a connection (see "Why TabBench"). */}
+              <span className="hidden sm:inline">Installable app · Most tools work offline</span>
+              <span className="sm:hidden">Installable · Offline-ready</span>
               <span className="text-muted-foreground/60 hidden sm:inline">·</span>
               <InstallAppButton variant="hero" className="h-6 px-2.5 text-xs" />
             </div>

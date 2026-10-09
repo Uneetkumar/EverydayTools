@@ -3684,14 +3684,14 @@ const TOOL_SOURCE: Record<string, ToolSource> = {
     "features": [
       "Annual CTC to monthly in-hand conversion",
       "Variable bonus percentage adjustment",
-      "New and old regime tax at FY 2025-26 rates",
+      "New and old regime tax at FY 2026-27 rates",
       "Detailed annual salary structure breakdown"
     ],
     "formulas": [
       {
         "name": "Take-Home Salary Formula",
         "expression": "Monthly in-hand = (Fixed CTC − Employer PF − Employee PF − Professional tax − Income tax on fixed pay) / 12",
-        "explanation": "Employer PF is part of CTC but goes to your PF account, so it is removed first. Income tax uses the FY 2025-26 slabs for the regime you choose, including the section 87A rebate and 4% cess.",
+        "explanation": "Employer PF is part of CTC but goes to your PF account, so it is removed first. Income tax uses the FY 2026-27 slabs (unchanged from 2025-26) for the regime you choose, including the section 87A rebate and 4% cess.",
         "example": "₹12 lakh CTC with 10% variable pay and PF at 12% of basic: fixed gross ₹10,15,200, taxable income ₹10,60,200 (below ₹12 lakh, so no tax in the new regime) → about ₹79,000 a month in hand."
       }
     ],

@@ -2100,144 +2100,161 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "jpg-to-png": {
     intro:
-      "Converting JPG photos to PNG is essential when you need uncompressed image fidelity, transparent layer readiness, or clean digital assets for graphic design and web publishing. Because JPEG uses lossy discrete cosine transform compression, re-saving a JPG repeatedly introduces compounding blur and compression artifacts. Our client-side JPG to PNG converter creates a crisp, 24-bit RGB PNG directly inside your browser memory without quality loss or server uploads.",
+      "This converter re-saves a JPG (or any other image your browser can open) as a PNG. The pixels are copied exactly as the browser decodes them, so the PNG looks identical to the JPG, and it is usually several times larger, because PNG stores every pixel losslessly while JPEG discards detail to save space. That trade is worth making when an image will be edited and saved again and again, or when a form or app accepts only PNG. It does not improve a photo: blur and blocky artefacts already in the JPG are copied into the PNG along with everything else.",
     howTo: {
-      title: "How to convert JPG to PNG online",
+      title: "How to convert JPG to PNG",
       steps: [
-        "Upload or drag-and-drop your JPG/JPEG image into the converter.",
-        "The tool instantly decodes the raw image bitmap into uncompressed pixel data.",
-        "Preview the converted PNG file size and resolution in real time.",
-        "Click Download PNG to save your lossless high-quality image immediately.",
+        "Check that JPG to PNG is selected in the row of modes at the top (it is, on this page).",
+        "Click the drop area, or drag a file onto it, and choose a JPG or JPEG from your device.",
+        "The PNG is made straight away. The card underneath shows the original and the new file size.",
+        "Click Download PNG. The file keeps its original name with a .png extension.",
       ],
     },
     useCases: [
       {
-        title: "Graphic design & UI asset preparation",
+        title: "Before several rounds of editing",
         body:
-          "Designers converting stock photos or client mockups to PNG ensure that subsequent edits in Figma, Photoshop, or Canva do not degrade from repeated JPEG compression cycles.",
+          "Each time a JPG is opened, edited and saved again, the encoder throws away a little more detail, and text and sharp edges pick up smudgy halos. Converting once to PNG at the start, for a screenshot you will annotate or a scan you will clean up, makes every later save lossless. Export the finished piece as JPG or WebP at the end if file size matters.",
       },
       {
-        title: "Website logo & icon conversion",
+        title: "Uploads that insist on PNG",
         body:
-          "PNG provides sharp text rendering, high contrast edges, and zero pixel bleeding around logos, making it the preferred format for hero branding and UI elements.",
+          "Some forms, app stores and print-on-demand services accept only PNG, for example for app icons and sticker designs. Converting satisfies the format check without changing how the image looks. Check the required pixel size as well: this tool keeps the original dimensions, so use Resize Image if the service asks for something like 512 × 512.",
       },
       {
-        title: "Print & publishing preparation",
+        title: "Getting ready for a transparent background",
         body:
-          "Converting high-resolution JPEG photography to PNG preserves pristine color profiles and crisp lines for desktop publishing and marketing collateral.",
+          "A JPG cannot store transparency at all, so a logo on a white JPG background has nothing that can be made see-through until it is in a format that can. Convert to PNG first, then remove the background in an image editor. The converter itself keeps every pixel opaque; it does not guess which parts should be transparent.",
       },
     ],
     tips: [
-      "Converting JPG to PNG cannot restore detail lost during original JPEG compression, but it permanently stops future compression degradation.",
-      "PNG files have larger file sizes than JPGs because PNG uses lossless DEFLATE compression. If you need smaller web files, consider WebP.",
-      "Everything runs 100% locally in your browser with zero server latency and total privacy.",
+      "Expect a bigger file. A 300 KB phone photo commonly becomes a PNG of a few megabytes, because PNG keeps every pixel instead of approximating them.",
+      "Camera details (EXIF data such as the date, camera model and GPS location) are not copied, because the image is redrawn on a canvas before it is saved. That is useful before sharing; keep the original if you need the metadata.",
+      "Embedded colour profiles are not kept either. The browser converts colours to standard sRGB first, which is invisible for most photos but can make a wide-gamut (Display P3 or Adobe RGB) image look slightly less saturated.",
+      "Photos taken sideways come out the right way up: current browsers apply the orientation flag when they open the image, even though the flag itself is dropped from the PNG.",
+      "It converts one image at a time. For a batch, run the files through one after another; each takes a moment because nothing has to upload.",
     ],
     extraFaqs: [
       {
-        question: "Does converting JPG to PNG make the background transparent?",
+        question: "Does converting JPG to PNG improve quality?",
         answer:
-          "No. Standard JPGs have opaque backgrounds (often white). To make it transparent after converting, you can remove the background in any image editor.",
+          "No. PNG is lossless, so it preserves the image exactly as it is now, but the detail JPEG compression already removed cannot be recovered. What you gain is that further edits and saves will not lose anything more.",
       },
       {
-        question: "Is there any file size limit for JPG to PNG conversion?",
+        question: "Why is the PNG so much larger than the JPG?",
         answer:
-          "Because processing happens entirely in your device's memory using HTML5 Canvas, you can convert large multi-megabyte photos instantly without server upload limits.",
+          "JPEG is built for photos: it approximates areas of similar colour and drops detail the eye is unlikely to miss. PNG records every pixel exactly and only compresses repetition, which works well for flat graphics and screenshots but not for the fine, noisy detail of a photo. For photos on the web, WebP or JPG is the better delivery format.",
+      },
+      {
+        question: "Is there a file size limit?",
+        answer:
+          "There is no upload, so no server limit. The practical limit is your device's memory and the browser's maximum canvas size. Desktop browsers handle normal camera photos easily; phones cap canvases lower (Safari on iPhone at roughly 16.7 million pixels), so a 48-megapixel photo can fail on a phone that converts a 12-megapixel one without trouble.",
       },
     ],
   },
 
   "image-to-webp": {
     intro:
-      "WebP is Google's modern image format designed specifically for the web, delivering 25% to 80% smaller file sizes than comparable PNG and JPEG images while maintaining equivalent visual quality. Converting your website imagery to WebP drastically improves Google PageSpeed scores, lowers bandwidth consumption, and speeds up page load times on desktop and mobile devices. Our converter processes all images client-side with full quality control.",
+      "WebP is the image format Google designed for the web. For the same visual quality a lossy WebP is typically 25–34% smaller than a JPEG, by Google's own measurements, which is why page-speed tools suggest it. This converter takes a JPG, PNG or other image your browser can open and encodes it as WebP with the browser's built-in encoder. A quality slider trades size against sharpness, the new file size is shown before you download, and transparent areas in a PNG stay transparent.",
     howTo: {
-      title: "How to convert images to WebP format",
+      title: "How to convert an image to WebP",
       steps: [
-        "Select or drop any JPG, PNG, or GIF file into the upload zone.",
-        "Adjust the compression quality slider (recommended: 85% to 92% for optimal balance of size and visual clarity).",
-        "Compare the original versus converted file size savings in real time.",
-        "Click Download WebP to get your optimized lightweight image.",
+        "Check that Image to WebP is selected in the row of modes at the top.",
+        "Click the drop area, or drag a file onto it, and choose a JPG, PNG or other image.",
+        "Set Compression quality. It starts at 92%; for photos on a web page, 75–85% is usually indistinguishable at normal viewing size and noticeably smaller.",
+        "Compare the original and converted sizes on the result card, adjust the slider if you want, then click Download WebP.",
       ],
     },
     useCases: [
       {
-        title: "Core Web Vitals & SEO optimization",
+        title: "Lighter, faster web pages",
         body:
-          "Google search ranking algorithms heavily prioritize fast Largest Contentful Paint (LCP). Switching hero images to WebP frequently cuts load times in half.",
+          "Images are usually the heaviest part of a page, and the largest one on screen often sets the Largest Contentful Paint time that Google measures for Core Web Vitals. Re-encoding a 400 KB JPEG hero image as WebP at around 80% commonly saves 100 KB or more. If you still need to support very old browsers, serve it with a <picture> element and keep the JPEG as the fallback.",
       },
       {
-        title: "E-commerce product catalog compression",
+        title: "Cut-out images that are too heavy as PNG",
         body:
-          "Online stores with thousands of product photos save gigabytes of CDN bandwidth and hosting costs by serving WebP images to mobile shoppers.",
+          "Product photos on a transparent background, stickers and logos are often saved as PNG for the transparency, and a photographic PNG with an alpha channel can run to megabytes. Lossy WebP keeps the transparency, so the same cut-out can shrink to a fraction of the size while its background stays see-through.",
       },
       {
-        title: "Blog & content publishing",
+        title: "Getting under an upload limit",
         body:
-          "Article screenshots and infographics load instantly even on slow 4G/3G mobile networks when compressed into modern WebP.",
+          "When a platform accepts WebP but caps the file size, lowering the quality a step at a time and watching the converted size is a quick way to get under the cap without changing the pixel dimensions. If the platform needs a JPG instead, Compress Image can aim for an exact target such as 100 KB.",
       },
     ],
     tips: [
-      "A quality setting of 85% is visually indistinguishable from 100% for 99% of web users while cutting 60% of the byte weight.",
-      "WebP supports both lossy compression (like JPG) and lossless transparency (like PNG) in a single unified format.",
-      "All modern browsers (Chrome, Safari, Firefox, Edge, iOS Safari, Android) natively support WebP.",
+      "Safari can display WebP but cannot create it from a web page. On an iPhone, iPad or Mac using Safari the converter says so rather than saving a mislabelled file; Chrome, Edge and Firefox all encode WebP.",
+      "An animated GIF becomes a single still frame, because the image is drawn once onto a canvas before encoding.",
+      "Camera data (EXIF, including GPS location) is removed in the conversion.",
+      "Converting a JPEG to WebP cannot remove artefacts the JPEG already has. Start from the original or the highest-quality copy you have.",
+      "Screenshots with small text soften under lossy compression. Keep the quality high (90% or more) for them, or leave them as PNG.",
+      "Every current major browser shows WebP, but some email clients, notably older Outlook for Windows, still do not. Use JPG for images in email newsletters.",
     ],
     extraFaqs: [
       {
-        question: "How much smaller is WebP compared to PNG?",
+        question: "What quality setting should I use?",
         answer:
-          "WebP is typically 26% smaller than PNGs in lossless mode, and 25-34% smaller than comparable JPEGs at equivalent SSIM visual quality.",
+          "For photographs on web pages, 75–85% is a good starting point: the file is much smaller and the difference is hard to see at normal size. The 92% default favours quality. Check the result at 100% zoom on the parts that matter, such as faces or text, before settling on a lower value.",
       },
       {
-        question: "Are my uploaded images saved on a server?",
+        question: "Will using WebP make Google rank my site higher?",
         answer:
-          "No. All image encoding is performed strictly in your browser via the Canvas WebP encoder. No files are uploaded to any external server.",
+          "Not directly. Google does not prefer any image format; it measures how quickly pages load for real visitors. Smaller images improve that measurement, which is the indirect benefit, alongside lower bandwidth for your visitors.",
+      },
+      {
+        question: "Is the WebP lossless?",
+        answer:
+          "The converter produces a lossy WebP at the quality you choose, with transparency preserved. Lossy WebP is the right choice for photos; for pixel-exact graphics such as diagrams or pixel art, a PNG is the safer option.",
       },
     ],
   },
 
   "webp-to-jpg": {
     intro:
-      "While WebP is dominant on modern websites, many legacy desktop image editors, older operating systems, email clients, and printing services still require standard JPG or PNG files. Our WebP to JPG converter lets you effortlessly convert downloaded .webp images into universally compatible JPGs with adjustable quality and custom background color fill for transparent assets.",
+      "A lot of software and many upload forms still will not take a .webp file: older photo viewers and editors, print kiosks, and plenty of exam and government application portals that list JPG or JPEG only. This converter turns a WebP into an ordinary JPG inside your browser. JPG cannot store transparency, so any transparent area is filled with a background colour you choose (white unless you change it), and a quality slider sets how strongly the JPEG is compressed.",
     howTo: {
-      title: "How to convert WebP to JPG online",
+      title: "How to convert WebP to JPG",
       steps: [
-        "Upload your .webp image directly into the converter.",
-        "Choose your desired JPG quality setting (default 92% for crystal-clear fidelity).",
-        "Pick a background color fill if the source WebP contains transparent areas.",
-        "Click Download JPG to save a universally compatible image file.",
+        "Check that WebP to JPG is selected in the row of modes at the top (it is, on this page).",
+        "Click the drop area, or drag a file onto it, and choose your .webp image.",
+        "If the image has transparent parts, pick the colour that should fill them under Background Fill Color.",
+        "Leave the quality at 92% or adjust it, then click Download JPG. The original file name is kept with a .jpg extension.",
       ],
     },
     useCases: [
       {
-        title: "Editing downloaded web images in desktop software",
+        title: "Exam and government form uploads",
         body:
-          "Older versions of Adobe Photoshop, Microsoft Paint, Word, and Illustrator cannot open .webp files. Converting to JPG makes them immediately editable.",
+          "Application portals frequently accept only JPG or JPEG, often with a size cap such as 50 KB or 100 KB for a photograph or signature. Convert the WebP here first; if the JPG is still over the limit, Compress Image can reduce it to an exact target size without you guessing at quality settings.",
       },
       {
-        title: "Email campaigns & newsletter templates",
+        title: "Images saved from websites",
         body:
-          "Some older email clients (such as legacy Outlook) do not render WebP images. Converting to JPG makes the image display in every email client.",
+          "Right-clicking an image on many sites saves a .webp even when it looked like an ordinary photo, because the site sent WebP to your browser. Converting gives you a file that opens in any viewer, editor, word processor or messaging app, including older ones that do not recognise WebP.",
       },
       {
-        title: "Social media and photo print kiosks",
+        title: "Printing",
         body:
-          "Certain social media tools and in-store automated photo print kiosks only accept .jpg or .png uploads.",
+          "Photo kiosks and online print services commonly list JPG as the accepted format. For prints keep the quality at 92% or above and check the pixel size: a 6 × 4 inch print at 300 dpi needs about 1800 × 1200 pixels, and a web image saved at 800 pixels wide will look soft at that size whatever the format.",
       },
     ],
     tips: [
-      "If your WebP image has a transparent background, select white (#ffffff) or your brand color for clean background fill.",
-      "Use 92% or higher JPG quality to retain maximum sharpness.",
-      "Batch convert multiple files seamlessly with instant in-browser processing.",
+      "Transparent areas have to become a solid colour in a JPG. White suits documents and most prints; for a logo, choose the colour of the page or slide it will sit on.",
+      "An animated WebP becomes a still JPG of its first frame.",
+      "WebP is usually already compressed, so converting to JPG compresses the image a second time. At 92% the extra loss is very hard to see, but avoid converting the same image back and forth repeatedly.",
+      "The JPG can come out larger than the WebP it came from, because WebP compresses more efficiently. That is expected, not a fault.",
+      "Camera data (EXIF, including any GPS location) is not carried over into the JPG.",
     ],
     extraFaqs: [
       {
-        question: "Why can't I open WebP files on my computer?",
+        question: "Why does my JPG have a white background where the WebP was transparent?",
         answer:
-          "Older operating systems (such as Windows 7 or macOS High Sierra) lack native WebP codecs. Converting to JPG solves compatibility across all devices.",
+          "JPG has no transparency channel, so every pixel must have a solid colour. Transparent areas are filled with the background colour selected in the settings, which is white by default. Pick another colour before downloading, or convert to PNG instead if you need to keep the transparency.",
       },
       {
         question: "Does converting WebP to JPG reduce quality?",
         answer:
-          "Our tool uses high-fidelity 92%+ JPEG encoding, ensuring visual degradation is virtually zero while creating a universally compatible file.",
+          "Slightly, in principle, because the image is re-encoded with JPEG compression. At the default 92% quality the difference is very hard to see. Lower settings make smaller files with more visible softening, especially around text and sharp edges.",
       },
     ],
   },
@@ -2650,6 +2667,11 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
           "Freelancers and exporters billing in dollars need to know what a figure lands as in rupees. Because the rate moves between invoicing and payment, quoting from the current mid-market rate with a small buffer is the usual approach.",
       },
       {
+        title: "Sending money home from the Gulf",
+        body:
+          "The UAE dirham (3.6725 per US dollar) and the Saudi riyal (3.75) are pegged to the dollar, so dirham–rupee and riyal–rupee move almost exactly with dollar–rupee. Watching USD → INR tells you most of what timing a transfer can gain. What differs far more is the provider: in the busiest corridors, exchange houses compete hard on the margin, so compare the rupees each one actually delivers against the mid-market figure here.",
+      },
+      {
         title: "Budgeting for travel or online purchases",
         body:
           "Card networks convert at close to mid-market and then add their own fee, so the mid-market figure is a reasonable floor for what a foreign purchase will cost you.",
@@ -2675,7 +2697,7 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
       {
         question: "Does this tool work offline like the others?",
         answer:
-          "No, and it is the only one here that does not. A converter has to ask somebody what today's rate is, so it makes a request to an exchange-rate provider. That request contains no personal data — it just fetches the public rate table — but it does mean the tool needs a working connection, unlike the PDF and image tools.",
+          "Not fully. A converter has to ask somebody what today's rate is, so it requests the public rate table from an exchange-rate provider; the request contains nothing you typed. If you go offline, it shows the last rates saved on your device, with their date. A few other tools need a connection for the same kind of reason, such as the internet speed test and the API request tools; the PDF, image and text tools do not.",
       },
       {
         question: "How many currencies are supported?",
@@ -2691,6 +2713,21 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
         question: "Can I use these figures for accounting or tax?",
         answer:
           "Check first. Tax authorities usually specify which rate to use — often a central bank reference rate on a particular date, or an annual average. The mid-market rate here may not match the one your jurisdiction requires, so confirm with your accountant before filing.",
+      },
+      {
+        question: "Which currencies are pegged, and why does it matter?",
+        answer:
+          "The UAE dirham, Saudi riyal, Qatari riyal and Omani rial are fixed to the US dollar, so against the rupee they all move with the dollar. The Kuwaiti dinar is tied to an undisclosed basket of currencies, and Singapore manages its dollar against a basket within a band, so both follow the dollar less tightly. Free-floating currencies such as the euro, pound and Australian dollar move on their own news, which is why a euro–rupee rate can change even when nothing has happened in India.",
+      },
+      {
+        question: "Is there a limit on sending money into or out of India?",
+        answer:
+          "Indian rules do not cap money coming into India; the sending provider's own limits apply. Money going out is different: resident individuals can remit up to US$250,000 per financial year under the RBI's Liberalised Remittance Scheme, covering education, travel, investment and gifts together, and tax collected at source can apply above an annual threshold. Your bank will ask for the purpose of the transfer.",
+      },
+      {
+        question: "Why is one Kuwaiti dinar worth so many rupees?",
+        answer:
+          "The dinar is the highest-valued currency unit in the world, a result of how the unit was originally set rather than a measure of economic strength. It does mean small rate differences matter more per dinar, so check the full amount you will receive, not just the rate.",
       },
     ],
   },
@@ -3253,97 +3290,105 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "sip-calculator": {
     intro:
-      "A Systematic Investment Plan (SIP) is one of the most reliable wealth-building strategies, leveraging compounding and rupee-cost averaging to grow wealth over time. This calculator projects future maturity value, total principal invested, and estimated capital gains with live visual growth charts. Everything calculates locally on your device without saving your financial inputs.",
+      "A SIP (systematic investment plan) puts the same amount into a mutual fund every month. This calculator projects what those instalments could grow to: enter the monthly amount, the annual return you expect and the number of years, and it shows the maturity value, how much of it is your own money and how much is growth, and a year-by-year table. It uses the formula most Indian fund houses and platforms use, explained in full below, along with the assumption inside it that makes projections look slightly rosier than a fund's reported return.",
     howTo: {
-      title: "How to calculate mutual fund SIP returns",
+      title: "How to calculate SIP returns",
       steps: [
-        "Enter your planned monthly investment amount into the deposit field or use the slider.",
-        "Set your expected annual rate of return (e.g. 12% to 14% for diversified equity index funds).",
-        "Choose your target investment duration in years to visualize long-term compounding.",
-        "Review the estimated maturity wealth, wealth gain multiplier, and year-by-year annual growth breakdown table.",
+        "Enter your monthly investment, or drag its slider.",
+        "Enter the annual return you expect. Use a conservative figure; past fund returns are not a promise.",
+        "Set how many years you will keep investing.",
+        "Read the maturity value and the split between invested amount and gains, then the year-by-year table to see how much of the growth arrives in the final years.",
       ],
     },
     useCases: [
       {
-        title: "Retirement and long-term corpus planning",
+        title: "Seeing what time does",
         body:
-          "Calculate how small monthly contributions over 15 to 25 years can compound into substantial retirement capital.",
+          "At 12% a year, ₹10,000 a month grows to about ₹23.2 lakh in 10 years, ₹50.5 lakh in 15 and ₹1 crore in 20. The amount you put in only doubles from ₹12 lakh to ₹24 lakh between 10 and 20 years; the corpus more than quadruples, because the later years compound a much larger balance.",
       },
       {
-        title: "Child higher education & milestone goals",
+        title: "Working backwards from a goal",
         body:
-          "Determine the exact monthly SIP required to achieve a target corpus for college education or purchasing a home.",
+          "If you need about ₹50 lakh for a child's education in 15 years, try amounts until the maturity value reaches it: at 12%, roughly ₹10,000 a month gets there. Re-run it at 10% as well; if the lower return leaves a gap you could not live with, plan for a higher monthly amount from the start.",
       },
       {
-        title: "Comparing SIP growth vs Fixed Deposits",
+        title: "The cost of starting later",
         body:
-          "Compare the compounding power of disciplined equity investment against traditional fixed-return debt instruments.",
+          "₹10,000 a month at 12% for 30 years projects to about ₹3.53 crore; the same SIP for 25 years, starting five years later, projects to about ₹1.90 crore. The five missing years remove ₹6 lakh of contributions but nearly half of the final corpus.",
       },
     ],
     tips: [
-      "Starting an SIP 5 years earlier can double your eventual corpus due to the exponential nature of compound interest.",
-      "Equity mutual fund returns fluctuate in the short term; SIPs average out market volatility over 5+ year horizons.",
-      "Increasing your SIP amount annually by 10% (Step-Up SIP) can significantly accelerate your wealth accumulation.",
-      "All calculations assume reinvestment of returns with monthly compounding frequency.",
+      "The monthly rate is the annual rate divided by 12, as on most SIP calculators. That compounds to slightly more than the rate you typed: 12% entered behaves like 12.68% a year. Fund returns are quoted as CAGR, so to project at a true 12% a year, enter 11.39%.",
+      "The formula assumes each instalment is invested at the start of the month, which is what the extra (1 + i) factor at the end represents.",
+      "Real SIP returns are never a steady 12% a year. The projection shows an average path; actual balances rise and fall with the market, sometimes for years at a stretch.",
+      "Tax is not deducted. When you redeem, gains on equity fund units held over a year are taxed above ₹1.25 lakh a year, and gains on units held less than a year are taxed in full, so the amount you keep will be lower than the figure shown.",
+      "Inflation is not included either. At 5–6% inflation, ₹1 crore in 20 years buys roughly what ₹31–38 lakh buys today.",
     ],
     extraFaqs: [
       {
         question: "What is rupee cost averaging in an SIP?",
         answer:
-          "When markets fall, your fixed monthly allocation buys more fund units; when markets rise, it buys fewer units, averaging your cost per unit over time without requiring market timing.",
+          "Because you invest a fixed amount, you buy more fund units when prices are low and fewer when they are high, so your average cost per unit ends up below the average price over the period. It reduces the risk of investing everything at a market peak, but it does not guarantee a profit.",
       },
       {
         question: "Is SIP return guaranteed?",
         answer:
-          "No. Mutual fund and stock market investments carry market risk. Expected return rates (such as 12%) are historical reference estimates, not guaranteed bank rates.",
+          "No. Mutual funds carry market risk and the expected return you enter is an assumption, not a promise. Use the calculator to compare scenarios, for example 8%, 10% and 12%, rather than to predict a single outcome.",
+      },
+      {
+        question: "Why does my fund's app show a different value?",
+        answer:
+          "Your fund's app shows your actual units at the current price, after the market's real ups and downs. This calculator assumes the same return every month. Over long periods the two can be close, but in any given year they can differ a lot.",
       },
     ],
   },
 
   "compound-interest-calculator": {
     intro:
-      "Compound interest is interest calculated on the initial principal and also on the accumulated interest of previous periods. Often referred to as the eighth wonder of the world, compound interest accelerates savings dramatically over long timeframes. This tool calculates future values across daily, monthly, quarterly, and annual compounding schedules with optional monthly additions.",
+      "Compound interest means interest is added to the balance and then earns interest itself. This calculator works out what a starting deposit grows to at a given annual rate, with optional monthly additions, compounded annually, half-yearly, quarterly, monthly or daily. It shows the final balance, how much of it is your money and how much is interest, and the effective annual rate, so you can compare a bank quoting 7.5% compounded quarterly with one quoting 7.6% compounded yearly.",
     howTo: {
       title: "How to calculate compound interest",
       steps: [
-        "Enter your starting principal deposit amount.",
-        "Specify any additional regular monthly contributions you plan to make.",
-        "Input the annual interest rate (APY/APR) and total investment time horizon in years.",
-        "Select your account compounding frequency (e.g. daily, monthly, or annually) to compute the final maturity value.",
+        "Pick the currency symbol and enter the starting amount.",
+        "Enter the annual interest rate and the number of years.",
+        "Choose how often interest is compounded. Indian bank fixed deposits usually compound quarterly; many savings accounts and loans compound monthly or daily.",
+        "Add a monthly contribution if you will keep paying in, or set it to 0.",
+        "Read the maturity value, the interest earned and the effective annual rate.",
       ],
     },
     useCases: [
       {
-        title: "High-yield savings accounts & Certificates of Deposit (CDs)",
+        title: "Comparing deposit offers",
         body:
-          "Calculate the exact interest payout from banks compounding interest monthly or daily.",
+          "Banks quote a nominal rate and a compounding frequency, which makes offers hard to compare. The effective annual rate puts them on one footing: 8% compounded monthly is 8.30% a year, compounded quarterly 8.24%, compounded yearly exactly 8%. Compare effective rates, not headline rates.",
       },
       {
-        title: "Long-term investment portfolio compounding",
+        title: "Savings with regular deposits",
         body:
-          "Model how reinvested dividend payments and asset growth accumulate over multiple decades.",
+          "With the default inputs, ₹50,000 at 8% compounded monthly for five years becomes about ₹74,492 on its own. Adding ₹2,000 a month brings the total to about ₹2,21,446, of which ₹1,70,000 is your own money and about ₹51,446 is interest. Changing the monthly amount shows quickly whether regular saving or the starting sum matters more for your goal.",
       },
       {
-        title: "Loan and mortgage debt growth",
+        title: "Understanding debt that compounds",
         body:
-          "Understand how compounding interest affects unpaid loan balances or credit card debts over time.",
+          "The same arithmetic runs against you on a card balance or an unpaid loan. A credit card charging around 3.5% a month compounds to more than 50% a year, which is why a balance left unpaid for a few years grows so fast. Enter the monthly rate × 12 and monthly compounding to see it.",
       },
     ],
     tips: [
-      "Daily compounding yields slightly higher returns than annual compounding at the same nominal interest rate.",
-      "The Rule of 72 provides a quick mental estimate: divide 72 by your interest rate to estimate how many years it takes to double your money.",
-      "Consistent regular monthly contributions can outweigh the starting principal in long-term wealth building.",
+      "Daily compounding is only marginally better than monthly: at 8%, it is 8.33% a year against 8.30%. The rate and the time matter far more than the frequency.",
+      "The Rule of 72 estimates doubling time: 72 ÷ 8 = 9 years at 8% a year. The exact figure at 8% compounded yearly is 9.01 years.",
+      "Monthly contributions are treated as paid at the end of each month and earn interest at the same compounding frequency as the starting deposit.",
+      "Tax is not deducted. Interest on bank deposits is taxable as income in India, and banks deduct TDS above the yearly threshold, so the amount you keep depends on your tax bracket.",
     ],
     extraFaqs: [
       {
         question: "What is Effective Annual Rate (EAR)?",
         answer:
-          "Effective Annual Rate is the true annual interest rate earned after accounting for the compounding frequency, which is higher than the nominal stated interest rate when compounding occurs more than once per year.",
+          "It is the interest you actually earn over one year once compounding is included: EAR = (1 + r/n)^n − 1, where r is the nominal annual rate and n the number of compounding periods a year. For 8% compounded quarterly that is (1.02)^4 − 1 = 8.24%. Banks in some countries call this the APY.",
       },
       {
-        question: "How does compounding frequency impact returns?",
+        question: "How is compound interest different from simple interest?",
         answer:
-          "More frequent compounding (e.g., daily vs annually) means accrued interest starts earning interest sooner, yielding a higher future value.",
+          "Simple interest is paid only on the original amount: ₹50,000 at 8% for five years earns ₹20,000. Compounded yearly, the same deposit earns about ₹23,466, because each year's interest also earns interest in the years that follow. The gap widens rapidly over longer periods.",
       },
     ],
   },
@@ -3735,7 +3780,7 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
 
   "salary-calculator": {
     intro:
-      "Understanding the difference between gross Cost to Company (CTC) and actual monthly in-hand take-home salary is critical for job negotiations, financial planning, and budgeting. This calculator breaks down basic pay, HRA, special allowances, Provident Fund (PF) contributions, and income tax deductions across standard tax regimes.",
+      "Your CTC (cost to company) is not what reaches your bank account. This calculator turns an annual CTC into monthly in-hand pay for a typical Indian salary structure: it takes out employer and employee PF, professional tax and income tax under the regime you choose, keeps any variable pay separate, and shows the whole annual breakdown so you can see where every rupee of the CTC goes. Tax uses the FY 2026-27 slabs, which Budget 2026 left unchanged from 2025-26.",
     howTo: {
       title: "How to calculate take-home salary from CTC",
       steps: [
@@ -3749,27 +3794,38 @@ export const TOOL_CONTENT: Record<string, ToolContent> = {
     },
     useCases: [
       {
-        title: "Evaluating job offers & salary negotiations",
+        title: "Comparing job offers",
         body:
-          "Determine the real monthly disposable income from job offers with complex variable structures.",
+          "Two offers with the same CTC can pay quite differently each month. A large variable component is paid only if targets are met, and PF at 12% of the full basic takes more from each payslip than PF capped at ₹1,800 a month, though it builds a larger retirement balance. Enter each offer with its own variable percentage and PF setting to compare the monthly figure you will actually live on.",
       },
       {
-        title: "Annual tax planning & financial budgeting",
+        title: "Choosing a tax regime",
         body:
-          "Compare take-home compensation under the New and Old Tax Regimes to select the most tax-efficient structure.",
+          "On a ₹15 lakh CTC with no variable pay, PF at 12% of basic and ₹2,400 professional tax, the new regime leaves about ₹1,02,800 a month and the old regime about ₹93,100 when no deductions beyond PF are claimed. The old regime only wins if your HRA exemption, home-loan interest, 80D and other deductions are large, and those are not modelled here, so add them up separately before switching.",
+      },
+      {
+        title: "Planning around a raise",
+        body:
+          "The new regime has no tax up to ₹12 lakh of taxable income, and marginal relief just above it: at ₹12.5 lakh taxable, the tax is ₹52,000 including cess, not the ₹70,200 the slabs alone would give. Checking where a raise lands relative to that line shows how much of it you will actually keep.",
       },
     ],
     tips: [
-      "From FY 2025-26, the new regime charges no tax on taxable income up to ₹12 lakh (section 87A rebate). With the ₹75,000 standard deduction, that means salary up to ₹12.75 lakh is tax-free.",
+      "Since FY 2025-26 (and unchanged for 2026-27), the new regime charges no tax on taxable income up to ₹12 lakh (section 87A rebate). With the ₹75,000 standard deduction, that means salary up to ₹12.75 lakh is tax-free.",
       "Just above ₹12 lakh, marginal relief applies: the tax can never be more than the income above ₹12 lakh, so a small raise never leaves you worse off.",
       "Employer PF is inside your CTC but paid into your PF account, which is why it never appears in your bank balance.",
-      "Employee PF contributions earn statutory compound interest and provide tax-advantaged retirement savings.",
+      "The structure assumed is common but not universal: basic is 50% of fixed pay and HRA 40% of basic. Your payslip may split these differently, which changes PF and, under the old regime, the HRA exemption you could claim.",
+      "Gratuity, insurance premiums and other benefits some employers include in CTC are not separated out. If your offer letter lists them, subtract them from the CTC before entering it.",
     ],
     extraFaqs: [
       {
         question: "Why is in-hand salary significantly lower than CTC?",
         answer:
           "CTC includes employer-side expenses such as Employer PF, gratuity, health insurance, and variable bonus pools, while in-hand salary is what you receive after all employer and employee deductions.",
+      },
+      {
+        question: "Is the in-hand figure exactly what my payslip will show?",
+        answer:
+          "It is an estimate. Your employer deducts TDS based on the investment declarations you submit, may spread it unevenly across the year, and may structure allowances differently. Use the figure to compare offers and plan a budget, and your payslip for the exact amount.",
       },
     ],
   },

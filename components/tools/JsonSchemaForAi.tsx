@@ -151,13 +151,27 @@ export default function JsonSchemaForAi() {
   for (const p of params) {
     if (!p.name.trim()) continue;
     const cleanName = p.name.trim().replace(/\s+/g, "_");
+    // OpenAI strict mode requires every property to be listed in `required`;
+    // an optional one is expressed as nullable instead of being dropped.
+    const nullable = strictMode && !p.required;
     const propSchema: any = {
-      type: p.type,
+      type: nullable ? [p.type, "null"] : p.type,
       description: p.description || undefined,
     };
 
+    // Strict mode rejects an array without `items` and an object without
+    // `properties` / `additionalProperties: false`.
+    if (p.type === "array") propSchema.items = { type: "string" };
+    if (p.type === "object") {
+      propSchema.properties = {};
+      propSchema.required = [];
+      propSchema.additionalProperties = false;
+    }
+
     if (p.enumValues.trim()) {
-      propSchema.enum = p.enumValues.split(",").map((s) => s.trim()).filter(Boolean);
+      const values = p.enumValues.split(",").map((s) => s.trim()).filter(Boolean);
+      propSchema.enum = p.type === "number" ? values.map(Number).filter((n) => !Number.isNaN(n)) : values;
+      if (nullable) propSchema.enum.push(null);
     }
 
     propertiesObj[cleanName] = propSchema;
@@ -212,14 +226,17 @@ export default function JsonSchemaForAi() {
       if (!p.name.trim()) continue;
       const opt = p.required || strictMode ? "" : "?";
       let tsType = p.type as string;
-      if (tsType === "array") tsType = "any[]";
-      if (tsType === "object") tsType = "Record<string, any>";
+      if (tsType === "array") tsType = "string[]";
+      if (tsType === "object") tsType = "Record<string, never>";
       if (p.enumValues.trim()) {
         tsType = p.enumValues
           .split(",")
-          .map((s) => `"${s.trim()}"`)
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .map((s) => (p.type === "number" ? s : `"${s}"`))
           .join(" | ");
       }
+      if (strictMode && !p.required) tsType = `${tsType} | null`;
       lines.push(`  /** ${p.description || p.name} */`);
       lines.push(`  ${p.name.trim()}${opt}: ${tsType};`);
     }
@@ -252,7 +269,7 @@ export default function JsonSchemaForAi() {
     <div className="space-y-6">
       <ToolSection
         title="AI Function Calling & Tool JSON Schema Builder"
-        description="Build strict, production-ready tool schemas for OpenAI Structured Outputs and Anthropic Claude Tools."
+        description="Define a tool's parameters once and get the JSON for OpenAI function calling (with strict Structured Outputs rules applied when Strict is on), Anthropic tool use, and a matching TypeScript interface."
       >
         <Chips
           value={null}

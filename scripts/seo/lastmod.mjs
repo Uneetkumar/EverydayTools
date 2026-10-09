@@ -5,7 +5,7 @@
  *
  * Every public URL gets a fingerprint of the things that make up THAT page:
  *   - its data: the tool's registry entry and long-form copy, the guide, the
- *     category's copy and tool list, the currency pair's copy;
+ *     category's copy and tool list;
  *   - its own source: the tool component (plus the domain modules it imports
  *     directly, e.g. lib/regex for the Regex Tester), or the page file for
  *     static pages.
@@ -126,6 +126,7 @@ function dataParts({ registry, content, categoryContent, guides, pairs }) {
     parts.set(`/categories/${c.id}`, JSON.stringify({ c, content: visible(catContent[c.id]) ?? null, tools: inCat }));
   }
   for (const g of guideList) parts.set(`/guides/${g.slug}`, JSON.stringify(visible(g)));
+  // Retired /convert pages: only old git snapshots still have pairs.ts.
   for (const p of pairs?.CURRENCY_PAIRS ?? []) parts.set(`/convert/${p.slug}`, JSON.stringify(visible(p)));
 
   // Hub pages list other pages; their data is the list they render.

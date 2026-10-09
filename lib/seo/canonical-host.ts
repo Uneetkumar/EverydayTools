@@ -23,7 +23,7 @@ import { CANONICAL_ORIGIN } from "./config";
  * being stranded on a dead end.
  *
  * SAFETY — this is the part worth being careful about. The test is a *suffix*
- * match on the two Firebase domains, so it cannot fire on `tabbench.com`,
+ * match on the two Firebase domains (plus an exact match on www), so it cannot fire on `tabbench.com`,
  * `localhost`, or a preview IP. A hostname check that is wrong in this
  * direction is harmless; wrong in the other direction it would deindex
  * production, which is exactly the failure mode of the "add noindex" advice
@@ -31,10 +31,18 @@ import { CANONICAL_ORIGIN } from "./config";
  */
 export const CANONICAL_HOST = CANONICAL_ORIGIN;
 
+/**
+ * `www.` is matched exactly (^www\.tabbench\.com$), so it can never match the
+ * apex. It is a fallback: the real fix is a 301 set on the www domain in
+ * Firebase Hosting (Custom domains → redirect to tabbench.com). If www is
+ * connected as a normal domain instead, it serves the site with 200.
+ */
+const WWW_HOST_PATTERN = "^www\\." + new URL(CANONICAL_ORIGIN).hostname.replace(/\./g, "\\.") + "$";
+
 export const CANONICAL_HOST_SCRIPT = [
   "(function(){try{",
   "var h=location.hostname;",
-  "if(!/\\.web\\.app$|\\.firebaseapp\\.com$/.test(h))return;",
+  "if(!/\\.web\\.app$|\\.firebaseapp\\.com$|" + WWW_HOST_PATTERN + "/.test(h))return;",
   'var m=document.querySelector(\'meta[name="robots"]\');',
   "if(!m){m=document.createElement('meta');m.setAttribute('name','robots');document.head.appendChild(m);}",
   "m.setAttribute('content','noindex, follow');",

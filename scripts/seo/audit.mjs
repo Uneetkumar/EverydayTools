@@ -384,9 +384,12 @@ export async function runAudit({ dir = path.join(ROOT, "out"), firebaseFile = pa
 
   /* ---------------- firebase.json: redirects & headers ---------------- */
   for (const [source, dest] of redirects) {
+    // A destination may carry a query (the retired /convert/<pair> pages land
+    // on /tools/currency-converter?from=…&to=…); the page is its path.
+    const destPath = dest.split(/[?#]/)[0];
     if (builtRoutes.has(source)) err("redirect-shadows-page", source, "a redirect source that is also a built page");
-    if (redirects.has(dest)) err("redirect-chain", source, `redirects to ${dest}, which redirects again`);
-    if (!builtRoutes.has(dest)) err("redirect-dead-end", source, `redirects to ${dest}, which is not built`);
+    if (redirects.has(destPath)) err("redirect-chain", source, `redirects to ${dest}, which redirects again`);
+    if (!builtRoutes.has(destPath)) err("redirect-dead-end", source, `redirects to ${dest}, which is not built`);
   }
   // RSC payloads (about.txt, tools/x.txt, __next.*.txt) repeat every page's text and must be
   // noindex — but robots.txt and ads.txt must not be, so the rule excludes them by name.
@@ -452,13 +455,13 @@ export async function runAudit({ dir = path.join(ROOT, "out"), firebaseFile = pa
       }
       return { redirected, robots: robotsSet };
     };
-    for (const dup of ["everydaytools-s.web.app", "everydaytools-s.firebaseapp.com"]) {
+    for (const dup of ["everydaytools-s.web.app", "everydaytools-s.firebaseapp.com", `www.${new URL(ORIGIN).hostname}`]) {
       const r = run(dup);
       if (r.threw) err("host-guard", dup, `guard threw: ${r.threw}`);
       else if (!r.redirected?.startsWith(ORIGIN)) err("host-guard", dup, `guard does not redirect to ${ORIGIN}`);
       else if (!/noindex/.test(r.robots ?? "")) err("host-guard", dup, "guard does not apply noindex");
     }
-    for (const safe of ["tabbench.com", "localhost", "127.0.0.1"]) {
+    for (const safe of ["tabbench.com", "localhost", "127.0.0.1", "wwwtabbench.com", "www.tabbench.com.evil.example"]) {
       const r = run(safe);
       if (r.redirected || r.robots) err("host-guard", safe, "guard fires on a host it must leave alone");
     }

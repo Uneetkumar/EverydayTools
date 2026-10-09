@@ -36,20 +36,43 @@ const PRESETS = [
 
 interface ParsedDockerRun {
   serviceName: string;
+  /** Only set when --name was given; compose then pins the container name. */
+  containerName?: string;
   image: string;
-  command?: string;
+  /** Exec form, so quoted arguments (sh -c "a && b") survive intact. */
+  command: string[];
   ports: string[];
   volumes: string[];
   environment: Record<string, string>;
   envFiles: string[];
   restart?: string;
   networks: string[];
+  networkMode?: string;
   memory?: string;
   cpus?: string;
   privileged?: boolean;
+  init?: boolean;
+  readOnly?: boolean;
   workdir?: string;
   entrypoint?: string;
   user?: string;
+  hostname?: string;
+  capAdd: string[];
+  extraHosts: string[];
+  labels: string[];
+  /** Flags this converter does not map, as typed, so they can be added by hand. */
+  unsupported: string[];
+}
+
+/** docker run flags that take no value. Anything else unknown is assumed to take one. */
+const BOOLEAN_FLAGS = new Set([
+  "-d", "--detach", "-i", "--interactive", "-t", "--tty", "--rm", "--privileged",
+  "--init", "--read-only", "-P", "--publish-all", "--no-healthcheck", "--oom-kill-disable",
+]);
+
+/** Values that select a network mode rather than name a network. */
+function isNetworkMode(n: string): boolean {
+  return n === "host" || n === "none" || n === "bridge" || n.startsWith("container:");
 }
 
 function parseDockerRun(cmd: string): ParsedDockerRun | null {
@@ -59,19 +82,19 @@ function parseDockerRun(cmd: string): ParsedDockerRun | null {
   let clean = cmd.replace(/\\\s*\r?\n/g, " ").replace(/\s+/g, " ").trim();
 
   // Strip initial "docker run" if present
-  clean = clean.replace(/^(sudo\s+)?docker\s+run\s+/i, "");
+  clean = clean.replace(/^(sudo\s+)?docker\s+(container\s+)?run\s+/i, "");
 
   // Tokenize while respecting quotes
   const tokens: string[] = [];
   const regex = /[^\s"']+|"([^"]*)"|'([^']*)'/g;
   let match;
   while ((match = regex.exec(clean)) !== null) {
-    tokens.push(match[1] || match[2] || match[0]);
+    tokens.push(match[1] ?? match[2] ?? match[0]);
   }
 
   if (tokens.length === 0) return null;
 
-  let serviceName = "app";
+  let name = "";
   let image = "";
   const commandArgs: string[] = [];
   const ports: string[] = [];
@@ -80,16 +103,33 @@ function parseDockerRun(cmd: string): ParsedDockerRun | null {
   const envFiles: string[] = [];
   let restart = "";
   const networks: string[] = [];
+  let networkMode = "";
   let memory = "";
   let cpus = "";
   let privileged = false;
+  let init = false;
+  let readOnly = false;
   let workdir = "";
   let entrypoint = "";
   let user = "";
+  let hostname = "";
+  const capAdd: string[] = [];
+  const extraHosts: string[] = [];
+  const labels: string[] = [];
+  const unsupported: string[] = [];
 
   let i = 0;
   while (i < tokens.length) {
     const raw = tokens[i];
+
+    // Everything after the image is the container's command, flags included
+    // (`nginx -g "daemon off;"`).
+    if (image) {
+      commandArgs.push(raw);
+      i++;
+      continue;
+    }
+
     let flag = raw;
     let inlineVal: string | null = null;
     if (raw.startsWith("-") && raw.includes("=")) {
@@ -111,13 +151,17 @@ function parseDockerRun(cmd: string): ParsedDockerRun | null {
       return "";
     };
 
-    if (flag === "-d" || flag === "--detach" || flag === "-i" || flag === "-t" || flag === "-it" || flag === "--rm") {
-      i++;
-    } else if (flag === "--privileged") {
-      privileged = true;
+    if (BOOLEAN_FLAGS.has(flag) || /^-[dit]{2,3}$/.test(flag)) {
+      // -it, -dit, -itd ...
+      if (flag === "--privileged") privileged = true;
+      else if (flag === "--init") init = true;
+      else if (flag === "--read-only") readOnly = true;
+      else if (flag === "-P" || flag === "--publish-all" || flag === "--no-healthcheck" || flag === "--oom-kill-disable") {
+        unsupported.push(flag);
+      }
       i++;
     } else if (flag === "--name") {
-      serviceName = consumeValue();
+      name = consumeValue();
     } else if (flag === "-p" || flag === "--publish") {
       const p = consumeValue();
       if (p) ports.push(p);
@@ -139,7 +183,8 @@ function parseDockerRun(cmd: string): ParsedDockerRun | null {
       restart = consumeValue();
     } else if (flag === "--net" || flag === "--network") {
       const n = consumeValue();
-      if (n) networks.push(n);
+      if (n && isNetworkMode(n)) networkMode = n;
+      else if (n) networks.push(n);
     } else if (flag === "-m" || flag === "--memory") {
       memory = consumeValue();
     } else if (flag === "--cpus") {
@@ -150,40 +195,68 @@ function parseDockerRun(cmd: string): ParsedDockerRun | null {
       entrypoint = consumeValue();
     } else if (flag === "-u" || flag === "--user") {
       user = consumeValue();
-    } else if (!raw.startsWith("-") && !image) {
-      // First non-flag token is the image!
+    } else if (flag === "-h" || flag === "--hostname") {
+      hostname = consumeValue();
+    } else if (flag === "--cap-add") {
+      const c = consumeValue();
+      if (c) capAdd.push(c);
+    } else if (flag === "--add-host") {
+      const h = consumeValue();
+      if (h) extraHosts.push(h);
+    } else if (flag === "-l" || flag === "--label") {
+      const l = consumeValue();
+      if (l) labels.push(l);
+    } else if (!raw.startsWith("-")) {
+      // First non-flag token is the image.
       image = raw;
       i++;
-    } else if (image) {
-      // Tokens after image are container command arguments
-      commandArgs.push(raw);
-      i++;
     } else {
-      // Unknown flag, skip
-      i++;
+      // An unmapped flag. Most docker run flags take a value, and skipping
+      // only the flag would make its value look like the image name
+      // ("--hostname web nginx" became image: web).
+      const hadInline = inlineVal !== null;
+      const takesNext = !hadInline && i + 1 < tokens.length && !tokens[i + 1].startsWith("-");
+      const value = hadInline || takesNext ? consumeValue() : (i++, "");
+      unsupported.push(value ? `${flag}${hadInline ? "=" : " "}${value}` : flag);
     }
   }
 
   if (!image) return null;
 
+  const serviceName = (name || image.split("/").pop()!.split(":")[0] || "app")
+    .replace(/[^a-zA-Z0-9_-]/g, "_")
+    .toLowerCase();
+
   return {
-    serviceName: serviceName.replace(/[^a-zA-Z0-9_-]/g, "_").toLowerCase(),
+    serviceName,
+    containerName: name || undefined,
     image,
-    command: commandArgs.length > 0 ? commandArgs.join(" ") : undefined,
+    command: commandArgs,
     ports,
     volumes,
     environment,
     envFiles,
     restart: restart || undefined,
     networks,
+    networkMode: networkMode || undefined,
     memory: memory || undefined,
     cpus: cpus || undefined,
     privileged: privileged || undefined,
+    init: init || undefined,
+    readOnly: readOnly || undefined,
     workdir: workdir || undefined,
     entrypoint: entrypoint || undefined,
     user: user || undefined,
+    hostname: hostname || undefined,
+    capAdd,
+    extraHosts,
+    labels,
+    unsupported,
   };
 }
+
+/** A YAML double-quoted scalar. JSON string syntax is valid YAML. */
+const q = (v: string) => JSON.stringify(v);
 
 function generateComposeYaml(parsed: ParsedDockerRun): string {
   const lines: string[] = ["services:"];
@@ -191,68 +264,41 @@ function generateComposeYaml(parsed: ParsedDockerRun): string {
   const sIndent = "    ";
   const pIndent = "      ";
 
+  const list = (key: string, items: string[]) => {
+    if (items.length === 0) return;
+    lines.push(`${sIndent}${key}:`);
+    for (const item of items) lines.push(`${pIndent}- ${q(item)}`);
+  };
+
   lines.push(`${indent}${parsed.serviceName}:`);
   lines.push(`${sIndent}image: ${parsed.image}`);
-  lines.push(`${sIndent}container_name: ${parsed.serviceName}`);
+  if (parsed.containerName) lines.push(`${sIndent}container_name: ${q(parsed.containerName)}`);
+  if (parsed.hostname) lines.push(`${sIndent}hostname: ${q(parsed.hostname)}`);
+  if (parsed.restart) lines.push(`${sIndent}restart: ${parsed.restart}`);
+  if (parsed.privileged) lines.push(`${sIndent}privileged: true`);
+  if (parsed.init) lines.push(`${sIndent}init: true`);
+  if (parsed.readOnly) lines.push(`${sIndent}read_only: true`);
+  if (parsed.entrypoint) lines.push(`${sIndent}entrypoint: ${q(parsed.entrypoint)}`);
+  if (parsed.command.length > 0) lines.push(`${sIndent}command: [${parsed.command.map(q).join(", ")}]`);
+  if (parsed.workdir) lines.push(`${sIndent}working_dir: ${q(parsed.workdir)}`);
+  if (parsed.user) lines.push(`${sIndent}user: ${q(parsed.user)}`);
+  if (parsed.networkMode) lines.push(`${sIndent}network_mode: ${q(parsed.networkMode)}`);
 
-  if (parsed.restart) {
-    lines.push(`${sIndent}restart: ${parsed.restart}`);
-  }
-
-  if (parsed.privileged) {
-    lines.push(`${sIndent}privileged: true`);
-  }
-
-  if (parsed.entrypoint) {
-    lines.push(`${sIndent}entrypoint: ${parsed.entrypoint}`);
-  }
-
-  if (parsed.command) {
-    lines.push(`${sIndent}command: ${parsed.command}`);
-  }
-
-  if (parsed.workdir) {
-    lines.push(`${sIndent}working_dir: ${parsed.workdir}`);
-  }
-
-  if (parsed.user) {
-    lines.push(`${sIndent}user: "${parsed.user}"`);
-  }
-
-  if (parsed.ports.length > 0) {
-    lines.push(`${sIndent}ports:`);
-    for (const p of parsed.ports) {
-      lines.push(`${pIndent}- "${p}"`);
-    }
-  }
-
-  if (parsed.volumes.length > 0) {
-    lines.push(`${sIndent}volumes:`);
-    for (const v of parsed.volumes) {
-      lines.push(`${pIndent}- ${v}`);
-    }
-  }
-
-  if (parsed.envFiles.length > 0) {
-    lines.push(`${sIndent}env_file:`);
-    for (const ef of parsed.envFiles) {
-      lines.push(`${pIndent}- ${ef}`);
-    }
-  }
+  list("ports", parsed.ports);
+  list("volumes", parsed.volumes);
+  list("env_file", parsed.envFiles);
 
   if (Object.keys(parsed.environment).length > 0) {
     lines.push(`${sIndent}environment:`);
     for (const [k, v] of Object.entries(parsed.environment)) {
-      lines.push(`${pIndent}${k}: "${v}"`);
+      lines.push(`${pIndent}${k}: ${q(v)}`);
     }
   }
 
-  if (parsed.networks.length > 0) {
-    lines.push(`${sIndent}networks:`);
-    for (const n of parsed.networks) {
-      lines.push(`${pIndent}- ${n}`);
-    }
-  }
+  list("cap_add", parsed.capAdd);
+  list("extra_hosts", parsed.extraHosts);
+  list("labels", parsed.labels);
+  list("networks", parsed.networks);
 
   if (parsed.memory || parsed.cpus) {
     lines.push(`${sIndent}deploy:`);
@@ -273,6 +319,7 @@ function generateComposeYaml(parsed: ParsedDockerRun): string {
 
   // Volume declaration for named volumes
   const namedVolumes = parsed.volumes
+    .filter((v) => v.includes(":"))
     .map((v) => v.split(":")[0])
     .filter((v) => !v.startsWith(".") && !v.startsWith("/") && !v.startsWith("~"));
 
@@ -324,7 +371,7 @@ export default function DockerRunToCompose() {
           ariaLabel="Docker Run Presets"
         />
 
-        <Field label="Docker Run Command" hint="Supports flags: -p, -v, -e, --restart, -d, --network, -m, --cpus">
+        <Field label="Docker Run Command" hint="Maps -p, -v, -e, --env-file, --name, --restart, --network, -m, --cpus, -w, -u, -h, --cap-add, --add-host, -l and more">
           <TextArea
             value={cliInput}
             onChange={(e) => setCliInput(e.target.value)}
@@ -341,7 +388,7 @@ export default function DockerRunToCompose() {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Compose Specification (v3)
+              Compose Specification
             </span>
             <div className="flex items-center gap-1.5">
               <Button
@@ -373,6 +420,14 @@ export default function DockerRunToCompose() {
             aria-label="Generated Compose YAML"
           />
         </div>
+        {parsed && parsed.unsupported.length > 0 && (
+          <Notice tone="warning">
+            Not converted, add by hand if you need them: {parsed.unsupported.join(", ")}
+          </Notice>
+        )}
+        {cliInput.trim() && !parsed && (
+          <Notice tone="error">No image found. A docker run command needs an image name, such as nginx:alpine.</Notice>
+        )}
       </ToolSection>
     </div>
   );

@@ -133,7 +133,7 @@ export default function SalaryCalculator() {
         <p className="flex gap-1.5 text-xs text-muted-foreground">
           <Info className="mt-px size-3.5 shrink-0" aria-hidden="true" />
           <span>
-            FY 2025-26 rates. New regime: no tax up to ₹12 lakh of taxable income, ₹75,000 standard deduction.
+            FY 2026-27 rates (Budget 2026 kept the 2025-26 slabs). New regime: no tax up to ₹12 lakh of taxable income, ₹75,000 standard deduction.
             Old regime: ₹50,000 standard deduction, and PF counted under 80C; HRA exemption and other deductions
             are not included. An estimate, not tax advice.
           </span>

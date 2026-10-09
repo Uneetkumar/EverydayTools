@@ -89,6 +89,81 @@
         "source": "/tools/time-format-converter",
         "destination": "/tools/time-converter",
         "type": 301
+      },
+      {
+        "source": "/categories/everyday",
+        "destination": "/categories",
+        "type": 301
+      },
+      {
+        "source": "/convert/usd-to-inr",
+        "destination": "/tools/currency-converter?from=USD&to=INR",
+        "type": 301
+      },
+      {
+        "source": "/convert/inr-to-usd",
+        "destination": "/tools/currency-converter?from=INR&to=USD",
+        "type": 301
+      },
+      {
+        "source": "/convert/aed-to-inr",
+        "destination": "/tools/currency-converter?from=AED&to=INR",
+        "type": 301
+      },
+      {
+        "source": "/convert/eur-to-inr",
+        "destination": "/tools/currency-converter?from=EUR&to=INR",
+        "type": 301
+      },
+      {
+        "source": "/convert/gbp-to-inr",
+        "destination": "/tools/currency-converter?from=GBP&to=INR",
+        "type": 301
+      },
+      {
+        "source": "/convert/sar-to-inr",
+        "destination": "/tools/currency-converter?from=SAR&to=INR",
+        "type": 301
+      },
+      {
+        "source": "/convert/cad-to-inr",
+        "destination": "/tools/currency-converter?from=CAD&to=INR",
+        "type": 301
+      },
+      {
+        "source": "/convert/aud-to-inr",
+        "destination": "/tools/currency-converter?from=AUD&to=INR",
+        "type": 301
+      },
+      {
+        "source": "/convert/sgd-to-inr",
+        "destination": "/tools/currency-converter?from=SGD&to=INR",
+        "type": 301
+      },
+      {
+        "source": "/convert/kwd-to-inr",
+        "destination": "/tools/currency-converter?from=KWD&to=INR",
+        "type": 301
+      },
+      {
+        "source": "/convert/usd-to-eur",
+        "destination": "/tools/currency-converter?from=USD&to=EUR",
+        "type": 301
+      },
+      {
+        "source": "/convert/gbp-to-usd",
+        "destination": "/tools/currency-converter?from=GBP&to=USD",
+        "type": 301
+      },
+      {
+        "source": "/convert/**",
+        "destination": "/tools/currency-converter",
+        "type": 301
+      },
+      {
+        "source": "/convert",
+        "destination": "/tools/currency-converter",
+        "type": 301
       }
     ],
     "headers": [

@@ -29,6 +29,11 @@ const OID_MAP: Record<string, string> = {
   "1.2.840.113549.1.1.11": "SHA-256 with RSA Encryption",
   "1.2.840.113549.1.1.12": "SHA-384 with RSA Encryption",
   "1.2.840.113549.1.1.13": "SHA-512 with RSA Encryption",
+  "1.2.840.113549.1.1.5": "SHA-1 with RSA Encryption",
+  "1.2.840.113549.1.1.10": "RSASSA-PSS",
+  "1.3.132.0.34": "secp384r1 / NIST P-384",
+  "1.2.840.10045.4.3.3": "ECDSA with SHA-384",
+  "1.3.101.112": "Ed25519",
   "1.2.840.10045.2.1": "Elliptic Curve Public Key (ECC)",
   "1.2.840.10045.3.1.7": "secp256r1 / NIST P-256",
   "1.2.840.10045.4.3.2": "ECDSA with SHA-256",
@@ -214,8 +219,13 @@ export default function SslCertificateDecoder() {
 
     async function decodeCert() {
       try {
-        const isCsr = /CERTIFICATE REQUEST/i.test(pem);
-        const cleaned = pem.replace(/-----(BEGIN|END) [A-Z0-9 ]+-----/g, "").replace(/\s+/g, "");
+        // A pasted chain holds several PEM blocks. Decode the first (normally
+        // the server's leaf); joining them all would also give a fingerprint
+        // that matches no certificate.
+        const block = pem.match(/-----BEGIN [A-Z0-9 ]+-----[\s\S]*?-----END [A-Z0-9 ]+-----/);
+        const source = block ? block[0] : pem;
+        const isCsr = /CERTIFICATE REQUEST/i.test(source);
+        const cleaned = source.replace(/-----(BEGIN|END) [A-Z0-9 ]+-----/g, "").replace(/\s+/g, "");
         if (!cleaned) {
           setDecoded(null);
           setErrorMsg(null);
